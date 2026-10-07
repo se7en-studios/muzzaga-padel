@@ -9,6 +9,8 @@ import {
   priceFor,
 } from "../lib/clubConfig";
 import { getClubConfig } from "../lib/clubConfigServer";
+import { checkPublicRateLimit } from "../lib/adminRateLimit";
+import { RATE_LIMIT_ERROR } from "../lib/rateLimit";
 
 /**
  * @param {{date: string, courtId: string, startTime: string, endTime: string, playerName: string, playerPhone: string, playersCount: number, fullCourt: boolean}} input
@@ -79,6 +81,10 @@ export async function createBooking(input) {
         "No pudimos confirmar la disponibilidad en este momento. Escribinos por WhatsApp para coordinar el turno a mano.",
     };
   }
+
+  // Después de validar: un formulario mal cargado no gasta cupo.
+  const gate = await checkPublicRateLimit("createBooking");
+  if (!gate.allowed) return { ok: false, error: RATE_LIMIT_ERROR };
 
   let bookingKey;
   try {
