@@ -7,6 +7,7 @@ import {
   joinOpenMatch,
 } from "../app/open-matches/actions";
 import { PRECIO_POR_JUGADOR } from "../data/pricing";
+import { OPEN_MATCH_CATEGORIES } from "../lib/openMatches";
 import Portal from "./Portal";
 import useDialogFocus from "../lib/useDialogFocus";
 import Mascota from "./Mascota";
@@ -426,6 +427,7 @@ export default function CommunityMatchesSection() {
                   placeholder="Ej. Lucas Gómez"
                   className="admin-input-field"
                   value={joinName}
+                  maxLength={60}
                   onChange={(e) => setJoinName(e.target.value)}
                   autoFocus
                 />
@@ -441,6 +443,7 @@ export default function CommunityMatchesSection() {
                   placeholder="Ej. 299 597 4176"
                   className="admin-input-field"
                   value={joinPhone}
+                  maxLength={25}
                   onChange={(e) => setJoinPhone(e.target.value)}
                 />
               </div>
@@ -514,16 +517,11 @@ export default function CommunityMatchesSection() {
                     setCreateForm({ ...createForm, category: e.target.value })
                   }
                 >
-                  <option value="7ma / Iniciación (1.5 - 2.9)">
-                    7ma / Iniciación (1.5 - 2.9)
-                  </option>
-                  <option value="6ta Categoría (3.0 - 3.9)">
-                    6ta Categoría (3.0 - 3.9)
-                  </option>
-                  <option value="5ta / Libre (4.0 - 5.5+)">
-                    5ta / Libre (4.0 - 5.5+)
-                  </option>
-                  <option value="Torneo Damas A/B">Torneo Damas A/B</option>
+                  {OPEN_MATCH_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -564,6 +562,7 @@ export default function CommunityMatchesSection() {
                     placeholder="Ej. 20:00 hs"
                     className="admin-input-field"
                     value={createForm.time}
+                    maxLength={20}
                     onChange={(e) =>
                       setCreateForm({ ...createForm, time: e.target.value })
                     }
@@ -589,6 +588,7 @@ export default function CommunityMatchesSection() {
                     placeholder="Tu nombre"
                     className="admin-input-field"
                     value={createForm.creatorName}
+                    maxLength={60}
                     onChange={(e) =>
                       setCreateForm({
                         ...createForm,
@@ -605,6 +605,7 @@ export default function CommunityMatchesSection() {
                     placeholder="Tu teléfono"
                     className="admin-input-field"
                     value={createForm.creatorPhone}
+                    maxLength={25}
                     onChange={(e) =>
                       setCreateForm({
                         ...createForm,
@@ -624,6 +625,7 @@ export default function CommunityMatchesSection() {
                   placeholder="Ej. Buscamos 2 jugadores con buen revés para partido parejo"
                   className="admin-input-field"
                   value={createForm.desc}
+                  maxLength={200}
                   onChange={(e) =>
                     setCreateForm({ ...createForm, desc: e.target.value })
                   }
