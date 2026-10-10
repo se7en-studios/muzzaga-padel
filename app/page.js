@@ -4,7 +4,6 @@ import LiveWeatherRadar from "../components/LiveWeatherRadar";
 import TodayFlashSlots from "../components/TodayFlashSlots";
 import BookingCalendar from "../components/BookingCalendar";
 import AmenitiesSection from "../components/AmenitiesSection";
-import CommunityMatchesSection from "../components/CommunityMatchesSection";
 import HomeTorneosTeaser from "../components/HomeTorneosTeaser";
 import HomeCantinaTeaser from "../components/HomeCantinaTeaser";
 import ClubToolsSection from "../components/ClubToolsSection";
@@ -45,7 +44,7 @@ const TICKER_ITEMS = [
   "Cristal templado",
   "Iluminación LED",
   "Turnos de 90 min",
-  "Canchas Abiertas",
+  "Pistas cubiertas",
   "Torneos todo el año",
   "Cantina y tercer tiempo",
   "Catriel · Río Negro",
@@ -122,9 +121,6 @@ export default async function Home() {
                   <path d="M12 5v14M5 12l7 7 7-7" />
                 </svg>
               </a>
-              <a href="#canchas-abiertas" className="hero-btn-ghost hero-cta-desktop-only">
-                Canchas Abiertas <span aria-hidden="true">→</span>
-              </a>
             </div>
 
             <ul className="hero-trust">
@@ -156,11 +152,11 @@ export default async function Home() {
               <dt>Torneos</dt>
               <dd className="hero-stat-word">Todo el año</dd>
             </div>
-            <div className="hero-stat hero-stat-desktop-only">
+            <div className="hero-stat">
               <dt>Jugadores pasan por el club</dt>
               <dd><StatCounter value={300} prefix="+" /></dd>
             </div>
-            <div className="hero-stat hero-stat-desktop-only">
+            <div className="hero-stat">
               <dt>Minutos por turno</dt>
               <dd><StatCounter value={config.slotDurationMin} /></dd>
             </div>
@@ -221,10 +217,7 @@ export default async function Home() {
       {/* 4. INSTALACIONES */}
       <AmenitiesSection />
 
-      {/* 5. CANCHAS ABIERTAS */}
-      <CommunityMatchesSection />
-
-      {/* 6. TORNEOS DESTACADOS */}
+      {/* 5. TORNEOS DESTACADOS */}
       <HomeTorneosTeaser />
 
       {/* 7. CANTINA DESTACADA */}

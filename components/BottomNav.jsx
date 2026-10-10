@@ -51,7 +51,7 @@ function useCompactOnScroll(ref) {
 // En la home, la pestaña de la sección que se está mirando. Se observan todas
 // las secciones: si no, "Abiertas" quedaba marcada al volver al hero o al
 // seguir bajando a instalaciones, FAQ, etc.
-const HOME_SECTION_TAB = { top: "turnos", turnos: "turnos", "canchas-abiertas": "canchas-abiertas", torneos: "torneos", cantina: "menu" };
+const HOME_SECTION_TAB = { top: "turnos", turnos: "turnos", instalaciones: "ubicacion", ubicacion: "ubicacion", torneos: "torneos", cantina: "menu" };
 
 function useHomeSection(enabled) {
   const [section, setSection] = useState("turnos");
@@ -106,16 +106,14 @@ export default function BottomNav() {
         <span className="bottom-bar-label">Turnos</span>
       </a>
 
-      <a {...item("canchas-abiertas")} href="/#canchas-abiertas" aria-label="Ir a Canchas Abiertas" style={{ "--k": 1 }}>
+      <a {...item("ubicacion")} href="/#ubicacion" aria-label="Cómo llegar y ubicación del club" style={{ "--k": 1 }}>
         <span className="bottom-bar-icon">
           <svg {...ICON}>
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
+            <circle cx="12" cy="9" r="2.5"></circle>
           </svg>
         </span>
-        <span className="bottom-bar-label">Abiertas</span>
+        <span className="bottom-bar-label">Club</span>
       </a>
 
       <Link {...item("torneos")} href="/torneos" aria-label="Ver torneos" style={{ "--k": 0 }}>

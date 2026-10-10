@@ -99,7 +99,7 @@ export default function Footer() {
               <h4 className="footer-col-title">Navegación</h4>
               <ul className="footer-links-list">
                 <li><a href="/#turnos">Elegí tu turno</a></li>
-                <li><a href="/#canchas-abiertas">Canchas Abiertas</a></li>
+                <li><a href="/#instalaciones">Instalaciones</a></li>
                 <li><a href="/torneos">Torneos</a></li>
                 <li><a href="/menu">Menú de cantina</a></li>
                 <li><a href="/herramientas/dividir-gastos">Dividir gastos</a></li>

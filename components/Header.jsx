@@ -7,9 +7,9 @@ import ScrollRow from "./ScrollRow";
 
 const NAV_LINKS = [
   { href: "/#turnos", label: "Turnos" },
-  { href: "/#canchas-abiertas", label: "Canchas Abiertas" },
   { href: "/torneos", label: "Torneos" },
   { href: "/menu", label: "Cantina" },
+  { href: "/#instalaciones", label: "Instalaciones" },
   { href: "/#ubicacion", label: "Ubicación" },
 ];
 
