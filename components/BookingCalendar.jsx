@@ -514,193 +514,119 @@ export default function BookingCalendar({ serverToday, mpEnabled = false }) {
               aria-modal={isDrawer || undefined}
               aria-label="Confirmar reserva"
             >
+              {isDrawer && <div className="booking-drawer-handle" aria-hidden="true" />}
+
               <div className="booking-form-header">
                 <div
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "flex-start",
+                    alignItems: "center",
+                    marginBottom: 10,
                   }}
                 >
                   <div>
-                    <h3 style={{ margin: 0 }}>Confirmar reserva</h3>
-                    <p style={{ margin: "4px 0 0" }}>
-                      {selected.start} hs ·{" "}
-                      {courts.find((c) => c.id === selected.courtId)?.name}
-                    </p>
+                    <span className="booking-badge-court">
+                      🎾 {courts.find((c) => c.id === selected.courtId)?.name || "Cancha de cristal"}
+                    </span>
+                    <h3 style={{ margin: "4px 0 0", fontSize: 19, fontWeight: 700 }}>Confirmar tu turno</h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelected(null)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      fontSize: 20,
-                      cursor: "pointer",
-                      color: "var(--color-muted)",
-                      padding: "0 4px",
-                      lineHeight: 1,
-                    }}
+                    className="booking-drawer-close-btn"
                     aria-label="Cerrar formulario"
                   >
-                    <X size={20} aria-hidden="true" />
+                    <X size={18} aria-hidden="true" />
                   </button>
                 </div>
-                <div
-                  style={{
-                    marginTop: 6,
-                    padding: "8px 12px",
-                    background:
-                      "var(--color-surface-hover, rgba(255,255,255,0.05))",
-                    borderRadius: "var(--radius-md, 8px)",
-                    border:
-                      "1px solid var(--color-hairline, rgba(255,255,255,0.1))",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 700,
-                      color: "var(--color-ink)",
-                    }}
-                  >
-                    ${selectedPricing.total.toLocaleString("es-AR")}
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--color-body)" }}>
-                    ${selectedPricing.perPlayer.toLocaleString("es-AR")} por
-                    jugador si son cuatro
+
+                <div className="booking-slot-summary-card">
+                  <div className="booking-summary-main">
+                    <div className="booking-summary-time">
+                      <span className="summary-label">Día y horario</span>
+                      <strong>
+                        {activeDay?.dayName} {activeDay?.dayNumber} {activeDay?.monthName} · {selected.start} hs ({selected.end} hs)
+                      </strong>
+                    </div>
+                    <div className="booking-summary-price">
+                      <span className="summary-label">Total del turno</span>
+                      <strong className="summary-price-tag">${selectedPricing.total.toLocaleString("es-AR")}</strong>
+                      <span className="summary-price-sub">${selectedPricing.perPlayer.toLocaleString("es-AR")} c/u (4p)</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <label>
-                <span>Tu nombre y apellido</span>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Lucas Rossi"
-                  value={form.playerName}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, playerName: e.target.value }))
-                  }
-                />
-              </label>
+              <div className="booking-inputs-group">
+                <label className="booking-input-label">
+                  <span>Tu nombre y apellido</span>
+                  <div className="booking-input-wrap">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Lucas Rossi"
+                      value={form.playerName}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, playerName: e.target.value }))
+                      }
+                    />
+                  </div>
+                </label>
 
-              <label>
-                <span>Teléfono de contacto (WhatsApp)</span>
-                <input
-                  type="tel"
-                  required
-                  placeholder="Ej. 299 597 4176"
-                  value={form.playerPhone}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, playerPhone: e.target.value }))
-                  }
-                />
-              </label>
+                <label className="booking-input-label">
+                  <span>WhatsApp (para confirmar el turno)</span>
+                  <div className="booking-input-wrap">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="#25D366" aria-hidden="true">
+                      <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.694.067-1.127-.072-.27-.087-.621-.21-1.077-.407-1.927-.834-3.176-2.778-3.272-2.906-.096-.129-.778-1.037-.778-1.977 0-.94.492-1.401.667-1.593.175-.192.38-.24.507-.24.127 0 .254.002.365.007.119.006.279-.045.437.334.162.388.555 1.353.603 1.451.048.098.08.213.016.341-.064.128-.096.208-.192.32-.096.112-.202.25-.288.336-.096.096-.197.201-.085.393.112.192.497.82 1.066 1.328.733.654 1.352.857 1.544.953.192.096.304.08.416-.048.112-.128.48-1.558.608-.752.128-.192.256-.16.432-.096.176.064 1.114.525 1.306.621.192.096.32.144.368.224.048.08.048.464-.096.869z" />
+                    </svg>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="Ej. 299 597 4176"
+                      value={form.playerPhone}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, playerPhone: e.target.value }))
+                      }
+                    />
+                  </div>
+                </label>
+              </div>
 
               {isRemembered && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    background: "rgba(16, 185, 129, 0.08)",
-                    border: "1px solid rgba(16, 185, 129, 0.25)",
-                    borderRadius: 6,
-                    padding: "6px 10px",
-                    fontSize: 12,
-                    color: "#059669",
-                    marginTop: -4,
-                    marginBottom: 6,
-                  }}
-                >
-                  <span>✓ Datos autocompletados para reservar más rápido</span>
+                <div className="booking-remembered-chip">
+                  <span>✓ Datos listos para reservar en 1 toque</span>
                   <button
                     type="button"
                     onClick={handleForgetProfile}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "var(--color-muted)",
-                      textDecoration: "underline",
-                      cursor: "pointer",
-                      fontSize: 11,
-                      padding: 0,
-                      marginLeft: 8,
-                    }}
-                    title="Borrar datos guardados en este dispositivo"
+                    className="booking-forget-btn"
                   >
                     Cambiar
                   </button>
                 </div>
               )}
 
-              <label>
-                <span>Cantidad de jugadores</span>
-                <select
-                  value={form.playersCount}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      playersCount: Number(e.target.value),
-                    }))
-                  }
-                >
-                  {[1, 2, 3, 4].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="type-switcher">
-                <button
-                  type="button"
-                  className={`type-btn${form.fullCourt ? " active" : ""}`}
-                  onClick={() => setForm((f) => ({ ...f, fullCourt: true }))}
-                  aria-pressed={form.fullCourt}
-                >
-                  <strong>Cancha completa</strong>
-                  <span>${selectedPricing.total.toLocaleString("es-AR")}</span>
-                </button>
-                <button
-                  type="button"
-                  className={`type-btn${!form.fullCourt ? " active" : ""}`}
-                  onClick={() => setForm((f) => ({ ...f, fullCourt: false }))}
-                  aria-pressed={!form.fullCourt}
-                >
-                  <strong>Por jugador</strong>
-                  <span>
-                    ${selectedPricing.perPlayer.toLocaleString("es-AR")} c/u
-                  </span>
-                </button>
-              </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: "var(--color-body)",
-                  marginTop: -6,
-                  marginBottom: 4,
-                }}
-              >
-                ${selectedPricing.perPlayer.toLocaleString("es-AR")} por jugador
-                si son cuatro
-              </div>
-
               {submitError && <p className="booking-error">{submitError}</p>}
 
               <button
                 type="submit"
-                className="btn btn-linear-primary"
+                className="booking-submit-btn"
                 disabled={submitting || !isFormValid}
-                style={{ width: "100%" }}
               >
-                {submitting
-                  ? "Confirmando…"
-                  : "Confirmar y avisar por WhatsApp →"}
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.694.067-1.127-.072-.27-.087-.621-.21-1.077-.407-1.927-.834-3.176-2.778-3.272-2.906-.096-.129-.778-1.037-.778-1.977 0-.94.492-1.401.667-1.593.175-.192.38-.24.507-.24.127 0 .254.002.365.007.119.006.279-.045.437.334.162.388.555 1.353.603 1.451.048.098.08.213.016.341-.064.128-.096.208-.192.32-.096.112-.202.25-.288.336-.096.096-.197.201-.085.393.112.192.497.82 1.066 1.328.733.654 1.352.857 1.544.953.192.096.304.08.416-.048.112-.128.48-1.558.608-.752.128-.192.256-.16.432-.096.176.064 1.114.525 1.306.621.192.096.32.144.368.224.048.08.048.464-.096.869z" />
+                </svg>
+                <span>{submitting ? "Confirmando reserva…" : "Confirmar turno por WhatsApp"}</span>
+                <span className="booking-btn-arrow" aria-hidden="true">→</span>
               </button>
+
+              <div className="booking-guarantee-note">
+                <span>🔒 Confirmás con una seña por WhatsApp · Pago rápido</span>
+              </div>
             </form>
           </div>
         </MaybePortal>

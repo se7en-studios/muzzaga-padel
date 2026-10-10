@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 const TARGET_SELECTOR =
-    ".section-header-row, .photo-bento-card, .open-card, .rating-box, .map-frame-wrap, .info-card, .info-link-card, .faq-card, .testimonial-card, .club-tool-card, .torneo-thumb, .spec-panel, .fc-wrap, .price-tag";
+    ".section-header-row, .photo-bento-card, .open-card, .rating-box, .location-unified-card, .map-frame-wrap, .info-card, .info-link-card, .faq-card, .testimonial-card, .club-tool-card, .torneo-thumb, .spec-panel, .fc-wrap, .price-tag";
 
 /** Renders nothing; just wires up the fade-in-on-scroll behavior for the static sections. */
 export default function ScrollReveal() {
