@@ -1,17 +1,22 @@
 const isDev = process.env.NODE_ENV !== "production";
 
-// Política de contenido: solo se carga lo propio, más el mapa embebido de
-// Google. Next inyecta scripts inline para hidratar, por eso 'unsafe-inline'
-// en script-src (sin nonces por request); el resto va cerrado. En desarrollo
-// React necesita eval para los stack traces.
+// Política de contenido. Lo que protege de verdad va estricto: scripts solo
+// propios (más los inline que Next necesita para hidratar), sin <object>,
+// <base> ni formularios hacia afuera, y nadie puede embeber el sitio.
+// Lo demás (iframes, imágenes, fuentes, conexiones, media) se permite por
+// https: el mapa de Google redirige entre dominios según el país
+// (google.com, google.com.ar...) y los navegadores internos de Instagram y
+// WhatsApp cargan recursos propios: una lista corta de hosts los bloqueaba
+// con "Este contenido está bloqueado". En desarrollo React necesita eval.
 const CSP = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https:",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
-  "connect-src 'self' https://vitals.vercel-insights.com",
-  "frame-src https://maps.google.com https://www.google.com",
+  "font-src 'self' data: https:",
+  "media-src 'self' blob: https:",
+  "connect-src 'self' https:",
+  "frame-src https:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
