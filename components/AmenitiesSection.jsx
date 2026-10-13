@@ -47,7 +47,7 @@ const SPECS = [
   },
 ];
 
-export default function AmenitiesSection() {
+export default function AmenitiesSection({ photos }) {
   const [selectedSpec, setSelectedSpec] = useState(SPECS[0].id);
 
   const active = SPECS.find((s) => s.id === selectedSpec) || SPECS[0];
@@ -80,7 +80,7 @@ export default function AmenitiesSection() {
           </div>
         </div>
 
-        <FeatureCarousel />
+        <FeatureCarousel photos={photos} />
 
         {/* FICHA TÉCNICA INTERACTIVA DE PISTAS */}
         <div className="spec-panel">

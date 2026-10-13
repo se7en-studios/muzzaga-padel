@@ -25,6 +25,23 @@ const CSP = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    // Fotos que el club sube desde Configuración → Sitio web (Vercel Blob).
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+        pathname: "/sitio/**",
+      },
+    ],
+  },
+  experimental: {
+    serverActions: {
+      // Las fotos llegan ya achicadas (lib/compressImage.js, tope 3,8 MB);
+      // Vercel no acepta cuerpos de más de 4,5 MB.
+      bodySizeLimit: "4.5mb",
+    },
+  },
   async headers() {
     return [
       {

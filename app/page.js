@@ -19,6 +19,7 @@ import HeroMascot from "../components/HeroMascot";
 import "./landing.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
+import { getSiteContent } from "../lib/siteContentServer";
 import { publicPayment } from "../lib/clubConfig";
 import { CLUB_INFO } from "../data/club";
 import { todayInClub } from "../lib/booking";
@@ -52,12 +53,12 @@ const TICKER_ITEMS = [
   "Catriel · Río Negro",
 ];
 
-// El precio del turno sale de Configuración: la home se regenera cada 5 min
-// para reflejar cambios sin redeploy.
+// El precio del turno y las fotos salen de Configuración: la home se regenera
+// cada 5 min (y al guardar fotos) para reflejar cambios sin redeploy.
 export const revalidate = 300;
 
 export default async function Home() {
-  const config = await getClubConfig();
+  const [config, { photos }] = await Promise.all([getClubConfig(), getSiteContent()]);
   const { valle, pico, picoEnabled } = config.pricing;
   // Se anuncia el precio más bajo ("desde") cuando hay horario pico.
   const cheapest = picoEnabled && pico.court < valle.court ? pico : valle;
@@ -80,7 +81,7 @@ export default async function Home() {
       <section id="top" className="hero-night">
         <div className="hero-night-photo" aria-hidden="true">
           <Image
-            src="/img/court_glass_night_match.jpg"
+            src={photos.hero.src}
             alt=""
             fill
             priority
@@ -224,13 +225,13 @@ export default async function Home() {
           las de Google). El componente queda en components/. */}
 
       {/* 4. INSTALACIONES */}
-      <AmenitiesSection />
+      <AmenitiesSection photos={photos} />
 
       {/* 5. TORNEOS DESTACADOS */}
-      <HomeTorneosTeaser />
+      <HomeTorneosTeaser photos={photos} />
 
       {/* 7. CANTINA DESTACADA */}
-      <HomeCantinaTeaser />
+      <HomeCantinaTeaser photos={photos} />
 
       {/* 8. HERRAMIENTAS DEL CLUB */}
       <ClubToolsSection />

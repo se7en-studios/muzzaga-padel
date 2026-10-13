@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getDb, isFirebaseConfigured } from "../../lib/firebase";
 import {
   addMinutes,
@@ -17,6 +18,19 @@ import {
   validateConfig,
 } from "../../lib/clubConfig";
 import { getClubConfig, setCachedClubConfig } from "../../lib/clubConfigServer";
+import {
+  CAPTION_MAX,
+  applyGalleryOp,
+  findPhotoSlot,
+  galleryFromDb,
+  galleryToDb,
+} from "../../lib/siteContent";
+import { getSiteContent } from "../../lib/siteContentServer";
+import {
+  deleteStoredPhotos,
+  isPhotoStorageConfigured,
+  storePhoto,
+} from "../../lib/sitePhotoStorage";
 import {
   bookingTotal,
   buildDailySummaries,
@@ -1748,6 +1762,227 @@ export async function adminSaveClubConfig(input, pin) {
   } catch (err) {
     return { ok: false, error: "No se pudo guardar la configuración." };
   }
+}
+
+/* ==========================================================================
+   SITIO WEB: FOTOS DE LA LANDING Y GALERÍA DE TORNEOS
+   Cada cambio se publica al toque (no pasa por "Guardar"): sube la foto,
+   la anota en siteContent, borra la vieja del store y regenera las páginas.
+   ========================================================================== */
+
+const STORAGE_MISSING = {
+  ok: false,
+  error:
+    "Falta conectar el almacenamiento de fotos (Vercel Blob) al proyecto. Avisale a quien maneja la cuenta de Vercel.",
+};
+const GALLERY_ERROR = { ok: false, error: "No se pudo guardar la galería." };
+
+export async function adminGetSiteContent() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  return {
+    ok: true,
+    content: await getSiteContent(),
+    storageReady: isPhotoStorageConfigured(),
+  };
+}
+
+async function siteWriteBlocked({ upload = false } = {}) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isFirebaseConfigured()) {
+    return { ok: false, error: "Firebase no está configurado." };
+  }
+  if (upload && !isPhotoStorageConfigured()) return STORAGE_MISSING;
+  return null;
+}
+
+/** Regenera las páginas con fotos y devuelve el contenido nuevo al panel. */
+async function publishSite() {
+  revalidatePath("/");
+  revalidatePath("/torneos");
+  return { ok: true, content: await getSiteContent() };
+}
+
+async function uploadSitePhoto(file, name) {
+  try {
+    return await storePhoto(file, name);
+  } catch (error) {
+    console.warn("adminSitio: falló la subida:", error.message);
+    return { error: "No se pudo subir la foto. Probá de nuevo." };
+  }
+}
+
+/** FormData { slotId, file }: reemplaza la foto de un lugar fijo de la landing. */
+export async function adminSetSitePhoto(formData) {
+  const blocked = await siteWriteBlocked({ upload: true });
+  if (blocked) return blocked;
+  const slot = findPhotoSlot(String(formData?.get?.("slotId") || ""));
+  if (!slot) return INVALID;
+
+  const uploaded = await uploadSitePhoto(formData.get("file"), slot.id);
+  if (uploaded.error) return { ok: false, error: uploaded.error };
+
+  const db = getDb();
+  try {
+    let previous = null;
+    await db.ref(`siteContent/photos/${slot.id}`).transaction((current) => {
+      previous = current?.src || null;
+      return { ...(current || {}), src: uploaded.url, updatedAt: Date.now() };
+    });
+    await deleteStoredPhotos([previous]);
+    await audit(db, SESSION_STAFF, "SITIO_FOTO", `${slot.group} · ${slot.label}`, "Foto nueva");
+  } catch (error) {
+    await deleteStoredPhotos([uploaded.url]);
+    return { ok: false, error: "No se pudo guardar la foto." };
+  }
+  return publishSite();
+}
+
+/** Vuelve a la foto original de un lugar fijo (conserva el texto, si tiene). */
+export async function adminResetSitePhoto(slotId) {
+  const blocked = await siteWriteBlocked();
+  if (blocked) return blocked;
+  const slot = findPhotoSlot(String(slotId || ""));
+  if (!slot) return INVALID;
+
+  const db = getDb();
+  try {
+    let previous = null;
+    await db.ref(`siteContent/photos/${slot.id}`).transaction((current) => {
+      previous = current?.src || null;
+      if (!current) return null;
+      const { src, updatedAt, ...rest } = current;
+      return Object.keys(rest).length ? { ...rest, updatedAt: Date.now() } : null;
+    });
+    await deleteStoredPhotos([previous]);
+    await audit(db, SESSION_STAFF, "SITIO_FOTO", `${slot.group} · ${slot.label}`, "Volvió a la foto original");
+  } catch (error) {
+    return { ok: false, error: "No se pudo restaurar la foto." };
+  }
+  return publishSite();
+}
+
+/** Texto que va sobre las fotos destacadas de torneos en el inicio. */
+export async function adminSetSitePhotoCaption(slotId, caption) {
+  const blocked = await siteWriteBlocked();
+  if (blocked) return blocked;
+  const slot = findPhotoSlot(String(slotId || ""));
+  if (!slot?.captioned) return INVALID;
+
+  try {
+    await getDb()
+      .ref(`siteContent/photos/${slot.id}`)
+      .update({ caption: clip(caption, CAPTION_MAX), updatedAt: Date.now() });
+  } catch (error) {
+    return { ok: false, error: "No se pudo guardar el texto." };
+  }
+  return publishSite();
+}
+
+/**
+ * Corre un cambio de applyGalleryOp en una transacción. Si la galería nunca se
+ * guardó, arranca de los defaults (los torneos de junio y agosto).
+ */
+async function runGalleryOp(op, auditAction, auditDetails, staff = SESSION_STAFF) {
+  const db = getDb();
+  let outcome = { error: GALLERY_ERROR.error };
+  try {
+    const res = await db.ref("siteContent/gallery").transaction((current) => {
+      // Admin SDK: la primera pasada puede venir con null aunque haya datos;
+      // nunca se aborta, así la reintenta con el valor real del server.
+      outcome = applyGalleryOp(galleryFromDb(current), op);
+      return outcome.error ? current : galleryToDb(outcome.list);
+    });
+    if (!res.committed) return GALLERY_ERROR;
+    if (outcome.error) return { ok: false, error: outcome.error };
+    await deleteStoredPhotos(outcome.removed);
+    if (auditAction) {
+      await audit(db, staff, auditAction, outcome.target, auditDetails);
+    }
+  } catch (error) {
+    return GALLERY_ERROR;
+  }
+  return publishSite();
+}
+
+export async function adminSaveGalleryTournament({ id, name, categories } = {}) {
+  const blocked = await siteWriteBlocked();
+  if (blocked) return blocked;
+  if (id) {
+    if (!isId(id)) return INVALID;
+    return runGalleryOp({ type: "renameTournament", id, name, categories });
+  }
+  const newId = getDb().ref("siteContent/gallery").push().key;
+  return runGalleryOp(
+    { type: "addTournament", id: newId, name, categories },
+    "SITIO_TORNEO_NUEVO",
+    "Torneo agregado a la galería",
+  );
+}
+
+/** Borra un torneo entero con sus fotos: como todo borrado, pide PIN del equipo. */
+export async function adminDeleteGalleryTournament(id, pin, reason) {
+  const blocked = await siteWriteBlocked();
+  if (blocked) return blocked;
+  if (!isId(id)) return INVALID;
+  const auth = await authorizeStaff(pin);
+  if (auth.error) return { ok: false, error: auth.error };
+  return runGalleryOp(
+    { type: "deleteTournament", id },
+    "SITIO_TORNEO_BORRAR",
+    reason ? `Motivo: ${clip(reason, 200)}` : "Torneo y sus fotos quitados de la galería",
+    auth.staff,
+  );
+}
+
+export async function adminMoveGalleryTournament(id, direction) {
+  const blocked = await siteWriteBlocked();
+  if (blocked) return blocked;
+  if (!isId(id) || !["up", "down"].includes(direction)) return INVALID;
+  return runGalleryOp({ type: "moveTournament", id, direction });
+}
+
+/** FormData { tournamentId, kind: "jugadores"|"ganadores", file } */
+export async function adminAddGalleryPhoto(formData) {
+  const blocked = await siteWriteBlocked({ upload: true });
+  if (blocked) return blocked;
+  const tournamentId = String(formData?.get?.("tournamentId") || "");
+  const kind = String(formData?.get?.("kind") || "");
+  if (!isId(tournamentId) || !["jugadores", "ganadores"].includes(kind)) {
+    return INVALID;
+  }
+
+  const uploaded = await uploadSitePhoto(formData.get("file"), `torneo-${kind}`);
+  if (uploaded.error) return { ok: false, error: uploaded.error };
+
+  const photoId = getDb().ref("siteContent/gallery").push().key;
+  const res = await runGalleryOp({
+    type: "addPhoto",
+    id: tournamentId,
+    kind,
+    photo: { id: photoId, src: uploaded.url },
+  });
+  if (!res.ok) await deleteStoredPhotos([uploaded.url]);
+  return res;
+}
+
+export async function adminRemoveGalleryPhoto({ tournamentId, kind, photoId } = {}) {
+  const blocked = await siteWriteBlocked();
+  if (blocked) return blocked;
+  if (!isId(tournamentId) || !isId(photoId)) return INVALID;
+  return runGalleryOp(
+    { type: "removePhoto", id: tournamentId, kind, photoId },
+    "SITIO_FOTO_QUITAR",
+    `Foto quitada de ${kind === "ganadores" ? "ganadores" : "jugadores"}`,
+  );
+}
+
+export async function adminSetGalleryPhotoLabel({ tournamentId, photoId, label } = {}) {
+  const blocked = await siteWriteBlocked();
+  if (blocked) return blocked;
+  if (!isId(tournamentId) || !isId(photoId)) return INVALID;
+  return runGalleryOp({ type: "labelPhoto", id: tournamentId, photoId, label });
 }
 
 /* ==========================================================================

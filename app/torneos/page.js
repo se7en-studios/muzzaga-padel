@@ -5,6 +5,7 @@ import BottomNav from "../../components/BottomNav";
 import TorneosGallery from "../../components/TorneosGallery";
 import { CLUB_INFO } from "../../data/club";
 import { pageMetadata } from "../../lib/pageMeta";
+import { getSiteContent } from "../../lib/siteContentServer";
 
 export const metadata = pageMetadata({
   title: "Torneos de pádel en Catriel · Muzzaga Pádel",
@@ -13,7 +14,12 @@ export const metadata = pageMetadata({
   path: "/torneos",
 });
 
-export default function TorneosPage() {
+// Las fotos se cargan desde Configuración → Sitio web: se regenera cada 5 min
+// y al guardar cambios en la galería.
+export const revalidate = 300;
+
+export default async function TorneosPage() {
+  const { gallery } = await getSiteContent();
   return (
     <>
       <Header />
@@ -69,7 +75,7 @@ export default function TorneosPage() {
               (el componente, con jugadores de ejemplo, queda en components/). */}
         </div>
 
-        <TorneosGallery />
+        <TorneosGallery tournaments={gallery} />
       </main>
       <Footer />
       <BottomNav />

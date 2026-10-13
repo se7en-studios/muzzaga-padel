@@ -92,33 +92,21 @@ function IconShower() {
   );
 }
 
-// Fotos del club del 12/10/2026 (public/img/club): canchas, iluminación,
-// cantina y vestuarios. El resto son de la sesión anterior.
-// Mapeo verificado mirando cada foto real (los nombres de archivo venían de
-// otra sesión y no coinciden con el contenido: court_blue_glass.jpg es en
-// realidad la mesa del living viendo TV, match_action_led.jpg es un café con
-// la cancha de fondo, etc). No hay foto real de "alquiler de paletas": se
-// sacó esa feature en vez de ilustrarla con una imagen que no la muestra.
-// Los nombres de archivo engañan (no se renombran para no romper links):
-// lounge_tv_table.jpg es una cancha vacía con las luces prendidas,
-// court_blue_glass.jpg es el living con la pantalla y gente mirando, y
-// match_action_led.jpg es un café en la barra con la cancha atrás.
-// Ninguna foto de acá se repite en la cantina ni en torneos de la home.
+// La foto de cada tarjeta sale de Configuración → Sitio web (slot
+// `inst-<id>` en lib/siteContent.js, que también tiene las de por defecto).
+// No hay foto real de "alquiler de paletas": se sacó esa feature en vez de
+// ilustrarla con una imagen que no la muestra.
 const FEATURES = [
   {
     id: "canchas",
     label: "Canchas de cristal",
     icon: IconCourt,
-    image: "/img/club/canchas-vista.jpg",
-    alt: "Las dos canchas de cristal con césped azul vistas desde el pasillo central",
     description: "2 canchas de cristal templado con rebote parejo.",
   },
   {
     id: "led",
     label: "Iluminación LED",
     icon: IconBulb,
-    image: "/img/club/iluminacion-led.jpg",
-    alt: "Jugador en la cancha de cristal de noche, con las luces LED prendidas",
     description:
       "Luz LED en todas las canchas para jugar de noche sin perder nitidez.",
   },
@@ -126,24 +114,18 @@ const FEATURES = [
     id: "cantina",
     label: "Cantina propia",
     icon: IconCantina,
-    image: "/img/club/cantina-torta.jpg",
-    alt: "Torta casera sobre la mesa de la cantina, con las canchas de fondo",
     description: "Pizzas caseras, minutas y bebidas para el tercer tiempo.",
   },
   {
     id: "torneos",
     label: "Torneos todo el año",
     icon: IconTrophy,
-    image: "/img/torneos/junio/jugadores_12.jpg",
-    alt: "Cuatro jugadores posando en la red, Torneo Junio 2026",
     description: "Torneos y ligas internas durante toda la temporada.",
   },
   {
     id: "living",
     label: "Living y tercer tiempo",
     icon: IconSofa,
-    image: "/img/court_blue_glass.jpg",
-    alt: "El living de la cantina lleno, mirando un partido en la pantalla",
     description:
       "Pantalla grande, mesas y buena previa para quedarte después de jugar.",
   },
@@ -151,8 +133,6 @@ const FEATURES = [
     id: "vestuarios",
     label: "Vestuarios y duchas",
     icon: IconShower,
-    image: "/img/club/vestuario-duchas.jpg",
-    alt: "Vestuario con dos duchas con cortina y un banco de madera",
     description: "Duchas y baños para cambiarte después de jugar.",
   },
 ];
@@ -173,7 +153,7 @@ const wrap = (min, max, v) => {
   return ((((v - min) % rangeSize) + rangeSize) % rangeSize) + min;
 };
 
-export default function FeatureCarousel() {
+export default function FeatureCarousel({ photos }) {
   const [step, setStep] = useState(0);
   const wrapRef = useRef(null);
   const [inView, setInView] = useState(false);
@@ -291,6 +271,7 @@ export default function FeatureCarousel() {
               const isActive = status === "active";
               const isPrev = status === "prev";
               const isNext = status === "next";
+              const photo = photos[`inst-${feature.id}`];
 
               return (
                 <motion.div
@@ -325,8 +306,8 @@ export default function FeatureCarousel() {
                   {/* La tarjeta mide 320 × 400 (420 × 525 desde 1024): next/image
                       sirve ese ancho en vez del archivo entero. */}
                   <Image
-                    src={feature.image}
-                    alt={feature.alt}
+                    src={photo.src}
+                    alt={photo.alt}
                     fill
                     sizes="(max-width: 1023px) 320px, 420px"
                     draggable={false}
