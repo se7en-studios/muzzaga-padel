@@ -5,7 +5,7 @@
 // íconos son los mismos SVG inline que ya usa AmenitiesSection, y las fotos
 // son las reales del club (public/img), no placeholders de stock.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, MotionConfig } from "motion/react";
 import Image from "next/image";
 
@@ -164,6 +164,9 @@ const ITEM_HEIGHT = 52;
 // Deslizar la foto: pasa si se arrastró más que esto o se soltó rápido.
 const SWIPE_PX = 50;
 const SWIPE_VELOCITY = 400;
+// Rotación automática: da tiempo a leer el texto de cada foto. Cada toque o
+// deslizamiento reinicia la cuenta (el efecto depende de `step`).
+const AUTOPLAY_MS = 5500;
 
 const wrap = (min, max, v) => {
   const rangeSize = max - min;
@@ -172,6 +175,11 @@ const wrap = (min, max, v) => {
 
 export default function FeatureCarousel() {
   const [step, setStep] = useState(0);
+  const wrapRef = useRef(null);
+  const [inView, setInView] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isTabVisible, setIsTabVisible] = useState(true);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   const currentIndex =
     ((step % FEATURES.length) + FEATURES.length) % FEATURES.length;
@@ -181,8 +189,41 @@ export default function FeatureCarousel() {
     if (diff > 0) setStep((s) => s + diff);
   };
 
-  // Sin autoplay: pasaba solo cada 3,5 s mientras el texto de al lado se
-  // leía. Ahora avanza cuando lo tocás.
+  // Preferencias y visibilidad: solo rota si la sección se ve en pantalla, la
+  // pestaña está activa, no hay "reducir movimiento" y nadie la está usando.
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onMotion = () => setReduceMotion(mq.matches);
+    const onVisibility = () => setIsTabVisible(!document.hidden);
+    onMotion();
+    onVisibility();
+    mq.addEventListener("change", onMotion);
+    document.addEventListener("visibilitychange", onVisibility);
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.4 },
+    );
+    if (wrapRef.current) observer.observe(wrapRef.current);
+    return () => {
+      mq.removeEventListener("change", onMotion);
+      document.removeEventListener("visibilitychange", onVisibility);
+      observer.disconnect();
+    };
+  }, []);
+
+  const shouldAutoplay = inView && isTabVisible && !isPaused && !reduceMotion;
+  useEffect(() => {
+    if (!shouldAutoplay) return undefined;
+    const id = setTimeout(() => setStep((s) => s + 1), AUTOPLAY_MS);
+    return () => clearTimeout(id);
+  }, [shouldAutoplay, step]);
+
+  // El mouse encima pausa la rotación; en celular no hay "encima", así que ahí
+  // solo manda el reinicio de la cuenta al tocar o deslizar.
+  const pauseProps = {
+    onPointerEnter: (e) => e.pointerType === "mouse" && setIsPaused(true),
+    onPointerLeave: (e) => e.pointerType === "mouse" && setIsPaused(false),
+  };
 
   const getCardStatus = (index) => {
     const diff = index - currentIndex;
@@ -200,7 +241,7 @@ export default function FeatureCarousel() {
   // opacidad.
   return (
     <MotionConfig reducedMotion="user">
-    <div className="fc-wrap">
+    <div className="fc-wrap" ref={wrapRef} {...pauseProps}>
       <div className="fc-frame">
         <div className="fc-nav">
           <div className="fc-nav-fade fc-nav-fade-top" />
