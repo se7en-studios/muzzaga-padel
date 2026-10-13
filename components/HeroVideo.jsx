@@ -24,8 +24,29 @@ export default function HeroVideo() {
     const connection = navigator.connection;
     const saveData = connection?.saveData === true;
     if (reduceMotion || saveData) return;
-    // Con 2G/3G se manda la versión liviana; con buena señal, la nítida.
-    setSrc(SLOW_CONNECTIONS.includes(connection?.effectiveType) ? SRC_LIGHT : SRC_HD);
+    const chosen = SLOW_CONNECTIONS.includes(connection?.effectiveType)
+      ? SRC_LIGHT
+      : SRC_HD;
+    // El video se pide recién cuando la página terminó de cargar y el
+    // navegador está libre: si se bajaba antes, sus megas competían con la
+    // foto y el texto del hero y la pantalla tardaba más en verse.
+    let idleId = null;
+    let timerId = null;
+    const start = () => setSrc(chosen);
+    const whenIdle = () => {
+      if ("requestIdleCallback" in window) {
+        idleId = window.requestIdleCallback(start, { timeout: 3000 });
+      } else {
+        timerId = window.setTimeout(start, 1500);
+      }
+    };
+    if (document.readyState === "complete") whenIdle();
+    else window.addEventListener("load", whenIdle, { once: true });
+    return () => {
+      window.removeEventListener("load", whenIdle);
+      if (idleId !== null) window.cancelIdleCallback(idleId);
+      if (timerId !== null) window.clearTimeout(timerId);
+    };
   }, []);
 
   if (!src) return null;

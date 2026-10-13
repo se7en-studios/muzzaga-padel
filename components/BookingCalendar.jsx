@@ -356,7 +356,6 @@ export default function BookingCalendar({
             key={day.iso}
             type="button"
             className={`booking-date-btn${day.iso === activeDate ? " active" : ""}${day.closed ? " is-closed" : ""}`}
-            aria-label={day.closed ? `${day.fullLabel}, cerrado` : undefined}
             onClick={() => {
               userChoseDay.current = true;
               setAutoNotice(null);
@@ -374,6 +373,7 @@ export default function BookingCalendar({
             </span>
             <span className="booking-date-num">{day.dayNumber}</span>
             <span className="booking-date-month">{day.monthName}</span>
+            {day.closed && <span className="sr-only">, cerrado</span>}
           </button>
         ))}
       </ScrollRow>

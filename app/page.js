@@ -134,7 +134,7 @@ export default async function Home() {
 
           <div className="hero-night-visual" aria-hidden="true">
             <div className="hero-mascot-ring" />
-            <HeroMascot src="/img/mascotas/muzzaguito-lentes-hero.webp" width={1024} height={935} />
+            <HeroMascot src="/img/mascotas/muzzaguito-lentes-hero.webp" width={720} height={657} />
             <div className="hero-float-card hero-float-price">
               <span className="hero-float-label">{priceFrom ? "Turno desde" : "Turno"} · {config.slotDurationMin} min</span>
               <strong>${pricing.total.toLocaleString("es-AR")}</strong>

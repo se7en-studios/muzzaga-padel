@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 const DURATION_MS = 1400;
 
-/** Número que cuenta desde 0 cuando entra en pantalla. Sin JS o con
- *  reduced-motion muestra el valor final directo. */
+/** Número que cuenta desde 0 cuando aparece al hacer scroll. Sin JS, con
+ *  reduced-motion, o si ya está a la vista al cargar la página (el hero),
+ *  muestra el valor final directo: contar desde 0 arriba de todo retrasaba
+ *  cuándo terminaba de verse la pantalla y se veía parpadear el número. */
 export default function StatCounter({ value, prefix = "", suffix = "" }) {
   const ref = useRef(null);
   const [shown, setShown] = useState(value);
@@ -15,6 +17,8 @@ export default function StatCounter({ value, prefix = "", suffix = "" }) {
     if (!el || !("IntersectionObserver" in window)) return;
     if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches)
       return;
+
+    if (el.getBoundingClientRect().top < window.innerHeight) return;
 
     let raf;
     setShown(0);
