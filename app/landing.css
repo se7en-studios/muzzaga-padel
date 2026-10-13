@@ -59,6 +59,14 @@ body {
   opacity: 1;
 }
 
+/* En celular el video horizontal se recorta: se ancla a la izquierda para
+   que se vea la cancha de ese lado. */
+@media (max-width: 768px) {
+  .hero-night-video {
+    object-position: 0% 55%;
+  }
+}
+
 .hero-night-photo::after {
   content: "";
   position: absolute;
