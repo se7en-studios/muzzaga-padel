@@ -23,9 +23,15 @@ export async function POST(req) {
       url.searchParams.get("id");
 
     // Con MP_WEBHOOK_SECRET cargado (panel de MP > Webhooks), solo aceptamos
-    // notificaciones firmadas por Mercado Pago. Sin la variable se saltea,
-    // pero el chequeo de monto de abajo sigue siendo obligatorio.
+    // notificaciones firmadas por Mercado Pago. En producción es obligatorio:
+    // sin la variable el webhook no procesa nada (en desarrollo se saltea).
     const secret = process.env.MP_WEBHOOK_SECRET;
+    if (!secret && process.env.NODE_ENV === "production") {
+      console.error(
+        "Webhook de Mercado Pago rechazado: falta MP_WEBHOOK_SECRET en producción.",
+      );
+      return NextResponse.json({ received: false }, { status: 503 });
+    }
     if (
       secret &&
       !verifyWebhookSignature({
@@ -95,12 +101,26 @@ export async function POST(req) {
       return NextResponse.json({ received: true, status });
     }
 
-    await found.ref.update({
-      paymentStatus: "approved",
-      paymentId: String(paymentId),
-      paidAmount: transaction_amount,
-      paidAt: Date.now(),
+    // Idempotente: una notificación repetida o un segundo pago no pisa el
+    // primero, y una reserva cancelada no vuelve a quedar como paga.
+    const result = await found.ref.transaction((current) => {
+      if (current === null) return null; // RTDB reintenta con el valor real
+      if (current.paymentStatus === "approved") return;
+      if (current.status === "cancelado") return;
+      return {
+        ...current,
+        paymentStatus: "approved",
+        paymentId: String(paymentId),
+        paidAmount: transaction_amount,
+        paidAt: Date.now(),
+      };
     });
+    if (!result.committed) {
+      console.warn(
+        `Pago ${paymentId} NO aplicado a ${external_reference}: la reserva ya estaba paga o cancelada. Revisar en Mercado Pago.`,
+      );
+      return NextResponse.json({ received: true, status });
+    }
     console.log(`Pago ${paymentId} aprobado y registrado para ${external_reference}`);
 
     return NextResponse.json({ received: true, status });

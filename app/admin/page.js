@@ -44,6 +44,7 @@ import ConfiguracionView from "./views/ConfiguracionView";
 import CreateBookingModal from "./CreateBookingModal";
 import BookingDetailModal from "./BookingDetailModal";
 import StaffPinModal from "./ui/StaffPinModal";
+import { usePinGate } from "./ui/usePinGate";
 import { ICON_PROPS, NAV_GROUPS, NAV_ITEMS, findNavItem } from "./nav";
 import { Toaster, useToasts } from "./ui/Toaster";
 import CommandPalette from "./ui/CommandPalette";
@@ -80,6 +81,7 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
+  const { ask: askPin, pinModal } = usePinGate();
   const [cancelSeriesTarget, setCancelSeriesTarget] = useState(null);
 
   // Vista activa del sidebar
@@ -342,8 +344,15 @@ export default function AdminPage() {
   }
 
   async function handleToggleTest(booking) {
-    const res = await adminSetTestFlag("bookings", booking.id, !booking.isTest);
-    if (!res.ok) return showError(res, "No se pudo actualizar el turno.");
+    const res = await askPin(
+      {
+        title: booking.isTest ? "Volver a contar el turno" : "Marcar como prueba",
+        description:
+          "Marcar un turno como prueba lo saca de los totales. Lo autoriza un Administrador o Encargado.",
+      },
+      ({ pin }) => adminSetTestFlag("bookings", booking.id, !booking.isTest, pin),
+    );
+    if (!res) return;
     refreshMoney();
     loadClients();
     showToast(
@@ -388,9 +397,18 @@ export default function AdminPage() {
   }
 
   async function handleRemovePayment(paymentId) {
-    if (!detailBooking || !confirm("¿Eliminar este cobro?")) return;
-    const res = await adminRemovePayment(detailBooking.id, paymentId);
-    if (!res.ok) return showError(res, "No se pudo eliminar el cobro.");
+    if (!detailBooking) return;
+    const bookingId = detailBooking.id;
+    const res = await askPin(
+      {
+        title: "Eliminar cobro",
+        description: "Ingresá tu PIN para eliminar este cobro. Queda registrado a tu nombre.",
+        confirmButtonText: "Eliminar cobro",
+        confirmButtonTone: "danger",
+      },
+      ({ pin }) => adminRemovePayment(bookingId, paymentId, pin),
+    );
+    if (!res) return;
     refreshMoney();
     showToast("Cobro eliminado");
   }
@@ -995,6 +1013,8 @@ export default function AdminPage() {
           }}
         />
       )}
+
+      {pinModal}
 
       {/* PIN de staff para cancelar un turno (libera el horario) */}
       {cancelTarget && (

@@ -58,17 +58,6 @@ function IconCantina() {
   );
 }
 
-function IconUsers() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
-
 function IconTrophy() {
   return (
     <svg {...ICON_PROPS}>
@@ -89,6 +78,22 @@ function IconSofa() {
   );
 }
 
+function IconShower() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M4 21V6a3 3 0 0 1 3-3h1" />
+      <path d="M8 3a6 6 0 0 1 6 6H8" />
+      <line x1="9" y1="13" x2="9" y2="14" />
+      <line x1="12" y1="13" x2="12" y2="14" />
+      <line x1="15" y1="13" x2="15" y2="14" />
+      <line x1="10.5" y1="17" x2="10.5" y2="18" />
+      <line x1="13.5" y1="17" x2="13.5" y2="18" />
+    </svg>
+  );
+}
+
+// Fotos del club del 12/10/2026 (public/img/club): canchas, iluminación,
+// cantina y vestuarios. El resto son de la sesión anterior.
 // Mapeo verificado mirando cada foto real (los nombres de archivo venían de
 // otra sesión y no coinciden con el contenido: court_blue_glass.jpg es en
 // realidad la mesa del living viendo TV, match_action_led.jpg es un café con
@@ -104,16 +109,16 @@ const FEATURES = [
     id: "canchas",
     label: "Canchas de cristal",
     icon: IconCourt,
-    image: "/img/court_bench_players.jpg",
-    alt: "Cancha de cristal con césped azul y un banco al costado",
+    image: "/img/club/canchas-vista.jpg",
+    alt: "Las dos canchas de cristal con césped azul vistas desde el pasillo central",
     description: "2 canchas de cristal templado con rebote parejo.",
   },
   {
     id: "led",
     label: "Iluminación LED",
     icon: IconBulb,
-    image: "/img/lounge_tv_table.jpg",
-    alt: "Cancha vacía con las luces LED prendidas",
+    image: "/img/club/iluminacion-led.jpg",
+    alt: "Jugador en la cancha de cristal de noche, con las luces LED prendidas",
     description:
       "Luz LED en todas las canchas para jugar de noche sin perder nitidez.",
   },
@@ -121,17 +126,9 @@ const FEATURES = [
     id: "cantina",
     label: "Cantina propia",
     icon: IconCantina,
-    image: "/img/match_action_led.jpg",
-    alt: "Café en la barra de la cantina con un partido de fondo",
+    image: "/img/club/cantina-torta.jpg",
+    alt: "Torta casera sobre la mesa de la cantina, con las canchas de fondo",
     description: "Pizzas caseras, minutas y bebidas para el tercer tiempo.",
-  },
-  {
-    id: "comunidad",
-    label: "Canchas Abiertas",
-    icon: IconUsers,
-    image: "/img/court_spectators.jpg",
-    alt: "Gente mirando un partido desde el costado de la cancha",
-    description: "Partidos comunitarios para sumarte aunque vengas solo.",
   },
   {
     id: "torneos",
@@ -149,6 +146,14 @@ const FEATURES = [
     alt: "El living de la cantina lleno, mirando un partido en la pantalla",
     description:
       "Pantalla grande, mesas y buena previa para quedarte después de jugar.",
+  },
+  {
+    id: "vestuarios",
+    label: "Vestuarios y duchas",
+    icon: IconShower,
+    image: "/img/club/vestuario-duchas.jpg",
+    alt: "Vestuario con dos duchas con cortina y un banco de madera",
+    description: "Duchas y baños para cambiarte después de jugar.",
   },
 ];
 

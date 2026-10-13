@@ -22,6 +22,7 @@ import { getClubConfig } from "../lib/clubConfigServer";
 import { CLUB_INFO } from "../data/club";
 import { todayInClub } from "../lib/booking";
 import { FAQS } from "../data/faq";
+import HeroVideo from "../components/HeroVideo";
 
 export const metadata = {
   alternates: { canonical: "/" },
@@ -87,6 +88,7 @@ export default async function Home() {
             // el celular recibía 828 px para cubrir 2570 px de pantalla.
             sizes="(max-width: 480px) 330vw, (max-width: 900px) 170vw, 100vw"
           />
+          <HeroVideo />
         </div>
         <svg className="hero-court-lines" viewBox="0 0 1200 600" preserveAspectRatio="none" aria-hidden="true">
           <path d="M150 600 L420 160 L780 160 L1050 600" />

@@ -15,10 +15,6 @@ export const FAQS = [
     a: "Sí, tenemos tubos de pelotas nuevas presurizadas, cubre grips y accesorios a la venta en la cantina, y podés consultar disponibilidad de paletas para jugar.",
   },
   {
-    q: "¿Cómo funcionan las Canchas Abiertas?",
-    a: "¿Te falta gente para completar o querés jugar pero no tenés pareja? Podés ver los partidos convocados en la sección Canchas Abiertas de esta web o publicar tu propia convocatoria eligiendo tu categoría (7ma, 6ta o 5ta). Al sumarte, reservás tu lugar individual y te conectás con nuevos jugadores del club.",
-  },
-  {
     q: "¿Con cuánta anticipación puedo cancelar o reprogramar?",
     a: "Avisanos por WhatsApp lo antes posible y coordinamos la reprogramación de tu turno para otro día u horario disponible.",
   },
