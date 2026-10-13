@@ -74,9 +74,16 @@ function greetingWord() {
   return "Buenas noches";
 }
 
+// Pasado este tiempo sin respuesta se ofrece reintentar (la verificación
+// normal tarda menos de medio segundo).
+const SESSION_SLOW_MS = 8000;
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
+  // "slow" | "error" cuando la verificación no vuelve: sin esto la pantalla
+  // quedaba en "Verificando sesión…" para siempre ante un corte de red.
+  const [sessionProblem, setSessionProblem] = useState(null);
   const [pinInput, setPinInput] = useState("");
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
@@ -145,13 +152,22 @@ export default function AdminPage() {
   // ni falsearla, así que le preguntamos al servidor si sigue vigente.
   useEffect(() => {
     let cancelled = false;
-    checkAdminSession().then((res) => {
-      if (cancelled) return;
-      setIsAuthenticated(res.ok);
-      setSessionChecked(true);
-    });
+    const slowTimer = setTimeout(() => {
+      if (!cancelled) setSessionProblem((p) => p || "slow");
+    }, SESSION_SLOW_MS);
+    checkAdminSession()
+      .then((res) => {
+        if (cancelled) return;
+        setIsAuthenticated(res.ok);
+        setSessionChecked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setSessionProblem("error");
+      })
+      .finally(() => clearTimeout(slowTimer));
     return () => {
       cancelled = true;
+      clearTimeout(slowTimer);
     };
   }, []);
 
@@ -528,9 +544,43 @@ export default function AdminPage() {
   if (!sessionChecked) {
     return (
       <div className="admin-login-wrapper">
-        <p style={{ color: "var(--color-muted)", fontSize: 15.5 }}>
-          Verificando sesión…
-        </p>
+        {/* Con un problema va en la tarjeta del login: suelto, el texto gris
+            casi no se lee sobre la foto de fondo. */}
+        <div
+          role="status"
+          className={sessionProblem ? "admin-login-card" : undefined}
+          style={{ textAlign: "center" }}
+        >
+          <p style={{ color: "var(--color-muted)", fontSize: 15.5 }}>
+            {sessionProblem === "error"
+              ? "No se pudo verificar la sesión."
+              : "Verificando sesión…"}
+          </p>
+          {sessionProblem && (
+            <>
+              <p
+                style={{
+                  color: "var(--color-muted)",
+                  fontSize: 14,
+                  margin: "6px 0 14px",
+                }}
+              >
+                {sessionProblem === "error"
+                  ? "Revisá la conexión a internet y probá de nuevo."
+                  : "Está tardando más de lo normal."}
+              </p>
+              {/* Recarga en vez de volver a llamar al action: Next corre los
+                  server actions de a uno, y uno colgado deja en cola al resto. */}
+              <button
+                type="button"
+                className="btn btn-linear-primary"
+                onClick={() => window.location.reload()}
+              >
+                Reintentar
+              </button>
+            </>
+          )}
+        </div>
       </div>
     );
   }
