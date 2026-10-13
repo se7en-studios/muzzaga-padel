@@ -19,6 +19,7 @@ import HeroMascot from "../components/HeroMascot";
 import "./landing.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
+import { publicPayment } from "../lib/clubConfig";
 import { CLUB_INFO } from "../data/club";
 import { todayInClub } from "../lib/booking";
 import { FAQS } from "../data/faq";
@@ -209,7 +210,13 @@ export default async function Home() {
             </div>
           </div>
 
-          <BookingCalendar serverToday={todayInClub()} mpEnabled={Boolean(process.env.MP_ACCESS_TOKEN)} />
+          <BookingCalendar
+            serverToday={todayInClub()}
+            mpEnabled={Boolean(process.env.MP_ACCESS_TOKEN)}
+            payment={publicPayment(config)}
+            schedule={config.schedule}
+            blockedDates={config.blockedDates}
+          />
         </div>
       </section>
 

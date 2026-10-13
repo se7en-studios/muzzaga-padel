@@ -1174,6 +1174,12 @@ select:focus-visible,
   transform: translateY(-1px);
 }
 
+/* Día cerrado (domingo o fecha bloqueada): se ve apagado, pero sigue tocable
+   para que aparezca el aviso de "cerrado". */
+.booking-date-btn.is-closed:not(.active) {
+  opacity: 0.45;
+}
+
 .booking-date-btn.active {
   background: #000000;
   border-color: #000000;
@@ -1262,6 +1268,18 @@ select:focus-visible,
   border-color: #000000;
   color: #ffffff;
   font-weight: 600;
+}
+
+/* Aviso cuando se saltó solo al próximo día con turnos libres. */
+.booking-auto-notice {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-ink);
+  background: var(--color-accent-orange-soft, rgba(232, 114, 42, 0.12));
+  border: 1px solid var(--color-accent-orange-border, rgba(232, 114, 42, 0.35));
+  border-radius: var(--radius-md);
 }
 
 .booking-empty {
@@ -8255,4 +8273,78 @@ textarea:focus-visible {
 .pass-copy-btn:active,
 .floating-live-action:active {
   transform: scale(0.98);
+}
+
+/* Cartel "Instalar app": solo celular, arriba de la pastilla de navegación. */
+.install-prompt {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  max-width: 480px;
+  margin-inline: auto;
+  bottom: calc(
+    var(--bottom-pill-gap) + var(--bottom-pill-h) + 12px +
+      env(safe-area-inset-bottom, 0px)
+  );
+  z-index: 98;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  color: var(--color-ink);
+}
+
+.install-prompt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--color-muted);
+}
+
+.install-prompt-text strong {
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
+.install-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  flex: none;
+}
+
+.install-prompt-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-accent-orange, #e8722a);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.install-prompt-dismiss {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+@media (min-width: 769px) {
+  .install-prompt {
+    display: none;
+  }
 }

@@ -7,7 +7,13 @@ import { MaybePortal } from "./Portal";
 import ScrollRow from "./ScrollRow";
 import { scrollBehavior } from "../lib/motion";
 import useMediaQuery from "../lib/useMediaQuery";
-import { COURTS, nextDays, priceForSlot, todayInClub } from "../lib/booking";
+import {
+  COURTS,
+  isoWeekday,
+  nextDays,
+  priceForSlot,
+  todayInClub,
+} from "../lib/booking";
 import { PICK_SLOT_EVENT } from "../lib/pickSlot";
 import { toWhatsappNumber } from "../lib/phone";
 import { trackEvent } from "../lib/analytics";
@@ -32,7 +38,15 @@ function buildWhatsappUrl(bookingCode, booking) {
 // serverToday: el "hoy" con el que se renderizó el HTML (la home es ISR). Se
 // usa para el primer render así server y cliente coinciden; después del
 // montaje se corrige si ya cambió el día (ej. HTML cacheado antes de medianoche).
-export default function BookingCalendar({ serverToday, mpEnabled = false }) {
+export default function BookingCalendar({
+  serverToday,
+  mpEnabled = false,
+  payment = null,
+  // Horario y días bloqueados de Configuración: de ahí sale qué días se ven
+  // cerrados en el selector (antes se asumía "domingo cerrado" fijo).
+  schedule = null,
+  blockedDates = [],
+}) {
   const [days, setDays] = useState(() => nextDays(DAY_COUNT, serverToday));
   const [activeDate, setActiveDate] = useState(days[0].iso);
   // Turno pedido desde afuera (widget "turnos libres hoy"): se selecciona
@@ -102,6 +116,8 @@ export default function BookingCalendar({ serverToday, mpEnabled = false }) {
     function onPick(e) {
       const { date, courtId, start } = e.detail || {};
       if (!date || !courtId || !start) return;
+      userChoseDay.current = true;
+      setAutoNotice(null);
       setCourtFilter("all");
       setConfirmed(null);
       setActiveDate(date);
@@ -189,7 +205,52 @@ export default function BookingCalendar({ serverToday, mpEnabled = false }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingPick, slots, slotsDate]);
 
-  const activeDay = days.find((d) => d.iso === activeDate);
+  const daysView = useMemo(
+    () =>
+      days.map((d) => ({
+        ...d,
+        closed: schedule
+          ? !schedule[isoWeekday(d.iso)]?.open || blockedDates.includes(d.iso)
+          : d.closed,
+      })),
+    [days, schedule, blockedDates],
+  );
+  const activeDay = daysView.find((d) => d.iso === activeDate);
+
+  // Si "hoy" ya no tiene turnos libres (de noche todos figuran "Finalizado",
+  // o está cerrado/agotado) y la persona todavía no eligió un día, se salta
+  // solo al próximo día con turnos, avisándole.
+  const userChoseDay = useRef(false);
+  const [autoNotice, setAutoNotice] = useState(null);
+  useEffect(() => {
+    if (userChoseDay.current || !slots || slotsDate !== activeDate) return undefined;
+    if (activeDate !== daysView[0].iso) return undefined;
+    if (slots.some((s) => s.available)) return undefined;
+    let cancelled = false;
+    (async () => {
+      for (const day of daysView.slice(1, 8)) {
+        if (day.closed) continue;
+        try {
+          const res = await fetch(`/api/availability?date=${day.iso}`);
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (!data.slots?.some((s) => s.available)) continue;
+          if (cancelled || userChoseDay.current) return;
+          setActiveDate(day.iso);
+          setAutoNotice(
+            `Hoy ya no quedan turnos libres: te mostramos ${day.fullLabel}.`,
+          );
+          return;
+        } catch {
+          // Si falla una consulta se prueba con el día siguiente.
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots, slotsDate, activeDate]);
 
   const visibleSlots = useMemo(() => {
     if (!slots) return null;
@@ -266,6 +327,7 @@ export default function BookingCalendar({ serverToday, mpEnabled = false }) {
         }),
       );
       setIsRemembered(true);
+      localStorage.setItem("muzzaga_has_booked", "1");
     } catch {}
     trackEvent("booking_submitted", {
       courtId: selected.courtId,
@@ -289,12 +351,15 @@ export default function BookingCalendar({ serverToday, mpEnabled = false }) {
         role="group"
         aria-label="Elegí el día"
       >
-        {days.map((day) => (
+        {daysView.map((day) => (
           <button
             key={day.iso}
             type="button"
-            className={`booking-date-btn${day.iso === activeDate ? " active" : ""}`}
+            className={`booking-date-btn${day.iso === activeDate ? " active" : ""}${day.closed ? " is-closed" : ""}`}
+            aria-label={day.closed ? `${day.fullLabel}, cerrado` : undefined}
             onClick={() => {
+              userChoseDay.current = true;
+              setAutoNotice(null);
               setActiveDate(day.iso);
               setSelected(null);
               setConfirmed(null);
@@ -336,9 +401,15 @@ export default function BookingCalendar({ serverToday, mpEnabled = false }) {
       </ScrollRow>
 
       <div ref={gridAreaRef} tabIndex={-1} className="booking-grid-area">
+        {autoNotice && (
+          <p className="booking-auto-notice" role="status">
+            {autoNotice}
+          </p>
+        )}
+
         {activeDay?.closed && (
           <p className="booking-empty">
-            Los domingos el club está cerrado. Elegí otro día.
+            El club está cerrado ese día. Elegí otro día.
           </p>
         )}
 
@@ -568,6 +639,9 @@ export default function BookingCalendar({ serverToday, mpEnabled = false }) {
                     </svg>
                     <input
                       type="text"
+                      name="name"
+                      autoComplete="name"
+                      autoCapitalize="words"
                       required
                       placeholder="Ej. Lucas Rossi"
                       value={form.playerName}
@@ -586,6 +660,9 @@ export default function BookingCalendar({ serverToday, mpEnabled = false }) {
                     </svg>
                     <input
                       type="tel"
+                      name="tel"
+                      autoComplete="tel"
+                      inputMode="tel"
                       required
                       placeholder="Ej. 299 597 4176"
                       value={form.playerPhone}
@@ -697,8 +774,13 @@ export default function BookingCalendar({ serverToday, mpEnabled = false }) {
             bookingCode={confirmed.bookingCode}
             booking={confirmed.booking}
             whatsappUrl={confirmed.whatsappUrl}
-            onClose={() => setConfirmed(null)}
+            onClose={() => {
+              setConfirmed(null);
+              // Le avisa al cartel "Instalar app" que ya hubo una reserva.
+              window.dispatchEvent(new Event("muzzaga:booked"));
+            }}
             mpEnabled={mpEnabled}
+            payment={payment}
           />
         </>
       )}
