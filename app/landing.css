@@ -43,6 +43,22 @@ body {
   object-position: center 40%;
 }
 
+/* Video de fondo (HeroVideo): tapa la foto y aparece con fade al poder reproducirse. */
+.hero-night-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 55%;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.hero-night-video.is-ready {
+  opacity: 1;
+}
+
 .hero-night-photo::after {
   content: "";
   position: absolute;
