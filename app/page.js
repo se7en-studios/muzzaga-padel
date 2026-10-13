@@ -19,6 +19,7 @@ import HeroMascot from "../components/HeroMascot";
 import "./landing.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
+import { publicPayment } from "../lib/clubConfig";
 import { CLUB_INFO } from "../data/club";
 import { todayInClub } from "../lib/booking";
 import { FAQS } from "../data/faq";
@@ -133,7 +134,7 @@ export default async function Home() {
 
           <div className="hero-night-visual" aria-hidden="true">
             <div className="hero-mascot-ring" />
-            <HeroMascot src="/img/mascotas/muzzaguito-lentes-hero.webp" width={1024} height={935} />
+            <HeroMascot src="/img/mascotas/muzzaguito-lentes-hero.webp" width={720} height={657} />
             <div className="hero-float-card hero-float-price">
               <span className="hero-float-label">{priceFrom ? "Turno desde" : "Turno"} · {config.slotDurationMin} min</span>
               <strong>${pricing.total.toLocaleString("es-AR")}</strong>
@@ -209,7 +210,13 @@ export default async function Home() {
             </div>
           </div>
 
-          <BookingCalendar serverToday={todayInClub()} mpEnabled={Boolean(process.env.MP_ACCESS_TOKEN)} />
+          <BookingCalendar
+            serverToday={todayInClub()}
+            mpEnabled={Boolean(process.env.MP_ACCESS_TOKEN)}
+            payment={publicPayment(config)}
+            schedule={config.schedule}
+            blockedDates={config.blockedDates}
+          />
         </div>
       </section>
 

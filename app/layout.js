@@ -2,6 +2,7 @@ import { Poppins, JetBrains_Mono, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import LightboxProvider from "../components/LightboxProvider";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
+import InstallPrompt from "../components/InstallPrompt";
 import { Analytics } from "@vercel/analytics/react";
 import { SITE_URL } from "../lib/site";
 
@@ -118,6 +119,7 @@ export default function RootLayout({ children }) {
       <body>
         <LightboxProvider>{children}</LightboxProvider>
         <ServiceWorkerRegister />
+        <InstallPrompt />
         <Analytics />
       </body>
     </html>

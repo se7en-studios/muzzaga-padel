@@ -11,9 +11,11 @@ import Mascota from "./Mascota";
 // todo. Un cliente que confiara en eso podía transferir la seña a una cuenta
 // que no existe. Mientras no haya un dato real para mostrar (vía env var),
 // mandamos a confirmarlo por WhatsApp en vez de fingir un número de cuenta.
-const REAL_ALIAS = process.env.NEXT_PUBLIC_PAYMENT_ALIAS || null;
-const REAL_CBU = process.env.NEXT_PUBLIC_PAYMENT_CBU || null;
-const TITULAR = process.env.NEXT_PUBLIC_PAYMENT_TITULAR || "Muzzaga Pádel";
+// Ahora el dato sale de Ajustes → Cobros del panel (prop `payment`); las env
+// vars quedan como respaldo.
+const ENV_ALIAS = process.env.NEXT_PUBLIC_PAYMENT_ALIAS || null;
+const ENV_CBU = process.env.NEXT_PUBLIC_PAYMENT_CBU || null;
+const ENV_TITULAR = process.env.NEXT_PUBLIC_PAYMENT_TITULAR || "Muzzaga Pádel";
 
 import { trackEvent } from "../lib/analytics";
 import { buildGoogleCalendarUrl, downloadIcsCalendar } from "../lib/calendar";
@@ -27,7 +29,11 @@ export default function BookingPassModal({
   // Solo con credenciales de Mercado Pago en el servidor. Sin ellas el botón
   // abría un "Modo demostración": ahora directamente no aparece.
   mpEnabled = false,
+  payment = null,
 }) {
+  const REAL_ALIAS = payment?.alias || ENV_ALIAS;
+  const REAL_CBU = payment?.cbu || ENV_CBU;
+  const TITULAR = payment?.titular || ENV_TITULAR;
   const [copiedField, setCopiedField] = useState(null);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [payingMp, setPayingMp] = useState(false);

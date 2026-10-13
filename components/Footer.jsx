@@ -96,7 +96,7 @@ export default function Footer() {
           {/* Links Grid */}
           <div className="footer-links-group">
             <div className="footer-col">
-              <h4 className="footer-col-title">Navegación</h4>
+              <h3 className="footer-col-title">Navegación</h3>
               <ul className="footer-links-list">
                 <li><a href="/#turnos">Elegí tu turno</a></li>
                 <li><a href="/#instalaciones">Instalaciones</a></li>
@@ -108,7 +108,7 @@ export default function Footer() {
             </div>
 
             <div className="footer-col">
-              <h4 className="footer-col-title">Club y Horarios</h4>
+              <h3 className="footer-col-title">Club y Horarios</h3>
               <div className="footer-club-info">
                 <div className="footer-info-row">
                   <span className="footer-info-bullet">📍</span>
@@ -130,14 +130,14 @@ export default function Footer() {
             </div>
 
             <div className="footer-col footer-col-admin">
-              <h4 className="footer-col-title">Administración</h4>
+              <h3 className="footer-col-title">Administración</h3>
               <p className="footer-admin-text">
                 Acceso exclusivo para el personal del club: agenda, turnos, caja y torneos.
               </p>
               <a
                 href="/admin"
                 className="footer-admin-card-btn"
-                aria-label="Ingresar al Panel de Administración"
+                aria-label="Panel de Control: administración del club"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
