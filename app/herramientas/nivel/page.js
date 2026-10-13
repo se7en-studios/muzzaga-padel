@@ -93,10 +93,10 @@ export default function NivelPage() {
                     ¿Querés jugar en tu nivel?
                   </h3>
                   <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: "0 0 12px" }}>
-                    En Canchas Abiertas armamos partidos parejos por categoría todas las semanas.
+                    Reservá un turno y armá tu partido con jugadores de tu categoría.
                   </p>
-                  <Link href="/#canchas-abiertas" className="btn btn-secondary" style={{ fontSize: 13, padding: "6px 14px" }}>
-                    Ver Canchas Abiertas →
+                  <Link href="/#turnos" className="btn btn-secondary" style={{ fontSize: 13, padding: "6px 14px" }}>
+                    Reservar turno →
                   </Link>
                 </div>
               </div>

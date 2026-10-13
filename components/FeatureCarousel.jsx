@@ -58,17 +58,6 @@ function IconCantina() {
   );
 }
 
-function IconUsers() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
-
 function IconTrophy() {
   return (
     <svg {...ICON_PROPS}>
@@ -140,14 +129,6 @@ const FEATURES = [
     image: "/img/club/cantina-torta.jpg",
     alt: "Torta casera sobre la mesa de la cantina, con las canchas de fondo",
     description: "Pizzas caseras, minutas y bebidas para el tercer tiempo.",
-  },
-  {
-    id: "comunidad",
-    label: "Canchas Abiertas",
-    icon: IconUsers,
-    image: "/img/court_spectators.jpg",
-    alt: "Gente mirando un partido desde el costado de la cancha",
-    description: "Partidos comunitarios para sumarte aunque vengas solo.",
   },
   {
     id: "torneos",
