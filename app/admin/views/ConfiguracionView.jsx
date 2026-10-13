@@ -8,6 +8,7 @@ import {
   CreditCard,
   Eye,
   EyeOff,
+  Images,
   Pencil,
   Plus,
   Store,
@@ -35,6 +36,7 @@ import { formatARS, formatDate, plural } from "../../../lib/format";
 import { Skeleton } from "../ui/states";
 import StaffPinModal from "../ui/StaffPinModal";
 import { usePinGate } from "../ui/usePinGate";
+import SitioWebSection from "./SitioWebSection";
 
 // Espejo del server (lib/staff.js no se puede importar en un componente
 // "use client": usa node:crypto para hashear PINs).
@@ -67,6 +69,7 @@ const SECTIONS = [
   { id: "cierres", label: "Cierres", icon: CalendarX },
   { id: "club", label: "Club", icon: Store },
   { id: "equipo", label: "Equipo", icon: Users },
+  { id: "sitio", label: "Sitio web", icon: Images },
 ];
 
 /** Próximo día de la semana `weekday` desde hoy, para previsualizar turnos. */
@@ -938,6 +941,12 @@ export default function ConfiguracionView({
             </>
           )}
         </section>
+
+        {/* SITIO WEB: fotos de la landing y galería de torneos */}
+        <SitioWebSection
+          onExpiredSession={onExpiredSession}
+          onToast={onToast}
+        />
       </div>
 
       {pinModal}

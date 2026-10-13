@@ -6,7 +6,7 @@ import Mascota from "./Mascota";
 
 const FEATURED_ITEMS = CALCULATOR_ITEMS.slice(0, 6);
 
-export default function HomeCantinaTeaser() {
+export default function HomeCantinaTeaser({ photos }) {
   return (
     <section
       id="cantina"
@@ -38,8 +38,8 @@ export default function HomeCantinaTeaser() {
         </div>
         <div className="cantina-photos">
           <BentoPhotoCard
-            src="/img/cantina_beer_court.jpg"
-            alt="Cerveza helada y vista a la pista en la cantina de Muzzaga"
+            src={photos["cantina-tercer-tiempo"].src}
+            alt={photos["cantina-tercer-tiempo"].alt}
             caption="Cantina Muzzaga · tercer tiempo con vista a las canchas"
             badge="Tercer tiempo"
             badgeClassName="badge-amber"
@@ -50,8 +50,8 @@ export default function HomeCantinaTeaser() {
           </BentoPhotoCard>
 
           <BentoPhotoCard
-            src="/img/bar_coffee_snacks.jpg"
-            alt="Empanadas caseras y el partido de la Selección en la pantalla de la cantina"
+            src={photos["cantina-cocina"].src}
+            alt={photos["cantina-cocina"].alt}
             caption="Cantina Muzzaga · empanadas y fútbol en la pantalla"
             badge="Cocina propia"
             badgeClassName="badge-emerald"

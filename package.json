@@ -21,6 +21,7 @@
   "homepage": "https://github.com/riquerofranco32-prog/muzzaga-padel#readme",
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.8.0",
     "firebase-admin": "^14.4.0",
     "lucide-react": "^1.47.0",
     "motion": "^13.4.1",

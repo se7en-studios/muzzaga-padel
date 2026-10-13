@@ -7,41 +7,12 @@ import { useLightbox } from "./LightboxProvider";
 import { CLUB_INFO } from "../data/club";
 import Mascota from "./Mascota";
 
-const FEATURED_PHOTOS = [
-  {
-    src: "/img/torneos/agosto/ganadores_1er_caballeros.jpg",
-    alt: "1er puesto 7ma Caballeros, Torneo Agosto 2026",
-    label: "1er puesto Caballeros",
-  },
-  {
-    src: "/img/torneos/agosto/ganadores_1er_damas.jpg",
-    alt: "1er puesto 7ma Damas, Torneo Agosto 2026",
-    label: "1er puesto Damas",
-  },
-  {
-    src: "/img/torneos/junio/ganadores_1er_puesto.jpg",
-    alt: "1er puesto 6ta Libre (G. Salinas y F. Alcalá)",
-    label: "1er puesto 6ta Libre",
-  },
-  {
-    src: "/img/torneos/agosto/jugadores_01.jpg",
-    alt: "Cuatro jugadores posando en la red, Torneo Agosto 2026",
-    label: "Caballeros de agosto",
-  },
-  {
-    src: "/img/torneos/agosto/jugadores_06.jpg",
-    alt: "Cuatro jugadoras posando en la red, Torneo Agosto 2026",
-    label: "Damas de agosto",
-  },
-  {
-    src: "/img/torneos/junio/jugadores_12.jpg",
-    alt: "Cuatro jugadores posando en la red, Torneo Junio 2026",
-    label: "Torneo de junio",
-  },
-];
+// Fotos y textos: Configuración → Sitio web → Torneos en el inicio.
+const FEATURED_SLOTS = ["torneo-1", "torneo-2", "torneo-3", "torneo-4", "torneo-5"];
 
-export default function HomeTorneosTeaser() {
+export default function HomeTorneosTeaser({ photos }) {
   const openLightbox = useLightbox();
+  const featured = FEATURED_SLOTS.map((id) => ({ id, ...photos[id] }));
 
   return (
     <section id="torneos" className="section-turnos" style={{ background: "var(--bg-surface)" }}>
@@ -53,7 +24,7 @@ export default function HomeTorneosTeaser() {
             </span>
             <h2 className="section-title">Torneos en Muzzaga</h2>
             <p className="section-desc">
-              Torneos por categoría todo el año. Mirá las fotos de junio y agosto y anotate para el próximo.
+              Torneos por categoría todo el año. Mirá las fotos de los últimos torneos y anotate para el próximo.
             </p>
           </div>
           <div className="mascot-section-badge">
@@ -87,15 +58,15 @@ export default function HomeTorneosTeaser() {
           </a>
         </div>
 
-        {/* GRILLA RESUMIDA DE 6 FOTOS */}
+        {/* GRILLA RESUMIDA DE 5 FOTOS */}
         <div className="torneo-thumb-grid torneo-bento">
-          {FEATURED_PHOTOS.slice(0, 5).map((photo, i) => (
+          {featured.map((photo, i) => (
             <button
               type="button"
-              key={photo.src}
+              key={photo.id}
               className="torneo-thumb"
               onClick={() => openLightbox(photo.src, photo.alt)}
-              aria-label={`Ampliar foto: ${photo.label}`}
+              aria-label={`Ampliar foto: ${photo.caption || photo.alt}`}
             >
               <Image
                 src={photo.src}
@@ -105,9 +76,11 @@ export default function HomeTorneosTeaser() {
                 // La primera ocupa dos columnas y dos filas del bento.
                 sizes={i === 0 ? "(max-width: 900px) 92vw, 570px" : "(max-width: 900px) 46vw, 280px"}
               />
-              <div className="torneo-thumb-badge">
-                <span>{photo.label}</span>
-              </div>
+              {photo.caption && (
+                <div className="torneo-thumb-badge">
+                  <span>{photo.caption}</span>
+                </div>
+              )}
             </button>
           ))}
         </div>

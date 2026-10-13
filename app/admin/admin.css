@@ -2227,6 +2227,337 @@
   }
 }
 
+/* ---------- Configuración → Sitio web (fotos de la landing) ---------- */
+.admin-root .admin-site-notice {
+  margin: 12px 0 0;
+  font-size: 13.5px;
+}
+
+.admin-root .admin-site-group {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.admin-root .admin-site-group-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.admin-root .admin-site-slots {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  /* De a dos aun en el celu: las de Instalaciones son verticales. */
+  grid-template-columns: repeat(auto-fill, minmax(min(150px, 45%), 1fr));
+  gap: 12px;
+}
+
+.admin-root .admin-site-slots.is-single {
+  grid-template-columns: minmax(0, 420px);
+}
+
+.admin-root .admin-site-slot {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+
+.admin-root .admin-site-thumb {
+  position: relative;
+  background: var(--surface-muted);
+}
+
+.admin-root :is(.admin-site-thumb, .admin-site-photo) img {
+  object-fit: cover;
+}
+
+.admin-root .admin-site-slot-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.admin-root .admin-site-slot-label {
+  font-size: 13.5px;
+  line-height: 1.3;
+}
+
+/* Sobre la foto: al lado del nombre no entraba en las tarjetas angostas. */
+.admin-root .admin-site-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  max-width: calc(100% - 16px);
+  padding: 2px 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-root .admin-site-tag.is-custom {
+  background: #047857;
+  color: #ffffff;
+}
+
+.admin-root .admin-site-caption {
+  display: flex;
+  gap: 6px;
+}
+
+.admin-root .admin-site-caption input {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-root .admin-site-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.admin-root .admin-dashboard-layout .admin-site-actions .btn {
+  flex: 1 1 auto;
+  padding-inline: 10px;
+  white-space: nowrap;
+}
+
+.admin-root .admin-site-busy {
+  position: absolute;
+  inset: auto 8px 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgb(17 24 39 / 0.82);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.admin-root .admin-site-spin {
+  animation: adminSiteSpin 0.9s linear infinite;
+}
+
+@keyframes adminSiteSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-root .admin-site-spin {
+    animation-duration: 2.4s;
+  }
+}
+
+.admin-root .admin-site-new-tournament {
+  margin: 12px 0 16px;
+  padding: 14px 14px 0;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-control);
+}
+
+.admin-root .admin-site-tournament-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 0 12px;
+  align-items: end;
+}
+
+.admin-root .admin-site-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.admin-root .admin-site-tournaments {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-root .admin-site-tournament {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+
+.admin-root .admin-site-tournament > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 14px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.admin-root .admin-site-tournament > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-root .admin-site-tournament > summary::before {
+  content: "";
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+
+.admin-root .admin-site-tournament[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.admin-root .admin-site-tournament-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.admin-root .admin-site-tournament-name span {
+  color: var(--text-muted);
+}
+
+.admin-root .admin-site-tournament-body {
+  padding: 4px 14px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.admin-root .admin-site-tournament-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+}
+
+.admin-root .admin-site-tournament-body .admin-site-tournament-form {
+  margin-top: 12px;
+}
+
+.admin-root .admin-dashboard-layout .btn.admin-site-danger {
+  color: #b91c1c;
+}
+
+.admin-root .admin-site-subtitle {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 18px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.admin-root .admin-site-subtitle span {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-site-photos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+
+.admin-root .admin-site-photos.is-winners {
+  grid-template-columns: repeat(auto-fill, minmax(min(130px, 45%), 1fr));
+}
+
+.admin-root .admin-site-photos > li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-root .admin-site-photo {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-site-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgb(17 24 39 / 0.72);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.admin-root .admin-site-remove:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.admin-root :is(.admin-site-remove, .admin-site-add):disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-root .admin-site-add {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 6px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+}
+
+.admin-root .admin-site-add:hover:not(:disabled) {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+.admin-root .admin-site-winner-label {
+  width: 100%;
+  font-size: 12.5px;
+}
+
 /* body tiene overflow-x:hidden (globals.css) igual que html: eso lo vuelve
    contenedor de scroll y rompe el position:sticky del sidebar. En el admin
    se recorta con clip, que no crea contenedor. También sobra el padding de

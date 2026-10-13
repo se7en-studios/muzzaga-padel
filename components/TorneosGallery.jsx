@@ -6,64 +6,10 @@ import { useLightbox } from "./LightboxProvider";
 
 const WHATSAPP = "5492995974176";
 
-function jugadorPhotos(folder, count, label) {
-  return Array.from({ length: count }, (_, i) => {
-    const n = String(i + 1).padStart(2, "0");
-    return {
-      src: `/img/torneos/${folder}/jugadores_${n}.jpg`,
-      alt: `Jugador del ${label} en la cancha de Muzzaga`,
-      label,
-      caption: `${label} · Muzzaga Pádel`,
-    };
-  });
-}
-
-const TOURNAMENTS = [
-  {
-    id: "agosto-2026",
-    label: "Torneo Agosto 2026 · 7ma Damas y Caballeros",
-    jugadores: jugadorPhotos("agosto", 26, "Torneo Agosto 2026"),
-    ganadores: [
-      {
-        src: "/img/torneos/agosto/ganadores_1er_caballeros.jpg",
-        alt: "1er puesto categoría 7ma Caballeros, Torneo Agosto 2026",
-        label: "1er puesto Caballeros",
-      },
-      {
-        src: "/img/torneos/agosto/ganadores_2do_caballeros.jpg",
-        alt: "2do puesto categoría 7ma Caballeros, Torneo Agosto 2026",
-        label: "2do puesto Caballeros",
-      },
-      {
-        src: "/img/torneos/agosto/ganadores_1er_damas.jpg",
-        alt: "1er puesto categoría 7ma Damas, Torneo Agosto 2026",
-        label: "1er puesto Damas",
-      },
-      {
-        src: "/img/torneos/agosto/ganadores_2do_damas.jpg",
-        alt: "2do puesto categoría 7ma Damas, Torneo Agosto 2026",
-        label: "2do puesto Damas",
-      },
-    ],
-  },
-  {
-    id: "junio-2026",
-    label: "Primer Torneo · Junio 2026",
-    jugadores: jugadorPhotos("junio", 25, "Primer Torneo Junio 2026"),
-    ganadores: [
-      {
-        src: "/img/torneos/junio/ganadores_1er_puesto.jpg",
-        alt: "1er puesto categoría Sexta Libre, Gabriel Salinas y Franco Alcalá, Primer Torneo Junio 2026",
-        label: "1er puesto 6ta (G. Salinas - F. Alcalá)",
-      },
-      {
-        src: "/img/torneos/junio/ganadores_2do_puesto.jpg",
-        alt: "2do puesto categoría Sexta Libre, Sebastián Riquero y Lucas Ponce, Primer Torneo Junio 2026",
-        label: "2do puesto 6ta (S. Riquero - L. Ponce)",
-      },
-    ],
-  },
-];
+// Los torneos y sus fotos salen de Configuración → Sitio web → Galería de
+// torneos (ver lib/siteContent.js). Con pocas fotos de jugadores la tira que
+// se mueve sola deja huecos en pantallas anchas: va en grilla.
+const MARQUEE_MIN = 10;
 
 function WhatsappIcon() {
   return (
@@ -87,10 +33,10 @@ function JugadoresMarquee({ photos }) {
         style={{ animationDuration: `${durationSec}s` }}
       >
         {photos.map((photo) => (
-          <MarqueeCard key={photo.src} {...photo} />
+          <MarqueeCard key={photo.id} {...photo} />
         ))}
         {photos.map((photo) => (
-          <MarqueeCard key={`${photo.src}-dup`} {...photo} duplicate />
+          <MarqueeCard key={`${photo.id}-dup`} {...photo} duplicate />
         ))}
       </div>
     </div>
@@ -117,54 +63,56 @@ function TorneoThumb({ src, alt, label }) {
   );
 }
 
-function TorneoBlock({ label, jugadores, ganadores }) {
+const SUBTITLE_STYLE = {
+  fontSize: 15,
+  fontWeight: 700,
+  color: "var(--text-secondary)",
+};
+
+function TorneoBlock({ title, jugadores, ganadores }) {
+  const marquee = jugadores.length >= MARQUEE_MIN;
   return (
     <div style={{ marginBottom: 40 }}>
       <div className="container">
         <span className="badge-linear badge-amber" style={{ marginBottom: 8 }}>
-          {label}
+          {title}
         </span>
-        <h4
-          style={{
-            fontSize: 15,
-            fontWeight: 700,
-            margin: "14px 0 4px",
-            color: "var(--text-secondary)",
-          }}
-        >
-          Jugadores
-        </h4>
+        {jugadores.length > 0 && (
+          <h4 style={{ ...SUBTITLE_STYLE, margin: marquee ? "14px 0 4px" : "14px 0 10px" }}>
+            Jugadores
+          </h4>
+        )}
+        {jugadores.length > 0 && !marquee && (
+          <div className="torneo-thumb-grid" style={{ marginBottom: 12 }}>
+            {jugadores.map((photo) => (
+              <TorneoThumb key={photo.id} src={photo.src} alt={photo.alt} />
+            ))}
+          </div>
+        )}
       </div>
 
-      <JugadoresMarquee photos={jugadores} />
+      {marquee && <JugadoresMarquee photos={jugadores} />}
 
-      <div className="container">
-        <h4
-          style={{
-            fontSize: 15,
-            fontWeight: 700,
-            margin: "8px 0 10px",
-            color: "var(--text-secondary)",
-          }}
-        >
-          Ganadores
-        </h4>
-        <div className="torneo-thumb-grid">
-          {ganadores.map((photo) => (
-            <TorneoThumb
-              key={photo.src}
-              src={photo.src}
-              alt={photo.alt}
-              label={photo.label}
-            />
-          ))}
+      {ganadores.length > 0 && (
+        <div className="container">
+          <h4 style={{ ...SUBTITLE_STYLE, margin: "8px 0 10px" }}>Ganadores</h4>
+          <div className="torneo-thumb-grid">
+            {ganadores.map((photo) => (
+              <TorneoThumb
+                key={photo.id}
+                src={photo.src}
+                alt={photo.alt}
+                label={photo.label}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
-export default function TorneosGallery() {
+export default function TorneosGallery({ tournaments }) {
   return (
     <section id="torneos" className="section-bento">
       <div className="container">
@@ -195,10 +143,16 @@ export default function TorneosGallery() {
         </h3>
       </div>
 
-      {TOURNAMENTS.map((t) => (
+      {tournaments.length === 0 && (
+        <div className="container">
+          <p className="section-desc">Pronto vas a ver acá las fotos de los torneos.</p>
+        </div>
+      )}
+
+      {tournaments.map((t) => (
         <TorneoBlock
           key={t.id}
-          label={t.label}
+          title={t.title}
           jugadores={t.jugadores}
           ganadores={t.ganadores}
         />
