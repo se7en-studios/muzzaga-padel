@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb, isFirebaseConfigured } from "../../../../lib/firebase";
 import { getClubConfig } from "../../../../lib/clubConfigServer";
+import { hashIp, hitRateLimit } from "../../../../lib/rateLimit";
 import {
   createMercadoPagoPreference,
   depositForBooking,
@@ -26,6 +27,19 @@ export async function POST(req) {
       return NextResponse.json(
         { ok: false, error: "Pagos online no disponibles en este momento" },
         { status: 503 }
+      );
+    }
+
+    // Sin tope, este endpoint público sirve para probar códigos de reserva y
+    // gastar llamadas a Mercado Pago.
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip");
+    const gate = await hitRateLimit(getDb(), "mpPreference", hashIp(ip));
+    if (!gate.allowed) {
+      return NextResponse.json(
+        { ok: false, error: "Demasiados intentos. Probá de nuevo en unos minutos." },
+        { status: 429 }
       );
     }
 

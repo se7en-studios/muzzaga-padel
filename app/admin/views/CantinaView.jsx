@@ -40,6 +40,7 @@ import {
 } from "../../../lib/cantinaOrder";
 import { MENU_CATEGORIES, MENU_ITEMS } from "../../../data/menu";
 import StaffPinModal from "../ui/StaffPinModal";
+import { usePinGate } from "../ui/usePinGate";
 import { todayInClub } from "../../../lib/booking";
 import {
   computeDailyCash,
@@ -82,6 +83,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
   const [voiding, setVoiding] = useState(null); // venta a anular
   const [voidReason, setVoidReason] = useState("");
   const [deletingSale, setDeletingSale] = useState(null);
+  const { ask: askPin, pinModal } = usePinGate();
   const [orders, setOrders] = useState(null); // pedidos de la carta del día
   const [pendingOrder, setPendingOrder] = useState(null); // el que se está cobrando
   const [confirmCancel, setConfirmCancel] = useState(null);
@@ -308,16 +310,23 @@ export default function CantinaView({ onExpiredSession, onToast }) {
   }
 
   async function confirmVoid() {
-    const res = await adminVoidCantinaSale({
-      saleId: voiding.id,
-      reason: voidReason,
-    });
-    if (res.ok) {
+    const sale = voiding;
+    const res = await askPin(
+      {
+        title: "Anular venta",
+        description: "Ingresá tu PIN para anular esta venta. Queda registrado a tu nombre.",
+        confirmButtonText: "Anular venta",
+        confirmButtonTone: "danger",
+      },
+      ({ pin }) =>
+        adminVoidCantinaSale({ saleId: sale.id, reason: voidReason, pin }),
+    );
+    if (res?.ok) {
       setVoiding(null);
       setVoidReason("");
       loadSales();
       onToast?.("Venta anulada");
-    } else if (!onExpiredSession?.(res)) {
+    } else if (res && !onExpiredSession?.(res)) {
       onToast?.(res.error || "No se pudo anular la venta.", { tone: "error" });
     }
   }
@@ -337,12 +346,15 @@ export default function CantinaView({ onExpiredSession, onToast }) {
   }
 
   async function toggleTest(sale) {
-    const res = await adminSetTestFlag("cantinaSales", sale.id, !sale.isTest);
-    if (res.ok) loadSales();
-    else
-      onToast?.(res.error || "No se pudo actualizar la venta.", {
-        tone: "error",
-      });
+    const res = await askPin(
+      {
+        title: sale.isTest ? "Volver a contar la venta" : "Marcar como prueba",
+        description:
+          "Marcar una venta como prueba la saca de los totales. Lo autoriza un Administrador o Encargado.",
+      },
+      ({ pin }) => adminSetTestFlag("cantinaSales", sale.id, !sale.isTest, pin),
+    );
+    if (res?.ok) loadSales();
   }
 
   const quickFavoriteItems = useMemo(
@@ -1051,6 +1063,8 @@ export default function CantinaView({ onExpiredSession, onToast }) {
           </div>
         </div>
       )}
+
+      {pinModal}
 
       {deletingSale && (
         <StaffPinModal

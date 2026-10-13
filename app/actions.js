@@ -1,7 +1,13 @@
 "use server";
 
 import { getDb, isFirebaseConfigured } from "../lib/firebase";
-import { addMinutes, nowInClubTimezone, slotKey } from "../lib/booking";
+import {
+  addMinutes,
+  isValidIsoDate,
+  isoAddDays,
+  nowInClubTimezone,
+  slotKey,
+} from "../lib/booking";
 import {
   findCourtIn,
   hasSlotStarted,
@@ -11,6 +17,12 @@ import {
 import { getClubConfig } from "../lib/clubConfigServer";
 import { checkPublicRateLimit } from "../lib/adminRateLimit";
 import { RATE_LIMIT_ERROR } from "../lib/rateLimit";
+
+// Cuánto a futuro se puede reservar desde la web pública, y largos máximos
+// de los datos de contacto (sin tope se podía ensuciar la base).
+const MAX_BOOKING_DAYS_AHEAD = 60;
+const MAX_NAME_LENGTH = 60;
+const MAX_PHONE_LENGTH = 25;
 
 /**
  * @param {{date: string, courtId: string, startTime: string, endTime: string, playerName: string, playerPhone: string, playersCount: number, fullCourt: boolean}} input
@@ -26,6 +38,13 @@ export async function createBooking(input) {
     playersCount,
     fullCourt,
   } = input;
+
+  // La fecha es parte de la clave del candado en la base: tiene que ser una
+  // fecha real, si no "2026-10-14-x" esquivaba la unicidad del turno.
+  if (!isValidIsoDate(date)) return { ok: false, error: "Fecha inválida." };
+  if (typeof courtId !== "string" || typeof startTime !== "string") {
+    return { ok: false, error: "Datos inválidos." };
+  }
 
   // Canchas, horarios y precios salen de Configuración del admin.
   const config = await getClubConfig();
@@ -47,11 +66,18 @@ export async function createBooking(input) {
       error: "Ese horario ya pasó. Elegí un turno futuro.",
     };
   }
-  const name = (playerName || "").trim();
-  const phone = (playerPhone || "").trim();
-  if (name.length < 2) return { ok: false, error: "Ingresá tu nombre." };
-  if (phone.length < 6)
-    return { ok: false, error: "Ingresá un teléfono de contacto." };
+  if (date > isoAddDays(now.isoDate, MAX_BOOKING_DAYS_AHEAD)) {
+    return {
+      ok: false,
+      error: `Solo se puede reservar hasta ${MAX_BOOKING_DAYS_AHEAD} días adelante.`,
+    };
+  }
+  const name = String(playerName || "").trim();
+  const phone = String(playerPhone || "").trim();
+  if (name.length < 2 || name.length > MAX_NAME_LENGTH)
+    return { ok: false, error: "Ingresá tu nombre (hasta 60 letras)." };
+  if (phone.length < 6 || phone.length > MAX_PHONE_LENGTH)
+    return { ok: false, error: "Ingresá un teléfono de contacto válido." };
   const players = Number(playersCount) || 1;
   if (players < 1 || players > 4)
     return { ok: false, error: "La cancha admite entre 1 y 4 jugadores." };
@@ -85,13 +111,21 @@ export async function createBooking(input) {
   // Después de validar: un formulario mal cargado no gasta cupo.
   const gate = await checkPublicRateLimit("createBooking");
   if (!gate.allowed) return { ok: false, error: RATE_LIMIT_ERROR };
+  // Topes diarios por IP y por teléfono: evitan bloquear la grilla de a poco.
+  const daily = await checkPublicRateLimit("createBookingDaily");
+  if (!daily.allowed) return { ok: false, error: RATE_LIMIT_ERROR };
+  const byPhone = await checkPublicRateLimit(
+    "createBookingPhone",
+    phone.replace(/\D/g, "") || phone,
+  );
+  if (!byPhone.allowed) return { ok: false, error: RATE_LIMIT_ERROR };
 
   let bookingKey;
+  let claimRef;
+  let claimed = false;
   try {
     const db = getDb();
-    const claimRef = db.ref(
-      `slotClaims/${date}/${slotKey(courtId, startTime)}`,
-    );
+    claimRef = db.ref(`slotClaims/${date}/${slotKey(courtId, startTime)}`);
     const bookingRef = db.ref("bookings").push();
 
     const claim = await claimRef.transaction((current) => {
@@ -106,6 +140,7 @@ export async function createBooking(input) {
       };
     }
 
+    claimed = true;
     const code = `MUZZ-${bookingRef.key.slice(-5).toUpperCase()}`;
 
     const bookingData = {
@@ -133,6 +168,11 @@ export async function createBooking(input) {
       "createBooking: fallo al guardar la reserva en Firebase:",
       error.message,
     );
+    // Si el lock ya era nuestro y la reserva no se guardó, lo soltamos para
+    // que el horario no quede bloqueado sin dueño.
+    if (claimed && claimRef) {
+      await claimRef.remove().catch(() => {});
+    }
     return {
       ok: false,
       error:

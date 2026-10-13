@@ -57,6 +57,7 @@ import {
   STAFF_PIN,
   STAFF_ROLES,
   isPinTaken,
+  hashPinFields,
   makeStaffRecord,
   publicStaff,
   verifyStaffPin,
@@ -102,12 +103,40 @@ async function authorizeStaff(pin) {
     };
   }
   await clearLoginAttempts(gate.key);
+  if (res.legacy) {
+    // Primer PIN correcto con el hash viejo: se guarda de nuevo con scrypt.
+    await getDb()
+      .ref(`staffMembers/${res.staff.id}`)
+      .update(hashPinFields(String(pin).trim()))
+      .catch(() => {});
+  }
   return { staff: res.staff };
 }
 
-/** Con PIN lo exige válido; sin PIN (ej. "Deshacer" inmediato) queda a nombre de la sesión. */
-async function optionalStaff(pin) {
-  return pin ? authorizeStaff(pin) : { staff: SESSION_STAFF };
+// "Deshacer" sin PIN solo vale un rato después de crear el registro: pasado
+// ese margen, borrar un cobro o anular una venta exige el PIN de quien lo hace.
+const UNDO_WINDOW_MS = 60 * 1000;
+
+/**
+ * Con PIN lo exige válido. Sin PIN solo se acepta dentro de la ventana de
+ * "Deshacer" del registro recién creado (`createdAt`), a nombre de la sesión.
+ */
+async function undoStaff(pin, createdAt) {
+  if (pin) return authorizeStaff(pin);
+  if (Number(createdAt) > 0 && Date.now() - Number(createdAt) <= UNDO_WINDOW_MS) {
+    return { staff: SESSION_STAFF };
+  }
+  return { error: "Pasó más de un minuto: ingresá tu PIN para hacerlo." };
+}
+
+/** Exige PIN válido de Administrador o Encargado. → { staff } | { error } */
+async function authorizeManager(pin) {
+  const auth = await authorizeStaff(pin);
+  if (auth.error) return auth;
+  if (!MANAGER_ROLES.includes(auth.staff.role)) {
+    return { error: "Esta acción es solo para Administrador o Encargado." };
+  }
+  return auth;
 }
 
 async function audit(db, staff, action, target, details, extra = {}) {
@@ -361,16 +390,18 @@ async function createBookingAt(db, config, date, input) {
   }
 
   const bookingRef = db.ref("bookings").push();
-  const claim = await db
-    .ref(`slotClaims/${date}/${slotKey(courtId, startTime)}`)
-    .transaction((current) => (current ? undefined : bookingRef.key));
+  const claimRef = db.ref(`slotClaims/${date}/${slotKey(courtId, startTime)}`);
+  const claim = await claimRef.transaction((current) =>
+    current ? undefined : bookingRef.key,
+  );
   if (!claim.committed) {
     return { ok: false, error: "Ese horario ya se encuentra ocupado." };
   }
 
   const players = Math.min(8, Math.max(1, Number(playersCount) || 4));
   const slotPricing = priceFor(config, date, startTime);
-  await bookingRef.set({
+  try {
+    await bookingRef.set({
     courtId,
     courtName: courtLabel(court),
     date,
@@ -388,7 +419,12 @@ async function createBookingAt(db, config, date, input) {
     createdFromAdmin: true,
     ...(recurringId ? { recurringId } : {}),
     createdAt: Date.now(),
-  });
+    });
+  } catch (err) {
+    // El lock ya era nuestro: se suelta para no dejar el horario bloqueado.
+    await claimRef.remove().catch(() => {});
+    throw err;
+  }
   return { ok: true, bookingId: bookingRef.key };
 }
 
@@ -537,8 +573,15 @@ export async function adminCancelRecurringSeries({
   try {
     const db = getDb();
     const today = todayInClub();
-    const all = snapToList(await db.ref("bookings").get());
-    const targets = all.filter(
+    // Solo los turnos de esta serie (índice recurringId en database.rules.json).
+    const series = snapToList(
+      await db
+        .ref("bookings")
+        .orderByChild("recurringId")
+        .equalTo(recurringId)
+        .get(),
+    );
+    const targets = series.filter(
       (b) =>
         b.recurringId === recurringId &&
         b.status !== "cancelado" &&
@@ -666,19 +709,19 @@ export async function adminAddPayment(bookingId, method, amount) {
   }
 }
 
-/** Borra un cobro. Con PIN queda a nombre del integrante; sin PIN (Deshacer) a nombre de la sesión. */
+/** Borra un cobro. Con PIN queda a nombre del integrante; sin PIN solo dentro del minuto de "Deshacer". */
 export async function adminRemovePayment(bookingId, paymentId, pin) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
   if (!isId(bookingId) || !isId(paymentId)) return INVALID;
-  const auth = await optionalStaff(pin);
-  if (auth.error) return { ok: false, error: auth.error };
   try {
     const db = getDb();
     const booking = await readRecord(db, `bookings/${bookingId}`);
     const payment = booking?.payments?.[paymentId];
     if (!payment) return { ok: false, error: "Ese cobro ya no existe." };
+    const auth = await undoStaff(pin, payment.createdAt);
+    if (auth.error) return { ok: false, error: auth.error };
     const closed = await closedDayError(db, booking.date);
     if (closed) return closed;
     await db.ref(`bookings/${bookingId}/payments/${paymentId}`).remove();
@@ -1239,12 +1282,12 @@ export async function adminVoidCantinaSale({ saleId, reason, pin } = {}) {
   const why = clip(reason, 120);
   if (!isId(saleId)) return { ok: false, error: "Venta inválida." };
   if (!why) return { ok: false, error: "Indicá el motivo de la anulación." };
-  const auth = await optionalStaff(pin);
-  if (auth.error) return { ok: false, error: auth.error };
   try {
     const db = getDb();
     const current = await readRecord(db, `cantinaSales/${saleId}`);
     if (!current) return { ok: false, error: "Esa venta no existe." };
+    const auth = await undoStaff(pin, current.createdAt);
+    if (auth.error) return { ok: false, error: auth.error };
     const closed = await closedDayError(db, current.date);
     if (closed) return closed;
     // RTDB llama primero con el valor en caché (null si no hay): devolver
@@ -1664,13 +1707,16 @@ export async function adminGetClubConfig() {
   return { ok: true, config: await getClubConfig({ fresh: true }) };
 }
 
-export async function adminSaveClubConfig(input) {
+export async function adminSaveClubConfig(input, pin) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
   if (!isFirebaseConfigured()) {
     return { ok: false, error: "Firebase no está configurado." };
   }
+  // Precios, % de seña y alias de pago mueven plata: solo con PIN de gestión.
+  const auth = await authorizeManager(pin);
+  if (auth.error) return { ok: false, error: auth.error };
 
   const result = validateConfig(input || {});
   if (!result.ok) {
@@ -1688,10 +1734,16 @@ export async function adminSaveClubConfig(input) {
       paymentTitular: result.config.paymentTitular.trim(),
       clubPhone: result.config.clubPhone.trim(),
     };
-    await getDb()
-      .ref("clubConfig")
-      .set({ ...config, updatedAt: Date.now() });
+    const db = getDb();
+    await db.ref("clubConfig").set({ ...config, updatedAt: Date.now() });
     setCachedClubConfig(config);
+    await audit(
+      db,
+      auth.staff,
+      "CONFIG_GUARDAR",
+      "Configuración del club",
+      "Se guardó la configuración (precios, horarios, seña, pagos)",
+    ).catch(() => {});
     return { ok: true, config };
   } catch (err) {
     return { ok: false, error: "No se pudo guardar la configuración." };
@@ -1839,11 +1891,14 @@ const TEST_FLAG_COLLECTIONS = ["bookings", "cantinaSales"];
  * Marca o desmarca un registro como dato de prueba: sigue existiendo pero
  * no suma en ningún total. Desmarcar borra el campo en vez de guardar false.
  */
-export async function adminSetTestFlag(collection, id, isTest) {
+export async function adminSetTestFlag(collection, id, isTest, pin) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
   if (!TEST_FLAG_COLLECTIONS.includes(collection) || !isId(id)) return INVALID;
+  // Marcar algo como "prueba" lo saca de los totales: queda a nombre de quien lo hace.
+  const auth = await authorizeManager(pin);
+  if (auth.error) return { ok: false, error: auth.error };
   try {
     const db = getDb();
     const record = await readRecord(db, `${collection}/${id}`);
@@ -1851,6 +1906,16 @@ export async function adminSetTestFlag(collection, id, isTest) {
     const closed = await closedDayError(db, record.date);
     if (closed) return closed;
     await db.ref(`${collection}/${id}/isTest`).set(isTest ? true : null);
+    await audit(
+      db,
+      auth.staff,
+      isTest ? "MARCAR_PRUEBA" : "DESMARCAR_PRUEBA",
+      `${collection}/${id.slice(-6)}`,
+      isTest
+        ? "Marcado como dato de prueba"
+        : "Vuelve a contar como dato real",
+      { amount: Number(record.total) || 0 },
+    ).catch(() => {});
     return { ok: true };
   } catch (err) {
     return { ok: false, error: "No se pudo actualizar el registro." };

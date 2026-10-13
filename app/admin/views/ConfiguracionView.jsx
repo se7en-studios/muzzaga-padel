@@ -34,6 +34,7 @@ import { isoAddDays, todayInClub } from "../../../lib/booking";
 import { formatARS, formatDate, plural } from "../../../lib/format";
 import { Skeleton } from "../ui/states";
 import StaffPinModal from "../ui/StaffPinModal";
+import { usePinGate } from "../ui/usePinGate";
 
 // Espejo del server (lib/staff.js no se puede importar en un componente
 // "use client": usa node:crypto para hashear PINs).
@@ -86,6 +87,7 @@ export default function ConfiguracionView({
   const [saved, setSaved] = useState(null);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const { ask: askPin, pinModal } = usePinGate();
   const [fieldErrors, setFieldErrors] = useState({});
   const [newBlockedDate, setNewBlockedDate] = useState("");
   const [showCbu, setShowCbu] = useState(false);
@@ -242,10 +244,23 @@ export default function ConfiguracionView({
   }
 
   async function handleSave() {
-    setSaving(true);
     setFieldErrors({});
-    const res = await adminSaveClubConfig(form);
-    setSaving(false);
+    const res = await askPin(
+      {
+        title: "Guardar configuración",
+        description:
+          "Precios, seña y datos de pago mueven plata: lo autoriza un Administrador o Encargado con su PIN.",
+        confirmButtonText: "Guardar",
+      },
+      async ({ pin }) => {
+        setSaving(true);
+        const r = await adminSaveClubConfig(form, pin);
+        setSaving(false);
+        if (!r.ok && r.fieldErrors) setFieldErrors(r.fieldErrors);
+        return r;
+      },
+    );
+    if (!res) return;
     if (res.ok) {
       const config = normalizeConfig(res.config);
       setSaved(config);
@@ -924,6 +939,8 @@ export default function ConfiguracionView({
           )}
         </section>
       </div>
+
+      {pinModal}
 
       {toggleTarget && (
         <StaffPinModal
