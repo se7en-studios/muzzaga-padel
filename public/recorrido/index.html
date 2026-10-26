@@ -116,14 +116,46 @@ main{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
 @keyframes bump{40%{transform:scale(1.08);color:var(--accent)}}
 #err{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
 @media (max-width:860px){
-  body{height:auto;min-height:100%}
-  .app{display:flex;flex-direction:column;height:auto}
+  html,body{height:100%}
+  body{overflow:hidden;padding-block:8px;box-sizing:border-box;height:100dvh}
+  .app{display:flex;flex-direction:column;height:100%;gap:8px}
   aside{display:none}
-  #stage{flex:none;height:62vh;min-height:360px}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .sp{display:none}
-  .cc{display:none}
+  main{gap:8px;flex:1}
+  .top{gap:6px}
+  #dateChip,.top .addr,.live-chip{display:none}
+  #bookTop{order:1;margin-left:auto}
+  .seg,#roofBtn{order:2}
+  .chip{padding:7px 10px;font-size:11.5px}
+  .seg button{padding:6px 9px}
+  .chipbtn{padding:7px 11px}
+  .btn{padding:8px 13px}
+  #stage{min-height:0}
+  .stats{grid-template-columns:1fr;gap:8px}
+  .stat:not(:last-child){display:none}
+  .stat{flex-direction:row;align-items:center;justify-content:space-between;padding:8px 14px}
+  .stat .v{font-size:18px}
+  .sp,.cc{display:none}
+  .pin .pn{display:none}
+  .pin{padding:3px}
+  #info{padding:10px 12px;gap:10px;bottom:10px}
+  #info h2{font-size:22px}
+  #info p{font-size:12.5px;line-height:1.4}
+  #iImg{width:64px;height:86px}
+  #hint{font-size:11px;padding:6px 10px;left:8px;bottom:8px}
+  .ibox{padding:20px 20px}
+  .ibox h1{font-size:52px}
 }
+@media (max-height:520px){
+  .ibox{padding:14px 18px;gap:6px}
+  .ibox h1{font-size:38px}
+  .ibox .lead{font-size:12.5px;line-height:1.4}
+  .ibox img:not(.mas){width:40px;height:40px}
+  #info p{display:none}
+  #iImg{display:none}
+  #hint{display:none}
+  .stat{padding:5px 14px}
+}
+#intro{overflow:auto}
 </style>
 
 <style>[hidden]{display:none!important}img{max-width:100%}</style>
@@ -144,9 +176,9 @@ main{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
   <main>
     <div class="top">
       <a class="card chip" href="/" style="text-decoration:none;color:inherit">&larr; Volver al sitio</a>
-      <div class="card chip"><span class="live" id="liveDot"></span><span id="liveTxt">Horario</span></div>
+      <div class="card chip live-chip"><span class="live" id="liveDot"></span><span id="liveTxt">Horario</span></div>
       <div class="card chip" id="dateChip"></div>
-      <div class="card chip">Av. Cacique Catriel y Córdoba</div>
+      <div class="card chip addr">Av. Cacique Catriel y Córdoba</div>
       <div class="sp"></div>
       <div class="card seg" role="group" aria-label="Vista de cámara" id="views">
         <button data-v="3d" aria-pressed="true">3D</button><button data-v="side" aria-pressed="false">Lateral</button>
@@ -199,7 +231,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true }); }
   catch (e) { showErr('Tu navegador no tiene WebGL activado, así que la maqueta 3D no puede arrancar.'); return; }
-  let pr = Math.min(window.devicePixelRatio || 1, 1.75); const prMax = pr; renderer.setPixelRatio(pr);
+  let pr = Math.min(window.devicePixelRatio || 1, innerWidth < 860 ? 1.5 : 1.75); const prMax = pr; renderer.setPixelRatio(pr);
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.78; renderer.shadowMap.autoUpdate = false;
@@ -618,7 +650,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
     s.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.8, 32), new THREE.MeshBasicMaterial({ color: 0xf26a1b, transparent: true, opacity: 0.9, side: DS })); s.ring.rotation.x = -Math.PI / 2; s.ring.position.y = 0.05; g.add(s.ring);
     s.disc = new THREE.Mesh(new THREE.CircleGeometry(0.55, 32), new THREE.MeshBasicMaterial({ color: 0xf26a1b, transparent: true, opacity: 0.18, side: DS })); s.disc.rotation.x = -Math.PI / 2; s.disc.position.y = 0.045; g.add(s.disc);
     scene.add(g); s.found = false;
-    s.pin = document.createElement('div'); s.pin.className = 'pin'; s.pin.innerHTML = '<b>' + (i + 1) + '</b>' + s.name; pins.appendChild(s.pin);
+    s.pin = document.createElement('div'); s.pin.className = 'pin'; s.pin.innerHTML = '<b>' + (i + 1) + '</b><span class="pn">' + s.name + '</span>'; pins.appendChild(s.pin);
     s.pin.addEventListener('click', () => walkTo(s.x, s.z));
     const li = document.createElement('li'); li.innerHTML = '<button><span class="dot">' + (i + 1) + '</span><span>' + s.name + '</span></button>';
     li.firstChild.addEventListener('click', () => walkTo(s.x, s.z)); list.appendChild(li); s.li = li;
@@ -842,7 +874,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       if (!down || down.moved > 6) { want.az -= dx * 0.35; want.el = Math.max(8, Math.min(89.5, want.el + dy * 0.3)); cam.az = want.az; cam.el = want.el; }
     } else if (ptrs.size === 2) {
       const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
-      want.d = Math.max(26, Math.min(150, want.d * (pinch0 / d))); cam.d = want.d; pinch0 = d;
+      want.d = Math.max(26, Math.min(160, want.d * (pinch0 / d))); cam.d = want.d; pinch0 = d;
     }
   });
   const up = e => {
@@ -919,6 +951,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   }
   refresh();
 
+  if (matchMedia('(pointer:coarse)').matches) $('hint').textContent = 'Tocá el piso para caminar · arrastrá para girar · pellizcá para acercar.';
   /* ---------- bucle ---------- */
   const keys = {}; const tmp = new THREE.Vector3(), cp = new THREE.Vector3();
   addEventListener('keydown', e => { if (/^(Key[WASD]|Arrow)/.test(e.code)) { keys[e.code] = true; path = []; if (e.code.startsWith('Arrow')) e.preventDefault(); } });
@@ -994,6 +1027,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     });
   }
 
+  let dm = 1;
   let introOn = true; $('go').addEventListener('click', () => { introOn = false; want.az = PRE['3d'].az; want.d = PRE['3d'].d; want.el = PRE['3d'].el; setRoof(false); $('intro').classList.add('off'); });
   let last = performance.now(), t = 0, fc = 0, lastPK = '', wallsMoved = false, inView = true, pAcc = 0, pN = 0, pLocked = false;
   new IntersectionObserver(e => { inView = e[0].isIntersecting; }).observe(stage);
@@ -1012,7 +1046,8 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     cam.az += wrap(want.az - cam.az) * k; cam.el += (want.el - cam.el) * k; cam.d += (want.d - cam.d) * k;
     if (Math.abs(cam.fov - want.fov) > 0.05) { cam.fov += (want.fov - cam.fov) * k; camera.fov = cam.fov; camera.updateProjectionMatrix(); }
     const az = cam.az * rad, el = cam.el * rad, ce = Math.cos(el);
-    camera.position.set(TGT.x + cam.d * Math.sin(az) * ce, TGT.y + cam.d * Math.sin(el), TGT.z + cam.d * Math.cos(az) * ce);
+    dm += (clampN(1.35 / camera.aspect, 1, 2.6) - dm) * 0.2; const dd = cam.d * dm;
+    camera.position.set(TGT.x + dd * Math.sin(az) * ce, TGT.y + dd * Math.sin(el), TGT.z + dd * Math.cos(az) * ce);
     camera.lookAt(TGT); camera.updateMatrixWorld();
 
     // paredes que miran a la cámara se bajan
