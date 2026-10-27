@@ -10,6 +10,12 @@ import {
   isStoredPhoto,
   normalizeSiteContent,
 } from "../lib/siteContent.js";
+import {
+  DEFAULT_LOCATION,
+  isMapsUrl,
+  locationFromInput,
+  parseCoords,
+} from "../lib/siteLocation.js";
 
 const BLOB = "https://abc123xyz.public.blob.vercel-storage.com/sitio/hero-Xy12.webp";
 
@@ -204,4 +210,94 @@ test("mover torneos cambia el orden y no se pasa de los bordes", () => {
   assert.deepEqual(down.list.map((t) => t.id), ["junio-2026", "agosto-2026"]);
   const edge = applyGalleryOp(list, { type: "moveTournament", id: "agosto-2026", direction: "up" });
   assert.deepEqual(edge.list.map((t) => t.id), ["agosto-2026", "junio-2026"]);
+});
+
+test("sin ubicación guardada, la web muestra la dirección y el mapa de siempre", () => {
+  const { location } = normalizeSiteContent(null);
+  assert.equal(location.custom, false);
+  assert.equal(location.street, DEFAULT_LOCATION.street);
+  assert.equal(location.locality, "Catriel, Río Negro");
+  assert.equal(location.city, "Catriel");
+  assert.equal(location.region, "Río Negro");
+  assert.equal(location.mapsHref, "https://maps.app.goo.gl/kR1h9mhdLqGLKatV7");
+  assert.equal(
+    location.embedUrl,
+    "https://maps.google.com/maps?q=-37.8832905,-67.8005469&hl=es&z=16&output=embed",
+  );
+  assert.equal(location.wazeUrl, "https://waze.com/ul?ll=-37.8832905,-67.8005469&navigate=yes");
+});
+
+test("una ubicación guardada reemplaza la de siempre; sin link, Cómo llegar abre el punto", () => {
+  const { location } = normalizeSiteContent({
+    location: { street: " San Martín  450 ", locality: "Neuquén, Neuquén", mapsUrl: "", lat: -38.95, lng: -68.06 },
+  });
+  assert.equal(location.custom, true);
+  assert.equal(location.street, "San Martín 450");
+  assert.equal(location.city, "Neuquén");
+  assert.equal(location.mapsHref, "https://www.google.com/maps/search/?api=1&query=-38.95,-68.06");
+  assert.equal(location.coordsText, "-38.95, -68.06");
+});
+
+test("datos rotos en la base vuelven a los defaults campo por campo", () => {
+  const { location } = normalizeSiteContent({
+    location: { street: "", mapsUrl: "https://evil.example.com/maps", lat: "x", lng: 5 },
+  });
+  assert.equal(location.street, DEFAULT_LOCATION.street);
+  assert.equal(location.mapsUrl, "");
+  assert.equal(location.lat, DEFAULT_LOCATION.lat);
+  assert.equal(location.lng, DEFAULT_LOCATION.lng);
+});
+
+test("las coordenadas se entienden como las copia Google Maps", () => {
+  assert.deepEqual(parseCoords("-37.88329, -67.80054"), { lat: -37.88329, lng: -67.80054 });
+  assert.deepEqual(parseCoords(" -37.88329,-67.80054 "), { lat: -37.88329, lng: -67.80054 });
+  assert.deepEqual(parseCoords("(-37.88329 -67.80054)"), { lat: -37.88329, lng: -67.80054 });
+  assert.deepEqual(
+    parseCoords(
+      "https://www.google.com/maps/place/Muzzaga/@-37.88,-67.79,17z/data=!3m1!4b1!4m6!3m5!1s0x0:0x0!8m2!3d-37.8832905!4d-67.8005469",
+    ),
+    { lat: -37.8832905, lng: -67.8005469 },
+  );
+  assert.deepEqual(
+    parseCoords("https://www.google.com/maps/search/?api=1&query=-38.95%2C-68.06"),
+    { lat: -38.95, lng: -68.06 },
+  );
+  assert.equal(parseCoords("Catriel"), null);
+  assert.equal(parseCoords("-137.1, 20"), null);
+  assert.equal(parseCoords("0, 0"), null);
+});
+
+test("el link de Cómo llegar solo puede ser de Google Maps", () => {
+  assert.equal(isMapsUrl("https://maps.app.goo.gl/kR1h9mhdLqGLKatV7"), true);
+  assert.equal(isMapsUrl("https://www.google.com/maps/place/x"), true);
+  assert.equal(isMapsUrl("https://www.google.com.ar/maps/@-37,-67,15z"), true);
+  assert.equal(isMapsUrl("https://maps.google.com/?q=-37,-67"), true);
+  assert.equal(isMapsUrl("https://www.google.com/search?q=muzzaga"), false);
+  assert.equal(isMapsUrl("http://maps.app.goo.gl/x"), false);
+  assert.equal(isMapsUrl("https://maps.app.goo.gl.evil.com/x"), false);
+  assert.equal(isMapsUrl("javascript:alert(1)"), false);
+});
+
+test("guardar la ubicación valida lo que se cargó en el panel", () => {
+  assert.match(locationFromInput({ street: "", locality: "Catriel", coords: "-37.8, -67.8" }).error, /dirección/);
+  assert.match(locationFromInput({ street: "Ruta 6", locality: "", coords: "-37.8, -67.8" }).error, /localidad/);
+  assert.match(
+    locationFromInput({ street: "Ruta 6", locality: "Catriel", coords: "-37.8, -67.8", mapsUrl: "https://evil.example.com" }).error,
+    /Google Maps/,
+  );
+  assert.match(locationFromInput({ street: "Ruta 6", locality: "Catriel", coords: "acá" }).error, /coordenadas/);
+
+  assert.deepEqual(
+    locationFromInput({ street: "Ruta 6 km 2", locality: "Catriel, Río Negro", coords: "-37.9, -67.81", mapsUrl: "" }),
+    { location: { street: "Ruta 6 km 2", locality: "Catriel, Río Negro", mapsUrl: "", lat: -37.9, lng: -67.81 } },
+  );
+  // Sin coordenadas, sirven las del link largo.
+  const { location } = locationFromInput({
+    street: "Ruta 6",
+    locality: "Catriel",
+    coords: "",
+    mapsUrl: "https://www.google.com/maps/place/x/@-37.9,-67.81,17z",
+  });
+  assert.equal(location.lat, -37.9);
+  assert.equal(location.lng, -67.81);
 });

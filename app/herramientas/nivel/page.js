@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Header from "../../../components/Header";
-import Footer from "../../../components/Footer";
+import SiteFooter from "../../../components/SiteFooter";
 import BottomNav from "../../../components/BottomNav";
 import RatingCalculator from "../../../components/RatingCalculator";
 import { PADEL_LEVELS } from "../../../data/levels";
@@ -108,7 +108,7 @@ export default function NivelPage() {
           </div>
         </section>
       </main>
-      <Footer />
+      <SiteFooter />
       <BottomNav />
     </>
   );

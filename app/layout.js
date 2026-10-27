@@ -5,6 +5,7 @@ import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import InstallPrompt from "../components/InstallPrompt";
 import { Analytics } from "@vercel/analytics/react";
 import { SITE_URL } from "../lib/site";
+import { getSiteContent } from "../lib/siteContentServer";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -61,7 +62,8 @@ export const viewport = {
   themeColor: "#1b1b19",
 };
 
-const jsonLd = {
+// La dirección y el punto del mapa salen de Configuración → Sitio web.
+const buildJsonLd = (location) => ({
   "@context": "https://schema.org",
   "@type": "SportsActivityLocation",
   name: "Muzzaga Pádel",
@@ -70,7 +72,7 @@ const jsonLd = {
   url: SITE_URL,
   telephone: "+5492995974176",
   priceRange: "$$",
-  hasMap: "https://maps.google.com/maps?q=-37.8832905,-67.8005469",
+  hasMap: location.hasMap,
   image: [
     `${SITE_URL}/img/court_glass_night_match.jpg`,
     `${SITE_URL}/img/panoramic_courts.jpg`,
@@ -78,8 +80,8 @@ const jsonLd = {
   ],
   geo: {
     "@type": "GeoCoordinates",
-    latitude: -37.8832905,
-    longitude: -67.8005469,
+    latitude: location.lat,
+    longitude: location.lng,
   },
   openingHoursSpecification: [
     {
@@ -99,21 +101,26 @@ const jsonLd = {
   sameAs: ["https://instagram.com/muzzagapadel"],
   address: {
     "@type": "PostalAddress",
-    streetAddress: "Av. Cacique Catriel y Córdoba",
-    addressLocality: "Catriel",
-    addressRegion: "Río Negro",
-    postalCode: "R8307",
+    streetAddress: location.street,
+    addressLocality: location.city,
+    addressRegion: location.region || undefined,
+    // El código postal es el de Catriel: si se mudan de ciudad, se omite.
+    postalCode: location.city === "Catriel" ? "R8307" : undefined,
     addressCountry: "AR",
   },
-};
+});
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const { location } = await getSiteContent();
   return (
     <html lang="es-AR" className={`${poppins.variable} ${jetbrainsMono.variable} ${barlowCondensed.variable}`}>
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          // La dirección la escribe el club: un "</script>" no puede cerrar el tag.
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(buildJsonLd(location)).replace(/</g, "\\u003c"),
+          }}
         />
       </head>
       <body>

@@ -8,6 +8,7 @@ import {
   ImagePlus,
   Images,
   LoaderCircle,
+  MapPin,
   RotateCcw,
   Trash2,
   Upload,
@@ -19,13 +20,21 @@ import {
   adminGetSiteContent,
   adminMoveGalleryTournament,
   adminRemoveGalleryPhoto,
+  adminResetSiteLocation,
   adminResetSitePhoto,
   adminSaveGalleryTournament,
   adminSetGalleryPhotoLabel,
   adminSetSitePhoto,
+  adminSetSiteLocation,
   adminSetSitePhotoCaption,
 } from "../actions";
 import { CAPTION_MAX, NAME_MAX, PHOTO_GROUPS } from "../../../lib/siteContent";
+import {
+  LOCALITY_MAX,
+  STREET_MAX,
+  parseCoords,
+  presentLocation,
+} from "../../../lib/siteLocation";
 import { compressImage } from "../../../lib/compressImage";
 import { plural } from "../../../lib/format";
 import { Skeleton } from "../ui/states";
@@ -400,6 +409,141 @@ function GalleryTournament({
   );
 }
 
+const locationFields = (location) => ({
+  street: location.street,
+  locality: location.locality,
+  mapsUrl: location.mapsUrl,
+  coords: location.coordsText,
+});
+
+/** Dirección y mapa de la sección Ubicación y del footer, por si el club se muda. */
+function LocationForm({ location, busyText, disabled, onSave, onReset }) {
+  const saved = locationFields(location);
+  const [values, setValues] = useState(saved);
+  useEffect(() => setValues(locationFields(location)), [location]);
+  const field = (key) => ({
+    id: `site-loc-${key}`,
+    value: values[key],
+    onChange: (e) => setValues((v) => ({ ...v, [key]: e.target.value })),
+  });
+
+  // Igual que al guardar: sin coordenadas, sirven las del link largo.
+  const coords = values.coords.trim()
+    ? parseCoords(values.coords)
+    : parseCoords(values.mapsUrl);
+  const unchanged = Object.keys(saved).every((k) => values[k].trim() === saved[k]);
+  const movedPin =
+    coords && (coords.lat !== location.lat || coords.lng !== location.lng);
+  const staleLink = movedPin && values.mapsUrl.trim() && values.mapsUrl.trim() === saved.mapsUrl;
+
+  return (
+    <form
+      className="admin-site-location"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSave(values);
+      }}
+    >
+      <div className="admin-site-location-fields">
+        <div className="admin-field">
+          <label className="admin-field-label" htmlFor="site-loc-street">
+            Dirección
+          </label>
+          <input
+            {...field("street")}
+            type="text"
+            maxLength={STREET_MAX}
+            placeholder="ej. Av. Cacique Catriel y Córdoba"
+          />
+        </div>
+        <div className="admin-field">
+          <label className="admin-field-label" htmlFor="site-loc-locality">
+            Localidad
+          </label>
+          <input
+            {...field("locality")}
+            type="text"
+            maxLength={LOCALITY_MAX}
+            placeholder="ej. Catriel, Río Negro"
+          />
+        </div>
+        <div className="admin-field">
+          <label className="admin-field-label" htmlFor="site-loc-coords">
+            Punto en el mapa (coordenadas)
+          </label>
+          <input
+            {...field("coords")}
+            type="text"
+            inputMode="decimal"
+            placeholder="ej. -37.88329, -67.80054"
+            aria-describedby="site-loc-coords-hint"
+            aria-invalid={coords ? undefined : true}
+          />
+          <p id="site-loc-coords-hint" className="admin-field-hint">
+            {coords
+              ? "En Google Maps mantené apretado el lugar exacto (en la compu, clic derecho) y copiá los números que aparecen."
+              : "No se entienden las coordenadas: copialas de Google Maps, por ej. -37.88329, -67.80054."}
+          </p>
+        </div>
+        <div className="admin-field">
+          <label className="admin-field-label" htmlFor="site-loc-mapsUrl">
+            Link de Google Maps (opcional)
+          </label>
+          <input
+            {...field("mapsUrl")}
+            type="url"
+            inputMode="url"
+            placeholder="https://maps.app.goo.gl/…"
+            aria-describedby="site-loc-maps-hint"
+          />
+          <p id="site-loc-maps-hint" className="admin-field-hint">
+            {staleLink
+              ? "Cambiaste el punto del mapa: actualizá también este link (o borralo) para que \"Cómo llegar\" lleve al lugar nuevo."
+              : "El de los botones \"Cómo llegar\". En Google Maps: Compartir → Copiar vínculo. Si lo dejás vacío, abre el punto del mapa."}
+          </p>
+        </div>
+      </div>
+
+      <div className="admin-site-map">
+        {coords ? (
+          <iframe
+            title="Vista previa del mapa"
+            src={presentLocation({ ...location, ...coords }).embedUrl}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        ) : (
+          <span className="admin-site-map-empty">
+            <MapPin {...ICON} /> Cargá las coordenadas para ver el mapa
+          </span>
+        )}
+        {busyText && <BusyBadge text={busyText} />}
+      </div>
+
+      <div className="admin-site-form-actions">
+        <button
+          type="submit"
+          className="btn btn-linear-primary"
+          disabled={disabled || unchanged || !coords}
+        >
+          Guardar ubicación
+        </button>
+        {location.custom && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={disabled}
+            onClick={onReset}
+            title="Volver a Av. Cacique Catriel y Córdoba"
+          >
+            <RotateCcw {...SMALL} /> Original
+          </button>
+        )}
+      </div>
+    </form>
+  );
+}
+
 const fileFor = (blob) =>
   new File([blob], `foto.${blob.type === "image/webp" ? "webp" : "jpg"}`, {
     type: blob.type,
@@ -578,8 +722,9 @@ export default function SitioWebSection({ onExpiredSession, onToast }) {
         <Images {...ICON} /> Sitio web
       </h3>
       <p className="admin-field-hint" style={{ marginTop: 0 }}>
-        Las fotos que se ven en la página. Cada cambio se publica al toque (no
-        hace falta tocar Guardar): en uno o dos minutos ya se ve en la web.
+        Las fotos y la ubicación que se ven en la página. Cada cambio se
+        publica al toque (no hace falta tocar Guardar): en uno o dos minutos
+        ya se ve en la web.
       </p>
 
       {!storageReady && (
@@ -589,6 +734,31 @@ export default function SitioWebSection({ onExpiredSession, onToast }) {
           funciona.
         </div>
       )}
+
+      <div className="admin-site-group">
+        <h4 className="admin-site-group-title">Ubicación</h4>
+        <p className="admin-field-hint">
+          La dirección y el mapa de la sección &quot;Ubicación y horarios&quot; del
+          inicio y del pie de todas las páginas. Si el club se muda, cambiala acá.
+        </p>
+        <LocationForm
+          location={content.location}
+          busyText={busy?.key === "location" ? busy.text : null}
+          disabled={disabled}
+          onSave={(values) =>
+            run("location", "Guardando…", () => adminSetSiteLocation(values), "Ubicación publicada")
+          }
+          onReset={() => {
+            if (!confirm("¿Volver a la dirección y el mapa originales?")) return;
+            run(
+              "location",
+              "Restaurando…",
+              () => adminResetSiteLocation(),
+              "Volvió la ubicación original",
+            );
+          }}
+        />
+      </div>
 
       {PHOTO_GROUPS.map((group) => (
         <div key={group.id} className="admin-site-group">
