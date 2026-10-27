@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Mascota from "./Mascota";
+import FooterWordmark from "./FooterWordmark";
 import { DEFAULT_LOCATION, presentLocation } from "../lib/siteLocation";
 
 const DEFAULT = presentLocation(DEFAULT_LOCATION);
@@ -167,6 +168,8 @@ export default function Footer({ location = DEFAULT }) {
           </div>
         </div>
       </div>
+
+      <FooterWordmark />
     </footer>
   );
 }
