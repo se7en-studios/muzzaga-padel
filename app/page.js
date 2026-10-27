@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Header from "../components/Header";
+import SiteHeader from "../components/SiteHeader";
 import LiveWeatherRadar from "../components/LiveWeatherRadar";
 import TodayFlashSlots from "../components/TodayFlashSlots";
 import BookingCalendar from "../components/BookingCalendar";
@@ -78,7 +78,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <ScrollProgress />
-      <Header />
+      <SiteHeader />
 
       {/* 1. HERO */}
       <section id="top" className="hero-night">

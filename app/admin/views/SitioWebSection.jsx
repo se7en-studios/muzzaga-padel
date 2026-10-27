@@ -432,9 +432,16 @@ function LocationForm({ location, busyText, disabled, onSave, onReset }) {
     ? parseCoords(values.coords)
     : parseCoords(values.mapsUrl);
   const unchanged = Object.keys(saved).every((k) => values[k].trim() === saved[k]);
+  const link = values.mapsUrl.trim();
+  // Igual que en el servidor: link nuevo y coordenadas sin tocar → el punto
+  // sale del link al guardar.
+  const pinFromLink =
+    Boolean(link) &&
+    (!values.coords.trim() ||
+      (link !== saved.mapsUrl && values.coords.trim() === saved.coords));
   const movedPin =
     coords && (coords.lat !== location.lat || coords.lng !== location.lng);
-  const staleLink = movedPin && values.mapsUrl.trim() && values.mapsUrl.trim() === saved.mapsUrl;
+  const staleLink = movedPin && link && link === saved.mapsUrl;
 
   return (
     <form
@@ -477,12 +484,14 @@ function LocationForm({ location, busyText, disabled, onSave, onReset }) {
             inputMode="decimal"
             placeholder="ej. -37.88329, -67.80054"
             aria-describedby="site-loc-coords-hint"
-            aria-invalid={coords ? undefined : true}
+            aria-invalid={coords || pinFromLink ? undefined : true}
           />
           <p id="site-loc-coords-hint" className="admin-field-hint">
-            {coords
-              ? "En Google Maps mantené apretado el lugar exacto (en la compu, clic derecho) y copiá los números que aparecen."
-              : "No se entienden las coordenadas: copialas de Google Maps, por ej. -37.88329, -67.80054."}
+            {pinFromLink
+              ? "Al guardar, el punto se toma del link de Google Maps."
+              : coords
+                ? "En Google Maps mantené apretado el lugar exacto (en la compu, clic derecho) y copiá los números que aparecen."
+                : "No se entienden las coordenadas: copialas de Google Maps, por ej. -37.88329, -67.80054."}
           </p>
         </div>
         <div className="admin-field">
@@ -499,7 +508,7 @@ function LocationForm({ location, busyText, disabled, onSave, onReset }) {
           <p id="site-loc-maps-hint" className="admin-field-hint">
             {staleLink
               ? "Cambiaste el punto del mapa: actualizá también este link (o borralo) para que \"Cómo llegar\" lleve al lugar nuevo."
-              : "El de los botones \"Cómo llegar\". En Google Maps: Compartir → Copiar vínculo. Si lo dejás vacío, abre el punto del mapa."}
+              : "El de los botones \"Cómo llegar\". En Google Maps buscá el club: Compartir → Copiar vínculo. Si cambiás solo el link, el punto del mapa se actualiza solo. Si lo dejás vacío, abre el punto del mapa."}
           </p>
         </div>
       </div>
@@ -524,7 +533,7 @@ function LocationForm({ location, busyText, disabled, onSave, onReset }) {
         <button
           type="submit"
           className="btn btn-linear-primary"
-          disabled={disabled || unchanged || !coords}
+          disabled={disabled || unchanged || !(coords || pinFromLink)}
         >
           Guardar ubicación
         </button>
