@@ -82,6 +82,19 @@ export default function AmenitiesSection({ photos }) {
 
         <FeatureCarousel photos={photos} />
 
+        <div className="recorrido-cta">
+          <div>
+            <strong>Recorré el club en 3D</strong>
+            <p>
+              Caminá con Muzzaguito entre las dos canchas, la cantina y los
+              vestuarios, y descubrí cada rincón antes de venir.
+            </p>
+          </div>
+          <a className="btn btn-orange-primary" href="/recorrido">
+            Entrar al recorrido
+          </a>
+        </div>
+
         {/* FICHA TÉCNICA INTERACTIVA DE PISTAS */}
         <div className="spec-panel">
           <div className="spec-panel-head">

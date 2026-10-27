@@ -25,6 +25,12 @@ export default function sitemap() {
       priority: 0.8,
     },
     {
+      url: `${BASE_URL}/recorrido`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
       url: `${BASE_URL}/herramientas/dividir-gastos`,
       lastModified: now,
       changeFrequency: "monthly",

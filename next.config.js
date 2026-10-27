@@ -42,6 +42,10 @@ const nextConfig = {
       bodySizeLimit: "4.5mb",
     },
   },
+  // El recorrido 3D es un archivo estático independiente (public/recorrido).
+  async rewrites() {
+    return [{ source: "/recorrido", destination: "/recorrido/index.html" }];
+  },
   async headers() {
     return [
       {
