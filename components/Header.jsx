@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { DEFAULT_LOCATION } from "../lib/siteLocation";
 import ScrollRow from "./ScrollRow";
 
 const NAV_LINKS = [
@@ -21,7 +22,6 @@ const TOOLS_LINKS = [
   { href: "/herramientas/americano", label: "Torneo americano", short: "Americano", desc: "Generador de fixtures express" },
 ];
 
-const MAPS_URL = "https://maps.app.goo.gl/kR1h9mhdLqGLKatV7";
 const WHATSAPP_URL = "https://wa.me/5492995974176";
 
 const GoogleMapsIcon = () => (
@@ -40,7 +40,11 @@ const WhatsAppIcon = () => (
   </svg>
 );
 
-export default function Header() {
+/**
+ * `mapsHref` llega de Configuración → Sitio web vía SiteHeader; las páginas
+ * de error (client) lo usan sin prop y abren el link original.
+ */
+export default function Header({ mapsHref = DEFAULT_LOCATION.mapsUrl }) {
   const [open, setOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const menuBtnRef = useRef(null);
@@ -250,7 +254,7 @@ export default function Header() {
         <div className="mobile-nav-contact">
         <a
           className="mobile-nav-link maps-text"
-          href={MAPS_URL}
+          href={mapsHref}
           target="_blank"
           rel="noopener"
           style={{ display: "flex", alignItems: "center", gap: 8 }}

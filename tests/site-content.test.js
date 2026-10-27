@@ -13,6 +13,7 @@ import {
 import {
   DEFAULT_LOCATION,
   isMapsUrl,
+  isShortMapsUrl,
   locationFromInput,
   parseCoords,
 } from "../lib/siteLocation.js";
@@ -262,6 +263,11 @@ test("las coordenadas se entienden como las copia Google Maps", () => {
     parseCoords("https://www.google.com/maps/search/?api=1&query=-38.95%2C-68.06"),
     { lat: -38.95, lng: -68.06 },
   );
+  // Lo que devuelve un link corto de "Compartir" sobre un punto suelto.
+  assert.deepEqual(
+    parseCoords("https://www.google.com/maps/search/-37.880361,+-67.798343?entry=tts"),
+    { lat: -37.880361, lng: -67.798343 },
+  );
   assert.equal(parseCoords("Catriel"), null);
   assert.equal(parseCoords("-137.1, 20"), null);
   assert.equal(parseCoords("0, 0"), null);
@@ -276,6 +282,8 @@ test("el link de Cómo llegar solo puede ser de Google Maps", () => {
   assert.equal(isMapsUrl("http://maps.app.goo.gl/x"), false);
   assert.equal(isMapsUrl("https://maps.app.goo.gl.evil.com/x"), false);
   assert.equal(isMapsUrl("javascript:alert(1)"), false);
+  assert.equal(isShortMapsUrl("https://maps.app.goo.gl/dTRVRy3n6FbUkyQF7"), true);
+  assert.equal(isShortMapsUrl("https://www.google.com/maps/place/x"), false);
 });
 
 test("guardar la ubicación valida lo que se cargó en el panel", () => {

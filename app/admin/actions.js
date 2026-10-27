@@ -25,7 +25,7 @@ import {
   galleryFromDb,
   galleryToDb,
 } from "../../lib/siteContent";
-import { locationFromInput } from "../../lib/siteLocation";
+import { isShortMapsUrl, locationFromInput, parseCoords } from "../../lib/siteLocation";
 import { getSiteContent } from "../../lib/siteContentServer";
 import {
   deleteStoredPhotos,
@@ -1871,11 +1871,36 @@ export async function adminResetSitePhoto(slotId) {
   return publishSite();
 }
 
+/** Sigue un link corto de Google Maps hasta el link largo, que trae el punto. */
+async function resolveMapsUrl(url) {
+  if (!isShortMapsUrl(url)) return url;
+  try {
+    const res = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(5000) });
+    return res.headers.get("location") || "";
+  } catch (error) {
+    console.warn("adminSitio: no se pudo seguir el link de Maps:", error.message);
+    return "";
+  }
+}
+
 /** { street, locality, mapsUrl, coords }: la dirección y el mapa, por si el club se muda. */
 export async function adminSetSiteLocation(input) {
   const blocked = await siteWriteBlocked();
   if (blocked) return blocked;
-  const parsed = locationFromInput(input);
+
+  // Si cambiaron el link sin tocar las coordenadas (o las borraron), el punto
+  // sale del link: es lo que esperan al pegar el de "Compartir" del lugar.
+  const mapsUrl = String(input?.mapsUrl ?? "").trim();
+  const coords = String(input?.coords ?? "").trim();
+  const { location: current } = await getSiteContent();
+  const pinFromLink =
+    mapsUrl &&
+    (!coords || (mapsUrl !== current.mapsUrl && coords === current.coordsText));
+  const fromLink = pinFromLink ? parseCoords(await resolveMapsUrl(mapsUrl)) : null;
+  const parsed = locationFromInput({
+    ...input,
+    coords: fromLink ? `${fromLink.lat}, ${fromLink.lng}` : coords,
+  });
   if (parsed.error) return { ok: false, error: parsed.error };
 
   const { street, locality } = parsed.location;

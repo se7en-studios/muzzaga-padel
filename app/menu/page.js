@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import Header from "../../components/Header";
+import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
 import BottomNav from "../../components/BottomNav";
 import MenuClient from "./MenuClient";
@@ -16,7 +16,7 @@ export const metadata = pageMetadata({
 export default function MenuPage() {
   return (
     <>
-      <Header />
+      <SiteHeader />
       <main style={{ paddingTop: 90, minHeight: "80vh" }}>
         <div className="container" style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--text-muted)" }}>

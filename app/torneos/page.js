@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Header from "../../components/Header";
+import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
 import BottomNav from "../../components/BottomNav";
 import TorneosGallery from "../../components/TorneosGallery";
@@ -22,7 +22,7 @@ export default async function TorneosPage() {
   const { gallery } = await getSiteContent();
   return (
     <>
-      <Header />
+      <SiteHeader />
       <main style={{ paddingTop: 90, minHeight: "80vh" }}>
         <div className="container" style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--text-muted)" }}>
