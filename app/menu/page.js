@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import Header from "../../components/Header";
-import Footer from "../../components/Footer";
+import SiteFooter from "../../components/SiteFooter";
 import BottomNav from "../../components/BottomNav";
 import MenuClient from "./MenuClient";
 import { pageMetadata } from "../../lib/pageMeta";
@@ -32,7 +32,7 @@ export default function MenuPage() {
           <MenuClient />
         </Suspense>
       </main>
-      <Footer />
+      <SiteFooter />
       <BottomNav />
     </>
   );

@@ -1,5 +1,8 @@
 import Image from "next/image";
 import Mascota from "./Mascota";
+import { DEFAULT_LOCATION, presentLocation } from "../lib/siteLocation";
+
+const DEFAULT = presentLocation(DEFAULT_LOCATION);
 
 const GoogleMapsIcon = () => (
   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">
@@ -22,7 +25,11 @@ const InstagramIcon = () => (
   </svg>
 );
 
-export default function Footer() {
+/**
+ * La dirección llega de Configuración → Sitio web vía SiteFooter; las
+ * páginas de error (client) la usan sin prop y muestran la original.
+ */
+export default function Footer({ location = DEFAULT }) {
   return (
     <footer className="app-footer">
       <div className="container">
@@ -69,7 +76,7 @@ export default function Footer() {
                 <span>Instagram</span>
               </a>
               <a
-                href="https://maps.app.goo.gl/kR1h9mhdLqGLKatV7"
+                href={location.mapsHref}
                 target="_blank"
                 rel="noopener"
                 className="footer-social-pill footer-pill-maps"
@@ -112,7 +119,7 @@ export default function Footer() {
               <div className="footer-club-info">
                 <div className="footer-info-row">
                   <span className="footer-info-bullet">📍</span>
-                  <span>Av. Cacique Catriel y Córdoba</span>
+                  <span>{location.street}</span>
                 </div>
                 <div className="footer-info-row">
                   <span className="footer-info-bullet">⏰</span>

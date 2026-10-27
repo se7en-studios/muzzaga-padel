@@ -25,6 +25,7 @@ import {
   galleryFromDb,
   galleryToDb,
 } from "../../lib/siteContent";
+import { locationFromInput } from "../../lib/siteLocation";
 import { getSiteContent } from "../../lib/siteContentServer";
 import {
   deleteStoredPhotos,
@@ -1797,10 +1798,17 @@ async function siteWriteBlocked({ upload = false } = {}) {
   return null;
 }
 
-/** Regenera las páginas con fotos y devuelve el contenido nuevo al panel. */
-async function publishSite() {
-  revalidatePath("/");
-  revalidatePath("/torneos");
+/**
+ * Regenera las páginas con fotos y devuelve el contenido nuevo al panel.
+ * `everywhere`: la ubicación sale en el footer y el JSON-LD de todo el sitio.
+ */
+async function publishSite({ everywhere = false } = {}) {
+  if (everywhere) {
+    revalidatePath("/", "layout");
+  } else {
+    revalidatePath("/");
+    revalidatePath("/torneos");
+  }
   return { ok: true, content: await getSiteContent() };
 }
 
@@ -1861,6 +1869,40 @@ export async function adminResetSitePhoto(slotId) {
     return { ok: false, error: "No se pudo restaurar la foto." };
   }
   return publishSite();
+}
+
+/** { street, locality, mapsUrl, coords }: la dirección y el mapa, por si el club se muda. */
+export async function adminSetSiteLocation(input) {
+  const blocked = await siteWriteBlocked();
+  if (blocked) return blocked;
+  const parsed = locationFromInput(input);
+  if (parsed.error) return { ok: false, error: parsed.error };
+
+  const { street, locality } = parsed.location;
+  const db = getDb();
+  try {
+    await db
+      .ref("siteContent/location")
+      .set({ ...parsed.location, updatedAt: Date.now() });
+    await audit(db, SESSION_STAFF, "SITIO_UBICACION", "Ubicación", `${street} · ${locality}`);
+  } catch (error) {
+    return { ok: false, error: "No se pudo guardar la ubicación." };
+  }
+  return publishSite({ everywhere: true });
+}
+
+/** Vuelve a la dirección y el mapa originales. */
+export async function adminResetSiteLocation() {
+  const blocked = await siteWriteBlocked();
+  if (blocked) return blocked;
+  const db = getDb();
+  try {
+    await db.ref("siteContent/location").remove();
+    await audit(db, SESSION_STAFF, "SITIO_UBICACION", "Ubicación", "Volvió a la original");
+  } catch (error) {
+    return { ok: false, error: "No se pudo restaurar la ubicación." };
+  }
+  return publishSite({ everywhere: true });
 }
 
 /** Texto que va sobre las fotos destacadas de torneos en el inicio. */

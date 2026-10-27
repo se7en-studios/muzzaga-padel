@@ -11,7 +11,7 @@ import FaqSection from "../components/FaqSection";
 import FloatingLiveBar from "../components/FloatingLiveBar";
 import MascotFloatHelper from "../components/MascotFloatHelper";
 import BottomNav from "../components/BottomNav";
-import Footer from "../components/Footer";
+import SiteFooter from "../components/SiteFooter";
 import ScrollReveal from "../components/ScrollReveal";
 import ScrollProgress from "../components/ScrollProgress";
 import StatCounter from "../components/StatCounter";
@@ -58,7 +58,10 @@ const TICKER_ITEMS = [
 export const revalidate = 300;
 
 export default async function Home() {
-  const [config, { photos }] = await Promise.all([getClubConfig(), getSiteContent()]);
+  const [config, { photos, location }] = await Promise.all([
+    getClubConfig(),
+    getSiteContent(),
+  ]);
   const { valle, pico, picoEnabled } = config.pricing;
   // Se anuncia el precio más bajo ("desde") cuando hay horario pico.
   const cheapest = picoEnabled && pico.court < valle.court ? pico : valle;
@@ -263,8 +266,8 @@ export default async function Home() {
                   </div>
                   <div className="location-detail-content">
                     <span className="location-detail-label">Dirección</span>
-                    <strong className="location-detail-value">Av. Cacique Catriel y Córdoba</strong>
-                    <span className="location-detail-sub">Catriel, Río Negro</span>
+                    <strong className="location-detail-value">{location.street}</strong>
+                    <span className="location-detail-sub">{location.locality}</span>
                   </div>
                 </div>
 
@@ -285,7 +288,7 @@ export default async function Home() {
 
               <div className="location-actions">
                 <a
-                  href={CLUB_INFO.mapsUrl}
+                  href={location.mapsHref}
                   target="_blank"
                   rel="noopener"
                   className="location-btn location-btn-maps"
@@ -303,7 +306,7 @@ export default async function Home() {
                 </a>
 
                 <a
-                  href={CLUB_INFO.wazeUrl}
+                  href={location.wazeUrl}
                   target="_blank"
                   rel="noopener"
                   className="location-btn location-btn-waze"
@@ -334,8 +337,8 @@ export default async function Home() {
 
             <div className="location-map-pane">
               <iframe
-                title="Mapa de Muzzaga Pádel en Catriel"
-                src="https://maps.google.com/maps?q=-37.8832905,-67.8005469&hl=es&z=16&output=embed"
+                title={`Mapa de Muzzaga Pádel en ${location.city}`}
+                src={location.embedUrl}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -350,7 +353,7 @@ export default async function Home() {
 
       <FloatingLiveBar schedule={config.schedule} blockedDates={config.blockedDates} />
       <MascotFloatHelper />
-      <Footer />
+      <SiteFooter />
       <BottomNav />
       <ScrollReveal />
     </>
