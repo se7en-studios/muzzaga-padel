@@ -357,10 +357,6 @@ export default function TacticalCourtSimulator() {
     <section
       id="pizarra-tactica"
       className="section-turnos"
-      style={{
-        background: "#ffffff",
-        borderTop: "1px solid var(--color-hairline)",
-      }}
     >
       <div className="container">
         {/* HEADER */}
@@ -468,17 +464,28 @@ export default function TacticalCourtSimulator() {
               style={{ cursor: boardMode === "free" ? "crosshair" : "default" }}
             >
               <defs>
-                <linearGradient
-                  id="wptTurf"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="100%"
+
+                {/* Césped sintético azul (la misma foto de la banda de
+                    Instalaciones) en mosaico, y la luz de los reflectores. */}
+                <pattern
+                  id="turfTexture"
+                  patternUnits="userSpaceOnUse"
+                  width="130"
+                  height="130"
                 >
-                  <stop offset="0%" stopColor="#0a2540" />
-                  <stop offset="50%" stopColor="#0d3156" />
-                  <stop offset="100%" stopColor="#081d33" />
-                </linearGradient>
+                  <image
+                    href="/img/fondo/textura-cesped.jpg"
+                    width="130"
+                    height="130"
+                    preserveAspectRatio="none"
+                  />
+                </pattern>
+
+                <radialGradient id="courtLight" cx="50%" cy="50%" r="65%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.14" />
+                  <stop offset="60%" stopColor="#ffffff" stopOpacity="0" />
+                  <stop offset="100%" stopColor="#050d26" stopOpacity="0.45" />
+                </radialGradient>
 
                 <linearGradient
                   id="neonOrange"
@@ -506,16 +513,20 @@ export default function TacticalCourtSimulator() {
                 </filter>
               </defs>
 
-              {/* Court Surface (Textura Azul WPT Oficial) */}
+              {/* Superficie: césped sintético azul + luz de reflectores, y
+                  la línea de fondo/lateral blanca alrededor. */}
+              <rect x="20" y="20" width="260" height="460" fill="url(#turfTexture)" />
+              <rect x="20" y="20" width="260" height="460" fill="#0a1d5c" opacity="0.38" />
+              <rect x="20" y="20" width="260" height="460" fill="url(#courtLight)" />
               <rect
-                x="20"
-                y="20"
-                width="260"
-                height="460"
-                rx="8"
-                fill="url(#wptTurf)"
-                stroke="#38bdf8"
-                strokeWidth="2.5"
+                x="21.5"
+                y="21.5"
+                width="257"
+                height="457"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="3"
+                opacity="0.9"
               />
 
               {/* Paredes de cristal */}
@@ -524,8 +535,8 @@ export default function TacticalCourtSimulator() {
                 y="16"
                 width="264"
                 height="6"
-                fill="#38bdf8"
-                opacity="0.85"
+                fill="#dbeafe"
+                opacity="0.55"
                 rx="2"
               />
               <rect
@@ -533,8 +544,8 @@ export default function TacticalCourtSimulator() {
                 y="478"
                 width="264"
                 height="6"
-                fill="#38bdf8"
-                opacity="0.85"
+                fill="#dbeafe"
+                opacity="0.55"
                 rx="2"
               />
               <rect
@@ -542,8 +553,8 @@ export default function TacticalCourtSimulator() {
                 y="18"
                 width="6"
                 height="110"
-                fill="#38bdf8"
-                opacity="0.85"
+                fill="#dbeafe"
+                opacity="0.55"
                 rx="2"
               />
               <rect
@@ -551,8 +562,8 @@ export default function TacticalCourtSimulator() {
                 y="18"
                 width="6"
                 height="110"
-                fill="#38bdf8"
-                opacity="0.85"
+                fill="#dbeafe"
+                opacity="0.55"
                 rx="2"
               />
               <rect
@@ -560,8 +571,8 @@ export default function TacticalCourtSimulator() {
                 y="372"
                 width="6"
                 height="110"
-                fill="#38bdf8"
-                opacity="0.85"
+                fill="#dbeafe"
+                opacity="0.55"
                 rx="2"
               />
               <rect
@@ -569,8 +580,8 @@ export default function TacticalCourtSimulator() {
                 y="372"
                 width="6"
                 height="110"
-                fill="#38bdf8"
-                opacity="0.85"
+                fill="#dbeafe"
+                opacity="0.55"
                 rx="2"
               />
 
@@ -596,55 +607,22 @@ export default function TacticalCourtSimulator() {
                 opacity="0.7"
               />
 
-              {/* Service Box Lines Top */}
-              <line
-                x1="20"
-                y1="140"
-                x2="280"
-                y2="140"
-                stroke="#ffffff"
-                strokeWidth="2"
-                opacity="0.75"
-              />
-              <line
-                x1="150"
-                y1="140"
-                x2="150"
-                y2="250"
-                stroke="#ffffff"
-                strokeWidth="2"
-                opacity="0.75"
-              />
-
-              {/* Service Box Lines Bottom */}
-              <line
-                x1="20"
-                y1="360"
-                x2="280"
-                y2="360"
-                stroke="#ffffff"
-                strokeWidth="2"
-                opacity="0.75"
-              />
-              <line
-                x1="150"
-                y1="250"
-                x2="150"
-                y2="360"
-                stroke="#ffffff"
-                strokeWidth="2"
-                opacity="0.75"
-              />
+              {/* Líneas de saque a 6,95 m de la red (la mitad de la cancha
+                  mide 10 m = 230 unidades) y la central entre ellas. */}
+              <line x1="20" y1="90" x2="280" y2="90" stroke="#ffffff" strokeWidth="2.5" opacity="0.9" />
+              <line x1="20" y1="410" x2="280" y2="410" stroke="#ffffff" strokeWidth="2.5" opacity="0.9" />
+              <line x1="150" y1="90" x2="150" y2="410" stroke="#ffffff" strokeWidth="2.5" opacity="0.9" />
 
               {/* Net Line & Posts */}
+              <line x1="14" y1="251.5" x2="286" y2="251.5" stroke="#050d26" strokeWidth="5" opacity="0.55" />
               <line
-                x1="12"
+                x1="14"
                 y1="250"
-                x2="288"
+                x2="286"
                 y2="250"
                 stroke="#ffffff"
-                strokeWidth="3.5"
-                strokeDasharray="5 3"
+                strokeWidth="2.5"
+                strokeDasharray="1.5 2.5"
                 opacity="0.95"
               />
               <circle cx="15" cy="250" r="4" fill="#E8722A" />
@@ -998,7 +976,7 @@ export default function TacticalCourtSimulator() {
                   {/* FASES DE EJECUCIÓN */}
                   <div
                     style={{
-                      background: "#ffffff",
+                      background: "var(--color-surface-card)",
                       border: "1px solid var(--color-hairline)",
                       borderRadius: "var(--radius-md)",
                       padding: "10px 12px",
@@ -1087,9 +1065,9 @@ export default function TacticalCourtSimulator() {
                       gap: 8,
                       fontSize: 13,
                       padding: "10px 14px",
-                      borderColor: "rgba(37, 211, 102, 0.4)",
-                      color: "#166534",
-                      background: "rgba(37, 211, 102, 0.08)",
+                      borderColor: "#1fa855",
+                      color: "#ffffff",
+                      background: "#1fa855",
                       fontWeight: 600,
                       textDecoration: "none",
                     }}
@@ -1170,11 +1148,11 @@ export default function TacticalCourtSimulator() {
 
                 <div
                   className="pro-tip-box"
-                  style={{ background: "#e7f5ee", borderColor: "#0F7B4F" }}
+                  style={{ background: "rgba(22, 163, 74, 0.12)", borderColor: "#16a34a" }}
                 >
                   <strong
                     style={{
-                      color: "#0F7B4F",
+                      color: "#16a34a",
                       fontSize: 13,
                       display: "block",
                       marginBottom: 4,
@@ -1203,9 +1181,9 @@ export default function TacticalCourtSimulator() {
                     gap: 8,
                     fontSize: 13,
                     padding: "10px 14px",
-                    borderColor: "rgba(15, 123, 79, 0.4)",
-                    color: "#0F7B4F",
-                    background: "rgba(15, 123, 79, 0.08)",
+                    borderColor: "#1fa855",
+                    color: "#ffffff",
+                    background: "#1fa855",
                     fontWeight: 600,
                     textDecoration: "none",
                   }}
