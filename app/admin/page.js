@@ -586,12 +586,29 @@ export default function AdminPage() {
   }
 
   // LOGIN SCREEN
+  // Pensado como la "ficha del club" apoyada sobre la cancha: tira de grip
+  // en la esquina, sticker de la marca y Muzzaguito asomándose. El fondo
+  // (la cancha con paleta, pelotas y una porción de muzza) va en brand.css.
   if (!isAuthenticated) {
     return (
-      <div className="admin-login-wrapper">
-        <div className="admin-login-card">
-          <div className="admin-login-header">
-            <div className="admin-login-brand">
+      <div className="admin-login-wrapper admin-login-marca">
+        <div className="admin-login-col">
+          <div className="admin-login-card">
+            <span className="admin-login-grip" aria-hidden="true" />
+            <span className="admin-login-sticker" aria-hidden="true">
+              Más que
+              <br />
+              pádel
+            </span>
+            <img
+              src="/img/mascotas/muzzaguito-lentes-paleta.webp"
+              alt=""
+              width={120}
+              height={120}
+              className="admin-login-peek"
+            />
+
+            <div className="admin-login-header">
               <img
                 src="/img/logo_full_dark.png"
                 alt="Muzzaga · más que pádel"
@@ -599,69 +616,45 @@ export default function AdminPage() {
                 height={895}
                 className="admin-login-logo"
               />
-              <img
-                src="/img/mascotas/muzzaguito-lentes-paleta.webp"
-                alt=""
-                width={84}
-                height={84}
-                className="admin-login-mascot"
-              />
+              <span className="admin-login-kicker">
+                Solo para el equipo del club
+              </span>
+              <h1 className="admin-login-title">Panel del club</h1>
+              <p className="admin-login-sub">
+                Ingresá con la contraseña del club para continuar.
+              </p>
             </div>
-            <h1 className="admin-login-title">Panel del club</h1>
-            <p className="admin-login-sub">Muzzaga Pádel · Catriel</p>
+
+            <form onSubmit={handleLogin}>
+              <label htmlFor="admin-pin" className="admin-login-label">
+                Contraseña
+              </label>
+              <input
+                id="admin-pin"
+                type="password"
+                className="admin-input-field admin-login-input"
+                placeholder="Escribí la contraseña del club"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                autoFocus
+              />
+
+              {authError && <div className="admin-error-text">{authError}</div>}
+
+              <button
+                type="submit"
+                className="btn btn-linear-primary admin-login-submit"
+                disabled={authLoading}
+              >
+                {authLoading ? "Entrando…" : "Entrar"}
+                {!authLoading && <span aria-hidden="true">→</span>}
+              </button>
+            </form>
           </div>
 
-          <form onSubmit={handleLogin}>
-            <label
-              style={{
-                fontSize: 14.5,
-                color: "var(--text-secondary)",
-                display: "block",
-                marginBottom: 6,
-              }}
-            >
-              Contraseña
-            </label>
-            <input
-              type="password"
-              className="admin-input-field"
-              placeholder="Escribí la contraseña del club"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
-              autoFocus
-            />
-
-            {authError && <div className="admin-error-text">{authError}</div>}
-
-            <button
-              type="submit"
-              className="btn btn-linear-primary"
-              style={{
-                width: "100%",
-                height: 52,
-                fontSize: 17,
-                marginTop: 16,
-                justifyContent: "center",
-              }}
-              disabled={authLoading}
-            >
-              {authLoading ? "Entrando…" : "Entrar"}
-            </button>
-          </form>
-
-          <div style={{ marginTop: 24, textAlign: "center" }}>
-            <Link
-              href="/"
-              style={{
-                fontSize: 14.5,
-                color: "var(--brand-strong)",
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              ← Volver a la web del club
-            </Link>
-          </div>
+          <Link href="/" className="admin-login-back">
+            ← Volver a la web del club
+          </Link>
         </div>
       </div>
     );
