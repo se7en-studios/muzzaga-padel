@@ -125,13 +125,12 @@ export default function Footer({ location = DEFAULT }) {
               <a
                 href="/admin"
                 className="footer-admin-card-btn"
-                aria-label="Panel de Control: administración del club"
+                aria-label="Admin: panel de administración del club"
               >
                 <span className="footer-admin-icon" aria-hidden="true">
                   <Image src="/img/iconos/biblioteca/icono-candado.webp" alt="" width={26} height={26} className="icono-3d" />
                 </span>
-                <span>Panel de Control</span>
-                <span className="footer-admin-arrow" aria-hidden="true">↗</span>
+                <span>Admin</span>
               </a>
             </div>
           </div>

@@ -619,8 +619,12 @@
   flex-shrink: 0;
 }
 
-.footer-admin-card-btn .footer-admin-arrow {
-  margin-left: auto;
+/* Solo "Admin" y el candado: el botón va al ancho de su contenido. */
+.footer-admin-card-btn {
+  align-self: flex-start;
+  padding-right: 22px;
+  font-size: 15px;
+  letter-spacing: 0.04em;
 }
 
 .footer-credit {
