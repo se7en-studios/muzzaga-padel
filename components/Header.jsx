@@ -166,7 +166,7 @@ export default function Header({ mapsHref = DEFAULT_LOCATION.mapsUrl }) {
               className="btn btn-secondary-whatsapp header-whatsapp-btn"
               style={{ height: 36, padding: "6px 14px", gap: 6 }}
             >
-              <WhatsAppLogo color="#fff" /> WhatsApp
+              <WhatsAppLogo color="currentColor" /> WhatsApp
             </a>
             <button
               type="button"
