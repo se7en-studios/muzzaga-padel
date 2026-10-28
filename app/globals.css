@@ -3164,7 +3164,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
   gap: 32px;
-  align-items: center;
+  /* Arriba, no al centro: la cancha y el panel arrancan a la misma altura
+     aunque el panel sea más alto. */
+  align-items: start;
 }
 
 .tactical-court-wrap {
@@ -3256,7 +3258,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .pro-tip-box {
-  background: #fff7ed;
+  background: var(--color-accent-orange-subtle);
   border-left: 3px solid var(--color-accent-orange);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   padding: 12px 14px;
@@ -7776,8 +7778,8 @@ body:has(.footer-wordmark) {
    de darle dark mode automático no vale la pena, así que abajo
    (.admin-dashboard-layout / .admin-login-wrapper) se reafirman los valores
    claros para que el admin se vea igual sin importar el tema del sistema.
-   Mismo motivo para #pizarra-tactica y #todas-las-categorias: ambas
-   secciones fuerzan background:#ffffff literal en el JSX (no var), pero su
+   Mismo motivo para #todas-las-categorias: la sección fuerza
+   background:#ffffff literal en el JSX (no var), pero su
    texto interno sí usaba var(--color-ink)/var(--color-body)/etc, que este
    bloque redefine a tonos claros para dark mode → texto casi blanco sobre
    fondo blanco forzado, invisible. Se las suma al mismo light-lock.
@@ -7795,7 +7797,7 @@ body:has(.footer-wordmark) {
      zonas que quedan claras (pizarra, categorías, admin) y las etiquetas
      sobre foto la mantienen. Con :where() la exclusión no suma
      especificidad: la etiqueta numerada de la home ("01 |") sigue ganando. */
-  .badge-emerald:where(:not(#pizarra-tactica *, #todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *, .photo-bento-body *)) {
+  .badge-emerald:where(:not(#todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *, .photo-bento-body *)) {
     background: rgba(52, 211, 153, 0.12);
     border-color: rgba(52, 211, 153, 0.35);
     color: #34d399;
@@ -7864,17 +7866,17 @@ body:has(.footer-wordmark) {
 
   /* Sin las zonas que quedan en claro también en modo oscuro (pizarra,
      categorías, admin): ahí siguen los tonos oscuros. */
-  .whatsapp-text:not(#pizarra-tactica *, #todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *),
-  .btn-secondary-whatsapp:not(#pizarra-tactica *, #todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *) {
+  .whatsapp-text:not(#todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *),
+  .btn-secondary-whatsapp:not(#todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *) {
     color: #34d399;
   }
 
-  .maps-text:not(#pizarra-tactica *, #todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *) {
+  .maps-text:not(#todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *) {
     color: #ff8a80;
   }
 
   .booking-date-weekend-badge,
-  .fixture-round-badge:not(#pizarra-tactica *, #todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *) {
+  .fixture-round-badge:not(#todas-las-categorias *, .admin-root *, .admin-dashboard-layout *, .admin-login-wrapper *) {
     color: #ff9a5a;
   }
 
@@ -7934,7 +7936,6 @@ body:has(.footer-wordmark) {
 
   .admin-dashboard-layout,
   .admin-login-wrapper,
-  #pizarra-tactica,
   #todas-las-categorias {
     --color-canvas: #ffffff;
     --color-canvas-soft: #f4f0e7;
