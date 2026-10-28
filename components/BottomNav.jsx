@@ -10,7 +10,19 @@ const TOP_PX = 80;
 const DIRECTION_PX = 12;
 const BOTTOM_PX = 40;
 
-const ICON = { viewBox: "0 0 24 24", width: 20, height: 20, fill: "none", stroke: "currentColor", strokeWidth: 2, "aria-hidden": true };
+// Íconos 3D de la marca (public/img/iconos/biblioteca).
+function Icon3D({ name }) {
+  return (
+    <img
+      src={`/img/iconos/biblioteca/icono-${name}.webp`}
+      alt=""
+      width={26}
+      height={26}
+      className="bottom-bar-3d"
+      aria-hidden="true"
+    />
+  );
+}
 
 function useCompactOnScroll(ref) {
   useEffect(() => {
@@ -96,48 +108,28 @@ export default function BottomNav() {
 
       <a {...item("turnos")} href="/#turnos" aria-label="Ir a turnos" style={{ "--k": 2 }}>
         <span className="bottom-bar-icon">
-          <svg {...ICON}>
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
+          <Icon3D name="calendario" />
         </span>
         <span className="bottom-bar-label">Turnos</span>
       </a>
 
       <a {...item("ubicacion")} href="/#ubicacion" aria-label="Cómo llegar y ubicación del club" style={{ "--k": 1 }}>
         <span className="bottom-bar-icon">
-          <svg {...ICON}>
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
-            <circle cx="12" cy="9" r="2.5"></circle>
-          </svg>
+          <Icon3D name="ubicacion" />
         </span>
         <span className="bottom-bar-label">Club</span>
       </a>
 
       <Link {...item("torneos")} href="/torneos" aria-label="Ver torneos" style={{ "--k": 0 }}>
         <span className="bottom-bar-icon">
-          <svg {...ICON}>
-            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-            <path d="M4 22h16"></path>
-            <path d="M10 14.66V17c0 .55-.45 1-1 1H7c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-1c0-.55-.45-1-1-1h-2c-.55 0-1-.45-1-1v-2.34"></path>
-            <path d="M6 4h12a2 2 0 0 1 2 2v3a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6V6a2 2 0 0 1 2-2z"></path>
-          </svg>
+          <Icon3D name="trofeo" />
         </span>
         <span className="bottom-bar-label">Torneos</span>
       </Link>
 
       <Link {...item("menu")} href="/menu" aria-label="Ver el menú de la cantina" style={{ "--k": -1 }}>
         <span className="bottom-bar-icon">
-          <svg {...ICON}>
-            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-            <line x1="6" y1="1" x2="6" y2="4"></line>
-            <line x1="10" y1="1" x2="10" y2="4"></line>
-            <line x1="14" y1="1" x2="14" y2="4"></line>
-          </svg>
+          <Icon3D name="menu" />
         </span>
         <span className="bottom-bar-label">Menú</span>
       </Link>

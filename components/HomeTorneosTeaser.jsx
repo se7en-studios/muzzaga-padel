@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarClock } from "lucide-react";
 import { useLightbox } from "./LightboxProvider";
 import { CLUB_INFO } from "../data/club";
 import Mascota from "./Mascota";
@@ -38,7 +37,7 @@ export default function HomeTorneosTeaser({ photos }) {
         {/* CARD PROXIMO TORNEO */}
         <div className="next-event">
           <div className="next-event-date" aria-hidden="true">
-            <CalendarClock strokeWidth={2.2} />
+            <Image src="/img/iconos/biblioteca/icono-calendario.webp" alt="" width={44} height={44} className="icono-3d" />
             <span>Fecha</span>
           </div>
           <div className="next-event-body">

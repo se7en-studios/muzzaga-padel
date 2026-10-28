@@ -16,7 +16,10 @@ import ScrollReveal from "../components/ScrollReveal";
 import ScrollProgress from "../components/ScrollProgress";
 import StatCounter from "../components/StatCounter";
 import HeroMascot from "../components/HeroMascot";
+import HeroLiveSlots from "../components/HeroLiveSlots";
+import { WhatsAppLogo, GoogleMapsLogo, WazeLogo } from "../components/BrandLogos";
 import "./landing.css";
+import "./fondo-cancha.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";
@@ -136,18 +139,17 @@ export default async function Home() {
             </ul>
           </div>
 
-          <div className="hero-night-visual" aria-hidden="true">
-            <div className="hero-mascot-ring" />
+          {/* Sin aria-hidden en el contenedor: los turnos en vivo son un botón.
+              La mascota es decorativa (alt vacío) y el precio ya está en Reservas. */}
+          <div className="hero-night-visual">
+            <div className="hero-mascot-ring" aria-hidden="true" />
             <HeroMascot src="/img/mascotas/muzzaguito-lentes-hero.webp" width={720} height={657} />
-            <div className="hero-float-card hero-float-price">
+            <div className="hero-float-card hero-float-price" aria-hidden="true">
               <span className="hero-float-label">{priceFrom ? "Turno desde" : "Turno"} · {config.slotDurationMin} min</span>
               <strong>${pricing.total.toLocaleString("es-AR")}</strong>
               <span className="hero-float-sub">${pricing.perPlayer.toLocaleString("es-AR")} c/u si son 4</span>
             </div>
-            <div className="hero-float-card hero-float-glass">
-              <span className="hero-float-dot" />
-              Cristal templado · LED
-            </div>
+            <HeroLiveSlots />
           </div>
 
           <dl className="hero-stats">
@@ -259,10 +261,7 @@ export default async function Home() {
               <div className="location-details-list">
                 <div className="location-detail-item">
                   <div className="location-detail-icon location-icon-pin" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
+                    <Image src="/img/iconos/biblioteca/icono-ubicacion.webp" alt="" width={44} height={44} className="icono-3d" />
                   </div>
                   <div className="location-detail-content">
                     <span className="location-detail-label">Dirección</span>
@@ -273,10 +272,7 @@ export default async function Home() {
 
                 <div className="location-detail-item">
                   <div className="location-detail-icon location-icon-clock" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
+                    <Image src="/img/iconos/biblioteca/icono-reloj.webp" alt="" width={44} height={44} className="icono-3d" />
                   </div>
                   <div className="location-detail-content">
                     <span className="location-detail-label">Horarios</span>
@@ -294,13 +290,7 @@ export default async function Home() {
                   className="location-btn location-btn-maps"
                   aria-label="Abrir en Google Maps"
                 >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                    <path
-                      d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
-                      fill="#EA4335"
-                    />
-                    <circle cx="12" cy="9" r="2.8" fill="#ffffff" />
-                  </svg>
+                  <GoogleMapsLogo size={18} />
                   <span>Google Maps</span>
                   <span className="location-btn-arrow" aria-hidden="true">↗</span>
                 </a>
@@ -312,9 +302,7 @@ export default async function Home() {
                   className="location-btn location-btn-waze"
                   aria-label="Navegar con Waze"
                 >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                  </svg>
+                  <WazeLogo size={18} />
                   <span>Waze</span>
                   <span className="location-btn-arrow" aria-hidden="true">↗</span>
                 </a>
@@ -326,9 +314,7 @@ export default async function Home() {
                   className="location-btn location-btn-wa"
                   aria-label="Contactar por WhatsApp"
                 >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="#25D366" aria-hidden="true">
-                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.694.067-1.127-.072-.27-.087-.621-.21-1.077-.407-1.927-.834-3.176-2.778-3.272-2.906-.096-.129-.778-1.037-.778-1.977 0-.94.492-1.401.667-1.593.175-.192.38-.24.507-.24.127 0 .254.002.365.007.119.006.279-.045.437.334.162.388.555 1.353.603 1.451.048.098.08.213.016.341-.064.128-.096.208-.192.32-.096.112-.202.25-.288.336-.096.096-.197.201-.085.393.112.192.497.82 1.066 1.328.733.654 1.352.857 1.544.953.192.096.304.08.416-.048.112-.128.48-1.558.608-.752.128-.192.256-.16.432-.096.176.064 1.114.525 1.306.621.192.096.32.144.368.224.048.08.048.464-.096.869z" />
-                  </svg>
+                  <WhatsAppLogo size={18} />
                   <span>WhatsApp</span>
                   <span className="location-btn-arrow" aria-hidden="true">↗</span>
                 </a>
