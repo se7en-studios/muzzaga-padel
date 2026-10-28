@@ -59,11 +59,25 @@ body {
   opacity: 1;
 }
 
-/* En celular el video horizontal se recorta: se ancla a la izquierda para
-   que se vea la cancha de ese lado. */
+/* En celular el hero es alto y angosto: si el video lo cubría entero quedaba
+   ampliado ~4 veces y se veía borroso. Acá ocupa solo la parte de arriba
+   (menos zoom: entran el pasillo y el vidrio de las dos canchas), centrado
+   porque la toma es simétrica, y se funde con el fondo hacia abajo. La foto
+   se esconde cuando el video ya se ve, para que no asome debajo. */
 @media (max-width: 768px) {
   .hero-night-video {
-    object-position: 0% 55%;
+    height: min(100%, 165vw);
+    object-position: 50% 50%;
+    -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent);
+    mask-image: linear-gradient(180deg, #000 70%, transparent);
+  }
+
+  .hero-night-photo img {
+    transition: opacity 0.8s ease;
+  }
+
+  .hero-night-photo:has(.hero-night-video.is-ready) img {
+    opacity: 0;
   }
 }
 
