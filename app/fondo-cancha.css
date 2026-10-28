@@ -164,15 +164,105 @@
   background: rgba(255, 255, 255, 0.14);
 }
 
+/* El panel de las pastillas (Torneos, Living, Cantina…) es el mismo vidrio
+   desenfocado que la ficha técnica, no un negro sólido. Los degradés de
+   arriba y abajo eran negros: en el vidrio se cambian por una máscara que
+   desvanece la lista. */
+#instalaciones .fc-nav {
+  background: var(--cancha-vidrio);
+  backdrop-filter: blur(12px);
+}
+
+#instalaciones .fc-nav-fade {
+  display: none;
+}
+
+/* align-self: las pastillas van en absoluto y en celu la lista medía 0 de
+   alto, así que la máscara la tapaba entera: se estira al alto del panel. */
+#instalaciones .fc-nav-track {
+  align-self: stretch;
+  height: auto;
+  mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+}
+
 @media (max-width: 768px) {
   #instalaciones {
     padding-block: 120px;
   }
 
+  /* En celu la sección es una columna larguísima: con las proporciones de
+     una cancha real la línea de saque caía debajo de la descripción y la
+     red quedaba tapada por el carrusel. Acá el perimetral va por fuera del
+     texto (a 6 px del borde, con aire) y las líneas de adentro se dibujan
+     en los huecos del contenido: la de saque con su "T" entre el título y
+     el carrusel, y la red entre el carrusel y la ficha técnica. */
   #instalaciones::after {
-    top: 80px;
+    top: 96px;
     bottom: 80px;
+    left: 6px;
+    right: 6px;
     border-width: 2px;
+    background-image: none;
+  }
+
+  /* Más oscuro, sobre todo detrás del título, para que el texto se lea
+     sobre el césped. */
+  #instalaciones::before {
+    background-image:
+      linear-gradient(180deg, var(--color-canvas) 0, transparent 200px, transparent calc(100% - 240px), var(--color-canvas) 100%),
+      linear-gradient(180deg, rgba(7, 16, 52, 0.78) 0%, rgba(7, 16, 52, 0.5) 30%, rgba(7, 16, 52, 0.55) 70%, rgba(7, 16, 52, 0.78) 100%),
+      url("/img/fondo/textura-cesped.jpg");
+    background-size: auto, auto, 360px 360px;
+    background-repeat: no-repeat, no-repeat, repeat;
+  }
+
+  #instalaciones .section-title,
+  #instalaciones .section-desc {
+    text-shadow: 0 2px 12px rgba(5, 12, 36, 0.8);
+  }
+
+  #instalaciones .section-header-row {
+    position: relative;
+  }
+
+  /* Línea de saque, de borde a borde del perimetral (-10 px = de los 16 px
+     del contenedor a los 6 px de la línea). */
+  #instalaciones .section-header-row::after {
+    content: "";
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    bottom: -12px;
+    height: 2px;
+    background: var(--cancha-linea);
+  }
+
+  /* La "T": la central baja de la línea de saque hasta el carrusel. */
+  #instalaciones .section-header-row::before {
+    content: "";
+    position: absolute;
+    left: calc(50% - 1px);
+    top: calc(100% + 12px);
+    width: 2px;
+    height: 12px;
+    background: var(--cancha-linea);
+  }
+
+  /* La red, en el hueco entre el carrusel y la ficha técnica. */
+  #instalaciones .spec-panel {
+    position: relative;
+  }
+
+  #instalaciones .spec-panel::before {
+    content: "";
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    top: -16px;
+    height: 4px;
+    background:
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0 2px, transparent 2px 5px);
+    box-shadow: 0 2px 0 rgba(5, 12, 36, 0.55);
   }
 }
 
