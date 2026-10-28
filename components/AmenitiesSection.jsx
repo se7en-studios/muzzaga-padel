@@ -3,7 +3,7 @@
 import { useState } from "react";
 import FeatureCarousel from "./FeatureCarousel";
 import Mascota from "./Mascota";
-import { Grid2x2, Sprout, Lightbulb, Pizza } from "lucide-react";
+import Image from "next/image";
 
 // Solo lo que se puede afirmar sin la ficha técnica del club: el espesor
 // del cristal, la homologación, el césped y los proyectores quedan afuera
@@ -14,7 +14,7 @@ const SPECS = [
     short: "Cristales",
     title: "Cristal templado",
     subtitle: "Rebote parejo",
-    icon: Grid2x2,
+    icon: "/img/iconos/icono-cristal.webp",
     tag: "Las dos canchas",
     desc: "Paredes de cristal templado en las dos canchas: el rebote es parejo en el fondo y en los laterales.",
   },
@@ -23,7 +23,7 @@ const SPECS = [
     short: "Césped",
     title: "Césped sintético",
     subtitle: "Buen agarre",
-    icon: Sprout,
+    icon: "/img/iconos/icono-cesped.webp",
     tag: "Las dos canchas",
     desc: "Césped sintético para frenar, girar y arrancar sin resbalarte.",
   },
@@ -32,7 +32,7 @@ const SPECS = [
     short: "Iluminación",
     title: "Iluminación LED",
     subtitle: "Para jugar de noche",
-    icon: Lightbulb,
+    icon: "/img/iconos/icono-led.webp",
     tag: "Turnos de noche",
     desc: "Iluminación LED en las dos canchas para jugar de noche, hasta el último turno.",
   },
@@ -41,7 +41,7 @@ const SPECS = [
     short: "Cantina",
     title: "Cantina y tercer tiempo",
     subtitle: "Después de cada partido",
-    icon: Pizza,
+    icon: "/img/iconos/icono-cantina.webp",
     tag: "Menú completo",
     desc: "Mesas, pantalla grande para seguir partidos y torneos, pizzas caseras, bebidas frías y opciones sin TACC para después del partido.",
   },
@@ -100,7 +100,7 @@ export default function AmenitiesSection({ photos }) {
                   className="spec-tab"
                   onClick={() => setSelectedSpec(s.id)}
                 >
-                  <s.icon size={20} className="icono-marca" aria-hidden="true" />
+                  <Image src={s.icon} alt="" width={26} height={26} className="icono-3d" aria-hidden="true" />
                   <span>{s.short}</span>
                 </button>
               ))}
@@ -109,7 +109,7 @@ export default function AmenitiesSection({ photos }) {
 
           {/* key: re-monta el detalle para que la animación de entrada corra en cada cambio */}
           <div className="spec-detail" key={active.id} role="tabpanel">
-            <div className="spec-icon" aria-hidden="true"><active.icon size={20} className="icono-marca" /></div>
+            <div className="spec-icon" aria-hidden="true"><Image src={active.icon} alt="" width={72} height={72} className="icono-3d" /></div>
             <div>
               <div className="spec-title-row">
                 <strong>{active.title}</strong>

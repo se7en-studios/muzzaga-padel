@@ -2,95 +2,27 @@
 
 // Adaptado de un componente shadcn/Tailwind/TS (motion + hugeicons) al stack
 // real del proyecto: JS + CSS plano en globals.css, sin Tailwind ni TS. Los
-// íconos son los mismos SVG inline que ya usa AmenitiesSection, y las fotos
-// son las reales del club (public/img), no placeholders de stock.
+// íconos son los 3D de la marca que ya usa AmenitiesSection, y las fotos son
+// las reales del club (public/img), no placeholders de stock.
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, MotionConfig } from "motion/react";
 import Image from "next/image";
 
-const ICON_PROPS = {
-  viewBox: "0 0 24 24",
-  width: 18,
-  height: 18,
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-};
-
-function IconCourt() {
+// Íconos 3D de la marca (fieltro naranja, como Muzzaguito), los mismos de la
+// ficha técnica y la biblioteca en public/img/iconos.
+function Icon3D({ src }) {
   return (
-    <svg {...ICON_PROPS}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <line x1="3" y1="12" x2="21" y2="12" />
-      <line x1="12" y1="3" x2="12" y2="21" />
-    </svg>
+    <Image src={src} alt="" width={30} height={30} className="icono-3d fc-pill-3d" aria-hidden="true" />
   );
 }
 
-function IconBulb() {
-  return (
-    <svg {...ICON_PROPS}>
-      <circle cx="12" cy="12" r="5" />
-      <line x1="12" y1="1" x2="12" y2="3" />
-      <line x1="12" y1="21" x2="12" y2="23" />
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      <line x1="1" y1="12" x2="3" y2="12" />
-      <line x1="21" y1="12" x2="23" y2="12" />
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-    </svg>
-  );
-}
-
-function IconCantina() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-      <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
-      <line x1="6" y1="1" x2="6" y2="4" />
-      <line x1="10" y1="1" x2="10" y2="4" />
-      <line x1="14" y1="1" x2="14" y2="4" />
-    </svg>
-  );
-}
-
-function IconTrophy() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z" />
-      <path d="M17 5h3a2 2 0 0 1-2 4h-1M7 5H4a2 2 0 0 0 2 4h1" />
-    </svg>
-  );
-}
-
-function IconSofa() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M5 12V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5" />
-      <path d="M2 12h20v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4Z" />
-      <line x1="4" y1="18" x2="4" y2="21" />
-      <line x1="20" y1="18" x2="20" y2="21" />
-    </svg>
-  );
-}
-
-function IconShower() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M4 21V6a3 3 0 0 1 3-3h1" />
-      <path d="M8 3a6 6 0 0 1 6 6H8" />
-      <line x1="9" y1="13" x2="9" y2="14" />
-      <line x1="12" y1="13" x2="12" y2="14" />
-      <line x1="15" y1="13" x2="15" y2="14" />
-      <line x1="10.5" y1="17" x2="10.5" y2="18" />
-      <line x1="13.5" y1="17" x2="13.5" y2="18" />
-    </svg>
-  );
-}
+const IconCourt = () => <Icon3D src="/img/iconos/icono-cristal.webp" />;
+const IconBulb = () => <Icon3D src="/img/iconos/icono-led.webp" />;
+const IconCantina = () => <Icon3D src="/img/iconos/icono-cantina.webp" />;
+const IconTrophy = () => <Icon3D src="/img/iconos/biblioteca/icono-trofeo.webp" />;
+const IconSofa = () => <Icon3D src="/img/iconos/biblioteca/icono-living.webp" />;
+const IconShower = () => <Icon3D src="/img/iconos/biblioteca/icono-ducha.webp" />;
 
 // La foto de cada tarjeta sale de Configuración → Sitio web (slot
 // `inst-<id>` en lib/siteContent.js, que también tiene las de por defecto).

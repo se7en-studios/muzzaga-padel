@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { COURTS, nowInClubTimezone, nextDays } from "../lib/booking";
 import { requestSlotPick } from "../lib/pickSlot";
 import { scrollBehavior } from "../lib/motion";
+import { useFreeSlots } from "../lib/useFreeSlots";
 import Mascota from "./Mascota";
 import ScrollRow from "./ScrollRow";
 
@@ -13,55 +12,19 @@ import ScrollRow from "./ScrollRow";
 const SKELETON_CHIPS = [0, 1, 2, 3];
 
 export default function TodayFlashSlots() {
-  // "loading" | "ready" | "error"
-  const [status, setStatus] = useState("loading");
-  const [activeDate, setActiveDate] = useState("");
-  const [dateLabel, setDateLabel] = useState("Hoy");
-  const [availableSlots, setAvailableSlots] = useState([]);
-  const [courts, setCourts] = useState(COURTS);
-
-  useEffect(() => {
-    fetchSlots();
-  }, []);
-
-  async function fetchSlots() {
-    setStatus("loading");
-    try {
-      const now = nowInClubTimezone();
-      let targetDate = now.isoDate;
-      let label = "Hoy";
-
-      // Si ya son más de las 22:30 hs o el club está cerrado, buscar turnos de mañana
-      const days = nextDays(3);
-      if (now.hhmm >= "22:30" && days[1]) {
-        targetDate = days[1].iso;
-        label = `Mañana (${days[1].dayName})`;
-      }
-
-      setActiveDate(targetDate);
-      setDateLabel(label);
-
-      const res = await fetch(`/api/availability?date=${targetDate}`);
-      if (!res.ok) throw new Error("Error fetching slots");
-      const data = await res.json();
-
-      const free = (data.slots || []).filter((s) => s.available && !s.past);
-      setAvailableSlots(free);
-      if (data.courts?.length) setCourts(data.courts);
-      setStatus("ready");
-    } catch (err) {
-      console.error("Error loading flash slots", err);
-      setStatus("error");
-    }
-  }
+  const { status, date, label, today, upcoming, courts } = useFreeSlots();
 
   function handleSelectSlot(slot) {
     document.getElementById("turnos")?.scrollIntoView({ behavior: scrollBehavior() });
-    requestSlotPick({ date: activeDate, courtId: slot.courtId, start: slot.start });
+    requestSlotPick({ date: slot.date || date, courtId: slot.courtId, start: slot.start });
   }
 
+  // Hoy completo: se recomiendan los próximos libres de la semana.
+  const showWeek = status === "ready" && today.length === 0 && upcoming.length > 0;
+  const slots = showWeek ? upcoming : today;
+
   // Precio por jugador real de cada franja (pico/valle); se anuncia el menor.
-  const minPerPlayer = availableSlots.reduce(
+  const minPerPlayer = slots.reduce(
     (min, s) => Math.min(min, s.price?.perPlayer || Infinity),
     Infinity,
   );
@@ -72,8 +35,9 @@ export default function TodayFlashSlots() {
     return (
       <div className="container flash-wrap">
         <div className="flash-card is-full">
-          <div>
-            <strong className="flash-title">Turnos de {dateLabel.toLowerCase()}</strong>
+          <img src="/img/iconos/biblioteca/icono-paleta.webp" alt="" width={56} height={56} className="icono-3d flash-full-3d" aria-hidden="true" />
+          <div className="flash-full-text">
+            <strong className="flash-title">Turnos de {label.toLowerCase()}</strong>
             <div className="flash-meta">
               No pudimos cargar los turnos libres. Los ves en la grilla de abajo.
             </div>
@@ -86,14 +50,15 @@ export default function TodayFlashSlots() {
     );
   }
 
-  if (status === "ready" && availableSlots.length === 0) {
+  if (status === "ready" && slots.length === 0) {
     return (
       <div className="container flash-wrap">
         <div className="flash-card is-full">
-          <div>
-            <strong className="flash-title">Canchas al 100% para {dateLabel}</strong>
+          <img src="/img/iconos/biblioteca/icono-paleta.webp" alt="" width={56} height={56} className="icono-3d flash-full-3d" aria-hidden="true" />
+          <div className="flash-full-text">
+            <strong className="flash-title">Canchas al 100% esta semana</strong>
             <div className="flash-meta">
-              Todos los turnos de {dateLabel.toLowerCase()} ya fueron reservados. Asegurá tu lugar para los próximos días.
+              No quedan turnos libres en los próximos días. Si se libera uno, aparece acá.
             </div>
           </div>
           <a href="#turnos" className="btn btn-secondary">
@@ -108,7 +73,7 @@ export default function TodayFlashSlots() {
 
   return (
     <div className="container flash-wrap">
-      <div className={`flash-card${loading ? " is-loading" : ""}`} aria-busy={loading || undefined}>
+      <div className={`flash-card${loading ? " is-loading" : ""}${showWeek ? " is-week" : ""}`} aria-busy={loading || undefined}>
         <Mascota
           pose="golpe-pelota"
           alt=""
@@ -118,9 +83,15 @@ export default function TodayFlashSlots() {
         <div className="flash-body">
           <div className="flash-head">
             <div className="flash-head-left">
-              <span className="flash-live">Disponible ya</span>
+              <span className="flash-live">
+                {showWeek ? `${label} completo` : "Disponible ya"}
+              </span>
               <strong className="flash-title">
-                {loading ? `Turnos · ${dateLabel}` : `Turnos libres · ${dateLabel}`}
+                {loading
+                  ? `Turnos · ${label}`
+                  : showWeek
+                    ? "Próximos turnos libres"
+                    : `Turnos libres · ${label}`}
               </strong>
             </div>
             {loading ? (
@@ -147,16 +118,21 @@ export default function TodayFlashSlots() {
                     <span className="flash-chip-cta">Reservar →</span>
                   </div>
                 ))
-              : availableSlots.map((slot) => {
+              : slots.map((slot) => {
                   const court = courts.find((c) => c.id === slot.courtId);
                   return (
                     <button
-                      key={`${slot.courtId}-${slot.start}`}
+                      key={`${slot.date || date}-${slot.courtId}-${slot.start}`}
                       type="button"
                       onClick={() => handleSelectSlot(slot)}
                       className="flash-chip"
                     >
                       <div>
+                        {showWeek && (
+                          <div className="flash-chip-day">
+                            {slot.dayName} {slot.dayNumber}
+                          </div>
+                        )}
                         <div className="flash-chip-time">{slot.start}</div>
                         <div className="flash-chip-court">
                           {court?.name || "Cancha"} · hasta {slot.end}

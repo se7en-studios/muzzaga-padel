@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { Wallet, Target, Presentation, Zap } from "lucide-react";
+import Image from "next/image";
 
 const TOOLS = [
   {
     href: "/herramientas/dividir-gastos",
     badge: "Para grupos",
     badgeColor: "badge-emerald",
-    icon: Wallet,
+    icon: "/img/iconos/icono-dividir.webp",
     title: "Dividir cancha y tercer tiempo",
     desc: "Calculá en segundos cuánto paga cada uno por el turno y los consumos de cantina. Copiá el desglose directo al grupo de WhatsApp.",
     cta: "Abrir calculadora",
@@ -15,7 +15,7 @@ const TOOLS = [
     href: "/herramientas/nivel",
     badge: "Competencia",
     badgeColor: "badge-indigo",
-    icon: Target,
+    icon: "/img/iconos/icono-nivel-v2.webp",
     title: "Test de nivel y categorías",
     desc: "Descubrí si sos 7ma, 6ta o 5ta según tu juego y la escala internacional (1.0 a 7.0). Ideal para anotarte en partidos parejos.",
     cta: "Calcular mi nivel",
@@ -24,7 +24,7 @@ const TOOLS = [
     href: "/herramientas/pizarra",
     badge: "Estrategia",
     badgeColor: "badge-amber",
-    icon: Presentation,
+    icon: "/img/iconos/icono-pizarra.webp",
     title: "Pizarra táctica interactiva",
     desc: "Simulador interactivo de jugadas en cancha de cristal: repasá paso a paso la víbora a la reja, el smash por 3, bandejas y chiquitas.",
     cta: "Ver simulador táctico",
@@ -33,7 +33,7 @@ const TOOLS = [
     href: "/herramientas/americano",
     badge: "Torneos express",
     badgeColor: "badge-emerald",
-    icon: Zap,
+    icon: "/img/iconos/icono-americano.webp",
     title: "Generador de torneo americano",
     desc: "Armá el fixture de rotación para 4 a 8 jugadores donde todos juegan con todos en partidos cortos y equilibrados.",
     cta: "Generar fixture",
@@ -72,7 +72,7 @@ export default function ClubToolsSection() {
               <div>
                 <div className="club-tool-top">
                   <span className="club-tool-icon" aria-hidden="true">
-                    <tool.icon size={20} className="icono-marca" />
+                    <Image src={tool.icon} alt="" width={76} height={76} className="icono-3d" />
                   </span>
                   <span className={`badge-linear ${tool.badgeColor}`}>
                     {tool.badge}
