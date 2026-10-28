@@ -274,64 +274,260 @@
   font-size: 20px;
 }
 
-/* ---------- Login con la cancha de noche de fondo ---------- */
+/* ---------- Login: la ficha del club sobre la cancha ----------
+   Mismo espíritu que la marca: la cancha azul de noche vista desde arriba
+   con paleta, pelotas y una porción de muzza (fondo generado para el club),
+   y la tarjeta como una ficha de papel con una tira de overgrip, el sticker
+   "más que pádel" y Muzzaguito asomándose. */
 .admin-root .admin-login-wrapper {
+  justify-content: flex-start;
+  padding: 40px clamp(20px, 7vw, 120px);
   background:
-    linear-gradient(rgba(15, 15, 13, 0.72), rgba(15, 15, 13, 0.9)),
-    url("/img/court_glass_night_match.jpg") center / cover no-repeat,
-    var(--night);
+    linear-gradient(90deg, rgba(5, 12, 36, 0.55) 0%, rgba(5, 12, 36, 0.15) 45%, transparent 70%),
+    url("/img/admin/login-cancha.webp") 70% 50% / cover no-repeat,
+    #0b1a4d;
 }
 
 .admin-root .admin-login-wrapper > p {
   color: var(--on-night-soft) !important;
 }
 
-.admin-root .admin-login-card {
-  border: none;
-  border-top: 5px solid var(--brand);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+/* El body deja lugar abajo para la barra del celu de la web, que en el
+   panel no está: en el login quedaba una franja oscura bajo la cancha. */
+body:has(.admin-login-wrapper) {
+  padding-bottom: 0;
 }
 
-.admin-root .admin-login-brand {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  margin-bottom: 6px;
+.admin-root .admin-login-col {
+  width: 100%;
+  max-width: 440px;
+}
+
+.admin-root .admin-login-card {
+  position: relative;
+  max-width: none;
+  padding: 44px 40px 36px;
+  border: none;
+  border-radius: 6px;
+  background: #fbf8f1;
+  /* Papel apenas girado, con una sombra corta y otra larga de reflector. */
+  rotate: -1.2deg;
+  box-shadow:
+    0 2px 0 rgba(27, 27, 25, 0.08),
+    0 30px 60px -20px rgba(3, 8, 28, 0.75);
+}
+
+/* La "cinta" del papel: una tira de overgrip naranja con sus vueltas. */
+.admin-root .admin-login-grip {
+  position: absolute;
+  top: 14px;
+  right: -26px;
+  width: 132px;
+  height: 30px;
+  rotate: 38deg;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.55) 0 3px, transparent 3px 14px),
+    linear-gradient(180deg, #f08a45, #d95f1c);
+  box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.45);
+}
+
+/* El sticker de la marca, pegado de costado como en una planilla. */
+.admin-root .admin-login-sticker {
+  position: absolute;
+  top: -34px;
+  left: -30px;
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  rotate: -14deg;
+  background: var(--brand);
+  border: 3px solid #fbf8f1;
+  box-shadow: 0 8px 18px -6px rgba(0, 0, 0, 0.5);
+  color: #1b1b19;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 0.95;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Muzzaguito se asoma por el borde de arriba. */
+.admin-root .admin-login-peek {
+  position: absolute;
+  top: -80px;
+  right: 118px;
+  width: 112px;
+  height: auto;
+  rotate: 8deg;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+}
+
+.admin-root .admin-login-header {
+  text-align: center;
+  margin-bottom: 26px;
 }
 
 .admin-root .admin-login-logo {
-  width: 150px;
+  width: 120px;
   height: auto;
+  margin: 0 auto 14px;
+  display: block;
 }
 
-.admin-root .admin-login-mascot {
-  width: 84px;
-  height: 84px;
-  margin-left: 2px;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.25));
+.admin-root .admin-login-kicker {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand-strong);
 }
 
 .admin-root .admin-login-title {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-size: clamp(40px, 5vw, 50px);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: 0.005em;
   text-transform: uppercase;
-  color: var(--text);
+  color: #1b1b19;
 }
 
 .admin-root .admin-login-sub {
-  margin: 2px 0 0;
+  margin: 10px 0 0;
   font-size: 15px;
   color: var(--text-secondary);
 }
 
-.admin-root .admin-login-wrapper label {
-  font-size: 15px !important;
+.admin-root .admin-login-wrapper .admin-login-label {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: 17px !important;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1b1b19 !important;
+}
+
+/* Campos y botón con borde grueso y sombra corrida, como una pieza
+   impresa de la marca. */
+.admin-root .admin-login-input {
+  height: 54px;
+  padding: 0 16px;
+  font-size: 16px;
+  background: #ffffff;
+  border: 2px solid #1b1b19;
+  border-radius: 10px;
+  box-shadow: 0 4px 0 #1b1b19;
+}
+
+.admin-root .admin-login-input:focus {
+  border-color: var(--brand-strong);
+  box-shadow: 0 4px 0 var(--brand-strong);
+  outline: none;
+}
+
+.admin-root .admin-login-wrapper .admin-login-submit {
+  width: 100%;
+  height: 56px;
+  margin-top: 22px;
+  justify-content: center;
+  gap: 10px;
+  border: 2px solid #1b1b19;
+  border-radius: 10px;
+  background: var(--brand-strong);
+  box-shadow: 0 5px 0 #1b1b19;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.admin-root .admin-login-wrapper .admin-login-submit:hover:not(:disabled) {
+  background: var(--brand-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 0 #1b1b19;
+}
+
+.admin-root .admin-login-wrapper .admin-login-submit:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #1b1b19;
+}
+
+.admin-root .admin-login-back {
+  display: inline-block;
+  margin: 26px 0 0 6px;
+  color: #ffffff;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--text-secondary) !important;
+  text-decoration: none;
+  text-shadow: 0 2px 8px rgba(3, 8, 28, 0.8);
+}
+
+.admin-root .admin-login-back:hover {
+  color: #ffb27f;
+}
+
+/* Celu: la ficha centrada y derecha arriba, y la composición (paleta,
+   pelotas, muzza) abajo, en el espacio que queda libre debajo de la ficha.
+   El césped de la foto se repite como piso para que no quede un corte. */
+@media (max-width: 767px) {
+  .admin-root .admin-login-wrapper {
+    justify-content: center;
+    align-items: flex-start;
+    padding: 96px 18px 300px;
+    background:
+      linear-gradient(180deg, rgba(5, 12, 36, 0.7) 0%, rgba(5, 12, 36, 0.35) 45%, transparent 75%),
+      url("/img/admin/login-cancha.webp") 78% 100% / auto 380px no-repeat,
+      url("/img/fondo/textura-cesped.jpg") 0 0 / 360px 360px repeat,
+      #0b1a4d;
+  }
+
+  .admin-root .admin-login-card {
+    rotate: 0deg;
+    padding: 40px 24px 30px;
+  }
+
+  .admin-root .admin-login-sticker {
+    width: 76px;
+    height: 76px;
+    top: -30px;
+    left: -10px;
+    font-size: 16px;
+  }
+
+  .admin-root .admin-login-peek {
+    width: 92px;
+    top: -66px;
+    right: 92px;
+  }
+
+  .admin-root .admin-login-grip {
+    right: -14px;
+    width: 104px;
+  }
+
+  .admin-root .admin-login-back {
+    display: block;
+    text-align: center;
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-root .admin-login-wrapper .admin-login-submit {
+    transition: none;
+  }
 }
 
 /* ---------- Celu: barras de arriba y de abajo oscuras ---------- */
