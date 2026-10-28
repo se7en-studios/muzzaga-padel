@@ -15,7 +15,7 @@ const TOOLS = [
     href: "/herramientas/nivel",
     badge: "Competencia",
     badgeColor: "badge-indigo",
-    icon: "/img/iconos/icono-nivel.webp",
+    icon: "/img/iconos/icono-nivel-v2.webp",
     title: "Test de nivel y categorías",
     desc: "Descubrí si sos 7ma, 6ta o 5ta según tu juego y la escala internacional (1.0 a 7.0). Ideal para anotarte en partidos parejos.",
     cta: "Calcular mi nivel",
