@@ -482,6 +482,31 @@
   margin-bottom: 3px;
 }
 
+/* Hoy y el día siguiente en la misma fila: una rayita los separa y el día
+   que no es hoy va en el color del texto, no en naranja. */
+.flash-chip.is-next-day {
+  position: relative;
+  margin-left: 13px;
+}
+
+.flash-chip.is-next-day::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 10%;
+  bottom: 10%;
+  width: 1px;
+  background: var(--color-hairline-strong);
+}
+
+.flash-chip.is-other-day .flash-chip-day {
+  color: var(--color-body);
+}
+
+.flash-card.is-week .flash-chip.is-other-day .flash-chip-day {
+  color: var(--color-accent-orange-text);
+}
+
 .flash-card.is-week .flash-live {
   background: var(--color-surface-strong);
   color: var(--color-ink);

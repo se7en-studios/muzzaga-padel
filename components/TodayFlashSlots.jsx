@@ -19,9 +19,11 @@ export default function TodayFlashSlots() {
     requestSlotPick({ date: slot.date || date, courtId: slot.courtId, start: slot.start });
   }
 
-  // Hoy completo: se recomiendan los próximos libres de la semana.
+  // Hoy completo: se recomiendan los próximos libres de la semana. Si hoy
+  // hay, van primero y después los del próximo día con lugar.
   const showWeek = status === "ready" && today.length === 0 && upcoming.length > 0;
-  const slots = showWeek ? upcoming : today;
+  const nextDay = !showWeek && upcoming.length > 0 ? upcoming[0].dayLabel : null;
+  const slots = showWeek ? upcoming : [...today, ...upcoming];
 
   // Precio por jugador real de cada franja (pico/valle); se anuncia el menor.
   const minPerPlayer = slots.reduce(
@@ -91,7 +93,9 @@ export default function TodayFlashSlots() {
                   ? `Turnos · ${label}`
                   : showWeek
                     ? "Próximos turnos libres"
-                    : `Turnos libres · ${label}`}
+                    : nextDay
+                      ? `Turnos libres · ${label} y ${nextDay.toLowerCase()}`
+                      : `Turnos libres · ${label}`}
               </strong>
             </div>
             {loading ? (
@@ -118,21 +122,21 @@ export default function TodayFlashSlots() {
                     <span className="flash-chip-cta">Reservar →</span>
                   </div>
                 ))
-              : slots.map((slot) => {
+              : slots.map((slot, i) => {
                   const court = courts.find((c) => c.id === slot.courtId);
+                  // Con turnos de dos días, cada chip dice de qué día es y
+                  // una rayita separa hoy del día siguiente.
+                  const dayTag = showWeek || nextDay ? slot.dayLabel || label : null;
+                  const firstOfNextDay = nextDay && slot.dayLabel && !slots[i - 1]?.dayLabel;
                   return (
                     <button
                       key={`${slot.date || date}-${slot.courtId}-${slot.start}`}
                       type="button"
                       onClick={() => handleSelectSlot(slot)}
-                      className="flash-chip"
+                      className={`flash-chip${firstOfNextDay ? " is-next-day" : ""}${slot.dayLabel ? " is-other-day" : ""}`}
                     >
                       <div>
-                        {showWeek && (
-                          <div className="flash-chip-day">
-                            {slot.dayName} {slot.dayNumber}
-                          </div>
-                        )}
+                        {dayTag && <div className="flash-chip-day">{dayTag}</div>}
                         <div className="flash-chip-time">{slot.start}</div>
                         <div className="flash-chip-court">
                           {court?.name || "Cancha"} · hasta {slot.end}
