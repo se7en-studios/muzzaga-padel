@@ -10,7 +10,8 @@ export default function ServiceWorkerRegister() {
       process.env.NODE_ENV === "production"
     ) {
       navigator.serviceWorker
-        .register("/sw.js")
+        // Sin caché HTTP para sw.js: cada publicación lo actualiza enseguida.
+        .register("/sw.js", { updateViaCache: "none" })
         .then((reg) => {
           // Registrado exitosamente
         })

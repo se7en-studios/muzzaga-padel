@@ -69,6 +69,16 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // Que el navegador siempre traiga el service worker nuevo (public/sw.js).
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };
