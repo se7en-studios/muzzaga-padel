@@ -69,6 +69,14 @@ import {
 } from "../../lib/adminRateLimit";
 import { OPEN_ORDER_STATUSES } from "../../lib/cantinaOrder";
 import {
+  describeMenuDiff,
+  diffMenu,
+  menuFromInput,
+  menuSaveStep,
+  normalizeMenu,
+} from "../../lib/cantinaMenu";
+import { getCantinaMenu } from "../../lib/cantinaMenuServer";
+import {
   STAFF_PIN,
   STAFF_ROLES,
   isPinTaken,
@@ -1528,6 +1536,72 @@ export async function adminGetTopProducts(limit = 8) {
   } catch (error) {
     return { ok: false, error: "No se pudieron calcular los más vendidos." };
   }
+}
+
+/* ==========================================================================
+   CANTINA: LA CARTA (productos y precios)
+   Se edita entera y se guarda junta, con PIN de gestión como los precios de
+   las canchas. Al guardar se ve en /menu, el inicio, la calculadora y la caja.
+   ========================================================================== */
+
+export async function adminGetCantinaMenu() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  return { ok: true, menu: await getCantinaMenu() };
+}
+
+/**
+ * { items, baseUpdatedAt }: la carta completa como quedó en el panel.
+ * `baseUpdatedAt` es la versión sobre la que se editó: si otra pantalla
+ * guardó en el medio, no se pisa su trabajo.
+ */
+export async function adminSaveCantinaMenu({ items, baseUpdatedAt } = {}, pin) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isFirebaseConfigured()) {
+    return { ok: false, error: "Firebase no está configurado." };
+  }
+  const parsed = menuFromInput(items);
+  if (parsed.error) {
+    return { ok: false, error: parsed.error, fieldErrors: parsed.errors };
+  }
+  // Los precios de la cantina mueven plata: solo con PIN de gestión.
+  const auth = await authorizeManager(pin);
+  if (auth.error) return { ok: false, error: auth.error };
+
+  const base = Number(baseUpdatedAt) || null;
+  const updatedAt = Date.now();
+  const db = getDb();
+  try {
+    let before = null;
+    const result = await db.ref("cantinaMenu").transaction((current) => {
+      const next = menuSaveStep(current, base, parsed.items, updatedAt);
+      if (next) before = current;
+      return next;
+    });
+    if (!result.committed || !result.snapshot.exists()) {
+      return {
+        ok: false,
+        stale: true,
+        error:
+          "Mientras editabas, otra pantalla guardó cambios en la carta. Recargá la carta y volvé a hacer los tuyos.",
+      };
+    }
+    const diff = diffMenu(normalizeMenu(before).items, parsed.items);
+    await audit(
+      db,
+      auth.staff,
+      "CANTINA_CARTA",
+      "Carta de la cantina",
+      describeMenuDiff(diff) || "Se guardó sin cambios",
+    ).catch(() => {});
+  } catch (error) {
+    return { ok: false, error: "No se pudo guardar la carta." };
+  }
+  revalidatePath("/");
+  revalidatePath("/menu");
+  revalidatePath("/herramientas/dividir-gastos");
+  return { ok: true, menu: { items: parsed.items, custom: true, updatedAt } };
 }
 
 /**

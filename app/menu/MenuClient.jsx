@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { MENU_ITEMS, MENU_CATEGORIES } from "../../data/menu";
+import { MENU_CATEGORIES } from "../../data/menu";
 import { CLUB_INFO } from "../../data/club";
 import ScrollRow from "../../components/ScrollRow";
 import CantinaCart, { QtyStepper } from "../../components/CantinaCart";
@@ -47,7 +47,7 @@ const LOCATION_NAMES = {
   "mesa-6": "Mesa 6 (Cantina)",
 };
 
-export default function MenuClient() {
+export default function MenuClient({ items }) {
   const searchParams = useSearchParams();
   const [selectedCat, setSelectedCat] = useState("all");
   const [search, setSearch] = useState("");
@@ -69,7 +69,7 @@ export default function MenuClient() {
 
   useEffect(() => {
     try {
-      setCart(parseStoredCart(localStorage.getItem(CART_KEY), MENU_ITEMS));
+      setCart(parseStoredCart(localStorage.getItem(CART_KEY), items));
     } catch {}
     setCartLoaded(true);
   }, []);
@@ -89,7 +89,7 @@ export default function MenuClient() {
       return next;
     });
 
-  const lines = useMemo(() => orderLines(cart, MENU_ITEMS), [cart]);
+  const lines = useMemo(() => orderLines(cart, items), [cart, items]);
   const cartCount = orderCount(lines);
 
   // Al sacar un producto con el tacho de su tarjeta, el control vuelve a ser
@@ -103,7 +103,7 @@ export default function MenuClient() {
   }, [refocusAdd]);
 
   const filteredItems = useMemo(() => {
-    return MENU_ITEMS.filter((item) => {
+    return items.filter((item) => {
       const matchCat = selectedCat === "all" || item.category === selectedCat;
       const matchSearch =
         !search.trim() ||
@@ -111,7 +111,7 @@ export default function MenuClient() {
         (item.tag && item.tag.toLowerCase().includes(search.toLowerCase()));
       return matchCat && matchSearch;
     });
-  }, [selectedCat, search]);
+  }, [items, selectedCat, search]);
 
   const handleGeneralOrder = () => {
     const locationPrefix = activeLocation

@@ -23,6 +23,8 @@ import "./fondo-cancha.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";
+import { getCantinaMenu } from "../lib/cantinaMenuServer";
+import { HOME_FEATURED_COUNT, featuredItems } from "../lib/cantinaMenu";
 import { publicPayment } from "../lib/clubConfig";
 import { CLUB_INFO } from "../data/club";
 import { todayInClub } from "../lib/booking";
@@ -56,14 +58,15 @@ const TICKER_ITEMS = [
   "Catriel · Río Negro",
 ];
 
-// El precio del turno y las fotos salen de Configuración: la home se regenera
-// cada 5 min (y al guardar fotos) para reflejar cambios sin redeploy.
+// El precio del turno, las fotos y la carta salen del panel: la home se
+// regenera cada 5 min (y al guardar fotos o la carta) sin redeploy.
 export const revalidate = 300;
 
 export default async function Home() {
-  const [config, { photos, location }] = await Promise.all([
+  const [config, { photos, location }, menu] = await Promise.all([
     getClubConfig(),
     getSiteContent(),
+    getCantinaMenu(),
   ]);
   const { valle, pico, picoEnabled } = config.pricing;
   // Se anuncia el precio más bajo ("desde") cuando hay horario pico.
@@ -236,7 +239,10 @@ export default async function Home() {
       <HomeTorneosTeaser photos={photos} />
 
       {/* 7. CANTINA DESTACADA */}
-      <HomeCantinaTeaser photos={photos} />
+      <HomeCantinaTeaser
+        photos={photos}
+        featured={featuredItems(menu.items).slice(0, HOME_FEATURED_COUNT)}
+      />
 
       {/* 8. HERRAMIENTAS DEL CLUB */}
       <ClubToolsSection />

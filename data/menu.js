@@ -1,5 +1,6 @@
-// Carta oficial unificada de la cantina de Muzzaga Pádel.
-// Única fuente de verdad para la landing, calculadora split-cost, página /menu y panel admin.
+// Carta original de la cantina de Muzzaga Pádel. Los productos y precios se
+// cambian desde el panel (Cantina → Carta y precios, ver lib/cantinaMenu.js):
+// esta lista es la que se ve mientras el club no guardó ninguna carta.
 
 export const MENU_ITEMS = [
   // Cocina / Buffet
