@@ -279,81 +279,55 @@ export default function MenuClient() {
           {filteredItems.map((item) => {
             const qty = cart[item.id] || 0;
             return (
-            <div
-              key={item.id}
-              style={{
-                background: "var(--color-surface-card)",
-                border: "1px solid var(--color-hairline-strong)",
-                borderRadius: "var(--radius-lg)",
-                padding: "14px 18px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-                transition: "transform var(--t-hover) var(--ease), opacity var(--t-hover) var(--ease)",
-              }}
-            >
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                  <strong style={{ fontSize: 15, color: "var(--color-ink)" }}>
-                    {item.name}
-                  </strong>
-                  {item.tag && (
-                    <span
-                      className={`badge-linear ${
-                        item.tag.includes("Sin TACC")
-                          ? "badge-emerald"
-                          : item.tag.includes("Vegana")
-                          ? "badge-indigo"
-                          : "badge-amber"
-                      }`}
-                      style={{ fontSize: 10.5, padding: "2px 8px" }}
-                    >
-                      {item.tag}
-                    </span>
-                  )}
-                </div>
+            <div key={item.id} className="carta-item">
+              <div className="carta-item-info">
+                <strong className="carta-item-name">{item.name}</strong>
+                {item.tag && (
+                  <span
+                    className={`badge-linear ${
+                      item.tag.includes("Sin TACC")
+                        ? "badge-emerald"
+                        : item.tag.includes("Vegana")
+                        ? "badge-indigo"
+                        : "badge-amber"
+                    }`}
+                    style={{ fontSize: 10.5, padding: "2px 8px" }}
+                  >
+                    {item.tag}
+                  </span>
+                )}
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "right" }}>
-                <span
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: "var(--color-ink)",
-                    fontFamily: "var(--font-jetbrains-mono), monospace",
-                  }}
-                >
-                  ${item.price.toLocaleString("es-AR")}
-                </span>
-                {/* Ancho fijo: al agregar, el "+" pasa a "− 1 +" sin correr el
-                    precio ni hacer crecer la tarjeta. */}
-                <span className="menu-item-control">
-                  {qty > 0 ? (
-                    <QtyStepper
-                      name={item.name}
-                      qty={qty}
-                      onChange={(q) => {
-                        setQty(item.id, q);
-                        if (q <= 0) setRefocusAdd(item.id);
-                      }}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      className="menu-add-btn"
-                      ref={(el) => {
-                        addRefs.current[item.id] = el;
-                      }}
-                      onClick={() => setQty(item.id, 1)}
-                      aria-label={`Agregar ${item.name} al pedido`}
-                      title="Agregar al pedido"
-                    >
-                      <ShoppingCart size={20} aria-hidden="true" />
-                    </button>
-                  )}
-                </span>
-              </div>
+              <span className="carta-item-price">
+                ${item.price.toLocaleString("es-AR")}
+              </span>
+              {/* Ancho fijo: al agregar, el "+" pasa a "− 1 +" sin correr el
+                  precio ni hacer crecer la tarjeta. */}
+              <span className="menu-item-control">
+                {qty > 0 ? (
+                  <QtyStepper
+                    name={item.name}
+                    qty={qty}
+                    onChange={(q) => {
+                      setQty(item.id, q);
+                      if (q <= 0) setRefocusAdd(item.id);
+                    }}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className="menu-add-btn"
+                    ref={(el) => {
+                      addRefs.current[item.id] = el;
+                    }}
+                    onClick={() => setQty(item.id, 1)}
+                    aria-label={`Agregar ${item.name} al pedido`}
+                    title="Agregar al pedido"
+                  >
+                    <ShoppingCart size={20} aria-hidden="true" />
+                  </button>
+                )}
+              </span>
             </div>
             );
           })}
