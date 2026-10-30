@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { BentoPhotoCard } from "./PhotoCard";
-import { CALCULATOR_ITEMS } from "../data/menu";
 import { CLUB_INFO } from "../data/club";
 import Mascota from "./Mascota";
 
-const FEATURED_ITEMS = CALCULATOR_ITEMS.slice(0, 6);
-
-export default function HomeCantinaTeaser({ photos }) {
+/** `featured`: los destacados de la carta, ya recortados para el inicio. */
+export default function HomeCantinaTeaser({ photos, featured }) {
   return (
     <section
       id="cantina"
@@ -63,24 +61,26 @@ export default function HomeCantinaTeaser({ photos }) {
         </div>
 
         {/* PRODUCTOS DESTACADOS CON PRECIO — pizarra de menú */}
-        <div className="menu-board">
-          <div className="menu-board-head">
-            <span className="menu-board-title">Lo más pedido</span>
-            <span className="menu-board-note">Precios actualizados</span>
+        {featured.length > 0 && (
+          <div className="menu-board">
+            <div className="menu-board-head">
+              <span className="menu-board-title">Lo más pedido</span>
+              <span className="menu-board-note">Precios actualizados</span>
+            </div>
+            <ul className="menu-board-list">
+              {featured.map((item) => (
+                <li key={item.id} className="menu-board-item">
+                  <span className="menu-board-name">
+                    {item.name}
+                    {item.tag && <span className="menu-board-tag">{item.tag}</span>}
+                  </span>
+                  <span className="menu-board-dots" aria-hidden="true" />
+                  <span className="menu-board-price">${item.price.toLocaleString("es-AR")}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="menu-board-list">
-            {FEATURED_ITEMS.map((item) => (
-              <li key={item.id} className="menu-board-item">
-                <span className="menu-board-name">
-                  {item.name}
-                  {item.tag && <span className="menu-board-tag">{item.tag}</span>}
-                </span>
-                <span className="menu-board-dots" aria-hidden="true" />
-                <span className="menu-board-price">${item.price.toLocaleString("es-AR")}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        )}
 
         <div className="section-more">
           <Link href="/menu" className="section-more-link">

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getDb, isFirebaseConfigured } from "../../../lib/firebase";
 import { todayInClub } from "../../../lib/booking";
-import { MENU_ITEMS } from "../../../data/menu";
+import { getCantinaMenu } from "../../../lib/cantinaMenuServer";
 import { validateOrder } from "../../../lib/cantinaOrder";
 
 // Freno para que nadie llene el panel de pedidos falsos: 6 cada 10 minutos
@@ -75,7 +75,9 @@ export async function POST(request) {
     return NextResponse.json({ ok: false, error: "Pedido inválido." }, { status: 400 });
   }
 
-  const checked = validateOrder(input, MENU_ITEMS);
+  // Los precios salen de la carta guardada en el panel, nunca del navegador.
+  const { items: menu } = await getCantinaMenu();
+  const checked = validateOrder(input, menu);
   if (!checked.ok) return NextResponse.json(checked, { status: 400 });
 
   if (!isFirebaseConfigured()) {

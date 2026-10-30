@@ -4,6 +4,8 @@ import SiteFooter from "../../../components/SiteFooter";
 import BottomNav from "../../../components/BottomNav";
 import SplitCostCalculator from "../../../components/SplitCostCalculator";
 import { pageMetadata } from "../../../lib/pageMeta";
+import { getCantinaMenu } from "../../../lib/cantinaMenuServer";
+import { featuredItems } from "../../../lib/cantinaMenu";
 
 export const metadata = pageMetadata({
   title: "Calculadora para dividir cancha y cantina · Muzzaga Pádel",
@@ -12,7 +14,11 @@ export const metadata = pageMetadata({
   path: "/herramientas/dividir-gastos",
 });
 
-export default function DividirGastosPage() {
+// Los productos y precios salen de la carta del panel (se regenera al guardarla).
+export const revalidate = 300;
+
+export default async function DividirGastosPage() {
+  const { items } = await getCantinaMenu();
   return (
     <>
       <SiteHeader />
@@ -29,7 +35,7 @@ export default function DividirGastosPage() {
           </div>
         </div>
 
-        <SplitCostCalculator />
+        <SplitCostCalculator extras={featuredItems(items)} />
 
         <div className="container" style={{ margin: "40px auto 60px", textAlign: "center" }}>
           <div

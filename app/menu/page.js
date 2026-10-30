@@ -5,6 +5,7 @@ import SiteFooter from "../../components/SiteFooter";
 import BottomNav from "../../components/BottomNav";
 import MenuClient from "./MenuClient";
 import { pageMetadata } from "../../lib/pageMeta";
+import { getCantinaMenu } from "../../lib/cantinaMenuServer";
 
 export const metadata = pageMetadata({
   title: "Menú de la cantina · Muzzaga Pádel",
@@ -13,7 +14,12 @@ export const metadata = pageMetadata({
   path: "/menu",
 });
 
-export default function MenuPage() {
+// La carta sale del panel (Cantina → Carta y precios): se regenera al
+// guardarla y, por las dudas, cada 5 min.
+export const revalidate = 300;
+
+export default async function MenuPage() {
+  const { items } = await getCantinaMenu();
   return (
     <>
       <SiteHeader />
@@ -29,7 +35,7 @@ export default function MenuPage() {
         </div>
 
         <Suspense fallback={<div className="container" style={{ padding: 40, textAlign: "center" }}>Cargando carta de cantina…</div>}>
-          <MenuClient />
+          <MenuClient items={items} />
         </Suspense>
       </main>
       <SiteFooter />

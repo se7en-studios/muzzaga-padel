@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { PRECIO_TURNO, PRECIO_POR_JUGADOR } from "../data/pricing";
-import { CALCULATOR_ITEMS as EXTRAS } from "../data/menu";
 import {
   buildSplitCostMessage,
   buildSplitCostWhatsAppUrl,
@@ -13,12 +12,17 @@ import { CreditCard, Share2, Check, Copy } from "lucide-react";
 
 const CANCHA_PRICE = PRECIO_TURNO;
 
-export default function SplitCostCalculator() {
+// Arranca con un ejemplo armado, si esos productos siguen destacados en la carta.
+const EXAMPLE_EXTRAS = { heineken_litro: 2, pizza_muzza: 1 };
+
+/** `extras`: los productos destacados de la carta. */
+export default function SplitCostCalculator({ extras }) {
   const [players, setPlayers] = useState(4);
-  const [selectedExtras, setSelectedExtras] = useState({
-    heineken_litro: 2,
-    pizza_muzza: 1,
-  });
+  const [selectedExtras, setSelectedExtras] = useState(() =>
+    Object.fromEntries(
+      Object.entries(EXAMPLE_EXTRAS).filter(([id]) => extras.some((e) => e.id === id)),
+    ),
+  );
   const [alias, setAlias] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -45,10 +49,10 @@ export default function SplitCostCalculator() {
 
   const extrasTotal = useMemo(() => {
     return Object.entries(selectedExtras).reduce((acc, [id, qty]) => {
-      const item = EXTRAS.find((e) => e.id === id);
+      const item = extras.find((e) => e.id === id);
       return acc + (item ? item.price * qty : 0);
     }, 0);
-  }, [selectedExtras]);
+  }, [extras, selectedExtras]);
 
   const grandTotal = canchaPrice + extrasTotal;
   const perPerson = Math.round(grandTotal / (players || 1));
@@ -58,7 +62,7 @@ export default function SplitCostCalculator() {
       canchaPrice,
       players,
       selectedExtras,
-      menuItems: EXTRAS,
+      menuItems: extras,
       alias,
     });
     navigator.clipboard.writeText(msg);
@@ -71,10 +75,10 @@ export default function SplitCostCalculator() {
       canchaPrice,
       players,
       selectedExtras,
-      menuItems: EXTRAS,
+      menuItems: extras,
       alias,
     });
-  }, [canchaPrice, players, selectedExtras, alias]);
+  }, [canchaPrice, players, selectedExtras, extras, alias]);
 
   return (
     <section id="split-cost" className="section-turnos">
@@ -200,7 +204,7 @@ export default function SplitCostCalculator() {
 
             <p className="mobile-swipe-hint">← Deslizá para ver más extras →</p>
             <ScrollRow className="extras-selector-list">
-              {EXTRAS.map((extra) => {
+              {extras.map((extra) => {
                 const qty = selectedExtras[extra.id] || 0;
                 return (
                   <div key={extra.id} className="extra-item-row">
@@ -264,7 +268,7 @@ export default function SplitCostCalculator() {
               </div>
 
               {Object.entries(selectedExtras).map(([id, qty]) => {
-                const item = EXTRAS.find((e) => e.id === id);
+                const item = extras.find((e) => e.id === id);
                 if (!item) return null;
                 return (
                   <div key={id} className="ticket-row extra">

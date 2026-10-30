@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Ban,
+  BookOpen,
   ClipboardList,
   Coins,
   Minus,
@@ -23,6 +24,7 @@ import {
 } from "../../../lib/format";
 import {
   adminAddCantinaSale,
+  adminGetCantinaMenu,
   adminGetCantinaSales,
   adminGetTopProducts,
   adminSetTestFlag,
@@ -38,7 +40,8 @@ import {
   ORDER_STATUS_LABELS,
   payLabel,
 } from "../../../lib/cantinaOrder";
-import { MENU_CATEGORIES, MENU_ITEMS } from "../../../data/menu";
+import { MENU_CATEGORIES } from "../../../lib/cantinaMenu";
+import CartaEditor from "./CartaEditor";
 import StaffPinModal from "../ui/StaffPinModal";
 import { usePinGate } from "../ui/usePinGate";
 import { todayInClub } from "../../../lib/booking";
@@ -89,6 +92,17 @@ export default function CantinaView({ onExpiredSession, onToast }) {
   const [confirmCancel, setConfirmCancel] = useState(null);
   const seenOrderIds = useRef(null);
   const searchRef = useRef(null);
+  // La carta sale de la base (se edita en la pestaña "Carta y precios").
+  const [menu, setMenu] = useState(null);
+  const [tab, setTab] = useState("vender");
+  const [cartaDirty, setCartaDirty] = useState(false);
+  const menuItems = useMemo(() => menu?.items || [], [menu]);
+
+  async function loadMenu() {
+    const res = await adminGetCantinaMenu();
+    if (res.ok) setMenu(res.menu);
+    else onExpiredSession?.(res);
+  }
 
   async function loadOrders() {
     const res = await adminGetCantinaOrders(date);
@@ -177,6 +191,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
 
   useEffect(() => {
     searchRef.current?.focus();
+    loadMenu();
     adminGetTopProducts(8).then(
       (res) => res.ok && setTopProducts(res.products),
     );
@@ -198,17 +213,17 @@ export default function CantinaView({ onExpiredSession, onToast }) {
   }
 
   const itemsByName = useMemo(
-    () => new Map(MENU_ITEMS.map((i) => [i.name, i])),
-    [],
+    () => new Map(menuItems.map((i) => [i.name, i])),
+    [menuItems],
   );
   const filteredItems = useMemo(() => {
     const q = normalizeSearch(query);
-    return MENU_ITEMS.filter(
+    return menuItems.filter(
       (item) =>
         (selectedCat === "all" || item.category === selectedCat) &&
         (!q || normalizeSearch(item.name).includes(q)),
     );
-  }, [query, selectedCat]);
+  }, [menuItems, query, selectedCat]);
   const bestSellers = topProducts
     .map((p) => itemsByName.get(p.name))
     .filter(Boolean);
@@ -358,8 +373,8 @@ export default function CantinaView({ onExpiredSession, onToast }) {
   }
 
   const quickFavoriteItems = useMemo(
-    () => MENU_ITEMS.filter((i) => QUICK_FAVORITE_IDS.includes(i.id)),
-    [],
+    () => menuItems.filter((i) => QUICK_FAVORITE_IDS.includes(i.id)),
+    [menuItems],
   );
 
   function shareTicketWhatsApp(sale) {
@@ -559,6 +574,32 @@ export default function CantinaView({ onExpiredSession, onToast }) {
 
   return (
     <div>
+      <div className="admin-segmented admin-cantina-tabs" role="group" aria-label="Cantina">
+        <button type="button" aria-pressed={tab === "vender"} onClick={() => setTab("vender")}>
+          <ShoppingCart {...ICON} /> Vender
+        </button>
+        <button type="button" aria-pressed={tab === "carta"} onClick={() => setTab("carta")}>
+          <BookOpen {...ICON} /> Carta y precios
+          {cartaDirty && (
+            <span className="admin-cantina-tab-dot" role="img" aria-label="con cambios sin guardar" />
+          )}
+        </button>
+      </div>
+
+      {/* Las dos pestañas quedan montadas: lo que se está editando en la
+          carta no se pierde por ir a cobrar algo. */}
+      <div hidden={tab !== "carta"}>
+        <CartaEditor
+          menu={menu}
+          onSaved={setMenu}
+          onReload={loadMenu}
+          onDirtyChange={setCartaDirty}
+          onExpiredSession={onExpiredSession}
+          onToast={onToast}
+        />
+      </div>
+
+      <div hidden={tab !== "vender"}>
       {/* 3 KPI Cards de Cantina Estilo Kravio */}
       <div className="admin-kpis-3" style={{ marginBottom: 20 }}>
         <div className="admin-kravio-kpi-card">
@@ -861,7 +902,9 @@ export default function CantinaView({ onExpiredSession, onToast }) {
                   : categoryLabel(selectedCat)}
             </h3>
           )}
-          {filteredItems.length === 0 ? (
+          {!menu ? (
+            <SkeletonRows count={4} />
+          ) : filteredItems.length === 0 ? (
             <EmptyState
               icon={Search}
               title={`No hay productos con “${query}”`}
@@ -1091,6 +1134,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
           }}
         />
       )}
+      </div>
       </div>
     </div>
   );
