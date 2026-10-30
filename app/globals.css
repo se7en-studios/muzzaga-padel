@@ -7005,8 +7005,77 @@ body:has(.footer-wordmark) {
    en una columna al costado; en celu, "Ver mi pedido" (arriba) y la barra de
    abajo abren el mismo panel. Se paga antes de que la cocina lo empiece.
    ========================================================================== */
+/* Producto de la carta: nombre, precio y el botón para sumarlo. En grilla y
+   con la columna del nombre en minmax(0, 1fr): un nombre largo baja de
+   renglón en vez de empujar el carrito fuera de la tarjeta. */
+.carta-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "info price control";
+  align-items: center;
+  column-gap: 12px;
+  padding: 14px 18px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-lg);
+  transition: transform var(--t-hover) var(--ease), opacity var(--t-hover) var(--ease);
+}
+
+.carta-item-info {
+  grid-area: info;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.carta-item-name {
+  font-size: 15px;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+.carta-item-price {
+  grid-area: price;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+/* Celu: el precio pasa abajo del nombre y el nombre se queda con todo el
+   ancho que no usa el botón. */
+@media (max-width: 480px) {
+  .carta-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "info control"
+      "price control";
+    row-gap: 4px;
+    padding: 14px 14px 14px 16px;
+  }
+
+  .carta-item-price {
+    font-size: 15px;
+    color: var(--color-accent-orange-text);
+  }
+
+  /* Con el precio abajo ya no hay nada que se corra: el control mide lo que
+     el botón y el nombre gana esos 70 px. */
+  .carta-item .menu-item-control {
+    width: auto;
+  }
+}
+
 .menu-item-control {
-  flex: 0 0 114px;
+  /* width y no flex-basis: Safari arma el ancho del grupo precio + botón
+     con el botón solo (44 px) e ignora el flex-basis, y el carrito quedaba
+     afuera de la tarjeta en iPhone. */
+  grid-area: control;
+  flex: none;
+  width: 114px;
   display: flex;
   justify-content: flex-end;
 }

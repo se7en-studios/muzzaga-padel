@@ -1,5 +1,6 @@
 import { Poppins, JetBrains_Mono, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
+import "./marca.css";
 import LightboxProvider from "../components/LightboxProvider";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import InstallPrompt from "../components/InstallPrompt";

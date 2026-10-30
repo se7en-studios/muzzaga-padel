@@ -628,9 +628,10 @@ export default function TacticalCourtSimulator() {
               <circle cx="15" cy="250" r="4" fill="#E8722A" />
               <circle cx="285" cy="250" r="4" fill="#E8722A" />
               {/* En el extremo derecho: en el medio chocaba con jugadores y
-                  piques de casi todas las jugadas. */}
+                  piques de casi todas las jugadas. Termina antes del vidrio,
+                  que si no tapaba la última letra. */}
               <text
-                x="280"
+                x="271"
                 y="242"
                 fill="#ffffff"
                 fontSize="9"
