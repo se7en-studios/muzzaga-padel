@@ -2499,7 +2499,7 @@ body {
 .club-tour {
   position: relative;
   height: calc(var(--stops) * 85svh);
-  background: #e9e5dc;
+  background: #141826;
 }
 
 .club-tour-sticky {
@@ -2528,7 +2528,7 @@ body {
   inset: 0;
   display: grid;
   place-items: center;
-  color: #6c6f78;
+  color: #9aa0bd;
   font-size: 0.95rem;
 }
 
