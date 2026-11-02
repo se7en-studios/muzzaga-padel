@@ -17,7 +17,9 @@
       DS,
       solid,
       wood,
+      person,
     } = ctx;
+    const chairSpots = [];
     const aniso = renderer.capabilities.getMaxAnisotropy();
     const rand = (function (a) {
       return function () {
@@ -74,10 +76,11 @@
     courtLighting();
     coffeeBar();
     fridges();
-    digitalMenu();
+    signage();
     pendants();
     seating();
     decor();
+    people();
 
     /* ---- piso de madera: tablas con vetas, juntas escalonadas, relieve y reflejo ---- */
     function woodFloor() {
@@ -424,41 +427,53 @@
       });
     }
 
-    /* ---- menú digital sobre la barra ---- */
-    function digitalMenu() {
-      const cols = [
-        ["PIZZAS", "Muzza", "Napolitana", "Fugazzeta"],
-        ["EMPANADAS", "Carne", "Jamón y queso", "Caprese"],
-        ["BEBIDAS", "Cerveza fría", "Gaseosas", "Café"],
-      ];
-      const tex = ctx.ctex(960, 270, (g, w, h) => {
-        g.fillStyle = "#0e1116";
-        g.fillRect(0, 0, w, h);
-        g.fillStyle = "#f26a1b";
-        g.fillRect(0, 0, w, 8);
-        cols.forEach((col, i) => {
-          const x = 40 + i * 310;
-          g.textAlign = "left";
-          g.fillStyle = "#f26a1b";
-          g.font = '56px "Bebas Neue",Impact,sans-serif';
-          g.fillText(col[0], x, 78);
-          g.fillStyle = "#ffffff";
-          g.font = "30px Poppins,sans-serif";
-          col.slice(1).forEach((t, k) => g.fillText(t, x, 130 + k * 42));
-        });
+    /* ---- señalética: carta, pantalla de marca, letrero luminoso y placa de la barra (sin superposiciones) ---- */
+    function signage() {
+      const drop = (parent, x, y, z) => parent.children.slice().forEach(o => { if (o.isMesh && Math.abs(o.position.x - x) < 0.2 && Math.abs(o.position.y - y) < 0.2 && Math.abs(o.position.z - z) < 0.2) parent.remove(o); });
+      drop(W.front, 2.8, 3.0, 17.82); drop(W.front, -0.3, 3.0, 17.82); drop(scene, 0.9, 1.5, 15.0); drop(scene, -0.1, 1.35, 15.15);
+      const glow = (m, k) => { m.material.color.setScalar(k); return m; };
+
+      // carta
+      const food = [['Pizza muzza', '$18.000'], ['Pizza napo', '$20.000'], ['Tostados', '$14.000'], ['Empanada', '$2.000']];
+      const drinks = ['Cerveza bien fría', 'Gaseosas', 'Café y té'];
+      const menu = ctx.ctex(1024, 480, (g, w, h) => {
+        g.fillStyle = '#12151b'; g.fillRect(0, 0, w, h);
+        g.fillStyle = '#f26a1b'; g.fillRect(0, 0, w, 140);
+        g.fillStyle = '#ffffff'; g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.font = '104px "Bebas Neue",Impact,sans-serif'; g.fillText('LA CARTA', 44, 108);
+        g.textAlign = 'right'; g.font = '600 30px Poppins,sans-serif'; g.fillText('CANTINA · MUZZAGA PÁDEL', w - 44, 84);
+        const col = (x, title, rows, price) => {
+          g.textAlign = 'left'; g.fillStyle = '#f26a1b'; g.font = '52px "Bebas Neue",Impact,sans-serif'; g.fillText(title, x, 208);
+          rows.forEach((r, i) => {
+            const y = 262 + i * 56; g.fillStyle = '#ffffff'; g.font = '500 34px Poppins,sans-serif'; g.textAlign = 'left'; g.fillText(price ? r[0] : r, x, y);
+            if (price) { g.textAlign = 'right'; g.fillStyle = '#f26a1b'; g.font = '600 34px Poppins,sans-serif'; g.fillText(r[1], x + 420, y); }
+            g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x, y + 14, 420, 2);
+          });
+        };
+        col(44, 'COMIDA', food, true); col(548, 'BEBIDAS', drinks, false);
+        g.fillStyle = 'rgba(255,255,255,.7)'; g.textAlign = 'right'; g.font = '500 26px Poppins,sans-serif'; g.fillText('Opciones sin TACC · pedí en la barra', w - 44, 452);
       });
-      const m = plane(
-        3.0,
-        0.86,
-        2.8,
-        3.25,
-        17.8,
-        Math.PI,
-        new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }),
-        W.front,
-      );
-      m.material.color.setScalar(1.25);
-      box(3.1, 0.96, 0.05, 2.8, 3.25, 17.84, steel, { parent: W.front });
+      glow(plane(3.2, 1.5, 2.8, 3.15, 17.8, Math.PI, new THREE.MeshBasicMaterial({ map: menu, toneMapped: false }), W.front), 1.15);
+      box(3.3, 1.6, 0.05, 2.8, 3.15, 17.84, steel, { parent: W.front }); box(3.0, 0.03, 0.05, 2.8, 2.33, 17.75, ledWarm, { parent: W.front });
+
+      // pantalla de marca (reemplaza al cartel azul)
+      const tv = ctx.ctex(512, 288, (g, w, h) => {
+        g.fillStyle = '#0b0d12'; g.fillRect(0, 0, w, h); g.fillStyle = '#f26a1b'; g.fillRect(0, h - 10, w, 10);
+        if (IMG.badge && IMG.badge.naturalWidth) g.drawImage(IMG.badge, 36, 54, 150, 150);
+        g.fillStyle = '#ffffff'; g.textAlign = 'left'; g.font = '86px "Bebas Neue",Impact,sans-serif'; g.fillText('MUZZAGA', 212, 130);
+        g.fillStyle = '#f26a1b'; g.font = '56px "Bebas Neue",Impact,sans-serif'; g.fillText('PÁDEL', 212, 184);
+        g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '500 24px Poppins,sans-serif'; g.fillText('Turnos · Torneos · Cantina', 212, 226);
+      });
+      glow(plane(2.1, 1.18, -0.3, 3.0, 17.8, Math.PI, new THREE.MeshBasicMaterial({ map: tv, toneMapped: false }), W.front), 1.1);
+      box(2.22, 1.3, 0.06, -0.3, 3.0, 17.84, steel, { parent: W.front });
+
+      // letrero luminoso sobre el horno
+      const neon = ctx.ctex(512, 160, (g, w, h) => { g.clearRect(0, 0, w, h); g.textAlign = 'center'; g.fillStyle = '#ff7a2a'; g.font = '130px "Bebas Neue",Impact,sans-serif'; g.fillText('CANTINA', w / 2, 122); });
+      const nm = new THREE.MeshBasicMaterial({ map: neon, transparent: true, alphaTest: 0.3, toneMapped: false, side: DS }); nm.color.setScalar(2.4);
+      plane(1.9, 0.6, 5.95, 3.0, 17.78, Math.PI, nm, W.front); box(2.1, 0.74, 0.04, 5.95, 3.0, 17.84, steel, { parent: W.front });
+
+      // placa en el frente de la barra
+      const plaque = ctx.ctex(512, 80, (g, w, h) => { g.fillStyle = '#12151b'; g.fillRect(0, 0, w, h); g.fillStyle = '#f26a1b'; g.fillRect(0, h - 5, w, 5); g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = '56px "Bebas Neue",Impact,sans-serif'; g.fillText('MUZZAGA · CANTINA', w / 2, 58); });
+      plane(2.4, 0.375, 3, 0.62, 14.79, Math.PI, new THREE.MeshBasicMaterial({ map: plaque, toneMapped: false }));
     }
 
     /* ---- lámparas colgantes sobre un tirante de acero apoyado en dos columnas ---- */
@@ -543,6 +558,7 @@
             seatCols[i % 3],
           );
         }
+        for (let i = 0; i < n; i++) { const a = (Math.PI * 2 * i) / n + 0.5; chairSpots.push({ x: x + Math.sin(a) * 0.82, z: z + Math.cos(a) * 0.82, ry: a + Math.PI }); }
         solid(x - 1.05, x + 1.05, z - 1.05, z + 1.05);
         blob(x, z, 2.8, 2.8);
       }
@@ -554,6 +570,27 @@
       mesh(cyl(0.18, 0.18, 0.03, 16), steel, -12.9, 0.015, 17.0);
       mesh(cyl(0.12, 0.2, 0.28, 20), ledWarm, -12.9, 1.55, 17.0);
       solid(-13.1, -12.7, 16.8, 17.2);
+    }
+
+    /* ---- gente: barista, clientes en las mesas y la barra, jugadores descansando en los bancos ---- */
+    function people() {
+      if (!person) return;
+      const LOOKS = [
+        { s: 0xf26a1b, k: 0xe4b48c, h: 0x2a1d14, o: {} }, { s: 0x2f6fd6, k: 0xc68a63, h: 0x111111, o: {} },
+        { s: 0xffffff, k: 0xd9a47c, h: 0x5a3b22, o: { skirt: 0x2d3340, pony: true, band: 0xf26a1b } }, { s: 0x1f9d6b, k: 0x9a6a47, h: 0x111111, o: {} },
+        { s: 0x3a3f4b, k: 0xe4b48c, h: 0xb08a4a, o: { skirt: 0xffffff } }, { s: 0xd9534f, k: 0xc68a63, h: 0x2a1d14, o: {} },
+        { s: 0x8a4fd1, k: 0xe4b48c, h: 0x5a3b22, o: { pony: true, skirt: 0x222833 } }, { s: 0xf4c430, k: 0x9a6a47, h: 0x111111, o: {} },
+      ];
+      let n = 0;
+      const mk = (x, y, z, ry, act, seat) => {
+        const L = LOOKS[n++ % LOOKS.length], p = person(L.s, L.k, undefined, L.h, undefined, L.o);
+        p.position.set(x, y, z); p.rotation.y = ry; p.userData.act = act; if (seat) p.userData.legL.rotation.x = p.userData.legR.rotation.x = -1.5;
+        scene.add(p); return p;
+      };
+      mk(0.4, 0, 16.25, Math.PI, 'coffee');
+      chairSpots.forEach((c, i) => { if (i % 3 === 2) return; mk(c.x, -0.34, c.z, c.ry, i % 2 ? 'talk' : 'drink', true); });
+      mk(2.0, 0, 13.45, 0, 'talk'); mk(4.7, 0, 13.4, 0, 'drink');
+      [-2.85, -1.95, 1.95, 2.85].forEach((x, i) => mk(x, -0.32, 5.55, Math.PI, i % 2 ? 'talk' : 'drink', true));
     }
 
     /* ---- plantas, cuadros con fotos reales y umbrales ---- */
