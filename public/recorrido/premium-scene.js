@@ -261,7 +261,7 @@
     /* ---- iluminación deportiva: focos blancos sobre cada cancha + barras LED en las vigas ---- */
     function courtLighting() {
       [-6.5, 6.5].forEach((cx) => {
-        const sp = new THREE.SpotLight(0xf3f7ff, 1.2, 36, 1.0, 0.9, 1.3);
+        const sp = new THREE.SpotLight(0xf3f7ff, 1.9, 36, 0.95, 0.85, 1.3);
         sp.position.set(cx, 7.6, -6);
         sp.target.position.set(cx, 0, -6);
         scene.add(sp, sp.target);

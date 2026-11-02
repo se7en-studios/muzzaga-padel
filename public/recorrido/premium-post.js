@@ -8,11 +8,12 @@
       exposure: { value: 0.9 },
       vignette: { value: 0.34 },
       contrast: { value: 0.3 },
+      grade: { value: 0.9 },
     },
     vertexShader:
       "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
     fragmentShader: [
-      "uniform sampler2D tDiffuse; uniform float exposure; uniform float vignette; uniform float contrast; varying vec2 vUv;",
+      "uniform sampler2D tDiffuse; uniform float exposure; uniform float vignette; uniform float contrast; uniform float grade; varying vec2 vUv;",
       "vec3 rrt(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }",
       "vec3 aces(vec3 c){",
       "  const mat3 inM = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));",
@@ -22,6 +23,9 @@
       "void main(){",
       "  vec3 col = aces(texture2D(tDiffuse, vUv).rgb);",
       "  col = mix(col, col * col * (3.0 - 2.0 * col), contrast);",
+      "  float lum = dot(col, vec3(0.299, 0.587, 0.114));",
+      "  col = mix(col, col * vec3(1.07, 1.0, 0.9), smoothstep(0.45, 1.0, lum) * grade);",
+      "  col += (1.0 - lum) * vec3(0.004, 0.010, 0.028) * grade;",
       "  vec2 d = vUv - 0.5; col *= 1.0 - vignette * dot(d, d) * 2.4;",
       "  gl_FragColor = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);",
       "}",
