@@ -498,7 +498,7 @@
         s.userData.noCast = true;
       });
       [1.6, 5.2].forEach((x) => {
-        const l = new THREE.PointLight(0xffb468, 1.5, 9, 2);
+        const l = new THREE.PointLight(0xffb468, 0.85, 9, 2);
         l.position.set(x, 2.9, 14.9);
         scene.add(l);
       });

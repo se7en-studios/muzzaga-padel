@@ -10,9 +10,9 @@
     /* ---- luces cálidas locales ---- */
     if (!mobile) {
       [
-        [0xffb468, 1.3, 6, -12.9, 1.7, 17.0],
-        [0xffa050, 1.2, 7, -15.3, 2.9, 6.8],
-        [0xff8a30, 0.9, 5, 3, 0.5, 14.6],
+        [0xffb468, 1.0, 6, -12.9, 1.7, 17.0],
+        [0xffa050, 1.0, 7, -15.3, 2.9, 6.8],
+        [0xff8a30, 0.5, 5, 3, 0.5, 14.6],
       ].forEach(([c, k, d, x, y, z]) => {
         const l = new THREE.PointLight(c, k, d, 2);
         l.position.set(x, y, z);
@@ -20,6 +20,16 @@
         addFade(l, k);
       });
     }
+
+    /* ---- albedo máximo: las superficies claras no pueden devolver más luz de la que reciben (evita el blanco quemado) ---- */
+    const seen = new Set();
+    scene.traverse(o => {
+      const m = o.isMesh && o.material;
+      if (!m || Array.isArray(m) || seen.has(m) || !m.isMeshStandardMaterial || m.map || m.transparent) return;
+      seen.add(m);
+      const k = Math.max(m.color.r, m.color.g, m.color.b);
+      if (k > 0.7 && !(m.emissiveIntensity > 0.5 && m.emissive.getHex() > 0)) { m.color.multiplyScalar(0.7 / k); m.roughness = Math.max(m.roughness, 0.62); }
+    });
 
     /* ---- derrame de luz blanca de los focos sobre el borde interior de las canchas ---- */
     const spill = ctex(64, 4, (g, w, h) => {

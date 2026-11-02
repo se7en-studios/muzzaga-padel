@@ -1149,7 +1149,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
   /* ---------- posproceso: HDR + bloom + tonemapping ACES ---------- */
   try {
-    postfx = window.MuzzagaPost && window.MuzzagaPost.create({ THREE, renderer, scene, camera, exposure: () => renderer.toneMappingExposure, samples: innerWidth < 860 ? 2 : 4, ...(document.documentElement.classList.contains('embed') ? {} : { bloom: 0.22, threshold: 1.8 }) });
+    postfx = window.MuzzagaPost && window.MuzzagaPost.create({ THREE, renderer, scene, camera, exposure: () => renderer.toneMappingExposure, samples: innerWidth < 860 ? 2 : 4, ...(document.documentElement.classList.contains('embed') ? { bloom: 0.42, threshold: 1.2 } : { bloom: 0.22, threshold: 1.8 }) });
     if (postfx) resize();
   } catch (e) { console.error('post', e); postfx = null; renderer.toneMapping = THREE.ACESFilmicToneMapping; }
 
