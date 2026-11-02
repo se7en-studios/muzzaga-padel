@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { buildWhatsAppLink } from "../data/club";
 
-// Cada parada corresponde, en orden, a un cuadro de cámara de public/recorrido/index.html (modo ?embed=1).
+// Cada toma corresponde a un tramo de la ruta de cámara de public/recorrido/index.html (modo ?embed=1).
 const STOPS = [
   {
     kick: "El club · Catriel",
@@ -31,7 +32,24 @@ const STOPS = [
   },
 ];
 
+// Puntos de interés: `p` es la posición (0..1) del recorrido a la que viaja la cámara al tocarlos.
+// Son las posiciones de los cuadros clave de la ruta (8 cuadros → i / 7).
+const POIS = [
+  { label: "Vista general", p: 0 },
+  { label: "Canchas", p: 2 / 7 },
+  { label: "Recepción y cantina", p: 4 / 7 },
+  { label: "Zona de descanso", p: 5 / 7 },
+  { label: "Vestuarios", p: 6 / 7 },
+];
+
+const WHATSAPP_HREF = buildWhatsAppLink("Hola! Quiero reservar una cancha");
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const nearestPoi = (p) =>
+  POIS.reduce(
+    (best, poi, i) =>
+      Math.abs(poi.p - p) < Math.abs(POIS[best].p - p) ? i : best,
+    0,
+  );
 
 export default function ClubRecorrido() {
   const sectionRef = useRef(null);
@@ -39,6 +57,11 @@ export default function ClubRecorrido() {
   const [load, setLoad] = useState(false);
   const [ready, setReady] = useState(false);
   const [step, setStep] = useState(0);
+  const [poi, setPoi] = useState(0);
+
+  const post = useCallback((msg) => {
+    frameRef.current?.contentWindow?.postMessage(msg, window.location.origin);
+  }, []);
 
   // El iframe (three.js + texturas, ~1,3 MB) solo se pide cuando la sección está cerca.
   useEffect(() => {
@@ -70,7 +93,7 @@ export default function ClubRecorrido() {
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
-  // Scroll → progreso 0..1 → cámara del iframe + texto de la parada.
+  // Scroll → progreso 0..1 → cámara del iframe.
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return undefined;
@@ -84,10 +107,8 @@ export default function ClubRecorrido() {
       );
       if (p === last) return;
       last = p;
-      frameRef.current?.contentWindow?.postMessage(
-        { muzzaga: "tour", p },
-        window.location.origin,
-      );
+      setPoi(nearestPoi(p));
+      post({ muzzaga: "tour", p });
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -100,7 +121,46 @@ export default function ClubRecorrido() {
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [ready]);
+  }, [ready, post]);
+
+  // Parallax suave: la posición del cursor se manda a la maqueta (se apaga con "reducir movimiento").
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+      return undefined;
+    let raf = 0;
+    let pending = null;
+    const flush = () => {
+      raf = 0;
+      post({ muzzaga: "pointer", ...pending });
+    };
+    const onMove = (e) => {
+      pending = {
+        x: (e.clientX / window.innerWidth) * 2 - 1,
+        y: (e.clientY / window.innerHeight) * 2 - 1,
+      };
+      if (!raf) raf = requestAnimationFrame(flush);
+    };
+    el.addEventListener("pointermove", onMove, { passive: true });
+    return () => {
+      el.removeEventListener("pointermove", onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [post]);
+
+  // Tocar un punto de interés: scroll suave hasta ese tramo, la cámara lo sigue.
+  const goTo = (p) => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    window.scrollTo({
+      top: top + p * (el.offsetHeight - window.innerHeight),
+      behavior: reduce ? "auto" : "smooth",
+    });
+  };
 
   const stop = STOPS[step];
   const isLast = step === STOPS.length - 1;
@@ -126,19 +186,44 @@ export default function ClubRecorrido() {
         )}
         {!ready && <div className="club-tour-loading">Armando la maqueta…</div>}
 
+        <nav className="club-tour-poi" aria-label="Zonas del club">
+          {POIS.map((item, i) => (
+            <button
+              key={item.label}
+              type="button"
+              className={i === poi ? "on" : ""}
+              aria-current={i === poi ? "true" : undefined}
+              onClick={() => goTo(item.p)}
+            >
+              <span className="club-tour-poi-dot" aria-hidden="true" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
         <div className="club-tour-card" role="status" aria-live="polite">
-          <span className="club-tour-kick">{stop.kick}</span>
-          <h2 className="club-tour-title">{stop.title}</h2>
-          <p className="club-tour-text">{stop.text}</p>
+          <div key={step} className="club-tour-card-body">
+            <span className="club-tour-kick">{stop.kick}</span>
+            <h2 className="club-tour-title">{stop.title}</h2>
+            <p className="club-tour-text">{stop.text}</p>
+          </div>
           <div className="club-tour-actions">
             <a
-              className={`btn ${isLast ? "btn-orange-primary" : "btn-ghost"}`}
+              className={`btn club-tour-btn ${isLast ? "btn-orange-primary" : "btn-ghost"}`}
               href="#turnos"
             >
               Reservar turno
             </a>
+            <a
+              className="btn club-tour-btn club-tour-wa"
+              href={WHATSAPP_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp
+            </a>
             <a className="club-tour-link" href="/recorrido">
-              Recorrelo vos →
+              Recorrer el club →
             </a>
           </div>
           <ol className="club-tour-dots" aria-hidden="true">

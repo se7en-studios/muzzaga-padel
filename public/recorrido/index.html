@@ -1145,18 +1145,34 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     ];
     const cr = (p0, p1, p2, p3, t) => 0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
     let tgtWant = null, lastShot = -1;
+    const fadeItems = []; let fadeStart = 0;          // [objeto, valor final]: luces que se encienden de a poco
+    const par = { x: 0, y: 0 }, parS = { x: 0, y: 0 }, base = { az: 215, el: 40 }; // parallax con el cursor
     const apply = p => {
       const f = Math.max(0, Math.min(1, p)) * (KF.length - 1), i = Math.min(KF.length - 2, Math.floor(f)), t = f - i;
       const k0 = KF[Math.max(0, i - 1)], k1 = KF[i], k2 = KF[i + 1], k3 = KF[Math.min(KF.length - 1, i + 2)];
       const at = key => cr(k0[key], k1[key], k2[key], k3[key], t);
-      want.az = at('az'); want.el = Math.max(12, at('el')); want.d = at('d');
+      want.az = at('az'); want.el = Math.max(12, at('el')); want.d = at('d'); base.az = want.az; base.el = want.el;
       tgtWant = { x: at('x'), z: at('z') };
       const near = KF[Math.round(f)];
       SPOTS.forEach((sp, k) => sp.pin.classList.toggle('act', k === near.pin));
       if (near.shot !== lastShot) { lastShot = near.shot; parent.postMessage({ muzzaga: 'shot', i: near.shot }, location.origin); }
     };
-    embedStep = dt => { if (tgtWant) { const k = 1 - Math.pow(0.0015, dt); TGT.x += (tgtWant.x - TGT.x) * k; TGT.z += (tgtWant.z - TGT.z) * k; } };
-    addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.muzzaga === 'tour') apply(+e.data.p || 0); });
+    embedStep = dt => {
+      const k = 1 - Math.pow(0.0015, dt);
+      if (tgtWant) { TGT.x += (tgtWant.x - TGT.x) * k; TGT.z += (tgtWant.z - TGT.z) * k; }
+      parS.x += (par.x - parS.x) * k * 0.5; parS.y += (par.y - parS.y) * k * 0.5;
+      want.az = base.az + parS.x * 3; want.el = Math.max(12, base.el - parS.y * 1.6);
+      if (fadeStart && fadeItems.length) {
+        const u = Math.max(0, Math.min(1, (performance.now() - fadeStart) / 2800)), e = u * u * (3 - 2 * u);
+        fadeItems.forEach(([o, v]) => { if (o.isLight) o.intensity = v * e; else o.opacity = v * e; });
+        if (u >= 1) fadeStart = 0;
+      }
+    };
+    addEventListener('message', e => {
+      if (e.origin !== location.origin || !e.data) return;
+      if (e.data.muzzaga === 'tour') apply(+e.data.p || 0);
+      if (e.data.muzzaga === 'pointer') { par.x = Math.max(-1, Math.min(1, +e.data.x || 0)); par.y = Math.max(-1, Math.min(1, +e.data.y || 0)); }
+    });
 
     // ---- atardecer: hora azul con luces cálidas (?look=day lo apaga) ----
     function dusk() {
@@ -1165,9 +1181,15 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       scene.background = skyD; scene.fog = new THREE.Fog(0x232b4a, 120, 300);
       scene.traverse(o => {
         if (o.isHemisphereLight) { o.color.set(0x7d93d6); o.groundColor.set(0x24253a); o.intensity = 0.5; }
-        if (o.isMesh && o.material && o.material.isMeshStandardMaterial && o.material !== glassMat) o.material.envMapIntensity = 0.3;
+        if (o.isMesh && o.material && o.material.isMeshStandardMaterial && o.material !== glassMat) o.material.envMapIntensity = 0.6;
       });
-      glassMat.envMapIntensity = 0.9;
+      const envS = new THREE.Scene();
+      envS.add(new THREE.Mesh(new THREE.SphereGeometry(60, 32, 16), new THREE.MeshBasicMaterial({ map: skyD, side: THREE.BackSide })));
+      [[0, 40, 0, 50, 2, 50, [0.5, 0.55, 0.85]], [-40, 14, 10, 2, 16, 30, [1.7, 0.95, 0.5]], [40, 14, -10, 2, 16, 30, [0.9, 0.6, 0.4]], [0, 12, -40, 40, 10, 2, [1.2, 0.7, 0.35]]].forEach(([x, y, z, w, h, d, c]) => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]) })); m.position.set(x, y, z); envS.add(m);
+      });
+      const pm2 = new THREE.PMREMGenerator(renderer); scene.environment = pm2.fromScene(envS, 0.03).texture; pm2.dispose();
+      glassMat.envMapIntensity = 1.5;
       sun.color.set(0xff9a55); sun.intensity = 0.62; sun.position.set(-30, 22, 16);
       const fill = new THREE.DirectionalLight(0x5f7fd8, 0.5); fill.position.set(24, 30, -18); scene.add(fill);
 
@@ -1197,7 +1219,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       const poolTex = ctex(128, 128, g => { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,190,110,.9)'); gr.addColorStop(0.5, 'rgba(255,160,70,.3)'); gr.addColorStop(1, 'rgba(255,140,50,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); });
       const pool = new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
       [-14, 4, 26].forEach(z => { const d = new THREE.Mesh(new THREE.PlaneGeometry(13, 13), pool); d.rotation.x = -Math.PI / 2; d.position.set(-23.4, 0.05, z); scene.add(d); });
-      [[3, 3.4, 12.5, 2.2], [-8, 3, 11, 1.6]].forEach(([x, y, z, k]) => { const pl = new THREE.PointLight(0xffb468, k, 16, 2); pl.position.set(x, y, z); scene.add(pl); });
+      [[3, 3.4, 12.5, 2.2], [-8, 3, 11, 1.6]].forEach(([x, y, z, k]) => { const pl = new THREE.PointLight(0xffb468, k, 16, 2); pl.position.set(x, y, z); scene.add(pl); fadeItems.push([pl, k]); });
       // halo de luz en cada luminaria cálida (farolas, focos, apliques)
       const halo2 = ctex(64, 64, g => { const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,214,150,1)'); gr.addColorStop(0.25, 'rgba(255,170,80,.55)'); gr.addColorStop(1, 'rgba(255,140,40,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); });
       const sm = new THREE.SpriteMaterial({ map: halo2, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, toneMapped: false, opacity: 0.7 });
@@ -1209,12 +1231,14 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       });
       lamps.forEach(v => { const sp = new THREE.Sprite(sm); sp.position.copy(v); const big = v.y > 4; sp.scale.setScalar(big ? 3.4 : 1.5); scene.add(sp); });
       scene.traverse(o => { if (o.isMesh && o.material && o.material.emissive && o.material.emissiveIntensity >= 1.2 && o.material.emissive.b < 0.75) o.material.emissiveIntensity = 2; });
+      fadeItems.push([halo, halo.opacity], [pool, pool.opacity], [sm, sm.opacity]);
+      fadeItems.forEach(([o]) => { if (o.isLight) o.intensity = 0; else o.opacity = 0; });
       scene.updateMatrixWorld(true); // la escena no se actualiza sola: sin esto lo agregado queda en el origen
     }
     if (!/look=day/.test(location.search)) { try { dusk(); } catch (e) { console.error('dusk', e); } } // el clima nunca debe romper la maqueta
     apply(0); TGT.set(KF[0].x, 0, KF[0].z); Object.assign(cam, want);
     // se espera a que techo y paredes terminen de bajar antes de mostrarse
-    setTimeout(() => parent.postMessage({ muzzaga: 'ready' }, location.origin), 1400);
+    setTimeout(() => { fadeStart = performance.now(); parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 1400);
   }
 })();
 </script>
