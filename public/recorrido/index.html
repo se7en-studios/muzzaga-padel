@@ -1175,7 +1175,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     const par = { x: 0, y: 0 }, parS = { x: 0, y: 0 }, base = { az: 215, el: 40 }; // parallax con el cursor
     const apply = p => {
       const dbg = /[?&]cam=([-0-9.,]+)/.exec(location.search); // ?cam=az,el,d,x,z fija la cámara (solo para revisar la maqueta)
-      if (dbg) { const c = dbg[1].split(',').map(Number); want.az = base.az = c[0]; want.el = base.el = c[1]; want.d = c[2]; tgtWant = { x: c[3], z: c[4] }; SPOTS.forEach(sp => sp.pin.classList.remove('act')); return; }
+      if (dbg) { const c = dbg[1].split(',').map(Number); want.az = base.az = c[0]; want.el = base.el = c[1]; want.d = c[2]; tgtWant = { x: c[3], z: c[4] }; TGT.y = c[5] || 0; SPOTS.forEach(sp => sp.pin.classList.remove('act')); return; }
       const f = Math.max(0, Math.min(1, p)) * (KF.length - 1), i = Math.min(KF.length - 2, Math.floor(f)), t = f - i;
       const k0 = KF[Math.max(0, i - 1)], k1 = KF[i], k2 = KF[i + 1], k3 = KF[Math.min(KF.length - 1, i + 2)];
       const at = key => cr(k0[key], k1[key], k2[key], k3[key], t);
@@ -1281,7 +1281,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       });
     })();
 
-    apply(0); TGT.set(KF[0].x, 0, KF[0].z); Object.assign(cam, want);
+    apply(0); TGT.set(KF[0].x, TGT.y, KF[0].z); Object.assign(cam, want);
     // se espera a que techo y paredes terminen de bajar antes de mostrarse
     setTimeout(() => { fadeStart = performance.now(); parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 1400);
   }
