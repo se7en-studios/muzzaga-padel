@@ -15,19 +15,14 @@ const STOPS = [
     text: "El Tano y La Vasca: cristal templado, cubiertas y sin viento.",
   },
   {
-    kick: "Cantina",
-    title: "Cantina propia",
+    kick: "Recepción",
+    title: "Recepción y cantina",
     text: "Pizzas al horno, empanadas, tostados y cerveza fría. Con opciones sin TACC.",
   },
   {
     kick: "Tercer tiempo",
-    title: "Living con vista a las canchas",
-    text: "Sillones para seguir el partido y comentar las mejores jugadas.",
-  },
-  {
-    kick: "Torneos",
-    title: "Torneos todo el año",
-    text: "Libre, Caballeros y Damas. Anotate por WhatsApp para el próximo.",
+    title: "Living y vestuarios",
+    text: "Sillones con vista a las canchas y baños y vestuarios para cambiarte antes y después de jugar.",
   },
   {
     kick: "Te esperamos",
@@ -64,8 +59,12 @@ export default function ClubRecorrido() {
 
   useEffect(() => {
     const onMessage = (e) => {
-      if (e.origin === window.location.origin && e.data?.muzzaga === "ready")
-        setReady(true);
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.muzzaga === "ready") setReady(true);
+      // la maqueta informa qué toma se está mostrando
+      if (e.data?.muzzaga === "shot") {
+        setStep(Math.min(STOPS.length - 1, Math.max(0, Number(e.data.i) || 0)));
+      }
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
@@ -85,7 +84,6 @@ export default function ClubRecorrido() {
       );
       if (p === last) return;
       last = p;
-      setStep(Math.round(p * (STOPS.length - 1)));
       frameRef.current?.contentWindow?.postMessage(
         { muzzaga: "tour", p },
         window.location.origin,

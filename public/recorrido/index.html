@@ -1131,24 +1131,29 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   /* ---------- modo embed: la cámara la maneja el scroll de la landing ---------- */
   if (document.documentElement.classList.contains('embed')) {
     introOn = false; setRoof(false); avatar.visible = false;
-    // az/el/d = cámara orbital; x/z = punto al que mira; pin = lugar destacado (índice de SPOTS)
+    // Recorrido continuo (sin cortes): az/el/d = cámara orbital; x/z = punto al que mira;
+    // shot = toma que muestra la landing; pin = lugar destacado (índice de SPOTS).
     const KF = [
-      { az: 215, el: 38, d: 78, x: -3, z: 2, pin: -1 },
-      { az: 205, el: 30, d: 36, x: 0, z: -6, pin: 1 },
-      { az: 235, el: 33, d: 30, x: 5, z: 11, pin: 3 },
-      { az: 150, el: 31, d: 30, x: -8, z: 10, pin: 4 },
-      { az: 170, el: 34, d: 34, x: 10, z: -5, pin: 6 },
-      { az: 215, el: 52, d: 90, x: -2, z: 2, pin: -1 }
+      { az: 215, el: 40, d: 80, x: -3, z: 2, pin: -1, shot: 0 },   // 1 · exterior, plano aéreo
+      { az: 195, el: 30, d: 48, x: -2, z: 6, pin: -1, shot: 0 },   //     bajando hacia el club
+      { az: 205, el: 22, d: 24, x: 3, z: -2, pin: 1, shot: 1 },    // 2 · canchas, pegado al cristal
+      { az: 160, el: 20, d: 22, x: -3, z: -10, pin: 1, shot: 1 },  //     y del otro lado
+      { az: 225, el: 26, d: 22, x: 3, z: 12, pin: 3, shot: 2 },    // 3 · recepción y cantina
+      { az: 150, el: 36, d: 34, x: -6, z: 11, pin: 4, shot: 3 },   // 4 · living
+      { az: 235, el: 36, d: 32, x: 7, z: 11, pin: 5, shot: 3 },    //     vestuarios
+      { az: 215, el: 50, d: 92, x: -2, z: 2, pin: -1, shot: 4 }    // 5 · se aleja y sube
     ];
-    const ease = u => u * u * (3 - 2 * u), lerp = (a, b, u) => a + (b - a) * u;
-    let tgtWant = null;
+    const cr = (p0, p1, p2, p3, t) => 0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
+    let tgtWant = null, lastShot = -1;
     const apply = p => {
-      const f = Math.max(0, Math.min(1, p)) * (KF.length - 1), i = Math.min(KF.length - 2, Math.floor(f));
-      const u = ease(Math.max(0, Math.min(1, (f - i - 0.22) / 0.56))), a = KF[i], b = KF[i + 1];
-      want.az = lerp(a.az, b.az, u); want.el = lerp(a.el, b.el, u); want.d = lerp(a.d, b.d, u);
-      tgtWant = { x: lerp(a.x, b.x, u), z: lerp(a.z, b.z, u) };
-      const act = KF[Math.round(f)].pin;
-      SPOTS.forEach((sp, k) => sp.pin.classList.toggle('act', k === act));
+      const f = Math.max(0, Math.min(1, p)) * (KF.length - 1), i = Math.min(KF.length - 2, Math.floor(f)), t = f - i;
+      const k0 = KF[Math.max(0, i - 1)], k1 = KF[i], k2 = KF[i + 1], k3 = KF[Math.min(KF.length - 1, i + 2)];
+      const at = key => cr(k0[key], k1[key], k2[key], k3[key], t);
+      want.az = at('az'); want.el = Math.max(12, at('el')); want.d = at('d');
+      tgtWant = { x: at('x'), z: at('z') };
+      const near = KF[Math.round(f)];
+      SPOTS.forEach((sp, k) => sp.pin.classList.toggle('act', k === near.pin));
+      if (near.shot !== lastShot) { lastShot = near.shot; parent.postMessage({ muzzaga: 'shot', i: near.shot }, location.origin); }
     };
     embedStep = dt => { if (tgtWant) { const k = 1 - Math.pow(0.0015, dt); TGT.x += (tgtWant.x - TGT.x) * k; TGT.z += (tgtWant.z - TGT.z) * k; } };
     addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.muzzaga === 'tour') apply(+e.data.p || 0); });

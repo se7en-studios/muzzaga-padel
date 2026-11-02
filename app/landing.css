@@ -2498,7 +2498,7 @@ body {
    -------------------------------------------------------------------------- */
 .club-tour {
   position: relative;
-  height: calc(var(--stops) * 85svh);
+  height: calc(var(--stops) * 100svh);
   background: #141826;
 }
 
