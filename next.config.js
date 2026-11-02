@@ -16,7 +16,7 @@ const CSP = [
   "font-src 'self' data: https:",
   "media-src 'self' blob: https:",
   "connect-src 'self' https:",
-  "frame-src https:",
+  "frame-src 'self' https:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -41,6 +41,10 @@ const nextConfig = {
       // Vercel no acepta cuerpos de más de 4,5 MB.
       bodySizeLimit: "4.5mb",
     },
+  },
+  // El recorrido 3D es un archivo estático independiente (public/recorrido).
+  async rewrites() {
+    return [{ source: "/recorrido", destination: "/recorrido/index.html" }];
   },
   async headers() {
     return [

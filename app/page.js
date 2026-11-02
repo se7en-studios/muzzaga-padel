@@ -6,6 +6,7 @@ import BookingCalendar from "../components/BookingCalendar";
 import AmenitiesSection from "../components/AmenitiesSection";
 import HomeTorneosTeaser from "../components/HomeTorneosTeaser";
 import HomeCantinaTeaser from "../components/HomeCantinaTeaser";
+import ClubRecorrido from "../components/ClubRecorrido";
 import ClubToolsSection from "../components/ClubToolsSection";
 import FaqSection from "../components/FaqSection";
 import FloatingLiveBar from "../components/FloatingLiveBar";
@@ -191,6 +192,9 @@ export default async function Home() {
           ))}
         </div>
       </div>
+
+      {/* RECORRIDO 3D POR SCROLL */}
+      <ClubRecorrido />
 
       {/* WIDGET DISPONIBILIDAD INMEDIATA (HOY / MAÑANA) */}
       <TodayFlashSlots />
