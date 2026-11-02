@@ -193,9 +193,6 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* RECORRIDO 3D POR SCROLL */}
-      <ClubRecorrido />
-
       {/* WIDGET DISPONIBILIDAD INMEDIATA (HOY / MAÑANA) */}
       <TodayFlashSlots />
 
@@ -232,6 +229,9 @@ export default async function Home() {
           />
         </div>
       </section>
+
+      {/* RECORRIDO 3D POR SCROLL (después de reservar turnos) */}
+      <ClubRecorrido />
 
       {/* Testimonios: fuera hasta tener reseñas reales con nombre y foto (o
           las de Google). El componente queda en components/. */}
