@@ -885,7 +885,9 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   const wrap = a => ((a + 540) % 360) - 180;
 
   let postfx = null; // posproceso (premium-post.js); null = render directo
-  function resize() { const r = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); }
+  function resize() { const r = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height);
+    // en vertical (landing) se sube el motivo para que quede en la zona libre sobre la tarjeta
+    if (document.documentElement.classList.contains('embed') && r.width / r.height < 0.8) camera.setViewOffset(r.width, r.height, 0, r.height * 0.14, r.width, r.height); else camera.clearViewOffset(); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(stage); resize();
 
   const ptrs = new Map(); let down = null, pinch0 = 0;
@@ -1057,6 +1059,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   }
 
   let dm = 1;
+  const DM_CAP = document.documentElement.classList.contains('embed') ? 1.9 : 2.6; // en vertical, la landing encuadra más cerca
   let embedStep = null;
   let introOn = true; $('go').addEventListener('click', () => { introOn = false; want.az = PRE['3d'].az; want.d = PRE['3d'].d; want.el = PRE['3d'].el; setRoof(false); $('intro').classList.add('off'); });
   let last = performance.now(), t = 0, fc = 0, lastPK = '', wallsMoved = false, inView = true, pAcc = 0, pN = 0, pLocked = false;
@@ -1078,7 +1081,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     cam.az += wrap(want.az - cam.az) * k; cam.el += (want.el - cam.el) * k; cam.d += (want.d - cam.d) * k;
     if (Math.abs(cam.fov - want.fov) > 0.05) { cam.fov += (want.fov - cam.fov) * k; camera.fov = cam.fov; camera.updateProjectionMatrix(); }
     const az = cam.az * rad, el = cam.el * rad, ce = Math.cos(el);
-    dm += (clampN(1.35 / camera.aspect, 1, 2.6) - dm) * 0.2; const dd = cam.d * dm;
+    dm += (clampN(1.35 / camera.aspect, 1, DM_CAP) - dm) * 0.2; const dd = cam.d * dm;
     camera.position.set(TGT.x + dd * Math.sin(az) * ce, TGT.y + dd * Math.sin(el), TGT.z + dd * Math.cos(az) * ce);
     camera.lookAt(TGT); camera.updateMatrixWorld();
 

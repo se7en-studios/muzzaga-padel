@@ -2771,3 +2771,36 @@ body {
     font-size: 0.8rem;
   }
 }
+
+/* Celular: tarjeta compacta para que la maqueta respire arriba */
+@media (max-width: 640px) {
+  .club-tour-card {
+    padding: 12px 14px 12px;
+    border-radius: 16px;
+  }
+  .club-tour-title {
+    margin: 4px 0 6px;
+    font-size: 1.6rem;
+  }
+  .club-tour-text {
+    margin: 0 0 10px;
+    font-size: 0.84rem;
+    line-height: 1.4;
+  }
+  .club-tour-actions {
+    flex-wrap: nowrap;
+    gap: 6px 8px;
+  }
+  .club-tour-actions .btn {
+    padding: 0.45rem 0.62rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  .club-tour-link {
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+  .club-tour-dots {
+    margin-top: 10px;
+  }
+}
