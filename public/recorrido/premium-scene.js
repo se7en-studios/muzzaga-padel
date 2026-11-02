@@ -549,6 +549,9 @@
         mesh(cyl(0.5, 0.5, 0.04, 28), woodTop, x, 0.74, z);
         mesh(cyl(0.045, 0.06, 0.72, 10), steel, x, 0.37, z);
         mesh(cyl(0.3, 0.3, 0.03, 20), steel, x, 0.015, z);
+        const rugTex = ctx.ctex(256, 256, (g, w, h) => { g.fillStyle = '#23262d'; g.beginPath(); g.arc(w / 2, h / 2, w / 2, 0, 7); g.fill(); g.strokeStyle = '#f26a1b'; g.lineWidth = 5; g.beginPath(); g.arc(w / 2, h / 2, w * 0.44, 0, 7); g.stroke(); g.strokeStyle = 'rgba(255,255,255,.12)'; g.lineWidth = 2; g.beginPath(); g.arc(w / 2, h / 2, w * 0.36, 0, 7); g.stroke(); });
+        const rug = mesh(new THREE.CircleGeometry(1.3, 40), new THREE.MeshStandardMaterial({ map: rugTex, roughness: 1, transparent: true }), x, 0.022, z);
+        rug.rotation.x = -Math.PI / 2;
         for (let i = 0; i < n; i++) {
           const a = (Math.PI * 2 * i) / n + 0.5;
           chair(

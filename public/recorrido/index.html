@@ -1059,7 +1059,8 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   let embedStep = null;
   let introOn = true; $('go').addEventListener('click', () => { introOn = false; want.az = PRE['3d'].az; want.d = PRE['3d'].d; want.el = PRE['3d'].el; setRoof(false); $('intro').classList.add('off'); });
   let last = performance.now(), t = 0, fc = 0, lastPK = '', wallsMoved = false, inView = true, pAcc = 0, pN = 0, pLocked = false;
-  new IntersectionObserver(e => { inView = e[0].isIntersecting; }).observe(stage);
+  // en la landing la visibilidad la informa la página padre (el observer del iframe podía quedar en "no visible")
+  if (!document.documentElement.classList.contains('embed')) new IntersectionObserver(e => { inView = e[0].isIntersecting; }).observe(stage);
   function perf(dt) {
     pAcc += dt; pN++; if (pN < 60) return;
     const avg = pAcc / pN; pAcc = 0; pN = 0;
@@ -1196,6 +1197,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     addEventListener('message', e => {
       if (e.origin !== location.origin || !e.data) return;
       if (e.data.muzzaga === 'tour') apply(+e.data.p || 0);
+      if (e.data.muzzaga === 'visible') inView = !!e.data.v;
       if (e.data.muzzaga === 'pointer') { par.x = Math.max(-1, Math.min(1, +e.data.x || 0)); par.y = Math.max(-1, Math.min(1, +e.data.y || 0)); }
     });
 

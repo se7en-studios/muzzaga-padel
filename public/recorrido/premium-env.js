@@ -153,6 +153,7 @@
         const { width: w, height: h, depth: d } = body.geometry.parameters,
           parts = [],
           zf = d / 2;
+      if (h < 2.5 || w < 6) return; // solo volúmenes del tamaño de una casa (no la máquina de café, que también tiene un cono)
         const P = (geo, mat, x, y, z) =>
           parts.push({ geo, mat, m: mat4(x, y, z) });
         P(new THREE.BoxGeometry(0.95, 2.0, 0.08), door, 0, 1.0, zf + 0.04);

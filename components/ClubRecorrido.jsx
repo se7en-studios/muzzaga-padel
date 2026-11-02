@@ -93,6 +93,18 @@ export default function ClubRecorrido() {
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
+  // La maqueta solo dibuja mientras la sección está a la vista (el iframe no puede saberlo por sí solo).
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || !ready) return undefined;
+    const io = new IntersectionObserver(
+      ([entry]) => post({ muzzaga: "visible", v: entry.isIntersecting }),
+      { rootMargin: "20% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ready, post]);
+
   // Scroll → progreso 0..1 → cámara del iframe.
   useEffect(() => {
     const el = sectionRef.current;
