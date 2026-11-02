@@ -1159,17 +1159,18 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     // Recorrido continuo (sin cortes): az/el/d = cámara orbital; x/z = punto al que mira;
     // shot = toma que muestra la landing; pin = lugar destacado (índice de SPOTS).
     const KF = [
-      { az: 215, el: 33, d: 74, x: -3, z: 2, pin: -1, shot: 0 },   // 1 · exterior, plano aéreo
-      { az: 195, el: 24, d: 44, x: -2, z: 6, pin: -1, shot: 0 },   //     bajando hacia el club
-      { az: 205, el: 17, d: 22, x: 3, z: -2, pin: 1, shot: 1 },    // 2 · canchas, pegado al cristal
-      { az: 160, el: 16, d: 21, x: -3, z: -10, pin: 1, shot: 1 },  //     y del otro lado
-      { az: 214, el: 27, d: 19, x: 3, z: 12.8, pin: 3, shot: 2 },    // 3 · recepción y cantina
-      { az: 150, el: 22, d: 30, x: -6, z: 11, pin: 4, shot: 3 },   // 4 · living
-      { az: 235, el: 22, d: 28, x: 7, z: 11, pin: 5, shot: 3 },    //     vestuarios
-      { az: 215, el: 38, d: 86, x: -2, z: 2, pin: -1, shot: 4 }    // 5 · se aleja y sube
+      { az: 215, el: 33, d: 74, x: -3, z: 2, pin: -1, shot: 0, cut: 6 },   // 1 · exterior, plano aéreo
+      { az: 195, el: 24, d: 44, x: -2, z: 6, pin: -1, shot: 0, cut: 6 },   //     bajando hacia el club
+      { az: 205, el: 17, d: 22, x: 3, z: -2, pin: 1, shot: 1, cut: 6 },    // 2 · canchas, pegado al cristal
+      { az: 160, el: 16, d: 21, x: -3, z: -10, pin: 1, shot: 1, cut: 6 },  //     y del otro lado
+      { az: 214, el: 27, d: 19, x: 3, z: 12.8, pin: 3, shot: 2, cut: 0.9 },    // 3 · recepción y cantina
+      { az: 150, el: 22, d: 30, x: -6, z: 11, pin: 4, shot: 3, cut: 0.9 },   // 4 · living
+      { az: 235, el: 22, d: 28, x: 7, z: 11, pin: 5, shot: 3, cut: 0.9 },    //     vestuarios
+      { az: 215, el: 38, d: 86, x: -2, z: 2, pin: -1, shot: 4, cut: 6 }    // 5 · se aleja y sube
     ];
     const cr = (p0, p1, p2, p3, t) => 0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
-    let tgtWant = null, lastShot = -1;
+    let tgtWant = null, lastShot = -1, cutWant = 6, cutH = 6;
+    const cutPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 6);
     const fadeItems = []; let fadeStart = 0;          // [objeto, valor final]: luces que se encienden de a poco
     const par = { x: 0, y: 0 }, parS = { x: 0, y: 0 }, base = { az: 215, el: 40 }; // parallax con el cursor
     const apply = p => {
@@ -1178,7 +1179,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       const f = Math.max(0, Math.min(1, p)) * (KF.length - 1), i = Math.min(KF.length - 2, Math.floor(f)), t = f - i;
       const k0 = KF[Math.max(0, i - 1)], k1 = KF[i], k2 = KF[i + 1], k3 = KF[Math.min(KF.length - 1, i + 2)];
       const at = key => cr(k0[key], k1[key], k2[key], k3[key], t);
-      want.az = at('az'); want.el = Math.max(12, at('el')); want.d = at('d'); base.az = want.az; base.el = want.el;
+      want.az = at('az'); want.el = Math.max(12, at('el')); want.d = at('d'); base.az = want.az; base.el = want.el; cutWant = Math.max(0.9, Math.min(6, at('cut')));
       tgtWant = { x: at('x'), z: at('z') };
       const near = KF[Math.round(f)];
       SPOTS.forEach((sp, k) => sp.pin.classList.toggle('act', k === near.pin));
@@ -1187,6 +1188,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     embedStep = dt => {
       const k = 1 - Math.pow(0.0015, dt);
       if (tgtWant) { TGT.x += (tgtWant.x - TGT.x) * k; TGT.z += (tgtWant.z - TGT.z) * k; }
+      cutH += (cutWant - cutH) * k * 0.6; cutPlane.constant = cutH;
       parS.x += (par.x - parS.x) * k * 0.5; parS.y += (par.y - parS.y) * k * 0.5;
       want.az = base.az + parS.x * 3; want.el = Math.max(12, base.el - parS.y * 1.6);
       if (fadeStart && fadeItems.length) {
@@ -1264,6 +1266,21 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       scene.updateMatrixWorld(true); // la escena no se actualiza sola: sin esto lo agregado queda en el origen
     }
     if (!/look=day/.test(location.search)) { try { dusk(); if (window.MuzzagaLighting) { window.MuzzagaLighting.install({ THREE, scene, ctex, addFade: (o, v) => { fadeItems.push([o, v]); if (o.isLight) o.intensity = 0; else o.opacity = 0; } }); scene.updateMatrixWorld(true); } } catch (e) { console.error('dusk', e); } } // el clima nunca debe romper la maqueta
+    /* ---- las canchas se bajan cuando la cámara apunta a otro sector (no tapan la cantina ni los vestuarios) ---- */
+    (function () {
+      renderer.localClippingEnabled = true;
+      const clones = new Map(), box3 = new THREE.Box3();
+      const inPerson = o => { for (let a = o.parent; a; a = a.parent) if (a.userData && a.userData.legL) return true; return false; };
+      scene.traverse(o => {
+        if (!o.isMesh || !o.material || Array.isArray(o.material) || o.isSprite || inPerson(o)) return;
+        box3.setFromObject(o); const c = box3.getCenter(new THREE.Vector3());
+        if (c.x < -12.6 || c.x > 12.6 || c.z < -16.6 || c.z > 4.7 || box3.max.y < 1.3) return;   // dentro del recinto de canchas y más alto que la red
+        let m = clones.get(o.material);
+        if (!m) { m = o.material.clone(); m.clippingPlanes = [cutPlane]; m.clipShadows = true; clones.set(o.material, m); }
+        o.material = m;
+      });
+    })();
+
     apply(0); TGT.set(KF[0].x, 0, KF[0].z); Object.assign(cam, want);
     // se espera a que techo y paredes terminen de bajar antes de mostrarse
     setTimeout(() => { fadeStart = performance.now(); parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 1400);
