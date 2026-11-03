@@ -6,6 +6,7 @@ import BookingCalendar from "../components/BookingCalendar";
 import AmenitiesSection from "../components/AmenitiesSection";
 import HomeTorneosTeaser from "../components/HomeTorneosTeaser";
 import HomeCantinaTeaser from "../components/HomeCantinaTeaser";
+import ClubRecorrido from "../components/ClubRecorrido";
 import ClubToolsSection from "../components/ClubToolsSection";
 import FaqSection from "../components/FaqSection";
 import FloatingLiveBar from "../components/FloatingLiveBar";
@@ -228,6 +229,9 @@ export default async function Home() {
           />
         </div>
       </section>
+
+      {/* RECORRIDO 3D POR SCROLL (después de reservar turnos) */}
+      <ClubRecorrido />
 
       {/* Testimonios: fuera hasta tener reseñas reales con nombre y foto (o
           las de Google). El componente queda en components/. */}

@@ -2492,3 +2492,315 @@ body {
   transform: translateY(-1px);
 }
 
+
+/* --------------------------------------------------------------------------
+   RECORRIDO 3D POR SCROLL (maqueta del club detrás, la cámara sigue el scroll)
+   -------------------------------------------------------------------------- */
+.club-tour {
+  position: relative;
+  height: calc(var(--stops) * 100svh);
+  background: #141826;
+}
+
+.club-tour-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.club-tour-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.club-tour-frame.is-ready {
+  opacity: 1;
+}
+
+.club-tour-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #9aa0bd;
+  font-size: 0.95rem;
+}
+
+.club-tour-card {
+  position: absolute;
+  left: clamp(16px, 4vw, 56px);
+  bottom: clamp(20px, 6vh, 64px);
+  width: min(400px, calc(100% - 32px));
+  padding: 20px 22px;
+  border-radius: 18px;
+  background: rgba(16, 18, 22, 0.9);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5);
+}
+
+.club-tour-kick {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange-primary, #f26a1b);
+}
+
+.club-tour-title {
+  margin: 6px 0 8px;
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.club-tour-text {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.5;
+}
+
+.club-tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.club-tour-link {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.club-tour-dots {
+  display: flex;
+  gap: 6px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.club-tour-dots li {
+  width: 18px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.22);
+  transition: background 0.3s, width 0.3s;
+}
+
+.club-tour-dots li.on {
+  width: 30px;
+  background: var(--orange-primary, #f26a1b);
+}
+
+.club-tour-scroll {
+  position: absolute;
+  right: clamp(16px, 4vw, 56px);
+  bottom: clamp(20px, 6vh, 64px);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(16, 18, 22, 0.88);
+  color: #fff;
+  font-size: 0.85rem;
+  transition: opacity 0.4s;
+}
+
+.club-tour-scroll[data-hide="true"] {
+  opacity: 0;
+}
+
+@media (max-width: 640px) {
+  .club-tour-card {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: 84px; /* deja lugar a la barra flotante de abajo */
+    padding: 16px 18px;
+  }
+  .club-tour-scroll {
+    display: none;
+  }
+}
+
+/* Recorrido 3D: viñeta de cine, puntos de interés, animación de la tarjeta y microinteracciones */
+.club-tour-sticky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(8, 10, 22, 0.42));
+}
+
+.club-tour-poi {
+  position: absolute;
+  z-index: 2;
+  top: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  max-width: calc(100% - 24px);
+  padding: 6px;
+  overflow-x: auto;
+  border-radius: 999px;
+  background: rgba(16, 18, 22, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  scrollbar-width: none;
+}
+
+.club-tour-poi::-webkit-scrollbar {
+  display: none;
+}
+
+.club-tour-poi button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, transform 0.25s;
+}
+
+.club-tour-poi button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.club-tour-poi button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.club-tour-poi button.on {
+  color: #fff;
+  background: rgba(242, 106, 27, 0.24);
+}
+
+.club-tour-poi-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transition: background 0.25s, box-shadow 0.25s;
+}
+
+.club-tour-poi button.on .club-tour-poi-dot {
+  background: var(--orange-primary, #f26a1b);
+  box-shadow: 0 0 0 4px rgba(242, 106, 27, 0.28);
+  animation: club-tour-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes club-tour-pulse {
+  50% {
+    box-shadow: 0 0 0 7px rgba(242, 106, 27, 0);
+  }
+}
+
+.club-tour-card {
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.club-tour-card-body {
+  animation: club-tour-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes club-tour-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.club-tour-btn {
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.club-tour-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -10px var(--orange-glow);
+}
+
+.club-tour-btn:active {
+  transform: translateY(0);
+}
+
+.club-tour-wa {
+  background: rgba(37, 211, 102, 0.16);
+  border: 1px solid rgba(37, 211, 102, 0.45);
+  color: #5ee59a;
+}
+
+.club-tour-wa:hover {
+  background: rgba(37, 211, 102, 0.26);
+  box-shadow: 0 10px 24px -10px rgba(37, 211, 102, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .club-tour-card-body,
+  .club-tour-poi button.on .club-tour-poi-dot {
+    animation: none;
+  }
+  .club-tour-btn:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .club-tour-poi {
+    top: 76px;
+  }
+  .club-tour-poi button {
+    padding: 7px 11px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Celular: tarjeta compacta para que la maqueta respire arriba */
+@media (max-width: 640px) {
+  .club-tour-card {
+    padding: 12px 14px 12px;
+    border-radius: 16px;
+  }
+  .club-tour-title {
+    margin: 4px 0 6px;
+    font-size: 1.6rem;
+  }
+  .club-tour-text {
+    margin: 0 0 10px;
+    font-size: 0.84rem;
+    line-height: 1.4;
+  }
+  .club-tour-actions {
+    flex-wrap: nowrap;
+    gap: 6px 8px;
+  }
+  .club-tour-actions .btn {
+    padding: 0.45rem 0.62rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  .club-tour-link {
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+  .club-tour-dots {
+    margin-top: 10px;
+  }
+}
