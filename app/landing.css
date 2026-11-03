@@ -2507,6 +2507,8 @@ body {
   top: 0;
   height: 100svh;
   overflow: hidden;
+  /* foto de la maqueta: se ve al instante mientras carga la 3D */
+  background: #141826 url(/recorrido/poster.jpg) center / cover no-repeat;
 }
 
 .club-tour-frame {
@@ -2525,11 +2527,13 @@ body {
 
 .club-tour-loading {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: #9aa0bd;
-  font-size: 0.95rem;
+  left: 0;
+  right: 0;
+  top: 14px;
+  text-align: center;
+  color: #cfd3e8;
+  font-size: 0.8rem;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
 
 .club-tour-card {
