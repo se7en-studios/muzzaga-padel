@@ -74,7 +74,7 @@ export default function ClubRecorrido() {
           io.disconnect();
         }
       },
-      { rootMargin: "100% 0px" },
+      { rootMargin: "300% 0px" },
     );
     io.observe(el);
     return () => io.disconnect();

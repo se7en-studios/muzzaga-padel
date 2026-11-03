@@ -1286,7 +1286,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
     apply(0); TGT.set(KF[0].x, TGT.y, KF[0].z); Object.assign(cam, want);
     // se espera a que techo y paredes terminen de bajar antes de mostrarse
-    setTimeout(() => { fadeStart = performance.now(); parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 1400);
+    setTimeout(() => { fadeStart = performance.now(); parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 700);
   }
 })();
 </script>
