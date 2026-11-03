@@ -2808,3 +2808,9 @@ body {
     margin-top: 10px;
   }
 }
+
+/* iOS Safari ignora maximum-scale: esto bloquea el zoom de pellizco y de doble toque solo en la home. */
+html:has(#turnos),
+html:has(#turnos) body {
+  touch-action: pan-x pan-y;
+}

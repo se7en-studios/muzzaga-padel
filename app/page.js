@@ -63,6 +63,15 @@ const TICKER_ITEMS = [
 // regenera cada 5 min (y al guardar fotos o la carta) sin redeploy.
 export const revalidate = 300;
 
+// Solo en la home: sin zoom de pellizco (al ampliar se arrastraba hacia los costados).
+// El admin y el resto del sitio conservan el zoom.
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default async function Home() {
   const [config, { photos, location }, menu] = await Promise.all([
     getClubConfig(),
