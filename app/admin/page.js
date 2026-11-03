@@ -41,6 +41,7 @@ import CantinaView from "./views/CantinaView";
 import TorneosView from "./views/TorneosView";
 import CajaView from "./views/CajaView";
 import ConfiguracionView from "./views/ConfiguracionView";
+import ActividadView from "./views/ActividadView";
 import CreateBookingModal from "./CreateBookingModal";
 import BookingDetailModal from "./BookingDetailModal";
 import StaffPinModal from "./ui/StaffPinModal";
@@ -971,12 +972,16 @@ export default function AdminPage() {
             )}
             {view === "torneos" && (
               <TorneosView
+                clubConfig={clubConfig}
                 onExpiredSession={handleExpiredSession}
                 onToast={showToast}
               />
             )}
             {view === "reportes" && (
               <ReportesView onExpiredSession={handleExpiredSession} />
+            )}
+            {view === "actividad" && (
+              <ActividadView onExpiredSession={handleExpiredSession} />
             )}
             {view === "configuracion" && (
               <ConfiguracionView

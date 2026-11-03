@@ -71,8 +71,6 @@ export default async function TorneosPage() {
             </a>
           </div>
 
-          {/* Cuadros "en vivo": ocultos hasta tener datos reales del torneo
-              (el componente, con jugadores de ejemplo, queda en components/). */}
         </div>
 
         <TorneosGallery tournaments={gallery} />
