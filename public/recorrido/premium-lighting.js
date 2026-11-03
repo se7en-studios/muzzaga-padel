@@ -59,6 +59,25 @@
     );
     addFade(spillMat, 0.22);
 
+    /* ---- haces de luz de los focos sobre cada cancha (conos aditivos muy suaves) ---- */
+    const beam = ctex(4, 64, (g, w, h) => {
+      const gr = g.createLinearGradient(0, 0, 0, h);
+      gr.addColorStop(0, "rgba(220,232,255,1)");
+      gr.addColorStop(1, "rgba(220,232,255,0)");
+      g.fillStyle = gr;
+      g.fillRect(0, 0, w, h);
+    });
+    const beamMat = new THREE.MeshBasicMaterial({ map: beam, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+    [-6.5, 6.5].forEach((cx) =>
+      [-1, 1].forEach((dz) => {
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 3.4, 7.4, 28, 1, true), beamMat);
+        m.position.set(cx, 3.9, -6 + dz * 4.5);
+        m.userData.noCast = true;
+        scene.add(m);
+      }),
+    );
+    addFade(beamMat, 0.16);
+
     /* ---- sombra de contacto al pie de las paredes interiores ---- */
     const ao = ctex(4, 64, (g, w, h) => {
       const gr = g.createLinearGradient(0, 0, 0, h);

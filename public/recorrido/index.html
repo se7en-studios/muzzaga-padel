@@ -1279,7 +1279,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
         box3.setFromObject(o); const c = box3.getCenter(new THREE.Vector3());
         if (c.x < -12.6 || c.x > 12.6 || c.z < -16.6 || c.z > 4.7 || box3.max.y < 1.3) return;   // dentro del recinto de canchas y más alto que la red
         let m = clones.get(o.material);
-        if (!m) { m = o.material.clone(); m.clippingPlanes = [cutPlane]; m.clipShadows = true; clones.set(o.material, m); }
+        if (!m) { m = o.material.clone(); m.clippingPlanes = [cutPlane]; m.clipShadows = true; clones.set(o.material, m); fadeItems.filter(f => f[0] === o.material).forEach(f => fadeItems.push([m, f[1]])); }
         o.material = m;
       });
     })();
