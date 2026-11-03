@@ -83,6 +83,16 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // La maqueta 3D (scripts estáticos): se reusa desde caché y se actualiza en segundo plano.
+        source: "/recorrido/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, stale-while-revalidate=86400",
+          },
+        ],
+      },
     ];
   },
 };
