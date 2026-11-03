@@ -1,732 +1,510 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Trophy, Users, DollarSign, Search, Plus, Trash2, Calendar, Phone, CheckCircle, Clock } from "lucide-react";
+import { DollarSign, Plus, Trophy, Users, X } from "lucide-react";
 import { EmptyState, SkeletonRows } from "../ui/states";
-import { formatARS, plural, normalizeSearch } from "../../../lib/format";
+import { formatARS, plural } from "../../../lib/format";
+import { todayInClub } from "../../../lib/booking";
+import { CATEGORY_PRESETS, isByeMatch } from "../../../lib/tournament";
 import {
-  adminAddTournamentPlayer,
   adminCreateTournament,
-  adminDeleteTournament,
   adminGetTournaments,
-  adminRemoveTournamentPlayer,
-  adminTogglePlayerPaid,
-  adminUpdateTournamentStatus,
+  adminSaveTournamentMatch,
 } from "../actions";
-import { toWhatsappNumber } from "../../../lib/phone";
-import { WhatsAppMiniIcon } from "../adminHelpers";
-import TournamentBracket from "../../../components/TournamentBracket";
+import TournamentDetail from "./torneos/TournamentDetail";
+import { STATUS_LABELS, tournamentDates } from "./torneos/shared";
 
-const STATUS_LABELS = {
-  abierto: { label: "Inscripciones Abiertas", tone: "badge-emerald" },
-  cerrado: { label: "Inscripciones Cerradas", tone: "badge-amber" },
-  finalizado: { label: "Finalizado", tone: "badge-indigo" },
+const EMPTY_FORM = {
+  name: "",
+  date: "",
+  dateEnd: "",
+  price: "",
+  categories: [],
 };
 
-const EMPTY_TOURNAMENT_FORM = { name: "", date: "", category: "", price: "" };
-const EMPTY_PLAYER_FORM = { name: "", phone: "", partner: "" };
+/** Próximo sábado (o hoy si es sábado): el caso típico, "torneo este finde". */
+function nextSaturday() {
+  const today = todayInClub();
+  const d = new Date(`${today}T12:00:00Z`);
+  const add = (6 - d.getUTCDay() + 7) % 7;
+  d.setUTCDate(d.getUTCDate() + add);
+  return d.toISOString().slice(0, 10);
+}
 
-const toastError = (onToast, res, fallback) =>
-  onToast?.(res?.error || fallback, { tone: "error" });
+function plusDays(iso, n) {
+  const d = new Date(`${iso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
 
-const getInitials = (name) => {
-  if (!name) return "TP";
-  const parts = name.trim().split(/\s+/);
-  return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
-};
+/** Cuántos partidos se jugaron sobre el total (sin contar los bye). */
+function tournamentProgress(t) {
+  let total = 0;
+  let played = 0;
+  for (const fx of Object.values(t.fixtures || {})) {
+    for (const m of Object.values(fx.matches || {})) {
+      if (isByeMatch(m)) continue;
+      total += 1;
+      if (m.winner) played += 1;
+    }
+  }
+  return { total, played };
+}
 
-export default function TorneosView({ onExpiredSession, onToast }) {
+export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
   const [tournaments, setTournaments] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [createForm, setCreateForm] = useState(EMPTY_TOURNAMENT_FORM);
+  const [loading, setLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [customCat, setCustomCat] = useState("");
   const [creating, setCreating] = useState(false);
-  const [expandedId, setExpandedId] = useState(null);
-  const [playerForm, setPlayerForm] = useState(EMPTY_PLAYER_FORM);
-  const [addingPlayer, setAddingPlayer] = useState(false);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [tournamentTab, setTournamentTab] = useState("inscriptos");
+  const [statusFilter, setStatusFilter] = useState("activos");
+
+  const courts = clubConfig?.courts?.length
+    ? clubConfig.courts
+    : [
+        { id: "cancha-1", name: "Cancha 1" },
+        { id: "cancha-2", name: "Cancha 2" },
+      ];
 
   useEffect(() => {
-    loadTournaments();
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadTournaments() {
+  async function reload() {
     setLoading(true);
     const res = await adminGetTournaments();
     setLoading(false);
-    if (res.ok) {
+    if (res?.ok) {
       setTournaments(res.tournaments || []);
-      // Auto-expand first tournament if none expanded
-      if (res.tournaments?.length && !expandedId) {
-        setExpandedId(res.tournaments[0].id);
-      }
-    } else if (onExpiredSession) {
-      onExpiredSession(res);
+      return true;
     }
+    if (!onExpiredSession?.(res)) {
+      onToast?.(res?.error || "No se pudieron cargar los torneos.", {
+        tone: "error",
+      });
+      setTournaments((prev) => prev || []);
+    }
+    return false;
+  }
+
+  /** Corre una acción del server; si falla muestra el error. → true/false */
+  async function run(promise, fallback) {
+    const res = await promise;
+    if (res?.ok) return res;
+    if (!onExpiredSession?.(res))
+      onToast?.(res?.error || fallback, { tone: "error" });
+    return null;
+  }
+
+  function patchTournament(id, updater) {
+    setTournaments((list) =>
+      (list || []).map((t) => (t.id === id ? updater(t) : t)),
+    );
+  }
+
+  async function saveMatch(tournamentId, categoryId, matchId, payload) {
+    const res = await run(
+      adminSaveTournamentMatch(tournamentId, categoryId, matchId, payload),
+      "No se pudo guardar el partido.",
+    );
+    if (!res) return false;
+    patchTournament(tournamentId, (t) => {
+      const fx = t.fixtures?.[categoryId];
+      if (!fx?.matches?.[matchId]) return t;
+      const merged = { ...fx.matches[matchId], ...res.match };
+      for (const k of Object.keys(merged))
+        if (merged[k] == null) delete merged[k];
+      return {
+        ...t,
+        fixtures: {
+          ...t.fixtures,
+          [categoryId]: {
+            ...fx,
+            matches: { ...fx.matches, [matchId]: merged },
+          },
+        },
+      };
+    });
+    return true;
+  }
+
+  function toggleCategory(name) {
+    setForm((f) => ({
+      ...f,
+      categories: f.categories.includes(name)
+        ? f.categories.filter((c) => c !== name)
+        : [...f.categories, name],
+    }));
+  }
+
+  function addCustomCategory() {
+    const name = customCat.trim();
+    if (!name) return;
+    if (!form.categories.some((c) => c.toLowerCase() === name.toLowerCase())) {
+      setForm((f) => ({ ...f, categories: [...f.categories, name] }));
+    }
+    setCustomCat("");
+  }
+
+  function openCreate() {
+    const sat = nextSaturday();
+    setForm({ ...EMPTY_FORM, date: sat, dateEnd: plusDays(sat, 1) });
+    setShowCreate(true);
   }
 
   async function handleCreate(e) {
     e.preventDefault();
+    const categories = [...form.categories];
+    if (customCat.trim()) categories.push(customCat.trim());
     setCreating(true);
-    const res = await adminCreateTournament(createForm);
+    const res = await run(
+      adminCreateTournament({ ...form, categories }),
+      "No se pudo crear el torneo.",
+    );
     setCreating(false);
-    if (res.ok) {
-      onToast?.(`Torneo creado · ${createForm.name.trim()}`);
-      setCreateForm(EMPTY_TOURNAMENT_FORM);
-      setShowCreateForm(false);
-      loadTournaments();
-    } else if (!onExpiredSession?.(res)) {
-      toastError(onToast, res, "No se pudo crear el torneo.");
-    }
+    if (!res) return;
+    onToast?.(`Torneo creado · ${form.name.trim()}`);
+    setShowCreate(false);
+    setForm(EMPTY_FORM);
+    setCustomCat("");
+    await reload();
+    setSelectedId(res.tournamentId);
   }
 
-  async function handleDeleteTournament(id) {
-    if (!confirm("¿Eliminar este torneo y todos sus inscriptos?")) return;
-    const res = await adminDeleteTournament(id);
-    if (res.ok) loadTournaments();
-    else if (!onExpiredSession?.(res)) toastError(onToast, res, "No se pudo actualizar el torneo.");
-  }
-
-  async function handleStatusChange(id, status) {
-    const res = await adminUpdateTournamentStatus(id, status);
-    if (res.ok) loadTournaments();
-    else if (!onExpiredSession?.(res)) toastError(onToast, res, "No se pudo actualizar el torneo.");
-  }
-
-  async function handleAddPlayer(e, tournamentId) {
-    e.preventDefault();
-    setAddingPlayer(true);
-    const res = await adminAddTournamentPlayer(tournamentId, playerForm);
-    setAddingPlayer(false);
-    if (res.ok) {
-      onToast?.(`Inscripto · ${playerForm.name.trim()}`);
-      setPlayerForm(EMPTY_PLAYER_FORM);
-      loadTournaments();
-    } else if (!onExpiredSession?.(res)) {
-      toastError(onToast, res, "No se pudo agregar el jugador.");
-    }
-  }
-
-  async function handleTogglePaid(tournamentId, playerId, paid) {
-    const res = await adminTogglePlayerPaid(tournamentId, playerId, !paid);
-    if (res.ok) loadTournaments();
-    else if (!onExpiredSession?.(res)) toastError(onToast, res, "No se pudo actualizar el torneo.");
-  }
-
-  async function handleRemovePlayer(tournamentId, playerId) {
-    if (!confirm("¿Quitar a este jugador del torneo?")) return;
-    const res = await adminRemoveTournamentPlayer(tournamentId, playerId);
-    if (res.ok) loadTournaments();
-    else if (!onExpiredSession?.(res)) toastError(onToast, res, "No se pudo actualizar el torneo.");
-  }
-
-  // Métricas agregadas
   const metrics = useMemo(() => {
     const list = tournaments || [];
-    const openTournaments = list.filter((t) => t.status === "abierto").length;
-    const totalPairs = list.reduce((sum, t) => sum + (t.players?.length || 0), 0);
-    const paidPairs = list.reduce(
-      (sum, t) => sum + (t.players?.filter((p) => p.paid)?.length || 0),
-      0
-    );
-    const totalCollected = list.reduce(
-      (sum, t) =>
-        sum +
-        (t.players?.filter((p) => p.paid)?.length || 0) * (Number(t.price) || 0),
-      0
-    );
-    const totalPending = list.reduce(
-      (sum, t) =>
-        sum +
-        (t.players?.filter((p) => !p.paid)?.length || 0) * (Number(t.price) || 0),
-      0
-    );
-    return { openTournaments, totalPairs, paidPairs, totalCollected, totalPending };
+    const active = list.filter((t) => t.status !== "finalizado");
+    let pairs = 0;
+    let paid = 0;
+    let collected = 0;
+    let pending = 0;
+    for (const t of active) {
+      const price = Number(t.price) || 0;
+      for (const p of t.players || []) {
+        pairs += 1;
+        if (p.paid) {
+          paid += 1;
+          collected += price;
+        } else pending += price;
+      }
+    }
+    return { active: active.length, pairs, paid, collected, pending };
   }, [tournaments]);
 
-  // Torneos filtrados
-  const filteredTournaments = useMemo(() => {
-    let list = tournaments || [];
-    if (statusFilter !== "all") {
-      list = list.filter((t) => t.status === statusFilter);
-    }
-    if (search.trim()) {
-      const q = normalizeSearch(search);
-      list = list.filter(
-        (t) =>
-          normalizeSearch(t.name || "").includes(q) ||
-          normalizeSearch(t.category || "").includes(q) ||
-          t.players?.some((p) =>
-            normalizeSearch(`${p.name} ${p.partner || ""} ${p.phone || ""}`).includes(q)
-          )
-      );
-    }
+  const visible = useMemo(() => {
+    const list = tournaments || [];
+    if (statusFilter === "activos")
+      return list.filter((t) => t.status !== "finalizado");
+    if (statusFilter === "finalizado")
+      return list.filter((t) => t.status === "finalizado");
     return list;
-  }, [tournaments, statusFilter, search]);
+  }, [tournaments, statusFilter]);
+
+  const selected = tournaments?.find((t) => t.id === selectedId);
+
+  if (selected) {
+    return (
+      <TournamentDetail
+        key={selected.id}
+        tournament={selected}
+        courts={courts}
+        onBack={() => setSelectedId(null)}
+        onReload={reload}
+        onRun={run}
+        onSaveMatch={(catId, matchId, payload) =>
+          saveMatch(selected.id, catId, matchId, payload)
+        }
+        onPatch={(updater) => patchTournament(selected.id, updater)}
+        onDeleted={() => {
+          setSelectedId(null);
+          reload();
+        }}
+        onToast={onToast}
+      />
+    );
+  }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* 3 KPI CARDS KRAVIO PARA TORNEOS */}
+    <div className="tn-stack">
       <div className="admin-kpis-3">
-        <div className="admin-kravio-kpi-card">
-          <div className="admin-kravio-kpi-header">
-            <span className="admin-kravio-kpi-title">Torneos Activos</span>
-            <Trophy size={17} style={{ color: "#ea580c" }} />
-          </div>
-          <div className="admin-kravio-kpi-content">
-            <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: "#ea580c" }}>
-                {metrics.openTournaments} {metrics.openTournaments === 1 ? "Abierto" : "Abiertos"}
-              </div>
-              <span className="admin-cell-sub">
-                {tournaments ? `${tournaments.length} torneos registrados` : "Cargando..."}
-              </span>
-            </div>
-            <div className="admin-kravio-sparkline">
-              <svg viewBox="0 0 100 36">
-                <path d="M 0,28 Q 20,24 40,16 T 80,10 T 100,6" fill="none" stroke="#ea580c" strokeWidth="2.5" />
-                <path d="M 0,28 Q 20,24 40,16 T 80,10 T 100,6 L 100,36 L 0,36 Z" fill="rgba(234, 88, 12, 0.08)" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="admin-kravio-kpi-card">
-          <div className="admin-kravio-kpi-header">
-            <span className="admin-kravio-kpi-title">Parejas Inscriptas</span>
-            <Users size={17} style={{ color: "#15803d" }} />
-          </div>
-          <div className="admin-kravio-kpi-content">
-            <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: "#15803d" }}>
-                {metrics.totalPairs} {metrics.totalPairs === 1 ? "Pareja" : "Parejas"}
-              </div>
-              <span className="admin-cell-sub">
-                {metrics.paidPairs} abonadas · {metrics.totalPairs - metrics.paidPairs} pendientes
-              </span>
-            </div>
-            <div className="admin-kravio-sparkline">
-              <svg viewBox="0 0 100 36">
-                <path d="M 0,30 Q 25,28 50,15 T 85,8 T 100,4" fill="none" stroke="#15803d" strokeWidth="2.5" />
-                <path d="M 0,30 Q 25,28 50,15 T 85,8 T 100,4 L 100,36 L 0,36 Z" fill="rgba(21, 128, 61, 0.08)" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="admin-kravio-kpi-card">
-          <div className="admin-kravio-kpi-header">
-            <span className="admin-kravio-kpi-title">Recaudación Inscripciones</span>
-            <DollarSign size={17} style={{ color: "#0284c7" }} />
-          </div>
-          <div className="admin-kravio-kpi-content">
-            <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: "#0284c7" }}>
-                {formatARS(metrics.totalCollected)}
-              </div>
-              <span className="admin-cell-sub">
-                {metrics.totalPending > 0 ? `${formatARS(metrics.totalPending)} por cobrar` : "Todo al día"}
-              </span>
-            </div>
-            <div className="admin-kravio-sparkline">
-              <svg viewBox="0 0 100 36">
-                <path d="M 0,26 Q 30,22 60,14 T 90,8 T 100,6" fill="none" stroke="#0284c7" strokeWidth="2.5" />
-                <path d="M 0,26 Q 30,22 60,14 T 90,8 T 100,6 L 100,36 L 0,36 Z" fill="rgba(2, 132, 199, 0.08)" />
-              </svg>
-            </div>
-          </div>
-        </div>
+        <Kpi
+          icon={Trophy}
+          color="#ea580c"
+          title="Torneos activos"
+          value={metrics.active}
+          sub={tournaments ? `${tournaments.length} en total` : "Cargando..."}
+        />
+        <Kpi
+          icon={Users}
+          color="#15803d"
+          title="Parejas anotadas"
+          value={metrics.pairs}
+          sub={`${metrics.paid} pagaron · ${metrics.pairs - metrics.paid} deben`}
+        />
+        <Kpi
+          icon={DollarSign}
+          color="#0284c7"
+          title="Inscripciones cobradas"
+          value={formatARS(metrics.collected)}
+          sub={
+            metrics.pending > 0
+              ? `${formatARS(metrics.pending)} por cobrar`
+              : "Todo cobrado"
+          }
+        />
       </div>
 
-      {/* TOOLBAR CON SEGMENTOS Y BOTÓN DE NUEVO TORNEO */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", minWidth: 0, maxWidth: "100%" }}>
-          <div className="admin-segmented" role="group" aria-label="Filtro de torneos">
+      <div className="tn-row-between">
+        <div
+          className="admin-segmented"
+          role="group"
+          aria-label="Filtro de torneos"
+        >
+          {[
+            ["activos", "Activos"],
+            ["finalizado", "Terminados"],
+            ["all", "Todos"],
+          ].map(([id, label]) => (
             <button
+              key={id}
               type="button"
-              aria-pressed={statusFilter === "all"}
-              onClick={() => setStatusFilter("all")}
+              aria-pressed={statusFilter === id}
+              onClick={() => setStatusFilter(id)}
             >
-              Todos ({tournaments?.length || 0})
+              {label}
             </button>
-            <button
-              type="button"
-              aria-pressed={statusFilter === "abierto"}
-              onClick={() => setStatusFilter("abierto")}
-            >
-              Abiertos ({tournaments?.filter((t) => t.status === "abierto").length || 0})
-            </button>
-            <button
-              type="button"
-              aria-pressed={statusFilter === "cerrado"}
-              onClick={() => setStatusFilter("cerrado")}
-            >
-              Cerrados
-            </button>
-            <button
-              type="button"
-              aria-pressed={statusFilter === "finalizado"}
-              onClick={() => setStatusFilter("finalizado")}
-            >
-              Finalizados
-            </button>
-          </div>
-
-          <div className="admin-kravio-search-field" style={{ minWidth: "min(220px, 100%)" }}>
-            <Search size={14} style={{ color: "#5f5b52" }} aria-hidden />
-            <input
-              type="search"
-              aria-label="Buscar torneos o parejas"
-              placeholder="Buscar torneo o jugador..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ height: 34, fontSize: 14.5 }}
-            />
-          </div>
+          ))}
         </div>
-
         <button
           type="button"
           className="btn btn-linear-primary"
-          onClick={() => setShowCreateForm((v) => !v)}
-          aria-expanded={showCreateForm}
+          onClick={() => (showCreate ? setShowCreate(false) : openCreate())}
         >
-          <Plus size={16} /> Nuevo Torneo
+          <Plus size={16} /> Nuevo torneo
         </button>
       </div>
 
-      {/* FORMULARIO CREAR TORNEO */}
-      {showCreateForm && (
-        <form
-          onSubmit={handleCreate}
-          className="admin-kravio-table-card"
-          style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
-        >
-          <div style={{ gridColumn: "1 / -1", borderBottom: "1px solid var(--border)", paddingBottom: 10 }}>
-            <strong style={{ fontSize: 16, color: "var(--color-ink)" }}>Nuevo Torneo o Americano</strong>
-            <p className="admin-cell-sub" style={{ marginTop: 2 }}>
-              Configurá la categoría, fecha y el arancel por pareja para comenzar a inscribir.
+      {showCreate && (
+        <form onSubmit={handleCreate} className="tn-card tn-stack">
+          <div>
+            <h2 className="tn-card-title">Nuevo torneo</h2>
+            <p className="tn-muted" style={{ margin: 0 }}>
+              Poné el nombre, cuándo se juega y las categorías. Después anotás
+              las parejas.
             </p>
           </div>
-          <div>
-            <label className="admin-field-label">Nombre del torneo *</label>
-            <input
-              type="text"
-              required
-              className="admin-input-field"
-              placeholder="Ej. Torneo Primavera 2026"
-              value={createForm.name}
-              onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-            />
+          <div className="tn-grid-form">
+            <label className="tn-field" style={{ gridColumn: "1 / -1" }}>
+              <span className="admin-field-label">Nombre del torneo *</span>
+              <input
+                type="text"
+                required
+                autoFocus
+                maxLength={80}
+                placeholder="Ej. Torneo de Primavera"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </label>
+            <label className="tn-field">
+              <span className="admin-field-label">Empieza</span>
+              <input
+                type="date"
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+              />
+            </label>
+            <label className="tn-field">
+              <span className="admin-field-label">Termina</span>
+              <input
+                type="date"
+                value={form.dateEnd}
+                min={form.date || undefined}
+                onChange={(e) => setForm({ ...form, dateEnd: e.target.value })}
+              />
+            </label>
+            <label className="tn-field">
+              <span className="admin-field-label">Inscripción por pareja</span>
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                placeholder="$ 0"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+              />
+            </label>
           </div>
-          <div>
-            <label className="admin-field-label">Fecha del evento</label>
-            <input
-              type="date"
-              className="admin-input-field"
-              value={createForm.date}
-              onChange={(e) => setCreateForm({ ...createForm, date: e.target.value })}
-            />
+
+          <div className="tn-field">
+            <span className="admin-field-label">
+              Categorías * (tocá todas las que juegan)
+            </span>
+            <div className="tn-cats">
+              {CATEGORY_PRESETS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className="tn-cat-chip"
+                  aria-pressed={form.categories.includes(c)}
+                  onClick={() => toggleCategory(c)}
+                >
+                  {c}
+                </button>
+              ))}
+              {form.categories
+                .filter((c) => !CATEGORY_PRESETS.includes(c))
+                .map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className="tn-cat-chip"
+                    aria-pressed="true"
+                    onClick={() => toggleCategory(c)}
+                  >
+                    {c} <X size={13} aria-hidden />
+                  </button>
+                ))}
+            </div>
+            <div className="tn-row" style={{ marginTop: 6 }}>
+              <input
+                type="text"
+                maxLength={40}
+                placeholder="Otra: Suma 13, 7ma Damas..."
+                value={customCat}
+                onChange={(e) => setCustomCat(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCustomCategory();
+                  }
+                }}
+                style={{ maxWidth: 280 }}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={addCustomCategory}
+                disabled={!customCat.trim()}
+              >
+                Agregar
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="admin-field-label">Categoría</label>
-            <input
-              type="text"
-              className="admin-input-field"
-              placeholder="Ej. 6ta Libre / 7ma Caballeros"
-              value={createForm.category}
-              onChange={(e) => setCreateForm({ ...createForm, category: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="admin-field-label">Precio inscripción (por pareja)</label>
-            <input
-              type="number"
-              min="0"
-              className="admin-input-field"
-              placeholder="0"
-              value={createForm.price}
-              onChange={(e) => setCreateForm({ ...createForm, price: e.target.value })}
-            />
-          </div>
-          <div style={{ gridColumn: "1 / -1", display: "flex", gap: 8, justifyContent: "flex-end" }}>
+
+          <div className="tn-row" style={{ justifyContent: "flex-end" }}>
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => setShowCreateForm(false)}
+              onClick={() => setShowCreate(false)}
             >
               Cancelar
             </button>
             <button
               type="submit"
               className="btn btn-linear-primary"
-              disabled={creating}
+              disabled={
+                creating ||
+                !form.name.trim() ||
+                (!form.categories.length && !customCat.trim())
+              }
             >
-              {creating ? "Creando..." : "Crear Torneo"}
+              {creating ? "Creando..." : "Crear y anotar parejas →"}
             </button>
           </div>
         </form>
       )}
 
-      {/* LISTADO DE TORNEOS */}
-      <div className={loading ? "admin-content-loading" : ""} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {!tournaments ? (
-          <SkeletonRows count={3} height={72} />
-        ) : filteredTournaments.length === 0 ? (
-          <div className="admin-kravio-table-card" style={{ padding: 32 }}>
-            <EmptyState
-              icon={Trophy}
-              title="No se encontraron torneos"
-              text={
-                tournaments.length === 0
-                  ? "Todavía no cargaste ningún torneo. Creá uno para llevar la lista de parejas inscriptas."
-                  : "No hay torneos que coincidan con el filtro seleccionado."
-              }
-              action={
-                tournaments.length === 0
-                  ? { label: "Nuevo torneo", onClick: () => setShowCreateForm(true) }
-                  : undefined
-              }
-            />
-          </div>
-        ) : (
-          filteredTournaments.map((t) => {
-            const isOpen = expandedId === t.id;
-            const paidCount = t.players?.filter((p) => p.paid).length || 0;
-            const totalP = t.players?.length || 0;
-            const statusInfo = STATUS_LABELS[t.status] || STATUS_LABELS.abierto;
-            const totalIncome = paidCount * (Number(t.price) || 0);
-
+      {!tournaments ? (
+        <SkeletonRows count={3} height={110} />
+      ) : visible.length === 0 ? (
+        <div className="tn-card">
+          <EmptyState
+            icon={Trophy}
+            title={
+              tournaments.length
+                ? "No hay torneos acá"
+                : "Todavía no hay torneos"
+            }
+            text={
+              tournaments.length
+                ? "Cambiá el filtro para ver los demás."
+                : "Creá el torneo del finde: elegís categorías, anotás parejas, sorteás zonas y sacás el PDF con los horarios."
+            }
+            action={
+              !tournaments.length
+                ? { label: "Crear el primer torneo", onClick: openCreate }
+                : undefined
+            }
+          />
+        </div>
+      ) : (
+        <div className={`tn-list${loading ? " admin-content-loading" : ""}`}>
+          {visible.map((t) => {
+            const status = STATUS_LABELS[t.status] || STATUS_LABELS.abierto;
+            const { total, played } = tournamentProgress(t);
+            const paid = (t.players || []).filter((p) => p.paid).length;
             return (
-              <div
+              <button
                 key={t.id}
-                className="admin-kravio-table-card"
-                style={{
-                  border: isOpen ? "1px solid rgba(234, 88, 12, 0.4)" : undefined,
-                  boxShadow: isOpen ? "0 4px 16px rgba(234, 88, 12, 0.06)" : undefined,
-                  overflow: "hidden",
-                }}
+                type="button"
+                className="tn-list-item"
+                onClick={() => setSelectedId(t.id)}
               >
-                {/* CABECERA DEL TORNEO */}
-                <div
-                  role="button"
-                  tabIndex={0}
-                  aria-expanded={isOpen}
-                  onClick={() => setExpandedId(isOpen ? null : t.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setExpandedId(isOpen ? null : t.id);
-                    }
-                  }}
-                  style={{
-                    padding: "16px 20px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    cursor: "pointer",
-                    background: isOpen ? "rgba(234, 88, 12, 0.02)" : "transparent",
-                    borderBottom: isOpen ? "1px solid var(--border)" : "none",
-                    flexWrap: "wrap",
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                    <div
-                      style={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: 10,
-                        background: isOpen ? "rgba(234, 88, 12, 0.12)" : "var(--color-badge-bg)",
-                        color: isOpen ? "#ea580c" : "var(--text-muted)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Trophy size={20} />
-                    </div>
-                    <div>
-                      <strong style={{ fontSize: 16, color: "var(--color-ink)", display: "block" }}>
-                        {t.name}
-                      </strong>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          color: "var(--text-muted)",
-                          marginTop: 3,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <span>📅 {t.date || "Sin fecha fija"}</span>
-                        <span>🏆 {t.category || "General"}</span>
-                        <span>👥 {plural(totalP, "inscripto", "inscriptos")} ({paidCount} al día)</span>
-                        {t.price > 0 && (
-                          <span style={{ fontWeight: 600, color: "var(--color-ink)" }}>
-                            💰 {formatARS(t.price)} / pareja
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ textAlign: "right", display: "none", mdDisplay: "block" }}>
-                      <div style={{ fontSize: 14.5, fontWeight: 700, color: "#15803d" }}>
-                        {formatARS(totalIncome)}
-                      </div>
-                      <div style={{ fontSize: 13, color: "var(--text-muted)" }}>recaudado</div>
-                    </div>
-
-                    <span className={`badge-linear ${statusInfo.tone}`}>
-                      {statusInfo.label}
-                    </span>
-
-                    <span
-                      style={{
-                        fontSize: 13.5,
-                        color: "var(--text-muted)",
-                        transform: isOpen ? "rotate(180deg)" : "none",
-                        transition: "transform 0.15s ease",
-                      }}
-                    >
-                      ▼
-                    </span>
-                  </div>
+                <div className="tn-row-between">
+                  <span className={`badge-linear ${status.tone}`}>
+                    {status.label}
+                  </span>
+                  <span className="tn-muted">📅 {tournamentDates(t)}</span>
                 </div>
-
-                {/* DETALLE Y LISTA DE INSCRIPTOS */}
-                {isOpen && (
-                  <div style={{ padding: "16px 20px" }} onClick={(e) => e.stopPropagation()}>
-                    {/* CONTROLES DE ESTADO & BORRADO */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 16,
-                        flexWrap: "wrap",
-                        gap: 10,
-                        background: "var(--color-badge-bg)",
-                        padding: "10px 14px",
-                        borderRadius: 8,
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text-muted)" }}>
-                          Estado:
-                        </span>
-                        <select
-                          className="admin-mini-select"
-                          value={t.status}
-                          onChange={(e) => handleStatusChange(t.id, e.target.value)}
-                        >
-                          {Object.entries(STATUS_LABELS).map(([val, info]) => (
-                            <option key={val} value={val}>
-                              {info.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="admin-table-action-btn delete"
-                        onClick={() => handleDeleteTournament(t.id)}
-                        style={{ fontSize: 13.5 }}
-                      >
-                        <Trash2 size={13} /> Eliminar Torneo
-                      </button>
+                <span className="tn-list-name">{t.name}</span>
+                <div className="tn-list-meta">
+                  <span>🏆 {t.categories.map((c) => c.name).join(" · ")}</span>
+                  <span>
+                    👥 {plural(t.players.length, "pareja", "parejas")} ({paid}{" "}
+                    pagaron)
+                  </span>
+                </div>
+                {total > 0 && (
+                  <>
+                    <div className="tn-progress" aria-hidden>
+                      <span
+                        style={{
+                          width: `${Math.round((played / total) * 100)}%`,
+                        }}
+                      />
                     </div>
-
-                    {/* Selector de Solapas: Inscriptos vs Cuadro Fixture */}
-                    <div className="admin-segmented" style={{ marginBottom: 16 }}>
-                      <button
-                        type="button"
-                        aria-pressed={tournamentTab === "inscriptos"}
-                        onClick={() => setTournamentTab("inscriptos")}
-                      >
-                        👥 Parejas e Inscriptos ({totalP})
-                      </button>
-                      <button
-                        type="button"
-                        aria-pressed={tournamentTab === "bracket"}
-                        onClick={() => setTournamentTab("bracket")}
-                      >
-                        🏆 Cuadro Eliminatorio / Cruces
-                      </button>
-                    </div>
-
-                    {tournamentTab === "bracket" ? (
-                      <div style={{ marginTop: 8 }}>
-                        <TournamentBracket />
-                      </div>
-                    ) : (
-                      <>
-                        {/* TABLA ESTILO KRAVIO SLA DE INSCRIPTOS */}
-                        <div style={{ border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
-                          <table className="admin-kravio-table" style={{ margin: 0 }}>
-                        <thead>
-                          <tr>
-                            <th style={{ width: 44 }}>#</th>
-                            <th>Pareja Inscripta</th>
-                            <th>Teléfono / Contacto</th>
-                            <th>Estado Pago</th>
-                            <th style={{ textAlign: "right" }}>Acciones</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {!t.players || t.players.length === 0 ? (
-                            <tr>
-                              <td colSpan={5} style={{ textAlign: "center", padding: "28px 16px", color: "var(--text-muted)" }}>
-                                Aún no hay parejas inscriptas en este torneo. Completá el formulario de abajo para sumar la primera.
-                              </td>
-                            </tr>
-                          ) : (
-                            t.players.map((p, idx) => (
-                              <tr key={p.id}>
-                                <td style={{ color: "var(--text-muted)", fontSize: 13.5, fontWeight: 600 }}>
-                                  #{idx + 1}
-                                </td>
-                                <td>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                    <div className="admin-avatar-initials">
-                                      {getInitials(p.name)}
-                                    </div>
-                                    <div>
-                                      <strong style={{ fontSize: 15, color: "var(--color-ink)", display: "block" }}>
-                                        {p.name}
-                                      </strong>
-                                      {p.partner && (
-                                        <span className="admin-cell-sub">
-                                          Compañero: <strong>{p.partner}</strong>
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td>
-                                  {p.phone ? (
-                                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                      <span style={{ fontSize: 14.5 }}>{p.phone}</span>
-                                      <a
-                                        href={`https://wa.me/${toWhatsappNumber(p.phone)}`}
-                                        target="_blank"
-                                        rel="noopener"
-                                        className="admin-table-action-btn"
-                                        title="Enviar WhatsApp"
-                                      >
-                                        <WhatsAppMiniIcon />
-                                      </a>
-                                    </div>
-                                  ) : (
-                                    <span style={{ fontSize: 13.5, color: "var(--text-muted)" }}>—</span>
-                                  )}
-                                </td>
-                                <td>
-                                  <button
-                                    type="button"
-                                    className={`admin-status-pill ${p.paid ? "green" : "red"}`}
-                                    onClick={() => handleTogglePaid(t.id, p.id, p.paid)}
-                                    title="Click para cambiar estado de pago"
-                                    style={{ cursor: "pointer", border: "none" }}
-                                  >
-                                    <span className="admin-status-pill-dot" />
-                                    {p.paid ? "Abonado" : "Pendiente"}
-                                  </button>
-                                </td>
-                                <td style={{ textAlign: "right" }}>
-                                  <button
-                                    type="button"
-                                    className="admin-table-action-btn delete"
-                                    onClick={() => handleRemovePlayer(t.id, p.id)}
-                                    title="Quitar jugador"
-                                  >
-                                    <Trash2 size={13} />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* FORMULARIO AGREGAR INSCRIPTO */}
-                    <form
-                      onSubmit={(e) => handleAddPlayer(e, t.id)}
-                      style={{
-                        background: "var(--color-badge-bg)",
-                        padding: "14px 16px",
-                        borderRadius: 8,
-                        display: "flex",
-                        gap: 12,
-                        flexWrap: "wrap",
-                        alignItems: "flex-end",
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 160 }}>
-                        <label className="admin-field-label">Jugador 1 *</label>
-                        <input
-                          type="text"
-                          required
-                          className="admin-input-field"
-                          placeholder="Nombre y apellido"
-                          value={playerForm.name}
-                          onChange={(e) => setPlayerForm({ ...playerForm, name: e.target.value })}
-                        />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 160 }}>
-                        <label className="admin-field-label">Jugador 2 (Pareja)</label>
-                        <input
-                          type="text"
-                          className="admin-input-field"
-                          placeholder="Nombre compañero/a"
-                          value={playerForm.partner}
-                          onChange={(e) => setPlayerForm({ ...playerForm, partner: e.target.value })}
-                        />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 140 }}>
-                        <label className="admin-field-label">WhatsApp</label>
-                        <input
-                          type="tel"
-                          className="admin-input-field"
-                          placeholder="Ej. 11 2345 6789"
-                          value={playerForm.phone}
-                          onChange={(e) => setPlayerForm({ ...playerForm, phone: e.target.value })}
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        className="btn btn-linear-primary"
-                        style={{ height: 38 }}
-                        disabled={addingPlayer}
-                      >
-                        <Plus size={15} /> {addingPlayer ? "Sumando..." : "Inscribir Pareja"}
-                      </button>
-                    </form>
-                    </>
-                    )}
-                  </div>
+                    <span className="tn-muted">
+                      {played} de {total} partidos jugados
+                    </span>
+                  </>
                 )}
-              </div>
+              </button>
             );
-          })
-        )}
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Kpi({ icon: Icon, color, title, value, sub }) {
+  return (
+    <div className="admin-kravio-kpi-card">
+      <div className="admin-kravio-kpi-header">
+        <span className="admin-kravio-kpi-title">{title}</span>
+        <Icon size={17} style={{ color }} />
+      </div>
+      <div className="admin-kravio-kpi-content">
+        <div className="admin-kravio-kpi-left">
+          <div className="admin-kravio-kpi-number" style={{ color }}>
+            {value}
+          </div>
+          <span className="admin-cell-sub">{sub}</span>
+        </div>
       </div>
     </div>
   );

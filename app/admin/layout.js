@@ -4,6 +4,7 @@ import "./agenda.css";
 import "./views.css";
 import "./insights.css";
 import "./ui/ui.css";
+import "./torneos.css";
 import "./brand.css";
 
 // Una sola sans para todo el admin (inputs, montos, placeholders). La web

@@ -77,6 +77,15 @@ import {
 } from "../../lib/cantinaMenu";
 import { getCantinaMenu } from "../../lib/cantinaMenuServer";
 import {
+  LEGACY_CATEGORY_ID,
+  cleanMatchInfo,
+  normalizeFixture,
+  pairCategoryId,
+  parseScore,
+  sanitizeFixture,
+  tournamentCategories,
+} from "../../lib/tournament";
+import {
   STAFF_PIN,
   STAFF_ROLES,
   isPinTaken,
@@ -1605,42 +1614,121 @@ export async function adminSaveCantinaMenu({ items, baseUpdatedAt } = {}, pin) {
 }
 
 /**
- * Torneos: el admin ya inscribe parejas a mano por WhatsApp (ver
- * TorneosGallery en la landing), esto le da un lugar donde llevar esa lista
- * con quién pagó en vez de un cuaderno o un chat.
+ * Torneos: el dueño crea el torneo con sus categorías, anota parejas (de a
+ * una o pegando la lista de WhatsApp), sortea las zonas, arma los horarios
+ * por cancha, carga resultados y el cuadro (cuartos, semis, final) avanza
+ * solo. La lógica pura vive en lib/tournament.js.
+ *
+ * tournaments/{id}: { name, date, dateEnd, price, status, createdAt,
+ *   categories/{catId}: { name, order },
+ *   players/{pairId}: { name, partner, phone, categoryId, seed, paid, ... },
+ *   fixtures/{catId}: { format, groups, matches/{matchId}, ... } }
  */
+const TOURNAMENT_STATUSES = ["abierto", "cerrado", "finalizado"];
+const MAX_TOURNAMENT_CATEGORIES = 8;
+const MAX_TOURNAMENT_PAIRS = 128;
+
+const cleanPrice = (price) =>
+  Math.min(MAX_PAYMENT, Math.max(0, Math.round(Number(price) || 0)));
+
+function cleanCategoryNames(list) {
+  const names = [];
+  for (const raw of Array.isArray(list) ? list : []) {
+    const name = clip(raw, 40);
+    if (name && !names.some((n) => n.toLowerCase() === name.toLowerCase())) {
+      names.push(name);
+    }
+  }
+  return names.slice(0, MAX_TOURNAMENT_CATEGORIES);
+}
+
+function cleanPairInput(input = {}) {
+  return {
+    name: clip(input.name, 60),
+    partner: clip(input.partner, 60),
+    phone: clip(input.phone, 30),
+  };
+}
+
+/** Lee el torneo y sus categorías (las de torneos viejos, materializadas). */
+async function loadTournament(db, tournamentId) {
+  const t = await readRecord(db, `tournaments/${tournamentId}`);
+  if (!t) return null;
+  const players = Object.entries(t.players || {}).map(([id, p]) => ({ id, ...p }));
+  return { ...t, players, categoryList: tournamentCategories({ ...t, players }) };
+}
+
+const tournamentError = (error) => ({ ok: false, error });
+
 export async function adminCreateTournament({
   name,
   date,
-  category,
+  dateEnd,
   price,
+  categories,
 } = {}) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
-  if (!clip(name, 80)) {
-    return { ok: false, error: "Ingresá un nombre para el torneo." };
+  if (!clip(name, 80)) return tournamentError("Ingresá un nombre para el torneo.");
+  if (date && !ISO_DATE.test(date)) return tournamentError("Fecha inválida.");
+  if (dateEnd && (!ISO_DATE.test(dateEnd) || (date && dateEnd < date))) {
+    return tournamentError("La fecha de fin tiene que ser igual o posterior al inicio.");
   }
-  if (date && !ISO_DATE.test(date))
-    return { ok: false, error: "Fecha inválida." };
-  if (!isFirebaseConfigured()) {
-    return { ok: false, error: "Firebase no está configurado." };
-  }
+  const names = cleanCategoryNames(categories);
+  if (!names.length) return tournamentError("Elegí al menos una categoría.");
+  if (!isFirebaseConfigured()) return tournamentError("Firebase no está configurado.");
 
   try {
     const db = getDb();
     const ref = db.ref("tournaments").push();
+    const cats = {};
+    names.forEach((n, order) => {
+      cats[db.ref("tournaments").push().key] = { name: n, order };
+    });
     await ref.set({
       name: clip(name, 80),
       date: date || "",
-      category: clip(category, 40),
-      price: Math.min(MAX_PAYMENT, Math.max(0, Math.round(Number(price) || 0))),
+      dateEnd: dateEnd && dateEnd !== date ? dateEnd : "",
+      category: names.join(" · "),
+      categories: cats,
+      price: cleanPrice(price),
       status: "abierto",
       createdAt: Date.now(),
     });
     return { ok: true, tournamentId: ref.key };
   } catch (error) {
-    return { ok: false, error: "No se pudo crear el torneo." };
+    return tournamentError("No se pudo crear el torneo.");
+  }
+}
+
+/** Nombre, fechas y precio. */
+export async function adminUpdateTournament(tournamentId, input = {}) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isId(tournamentId)) return INVALID;
+
+  const name = clip(input.name, 80);
+  if (!name) return tournamentError("Ingresá un nombre para el torneo.");
+  const { date = "", dateEnd = "" } = input;
+  if (date && !ISO_DATE.test(date)) return tournamentError("Fecha inválida.");
+  if (dateEnd && (!ISO_DATE.test(dateEnd) || (date && dateEnd < date))) {
+    return tournamentError("La fecha de fin tiene que ser igual o posterior al inicio.");
+  }
+  try {
+    const db = getDb();
+    if (!(await readRecord(db, `tournaments/${tournamentId}/name`))) {
+      return tournamentError("El torneo no existe.");
+    }
+    await db.ref(`tournaments/${tournamentId}`).update({
+      name,
+      date,
+      dateEnd: dateEnd && dateEnd !== date ? dateEnd : "",
+      price: cleanPrice(input.price),
+    });
+    return { ok: true };
+  } catch (error) {
+    return tournamentError("No se pudo guardar el torneo.");
   }
 }
 
@@ -1656,21 +1744,35 @@ export async function adminGetTournaments() {
     const tournaments = [];
     if (snap.exists()) {
       Object.entries(snap.val()).forEach(([id, t]) => {
-        const players = t.players
-          ? Object.entries(t.players).map(([pid, p]) => ({ id: pid, ...p }))
-          : [];
-        const { players: _omit, ...rest } = t;
-        tournaments.push({ id, ...rest, players });
+        if (!t || typeof t !== "object") return;
+        const players = Object.entries(t.players || {})
+          .map(([pid, p]) => ({ id: pid, ...p }))
+          .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        const { players: _p, fixtures: rawFixtures, categories: _c, ...rest } = t;
+        const categories = tournamentCategories(t);
+        const fixtures = {};
+        for (const c of categories) {
+          const fx = normalizeFixture(rawFixtures?.[c.id]);
+          if (fx) fixtures[c.id] = fx;
+        }
+        tournaments.push({
+          id,
+          ...rest,
+          categories,
+          players: players.map((p) => ({
+            ...p,
+            categoryId: pairCategoryId(p, categories),
+          })),
+          fixtures,
+        });
       });
     }
     tournaments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     return { ok: true, tournaments };
   } catch (error) {
-    return { ok: false, error: "No se pudieron cargar los torneos." };
+    return tournamentError("No se pudieron cargar los torneos.");
   }
 }
-
-const TOURNAMENT_STATUSES = ["abierto", "cerrado", "finalizado"];
 
 export async function adminUpdateTournamentStatus(tournamentId, status) {
   const denied = await requireAdmin();
@@ -1683,7 +1785,7 @@ export async function adminUpdateTournamentStatus(tournamentId, status) {
     await getDb().ref(`tournaments/${tournamentId}`).update({ status });
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: "No se pudo actualizar el torneo." };
+    return tournamentError("No se pudo actualizar el torneo.");
   }
 }
 
@@ -1695,48 +1797,175 @@ export async function adminDeleteTournament({
 } = {}) {
   const denied = await requireAdmin();
   if (denied) return denied;
-  if (!isId(tournamentId)) return { ok: false, error: "Torneo inválido." };
+  if (!isId(tournamentId)) return tournamentError("Torneo inválido.");
 
   const auth = await authorizeStaff(pin);
-  if (auth.error) return { ok: false, error: auth.error };
+  if (auth.error) return tournamentError(auth.error);
   try {
     const db = getDb();
     const t = await readRecord(db, `tournaments/${tournamentId}`);
-    if (!t) return { ok: false, error: "El torneo no existe." };
+    if (!t) return tournamentError("El torneo no existe.");
     await db.ref(`tournaments/${tournamentId}`).remove();
     await audit(
       db,
       auth.staff,
       "ELIMINAR_TORNEO",
-      `${t.name} (${Object.keys(t.players || {}).length} inscriptos)`,
-      reason ? `Motivo: ${reason}` : "Torneo eliminado con sus inscriptos",
+      `${t.name} (${Object.keys(t.players || {}).length} parejas)`,
+      reason ? `Motivo: ${reason}` : "Torneo eliminado con sus parejas",
     );
     return { ok: true, staff: auth.staff.name };
   } catch (error) {
-    return { ok: false, error: "No se pudo eliminar el torneo." };
+    return tournamentError("No se pudo eliminar el torneo.");
   }
 }
 
-export async function adminAddTournamentPlayer(tournamentId, input) {
+/** Agrega o renombra una categoría del torneo. */
+export async function adminSaveTournamentCategory(tournamentId, { id, name } = {}) {
   const denied = await requireAdmin();
   if (denied) return denied;
+  if (!isId(tournamentId) || (id && !isId(id))) return INVALID;
+  const clean = clip(name, 40);
+  if (!clean) return tournamentError("Escribí el nombre de la categoría.");
 
-  const { name, phone, partner } = input || {};
-  if (!isId(tournamentId) || !clip(name, 60)) {
-    return { ok: false, error: "Ingresá el nombre del jugador." };
+  try {
+    const db = getDb();
+    const t = await loadTournament(db, tournamentId);
+    if (!t) return tournamentError("El torneo no existe.");
+    const cats = t.categoryList;
+    if (cats.some((c) => c.id !== id && c.name.toLowerCase() === clean.toLowerCase())) {
+      return tournamentError("Esa categoría ya está en el torneo.");
+    }
+    const updates = {};
+    // Torneo viejo: la categoría de texto pasa a ser una de verdad.
+    if (!t.categories) {
+      updates[`categories/${LEGACY_CATEGORY_ID}`] = { name: cats[0].name, order: 0 };
+    }
+    let categoryId = id;
+    if (id) {
+      if (!cats.some((c) => c.id === id)) return tournamentError("La categoría no existe.");
+      updates[`categories/${id}/name`] = clean;
+    } else {
+      if (cats.length >= MAX_TOURNAMENT_CATEGORIES) {
+        return tournamentError(`Máximo ${MAX_TOURNAMENT_CATEGORIES} categorías por torneo.`);
+      }
+      categoryId = db.ref("tournaments").push().key;
+      updates[`categories/${categoryId}`] = { name: clean, order: cats.length };
+    }
+    const names = (id ? cats.map((c) => (c.id === id ? clean : c.name)) : [...cats.map((c) => c.name), clean]);
+    updates.category = names.join(" · ");
+    await db.ref(`tournaments/${tournamentId}`).update(updates);
+    return { ok: true, categoryId };
+  } catch (error) {
+    return tournamentError("No se pudo guardar la categoría.");
+  }
+}
+
+/** Saca una categoría vacía (sin parejas). */
+export async function adminDeleteTournamentCategory(tournamentId, categoryId) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isId(tournamentId) || !isId(categoryId)) return INVALID;
+  try {
+    const db = getDb();
+    const t = await loadTournament(db, tournamentId);
+    if (!t) return tournamentError("El torneo no existe.");
+    const cats = t.categoryList;
+    if (!cats.some((c) => c.id === categoryId)) return tournamentError("La categoría no existe.");
+    if (cats.length === 1) return tournamentError("El torneo tiene que tener al menos una categoría.");
+    if (t.players.some((p) => pairCategoryId(p, cats) === categoryId)) {
+      return tournamentError("La categoría tiene parejas: pasalas a otra o quitalas antes.");
+    }
+    await db.ref(`tournaments/${tournamentId}`).update({
+      [`categories/${categoryId}`]: null,
+      [`fixtures/${categoryId}`]: null,
+      category: cats.filter((c) => c.id !== categoryId).map((c) => c.name).join(" · "),
+    });
+    return { ok: true };
+  } catch (error) {
+    return tournamentError("No se pudo quitar la categoría.");
+  }
+}
+
+/** Inscribe una pareja en una categoría. */
+export async function adminAddTournamentPlayer(tournamentId, input = {}) {
+  const res = await adminAddTournamentPairs(tournamentId, input.categoryId, [input]);
+  if (!res.ok) return res;
+  return { ok: true, playerId: res.ids[0] };
+}
+
+/** Inscribe varias parejas de una (lista pegada de WhatsApp). */
+export async function adminAddTournamentPairs(tournamentId, categoryId, pairs) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isId(tournamentId)) return INVALID;
+  const list = (Array.isArray(pairs) ? pairs : []).map(cleanPairInput).filter((p) => p.name);
+  if (!list.length) return tournamentError("Ingresá el nombre del jugador.");
+  if (list.length > 64) return tournamentError("Máximo 64 parejas por vez.");
+
+  try {
+    const db = getDb();
+    const t = await loadTournament(db, tournamentId);
+    if (!t) return tournamentError("El torneo no existe.");
+    const cats = t.categoryList;
+    const catId = cats.some((c) => c.id === categoryId) ? categoryId : null;
+    if (!catId) return tournamentError("Elegí la categoría.");
+    if (t.players.length + list.length > MAX_TOURNAMENT_PAIRS) {
+      return tournamentError(`Máximo ${MAX_TOURNAMENT_PAIRS} parejas por torneo.`);
+    }
+    const now = Date.now();
+    const updates = {};
+    const ids = [];
+    list.forEach((p, i) => {
+      const id = db.ref("tournaments").push().key;
+      ids.push(id);
+      updates[`players/${id}`] = {
+        ...p,
+        categoryId: catId,
+        paid: false,
+        createdAt: now + i,
+      };
+    });
+    await db.ref(`tournaments/${tournamentId}`).update(updates);
+    return { ok: true, ids };
+  } catch (error) {
+    return tournamentError("No se pudo inscribir la pareja.");
+  }
+}
+
+/** Corrige nombres/teléfono, cambia de categoría o marca cabeza de serie. */
+export async function adminUpdateTournamentPlayer(tournamentId, playerId, input = {}) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isId(tournamentId) || !isId(playerId)) return INVALID;
+
+  const patch = {};
+  if ("name" in input) {
+    patch.name = clip(input.name, 60);
+    if (!patch.name) return tournamentError("Ingresá el nombre del jugador.");
+  }
+  if ("partner" in input) patch.partner = clip(input.partner, 60);
+  if ("phone" in input) patch.phone = clip(input.phone, 30);
+  if ("seed" in input) {
+    const seed = Math.round(Number(input.seed) || 0);
+    patch.seed = seed > 0 && seed <= 64 ? seed : null;
   }
   try {
-    const ref = getDb().ref(`tournaments/${tournamentId}/players`).push();
-    await ref.set({
-      name: clip(name, 60),
-      phone: clip(phone, 30),
-      partner: clip(partner, 60),
-      paid: false,
-      createdAt: Date.now(),
-    });
-    return { ok: true, playerId: ref.key };
+    const db = getDb();
+    if ("categoryId" in input) {
+      const t = await loadTournament(db, tournamentId);
+      if (!t) return tournamentError("El torneo no existe.");
+      if (!t.categoryList.some((c) => c.id === input.categoryId)) {
+        return tournamentError("La categoría no existe.");
+      }
+      patch.categoryId = input.categoryId;
+    }
+    if (!(await readRecord(db, `tournaments/${tournamentId}/players/${playerId}/name`))) {
+      return tournamentError("La pareja ya no está inscripta.");
+    }
+    await db.ref(`tournaments/${tournamentId}/players/${playerId}`).update(patch);
+    return { ok: true };
   } catch (error) {
-    return { ok: false, error: "No se pudo agregar el jugador." };
+    return tournamentError("No se pudo guardar la pareja.");
   }
 }
 
@@ -1767,7 +1996,7 @@ export async function adminTogglePlayerPaid(
       );
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: "No se pudo actualizar el pago." };
+    return tournamentError("No se pudo actualizar el pago.");
   }
 }
 
@@ -1782,7 +2011,113 @@ export async function adminRemoveTournamentPlayer(tournamentId, playerId) {
       .remove();
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: "No se pudo quitar el jugador." };
+    return tournamentError("No se pudo quitar la pareja.");
+  }
+}
+
+/**
+ * Guarda el sorteo (zonas + partidos + cuadro) de una categoría. `null`
+ * lo borra para volver a sortear.
+ */
+export async function adminSaveTournamentFixture(tournamentId, categoryId, fixture) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isId(tournamentId) || !isId(categoryId)) return INVALID;
+
+  try {
+    const db = getDb();
+    const t = await loadTournament(db, tournamentId);
+    if (!t) return tournamentError("El torneo no existe.");
+    const cat = t.categoryList.find((c) => c.id === categoryId);
+    if (!cat) return tournamentError("La categoría no existe.");
+    const ref = db.ref(`tournaments/${tournamentId}/fixtures/${categoryId}`);
+    if (fixture === null) {
+      await ref.remove();
+      await audit(db, SESSION_STAFF, "TORNEO_SORTEO", `${t.name} · ${cat.name}`, "Sorteo borrado");
+      return { ok: true };
+    }
+    const pairIds = t.players
+      .filter((p) => pairCategoryId(p, t.categoryList) === categoryId)
+      .map((p) => p.id);
+    const clean = sanitizeFixture(fixture, pairIds);
+    if (!clean) return tournamentError("El sorteo no es válido: volvé a sortear.");
+    await ref.set(clean);
+    await audit(
+      db,
+      SESSION_STAFF,
+      "TORNEO_SORTEO",
+      `${t.name} · ${cat.name}`,
+      clean.format === "directo"
+        ? `Cuadro directo con ${pairIds.length} parejas`
+        : `${clean.groups.length} ${clean.groups.length === 1 ? "zona" : "zonas"}, ${
+            clean.qualify ? `pasan ${clean.qualify} por zona al cuadro` : "sin cuadro final"
+          }`,
+    );
+    return { ok: true, fixture: normalizeFixture(clean) };
+  } catch (error) {
+    return tournamentError("No se pudo guardar el sorteo.");
+  }
+}
+
+/** Resultado y/o horario de un partido. El ganador sale del resultado. */
+export async function adminSaveTournamentMatch(tournamentId, categoryId, matchId, input = {}) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isId(tournamentId) || !isId(categoryId) || !isId(matchId)) return INVALID;
+
+  const patch = cleanMatchInfo(input);
+  if ("score" in input) {
+    const parsed = parseScore(patch.score);
+    if (parsed.winner) patch.winner = parsed.winner;
+    else if (!("winner" in patch)) patch.winner = null;
+    if (patch.score && !parsed.sets.length && !patch.winner) {
+      return tournamentError("Escribí el resultado así: 6-4 6-3 (o marcá quién ganó).");
+    }
+  }
+  try {
+    const db = getDb();
+    const path = `tournaments/${tournamentId}/fixtures/${categoryId}/matches/${matchId}`;
+    if (!(await readRecord(db, `${path}/id`))) {
+      return tournamentError("El partido no existe: actualizá la página.");
+    }
+    await db.ref(path).update(patch);
+    return { ok: true, match: patch };
+  } catch (error) {
+    return tournamentError("No se pudo guardar el partido.");
+  }
+}
+
+/**
+ * Horarios de muchos partidos de una (el armado automático).
+ * assignments: [{ categoryId, matchId, date, time, court }]
+ */
+export async function adminSaveTournamentSchedule(tournamentId, assignments) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isId(tournamentId) || !Array.isArray(assignments)) return INVALID;
+  if (assignments.length > 600) return tournamentError("Demasiados partidos.");
+
+  try {
+    const db = getDb();
+    const fixtures = (await readRecord(db, `tournaments/${tournamentId}/fixtures`)) || {};
+    const updates = {};
+    for (const a of assignments) {
+      if (!isId(a?.categoryId) || !isId(a?.matchId)) return INVALID;
+      if (!fixtures[a.categoryId]?.matches?.[a.matchId]) {
+        return tournamentError("Cambió el sorteo: actualizá la página.");
+      }
+      const info = cleanMatchInfo({ date: a.date, time: a.time, court: a.court });
+      const base = `fixtures/${a.categoryId}/matches/${a.matchId}`;
+      updates[`${base}/date`] = info.date;
+      updates[`${base}/time`] = info.time;
+      updates[`${base}/court`] = info.court;
+    }
+    if (Object.keys(updates).length) {
+      await db.ref(`tournaments/${tournamentId}`).update(updates);
+    }
+    return { ok: true };
+  } catch (error) {
+    return tournamentError("No se pudieron guardar los horarios.");
   }
 }
 
