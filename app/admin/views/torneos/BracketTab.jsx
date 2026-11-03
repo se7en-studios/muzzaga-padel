@@ -1,15 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Trophy } from "lucide-react";
+import { Clock, Pencil, Trophy } from "lucide-react";
 import {
   computeFixture,
   isByeMatch,
   pairName,
-  parseScore,
   roundName,
+  shortPairName,
 } from "../../../../lib/tournament";
-import { courtNamer, dayLabel, MatchEditor, sideInfo } from "./shared";
+import {
+  BracketTree,
+  courtNamer,
+  dayLabel,
+  MatchEditor,
+  SetScores,
+  sideInfo,
+} from "./shared";
 
 /** Columnas del cuadro: [{ size, matches }] de la primera ronda a la final. */
 export function bracketRounds(fixture) {
@@ -113,31 +120,31 @@ export default function BracketTab({
         </p>
       )}
 
-      <div
-        className="tn-bracket"
-        role="list"
-        aria-label={`Cuadro de ${category.name}`}
-      >
-        {rounds.map((r) => (
-          <div key={r.size} className="tn-bracket-col" role="listitem">
-            <div className="tn-bracket-round">{roundName(r.size)}</div>
-            <div className="tn-bracket-matches">
-              {r.matches.map((m) => (
-                <BracketMatch
-                  key={m.id}
-                  match={m}
-                  fixture={fixture}
-                  calc={calc}
-                  pairsById={pairsById}
-                  courts={courts}
-                  courtName={courtName}
-                  defaultDate={t.dateEnd || t.date}
-                  onSave={(payload) => onSaveMatch(category.id, m.id, payload)}
-                />
-              ))}
+      <div className="tn-bracket-scroll">
+        <BracketTree
+          className="bk-screen"
+          rounds={rounds}
+          renderMatch={(m) => (
+            <BracketMatch
+              match={m}
+              fixture={fixture}
+              calc={calc}
+              pairsById={pairsById}
+              courts={courts}
+              courtName={courtName}
+              defaultDate={t.dateEnd || t.date}
+              onSave={(payload) => onSaveMatch(category.id, m.id, payload)}
+            />
+          )}
+          champion={
+            <div className={`bk-champ${champion ? " is-set" : ""}`}>
+              <Trophy size={22} aria-hidden />
+              <span>
+                {champion ? shortPairName(pairsById[champion]) : "A definir"}
+              </span>
             </div>
-          </div>
-        ))}
+          }
+        />
       </div>
     </div>
   );
@@ -154,54 +161,61 @@ function BracketMatch({
   onSave,
 }) {
   const [editing, setEditing] = useState(null);
-  const bye = isByeMatch(m);
   const a = sideInfo(calc, fixture, pairsById, m.a, { short: true });
   const b = sideInfo(calc, fixture, pairsById, m.b, { short: true });
   const ready = !a.tbd && !b.tbd;
-  const { sets } = parseScore(m.score);
-  const scoreFor = (side) => sets.map((s) => s[side === "a" ? 0 : 1]).join(" ");
 
-  if (bye) {
+  if (isByeMatch(m)) {
     const real = m.a?.bye ? b : a;
     return (
-      <div className="tn-bm is-bye">
-        <div className="tn-bm-side">
-          <span>{real.name}</span>
+      <div className="bk-match is-bye">
+        <div className={`bk-side${real.tbd ? " is-tbd" : ""}`}>
+          <span className="bk-name">{real.name}</span>
         </div>
-        <div className="tn-bm-side is-tbd">
-          <span>Pasa directo</span>
+        <div className="bk-side is-tbd">
+          <span className="bk-name">Pasa directo</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="tn-bm">
-      <div className="tn-bm-head">
+    <div
+      className={`bk-match${m.winner ? " is-played" : ""}${editing ? " is-editing" : ""}`}
+    >
+      <div className="bk-head">
         <span>
           {m.time
             ? `${dayLabel(m.date)} · ${m.time} · ${courtName(m.court)}`
             : "Sin horario"}
         </span>
-        <span>{m.winner ? "Jugado" : ""}</span>
+        <span className="bk-tools">
+          <button
+            type="button"
+            onClick={() =>
+              setEditing(editing === "schedule" ? null : "schedule")
+            }
+            aria-label="Cambiar día, hora o cancha"
+            title="Cambiar día, hora o cancha"
+          >
+            <Clock size={13} />
+          </button>
+        </span>
       </div>
       {[
         ["a", a],
         ["b", b],
-      ].map(([k, s]) => (
+      ].map(([k, side]) => (
         <div
           key={k}
-          className={`tn-bm-side${m.winner === k ? " is-winner" : ""}${s.tbd ? " is-tbd" : ""}`}
+          className={`bk-side${m.winner === k ? " is-winner" : ""}${m.winner && m.winner !== k ? " is-loser" : ""}${side.tbd ? " is-tbd" : ""}`}
         >
-          <span>
-            {m.winner === k && "🏆 "}
-            {s.name}
-          </span>
-          <span className="tn-score">{scoreFor(k)}</span>
+          <span className="bk-name">{side.name}</span>
+          <SetScores score={m.score} side={k} />
         </div>
       ))}
-      <div className="tn-bm-foot">
-        {editing ? (
+      {editing ? (
+        <div className="bk-edit">
           <MatchEditor
             match={m}
             sides={{ a, b }}
@@ -211,31 +225,27 @@ function BracketMatch({
             onSave={onSave}
             onClose={() => setEditing(null)}
           />
-        ) : (
-          <div className="tn-row" style={{ gap: 6 }}>
-            <button
-              type="button"
-              className="tn-icon-btn"
-              disabled={!ready}
-              onClick={() => setEditing("result")}
-              title={
-                ready
-                  ? "Cargar resultado"
-                  : "Se define cuando terminen los partidos anteriores"
-              }
-            >
-              <Pencil size={13} /> {m.winner ? "Editar resultado" : "Resultado"}
-            </button>
-            <button
-              type="button"
-              className="tn-icon-btn"
-              onClick={() => setEditing("schedule")}
-            >
-              Horario
-            </button>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="bk-result-btn"
+          disabled={!ready}
+          onClick={() => setEditing("result")}
+          title={
+            ready
+              ? "Cargar resultado"
+              : "Se define cuando terminen los partidos anteriores"
+          }
+        >
+          <Pencil size={12} aria-hidden />{" "}
+          {!ready
+            ? "Esperando rivales"
+            : m.winner
+              ? "Editar resultado"
+              : "Cargar resultado"}
+        </button>
+      )}
     </div>
   );
 }

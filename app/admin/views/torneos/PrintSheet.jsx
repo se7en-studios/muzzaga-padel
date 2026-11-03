@@ -7,13 +7,19 @@ import {
   computeFixture,
   isByeMatch,
   matchLabel,
-  roundName,
   shortPairName,
   sortedMatches,
   sourceLabel,
 } from "../../../../lib/tournament";
 import { bracketRounds } from "./BracketTab";
-import { courtNamer, dayLabel, longDayLabel, tournamentDates } from "./shared";
+import {
+  BracketTree,
+  courtNamer,
+  dayLabel,
+  longDayLabel,
+  SetScores,
+  tournamentDates,
+} from "./shared";
 
 /**
  * Hoja del torneo con la marca Muzzaga: una página por categoría (zonas con
@@ -79,12 +85,12 @@ export default function PrintSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t.fixtures, cats]);
 
-  const header = (badge) => (
+  const header = (badge, kicker = "Torneo de pádel") => (
     <header className="tp-header">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/img/logo_full.png" alt="Muzzaga · más que pádel" />
       <div className="tp-header-text">
-        <div className="tp-kicker">Torneo de pádel</div>
+        <div className="tp-kicker">{kicker}</div>
         <div className="tp-title">{t.name}</div>
         <div className="tp-sub">
           {tournamentDates(t)} · {CLUB_INFO.city}, {CLUB_INFO.province}
@@ -113,7 +119,7 @@ export default function PrintSheet({
     if (pending.length) {
       pages.push(
         <section key="inscriptos" className="tp-page">
-          {header("Inscriptos")}
+          {header("Inscriptos", "Parejas anotadas")}
           <div className="tp-body">
             {pending.map((c) => {
               const list = t.players.filter((p) => p.categoryId === c.id);
@@ -151,15 +157,18 @@ export default function PrintSheet({
     const calc = calcs[c.id];
     const matches = sortedMatches(fx);
     const rounds = bracketRounds(fx);
-    pages.push(
-      <section key={c.id} className="tp-page">
-        {header(c.name)}
-        <div className="tp-body">
-          {fx.format === "zonas" && (
-            <>
-              <h2 className="tp-h2">Zonas</h2>
-              <div className="tp-zones">
-                {fx.groups.map((g) => (
+    const anyPlayed = Object.values(fx.matches).some(
+      (m) => m.stage === "group" && m.winner,
+    );
+    if (fx.format === "zonas") {
+      pages.push(
+        <section key={`${c.id}-zonas`} className="tp-page">
+          {header(c.name, "Fase de zonas")}
+          <div className="tp-body">
+            <div className="tp-zones">
+              {fx.groups.map((g) => {
+                const rows = calc.standings[g.id];
+                return (
                   <div key={g.id} className="tp-zone">
                     <div className="tp-zone-head">
                       Zona {g.id}
@@ -171,14 +180,45 @@ export default function PrintSheet({
                         </span>
                       )}
                     </div>
-                    <ol>
-                      {(calc.groupDone[g.id]
-                        ? calc.standings[g.id].map((r) => r.pairId)
-                        : g.pairIds
-                      ).map((id) => (
-                        <li key={id}>{shortPairName(pairsById[id]) || "—"}</li>
-                      ))}
-                    </ol>
+                    <table className="tp-standings">
+                      {anyPlayed && (
+                        <thead>
+                          <tr>
+                            <th colSpan={2}>Pareja</th>
+                            <th>PJ</th>
+                            <th>PG</th>
+                            <th>Games</th>
+                          </tr>
+                        </thead>
+                      )}
+                      <tbody>
+                        {(anyPlayed
+                          ? rows
+                          : g.pairIds.map((id) => ({ pairId: id }))
+                        ).map((r, i) => (
+                          <tr
+                            key={r.pairId}
+                            className={
+                              anyPlayed && i < fx.qualify ? "is-q" : ""
+                            }
+                          >
+                            <td className="tp-pos">{i + 1}</td>
+                            <td className="tp-pname">
+                              {shortPairName(pairsById[r.pairId]) || "—"}
+                            </td>
+                            {anyPlayed && (
+                              <>
+                                <td>{r.played}</td>
+                                <td>
+                                  <strong>{r.won}</strong>
+                                </td>
+                                <td>{signed(r.gamesFor - r.gamesAgainst)}</td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                     <table className="tp-table">
                       <tbody>
                         {matches
@@ -188,18 +228,27 @@ export default function PrintSheet({
                           .map((m) => (
                             <tr key={m.id}>
                               <td className="tp-when">
-                                {when(m)}
-                                <br />
-                                <span style={{ fontWeight: 500 }}>
-                                  {courtName(m.court)}
+                                <strong>{m.time || "A conf."}</strong>
+                                <span className="tp-court">
+                                  {m.date ? dayLabel(m.date) : ""}
+                                  {m.court
+                                    ? ` · ${courtName(m.court).replace("Cancha ", "C")}`
+                                    : ""}
                                 </span>
                               </td>
-                              <td>
-                                {name(c.id, m.a).text}
-                                <br />
-                                {name(c.id, m.b).text}
+                              <td className="tp-vs">
+                                <span
+                                  className={m.winner === "a" ? "is-w" : ""}
+                                >
+                                  {name(c.id, m.a).text}
+                                </span>
+                                <span
+                                  className={m.winner === "b" ? "is-w" : ""}
+                                >
+                                  {name(c.id, m.b).text}
+                                </span>
                               </td>
-                              <td>
+                              <td className="tp-result-cell">
                                 <div className="tp-result">{m.score || ""}</div>
                               </td>
                             </tr>
@@ -207,77 +256,86 @@ export default function PrintSheet({
                       </tbody>
                     </table>
                   </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {rounds.length > 0 && (
-            <div className="tp-keep">
-              <h2 className="tp-h2">Cuadro final</h2>
-              <div className="tp-bracket">
-                {rounds.map((r) => (
-                  <div key={r.size} className="tp-bracket-col">
-                    <div className="tp-round">{roundName(r.size)}</div>
-                    <div className="tp-bracket-matches">
-                      {r.matches.map((m) => {
-                        if (isByeMatch(m)) {
-                          const real = name(c.id, m.a?.bye ? m.b : m.a);
-                          return (
-                            <div
-                              key={m.id}
-                              className="tp-bm"
-                              style={{ opacity: 0.6, borderStyle: "dashed" }}
-                            >
-                              <div
-                                className={`tp-bm-side${real.tbd ? " is-tbd" : ""}`}
-                              >
-                                {real.text}
-                              </div>
-                              <div className="tp-bm-side is-tbd">
-                                Pasa directo
-                              </div>
-                            </div>
-                          );
-                        }
-                        return (
-                          <div key={m.id} className="tp-bm">
-                            <div className="tp-bm-head">
-                              <span>{when(m)}</span>
-                              <span>{courtName(m.court)}</span>
-                            </div>
-                            {["a", "b"].map((k) => {
-                              const s = name(c.id, m[k]);
-                              return (
-                                <div
-                                  key={k}
-                                  className={`tp-bm-side${s.tbd ? " is-tbd" : ""}${m.winner === k ? " is-winner" : ""}`}
-                                >
-                                  <span>{s.text}</span>
-                                </div>
-                              );
-                            })}
-                            {m.score && (
-                              <div
-                                className="tp-bm-head"
-                                style={{ justifyContent: "center" }}
-                              >
-                                {m.score}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
-        </div>
-        {footer}
-      </section>,
-    );
+            {fx.qualify > 0 && (
+              <p className="tp-note">
+                Clasifican{" "}
+                {fx.qualify === 1
+                  ? "el 1° de cada zona"
+                  : `los ${fx.qualify} primeros de cada zona`}
+                . Desempate: partidos ganados, resultado entre ellos, diferencia
+                de sets y de games.
+              </p>
+            )}
+          </div>
+          {footer}
+        </section>,
+      );
+    }
+
+    if (rounds.length > 0) {
+      const finalMatch = rounds[rounds.length - 1].matches[0];
+      const champ = calc.winnerOf(finalMatch);
+      pages.push(
+        <section key={`${c.id}-cuadro`} className="tp-page">
+          {header(c.name, "Cuadro final")}
+          <div className="tp-body">
+            <BracketTree
+              className="bk-print"
+              rounds={rounds}
+              renderMatch={(m) => {
+                if (isByeMatch(m)) {
+                  const real = name(c.id, m.a?.bye ? m.b : m.a);
+                  return (
+                    <div className="bk-match is-bye">
+                      <div className={`bk-side${real.tbd ? " is-tbd" : ""}`}>
+                        <span className="bk-name">{real.text}</span>
+                      </div>
+                      <div className="bk-side is-tbd">
+                        <span className="bk-name">Pasa directo</span>
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="bk-match">
+                    <div className="bk-head">
+                      <span>{when(m)}</span>
+                      <span>{courtName(m.court)}</span>
+                    </div>
+                    {["a", "b"].map((k) => {
+                      const sd = name(c.id, m[k]);
+                      return (
+                        <div
+                          key={k}
+                          className={`bk-side${sd.tbd ? " is-tbd" : ""}${m.winner === k ? " is-winner" : ""}${m.winner && m.winner !== k ? " is-loser" : ""}`}
+                        >
+                          <span className="bk-name">{sd.text}</span>
+                          {m.score ? (
+                            <SetScores score={m.score} side={k} />
+                          ) : (
+                            <span className="bk-blank" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }}
+              champion={
+                <div className={`bk-champ${champ ? " is-set" : ""}`}>
+                  <span className="bk-champ-cup">🏆</span>
+                  <span>{champ ? shortPairName(pairsById[champ]) : ""}</span>
+                </div>
+              }
+            />
+          </div>
+          {footer}
+        </section>,
+      );
+    }
   }
 
   if (includeGrid && gridDays.length) {
@@ -288,7 +346,7 @@ export default function PrintSheet({
     );
     pages.push(
       <section key="grilla" className="tp-page">
-        {header("Horarios")}
+        {header("Horarios", "Grilla por cancha")}
         <div className="tp-body">
           {gridDays.map(([day, times]) => (
             <div key={day} className="tp-grid-day">
@@ -313,14 +371,15 @@ export default function PrintSheet({
                         {usedCourts.map((ct) => (
                           <td key={ct.id} className="tp-grid-cell">
                             {(times[time][ct.id] || []).map(({ m, c }) => (
-                              <div key={m.id}>
+                              <div key={m.id} className="tp-grid-match">
                                 <small>
                                   {withFixture.length > 1 ? `${c.name} · ` : ""}
-                                  {matchLabel(m).replace(" · Fecha", " F")}
+                                  {matchLabel(m).replace(" · Fecha ", " · F")}
                                 </small>
-                                {name(c.id, m.a).text}
-                                <br />
-                                vs {name(c.id, m.b).text}
+                                <span>
+                                  {name(c.id, m.a).text} <em>vs</em>{" "}
+                                  {name(c.id, m.b).text}
+                                </span>
                               </div>
                             ))}
                           </td>
@@ -415,3 +474,5 @@ export default function PrintSheet({
     document.body,
   );
 }
+
+const signed = (n) => (n > 0 ? `+${n}` : String(n));

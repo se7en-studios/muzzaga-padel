@@ -6,6 +6,7 @@ import {
   matchLabel,
   pairName,
   parseScore,
+  roundName,
   shortPairName,
   sourceLabel,
 } from "../../../../lib/tournament";
@@ -341,6 +342,81 @@ export function MatchRow({
           onSave={onSave}
           onClose={() => setEditing(null)}
         />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Resultado por set en casilleros, como un marcador: los sets que ganó ese
+ * lado van resaltados. side = "a" | "b".
+ */
+export function SetScores({ score, side, className = "bk-sets" }) {
+  const { sets } = parseScore(score);
+  if (!sets.length) return null;
+  const i = side === "a" ? 0 : 1;
+  return (
+    <span className={className}>
+      {sets.map((s, k) => (
+        <span key={k} className={s[i] > s[1 - i] ? "is-won" : ""}>
+          {s[i]}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Árbol del cuadro con líneas que unen cada par de partidos con el de la
+ * ronda siguiente. Lo usan la pantalla y el PDF (cambia solo el estilo).
+ * @param {{ rounds: {size:number, matches:object[]}[], renderMatch: (m:object)=>import("react").ReactNode, champion?: import("react").ReactNode, className?: string }} props
+ */
+export function BracketTree({ rounds, renderMatch, champion, className = "" }) {
+  const template = `repeat(${rounds.length}, minmax(var(--bk-col), 1fr))${
+    champion ? " minmax(var(--bk-champ-col), 0.75fr)" : ""
+  }`;
+  return (
+    <div
+      className={`bk ${className}`}
+      style={{ gridTemplateColumns: template }}
+    >
+      {rounds.map((r, ri) => {
+        const hasNext = ri < rounds.length - 1 || Boolean(champion);
+        const groups =
+          r.matches.length === 1
+            ? [r.matches]
+            : Array.from({ length: Math.ceil(r.matches.length / 2) }, (_, k) =>
+                r.matches.slice(2 * k, 2 * k + 2),
+              );
+        return (
+          <div key={r.size} className={`bk-col${hasNext ? " has-next" : ""}`}>
+            <div className="bk-round">{roundName(r.size)}</div>
+            <div className="bk-slots">
+              {groups.map((g) => (
+                <div
+                  key={g[0].id}
+                  className={g.length === 2 ? "bk-pair" : "bk-single"}
+                >
+                  {g.map((m) => (
+                    <div key={m.id} className="bk-slot">
+                      {renderMatch(m)}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      {champion && (
+        <div className="bk-col bk-col-champion">
+          <div className="bk-round">Campeón</div>
+          <div className="bk-slots">
+            <div className="bk-single">
+              <div className="bk-slot">{champion}</div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
