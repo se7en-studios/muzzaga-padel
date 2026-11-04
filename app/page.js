@@ -24,6 +24,7 @@ import "./fondo-cancha.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";
+import { getOpenTournaments } from "../lib/tournamentServer";
 import { getCantinaMenu } from "../lib/cantinaMenuServer";
 import { HOME_FEATURED_COUNT, featuredItems } from "../lib/cantinaMenu";
 import { publicPayment } from "../lib/clubConfig";
@@ -73,10 +74,11 @@ export const viewport = {
 };
 
 export default async function Home() {
-  const [config, { photos, location }, menu] = await Promise.all([
+  const [config, { photos, location }, menu, openTournaments] = await Promise.all([
     getClubConfig(),
     getSiteContent(),
     getCantinaMenu(),
+    getOpenTournaments(),
   ]);
   const { valle, pico, picoEnabled } = config.pricing;
   // Se anuncia el precio más bajo ("desde") cuando hay horario pico.
@@ -249,7 +251,7 @@ export default async function Home() {
       <AmenitiesSection photos={photos} />
 
       {/* 5. TORNEOS DESTACADOS */}
-      <HomeTorneosTeaser photos={photos} />
+      <HomeTorneosTeaser photos={photos} tournament={openTournaments[0]} />
 
       {/* 7. CANTINA DESTACADA */}
       <HomeCantinaTeaser

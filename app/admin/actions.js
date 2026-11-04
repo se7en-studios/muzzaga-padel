@@ -78,6 +78,7 @@ import {
 import { getCantinaMenu } from "../../lib/cantinaMenuServer";
 import {
   LEGACY_CATEGORY_ID,
+  MAX_TOURNAMENT_PAIRS,
   cleanMatchInfo,
   normalizeFixture,
   pairCategoryId,
@@ -1626,7 +1627,16 @@ export async function adminSaveCantinaMenu({ items, baseUpdatedAt } = {}, pin) {
  */
 const TOURNAMENT_STATUSES = ["abierto", "cerrado", "finalizado"];
 const MAX_TOURNAMENT_CATEGORIES = 8;
-const MAX_TOURNAMENT_PAIRS = 128;
+
+/**
+ * /torneos y la tarjeta del inicio muestran los torneos con inscripción
+ * abierta (ISR): se regeneran al crear, editar, cambiar de estado o borrar
+ * uno, así el cambio se ve en la próxima visita y no a los 5 minutos.
+ */
+function revalidateTournamentPages() {
+  revalidatePath("/torneos");
+  revalidatePath("/");
+}
 
 const cleanPrice = (price) =>
   Math.min(MAX_PAYMENT, Math.max(0, Math.round(Number(price) || 0)));
@@ -1696,6 +1706,7 @@ export async function adminCreateTournament({
       status: "abierto",
       createdAt: Date.now(),
     });
+    revalidateTournamentPages();
     return { ok: true, tournamentId: ref.key };
   } catch (error) {
     return tournamentError("No se pudo crear el torneo.");
@@ -1726,6 +1737,7 @@ export async function adminUpdateTournament(tournamentId, input = {}) {
       dateEnd: dateEnd && dateEnd !== date ? dateEnd : "",
       price: cleanPrice(input.price),
     });
+    revalidateTournamentPages();
     return { ok: true };
   } catch (error) {
     return tournamentError("No se pudo guardar el torneo.");
@@ -1783,6 +1795,7 @@ export async function adminUpdateTournamentStatus(tournamentId, status) {
   }
   try {
     await getDb().ref(`tournaments/${tournamentId}`).update({ status });
+    revalidateTournamentPages();
     return { ok: true };
   } catch (error) {
     return tournamentError("No se pudo actualizar el torneo.");
@@ -1813,6 +1826,7 @@ export async function adminDeleteTournament({
       `${t.name} (${Object.keys(t.players || {}).length} parejas)`,
       reason ? `Motivo: ${reason}` : "Torneo eliminado con sus parejas",
     );
+    revalidateTournamentPages();
     return { ok: true, staff: auth.staff.name };
   } catch (error) {
     return tournamentError("No se pudo eliminar el torneo.");
@@ -1854,6 +1868,7 @@ export async function adminSaveTournamentCategory(tournamentId, { id, name } = {
     const names = (id ? cats.map((c) => (c.id === id ? clean : c.name)) : [...cats.map((c) => c.name), clean]);
     updates.category = names.join(" · ");
     await db.ref(`tournaments/${tournamentId}`).update(updates);
+    revalidateTournamentPages();
     return { ok: true, categoryId };
   } catch (error) {
     return tournamentError("No se pudo guardar la categoría.");
@@ -1880,6 +1895,7 @@ export async function adminDeleteTournamentCategory(tournamentId, categoryId) {
       [`fixtures/${categoryId}`]: null,
       category: cats.filter((c) => c.id !== categoryId).map((c) => c.name).join(" · "),
     });
+    revalidateTournamentPages();
     return { ok: true };
   } catch (error) {
     return tournamentError("No se pudo quitar la categoría.");

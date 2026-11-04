@@ -112,7 +112,8 @@ function TorneoBlock({ title, jugadores, ganadores }) {
   );
 }
 
-export default function TorneosGallery({ tournaments }) {
+/** `signupOpen`: hay un torneo con inscripción abierta arriba (#inscripcion). */
+export default function TorneosGallery({ tournaments, signupOpen = false }) {
   return (
     <section id="torneos" className="section-bento">
       <div className="container">
@@ -124,18 +125,24 @@ export default function TorneosGallery({ tournaments }) {
               Consultá fechas y premios por WhatsApp.
             </p>
           </div>
-          <a
-            href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
-              "Hola Muzzaga! Quiero inscribir mi pareja al próximo torneo.",
-            )}`}
-            target="_blank"
-            rel="noopener"
-            className="btn btn-secondary-whatsapp"
-            style={{ gap: 8 }}
-          >
-            <WhatsappIcon />
-            Inscribir mi pareja por WhatsApp →
-          </a>
+          {signupOpen ? (
+            <a href="#inscripcion" className="btn btn-linear-primary">
+              Inscribir mi pareja ↑
+            </a>
+          ) : (
+            <a
+              href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
+                "Hola Muzzaga! Quiero inscribir mi pareja al próximo torneo.",
+              )}`}
+              target="_blank"
+              rel="noopener"
+              className="btn btn-secondary-whatsapp"
+              style={{ gap: 8 }}
+            >
+              <WhatsappIcon />
+              Inscribir mi pareja por WhatsApp →
+            </a>
+          )}
         </div>
 
         <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>

@@ -1,0 +1,214 @@
+/* Inscripción a torneos desde la web (components/TournamentSignup.jsx). */
+
+.tsu-list {
+  display: grid;
+  gap: 16px;
+}
+
+.tsu-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 24px 32px;
+  padding: 28px 24px;
+  background: linear-gradient(135deg, var(--color-accent-orange-subtle) 0%, var(--color-surface-card) 100%);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-xl);
+}
+
+@media (max-width: 860px) {
+  .tsu-card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 22px 18px;
+  }
+}
+
+.tsu-title {
+  font-size: 24px;
+  color: var(--color-ink);
+  margin: 10px 0 4px;
+  overflow-wrap: anywhere;
+}
+
+.tsu-when {
+  margin: 0 0 12px;
+  font-weight: 600;
+  color: var(--color-accent-orange-text);
+}
+
+.tsu-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.tsu-facts strong {
+  color: var(--color-ink);
+}
+
+.tsu-form {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.tsu-cats {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.tsu-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.tsu-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tsu-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 999px;
+  background: var(--color-canvas-soft);
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tsu-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tsu-chip:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent-orange);
+  outline-offset: 2px;
+}
+
+.tsu-chip.is-on {
+  border-color: var(--color-accent-orange);
+  background: var(--color-accent-orange);
+  color: #fff;
+}
+
+.tsu-chip-count {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.tsu-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tsu-field:last-of-type {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 520px) {
+  .tsu-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.tsu-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 16px; /* 16px: Safari no hace zoom al enfocar */
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.tsu-input::placeholder {
+  color: var(--text-muted);
+}
+
+.tsu-input:focus {
+  border-color: var(--color-accent-orange);
+}
+
+.tsu-trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.tsu-error {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.tsu-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+}
+
+.tsu-row .btn {
+  padding: 10px 22px;
+}
+
+.tsu-row .btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.tsu-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent-orange-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.tsu-done {
+  display: grid;
+  gap: 10px;
+  align-content: center;
+  color: var(--text-secondary);
+}
+
+.tsu-done strong {
+  font-size: 18px;
+  color: var(--color-ink);
+}
+
+.tsu-done p {
+  margin: 0 0 4px;
+}

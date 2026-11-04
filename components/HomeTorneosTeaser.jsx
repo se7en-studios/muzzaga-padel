@@ -5,11 +5,14 @@ import Link from "next/link";
 import { useLightbox } from "./LightboxProvider";
 import { CLUB_INFO } from "../data/club";
 import Mascota from "./Mascota";
+import { formatARS } from "../lib/format";
+import { tournamentDateText } from "../lib/tournament";
 
 // Fotos y textos: Configuración → Sitio web → Torneos en el inicio.
 const FEATURED_SLOTS = ["torneo-1", "torneo-2", "torneo-3", "torneo-4", "torneo-5"];
 
-export default function HomeTorneosTeaser({ photos }) {
+/** `tournament`: el próximo con inscripción abierta (lo crea el admin en Torneos). */
+export default function HomeTorneosTeaser({ photos, tournament }) {
   const openLightbox = useLightbox();
   const featured = FEATURED_SLOTS.map((id) => ({ id, ...photos[id] }));
 
@@ -38,23 +41,47 @@ export default function HomeTorneosTeaser({ photos }) {
         <div className="next-event">
           <div className="next-event-date" aria-hidden="true">
             <Image src="/img/iconos/biblioteca/icono-calendario.webp" alt="" width={44} height={44} className="icono-3d" />
-            <span>Fecha</span>
+            <span>
+              {tournament?.date
+                ? tournament.date.slice(8, 10) + "/" + tournament.date.slice(5, 7)
+                : "Fecha"}
+            </span>
           </div>
-          <div className="next-event-body">
-            <span className="next-event-tag">Próximo torneo</span>
-            <h3 className="next-event-title">Fecha a confirmar</h3>
-            <p className="next-event-desc">
-              Escribinos por WhatsApp y te avisamos la fecha y las categorías apenas estén definidas.
-            </p>
-          </div>
-          <a
-            href={`https://wa.me/${CLUB_INFO.phoneRaw}?text=${encodeURIComponent("¡Hola Muzzaga! Quiero información sobre fecha e inscripción para el próximo torneo.")}`}
-            target="_blank"
-            rel="noopener"
-            className="next-event-cta"
-          >
-            Anotarme por WhatsApp <span aria-hidden="true">→</span>
-          </a>
+          {tournament ? (
+            <>
+              <div className="next-event-body">
+                <span className="next-event-tag">Inscripción abierta</span>
+                <h3 className="next-event-title">{tournament.name}</h3>
+                <p className="next-event-desc">
+                  {tournamentDateText(tournament.date, tournament.dateEnd)}
+                  {" · "}
+                  {tournament.categories.map((c) => c.name).join(" · ")}
+                  {tournament.price > 0 ? ` · ${formatARS(tournament.price)} por pareja` : ""}
+                </p>
+              </div>
+              <Link href="/torneos#inscripcion" className="next-event-cta">
+                Inscribir mi pareja <span aria-hidden="true">→</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="next-event-body">
+                <span className="next-event-tag">Próximo torneo</span>
+                <h3 className="next-event-title">Fecha a confirmar</h3>
+                <p className="next-event-desc">
+                  Escribinos por WhatsApp y te avisamos la fecha y las categorías apenas estén definidas.
+                </p>
+              </div>
+              <a
+                href={`https://wa.me/${CLUB_INFO.phoneRaw}?text=${encodeURIComponent("¡Hola Muzzaga! Quiero información sobre fecha e inscripción para el próximo torneo.")}`}
+                target="_blank"
+                rel="noopener"
+                className="next-event-cta"
+              >
+                Anotarme por WhatsApp <span aria-hidden="true">→</span>
+              </a>
+            </>
+          )}
         </div>
 
         {/* GRILLA RESUMIDA DE 5 FOTOS */}
