@@ -504,6 +504,14 @@ export default function PairsTab({
                       <strong>
                         {p.seed ? `⭐${p.seed} ` : ""}
                         {p.name}
+                        {p.source === "web" && (
+                          <span
+                            className="tn-web-tag"
+                            title="Se anotó desde la web (muzzagapadel.com/torneos)"
+                          >
+                            Web
+                          </span>
+                        )}
                       </strong>
                       <span className="tn-muted">
                         {p.partner || "Falta el compañero"}

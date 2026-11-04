@@ -3,9 +3,12 @@ import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
 import BottomNav from "../../components/BottomNav";
 import TorneosGallery from "../../components/TorneosGallery";
+import TournamentSignup from "../../components/TournamentSignup";
 import { CLUB_INFO } from "../../data/club";
 import { pageMetadata } from "../../lib/pageMeta";
 import { getSiteContent } from "../../lib/siteContentServer";
+import { getOpenTournaments } from "../../lib/tournamentServer";
+import "./torneos.css";
 
 export const metadata = pageMetadata({
   title: "Torneos de pádel en Catriel · Muzzaga Pádel",
@@ -14,12 +17,15 @@ export const metadata = pageMetadata({
   path: "/torneos",
 });
 
-// Las fotos se cargan desde Configuración → Sitio web: se regenera cada 5 min
-// y al guardar cambios en la galería.
+// Las fotos se cargan desde Configuración → Sitio web y los torneos abiertos
+// desde Torneos en el admin: se regenera cada 5 min y al guardar cambios.
 export const revalidate = 300;
 
 export default async function TorneosPage() {
-  const { gallery } = await getSiteContent();
+  const [{ gallery }, openTournaments] = await Promise.all([
+    getSiteContent(),
+    getOpenTournaments(),
+  ]);
   return (
     <>
       <SiteHeader />
@@ -34,46 +40,53 @@ export default async function TorneosPage() {
           </div>
         </div>
 
-        {/* PRÓXIMO TORNEO DESTACADO */}
-        <div className="container" style={{ marginBottom: 20 }}>
-          <div
-            style={{
-              background: "linear-gradient(135deg, var(--color-accent-orange-subtle) 0%, var(--color-surface-card) 100%)",
-              border: "1px solid var(--color-hairline-strong)",
-              borderRadius: "var(--radius-xl)",
-              padding: "28px 24px",
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 20,
-            }}
-          >
-            <div>
-              <span className="badge-linear badge-amber" style={{ marginBottom: 8 }}>
-                Próximo torneo
-              </span>
-              <h2 style={{ fontSize: 22, color: "var(--color-ink)", margin: "4px 0 8px" }}>
-                Fecha a confirmar
-              </h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: 14, margin: 0, maxWidth: 500 }}>
-                Escribinos por WhatsApp y te avisamos la fecha y las categorías apenas estén definidas.
-              </p>
+        {/* PRÓXIMOS TORNEOS: los que el admin tiene con la inscripción abierta */}
+        <div id="inscripcion" className="container" style={{ marginBottom: 20, scrollMarginTop: 100 }}>
+          {openTournaments.length > 0 ? (
+            <div className="tsu-list">
+              {openTournaments.map((t) => (
+                <TournamentSignup key={t.id} tournament={t} />
+              ))}
             </div>
-            <a
-              href={`https://wa.me/${CLUB_INFO.phoneRaw}?text=${encodeURIComponent("¡Hola Muzzaga! Quiero información e inscribirme para el próximo torneo de pádel.")}`}
-              target="_blank"
-              rel="noopener"
-              className="btn btn-linear-primary"
-              style={{ padding: "10px 22px" }}
+          ) : (
+            <div
+              style={{
+                background: "linear-gradient(135deg, var(--color-accent-orange-subtle) 0%, var(--color-surface-card) 100%)",
+                border: "1px solid var(--color-hairline-strong)",
+                borderRadius: "var(--radius-xl)",
+                padding: "28px 24px",
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 20,
+              }}
             >
-              Anotarme por WhatsApp →
-            </a>
-          </div>
-
+              <div>
+                <span className="badge-linear badge-amber" style={{ marginBottom: 8 }}>
+                  Próximo torneo
+                </span>
+                <h2 style={{ fontSize: 22, color: "var(--color-ink)", margin: "4px 0 8px" }}>
+                  Fecha a confirmar
+                </h2>
+                <p style={{ color: "var(--text-secondary)", fontSize: 14, margin: 0, maxWidth: 500 }}>
+                  Escribinos por WhatsApp y te avisamos la fecha y las categorías apenas estén definidas.
+                </p>
+              </div>
+              <a
+                href={`https://wa.me/${CLUB_INFO.phoneRaw}?text=${encodeURIComponent("¡Hola Muzzaga! Quiero información e inscribirme para el próximo torneo de pádel.")}`}
+                target="_blank"
+                rel="noopener"
+                className="btn btn-linear-primary"
+                style={{ padding: "10px 22px" }}
+              >
+                Anotarme por WhatsApp →
+              </a>
+            </div>
+          )}
         </div>
 
-        <TorneosGallery tournaments={gallery} />
+        <TorneosGallery tournaments={gallery} signupOpen={openTournaments.length > 0} />
       </main>
       <SiteFooter />
       <BottomNav />
