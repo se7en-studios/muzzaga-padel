@@ -639,7 +639,7 @@ export default function TacticalCourtSimulator() {
                 opacity="0.8"
                 fontWeight="600"
               >
-                RED CENTRAL
+                RED
               </text>
 
               {/* MODO ROPE: Danger Zone & Rope Line */}
@@ -903,7 +903,7 @@ export default function TacticalCourtSimulator() {
                 <ScrollRow
                   axis="y"
                   className="tactic-buttons-list"
-                  style={{ maxHeight: 220, paddingRight: 4 }}
+                  style={{ maxHeight: 320, paddingRight: 4 }}
                 >
                   {PRESET_TACTICS.map((item) => (
                     <button

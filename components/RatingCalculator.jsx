@@ -19,7 +19,7 @@ export default function RatingCalculator() {
     wall: 1, // 0: basico, 1: intermedio, 2: avanzado
     net: 1, // 0: defiendo, 1: voleo firme, 2: remate
   });
-  const [raw, setRaw] = useState(34);
+  const [raw, setRaw] = useState(37);
 
   // Calculate rating from quiz if in quiz mode, otherwise from raw slider
   const computedRating = useMemo(() => {
@@ -168,7 +168,7 @@ export default function RatingCalculator() {
           </label>
           <input
             type="range"
-            min="18"
+            min="15"
             max="55"
             step="1"
             value={raw}
@@ -290,8 +290,8 @@ export default function RatingCalculator() {
             <strong style={{ fontSize: 18, color: "var(--color-ink)" }}>
               {category.name}
             </strong>
-            <span style={{ fontSize: 12, color: "var(--color-muted)", marginLeft: 6 }}>
-              ({category.label})
+            <span style={{ fontSize: 12, color: "var(--color-muted)", display: "block" }}>
+              {category.tag} · {category.ratingRange}
             </span>
           </div>
 

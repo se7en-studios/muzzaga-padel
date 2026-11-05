@@ -3182,7 +3182,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .tactical-court-svg {
   width: 100%;
-  max-width: 320px;
+  max-width: 400px;
   height: auto;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
 }
