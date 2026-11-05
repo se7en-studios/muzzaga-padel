@@ -17,7 +17,7 @@ const PRESET_TACTICS = [
     effectiveness: "88%",
     badge: "Ataque · Nivel 3.5+",
     badgeColor: "badge-amber",
-    desc: "Impacto lateral a la altura de la cabeza con efecto cortado agresivo. La bola busca picar profundo y morir en la malla lateral con rebote impredecible.",
+    desc: "Impacto lateral a la altura de la cabeza con efecto cortado agresivo. La bola busca picar profundo y morir en el cristal lateral de la esquina con rebote impredecible.",
     tip: "Girá los hombros rápido, no busques potencia pura sino fricción lateral con la pala a 45°.",
     players: {
       p1: { x: 130, y: 195, label: "J1 (Vos)" }, // Atacante que pega la víbora
@@ -25,9 +25,9 @@ const PRESET_TACTICS = [
       r1: { x: 90, y: 440, label: "R1" }, // Rival defendiendo fondo
       r2: { x: 210, y: 430, label: "R2" }, // Rival en esquina
     },
-    bouncePos: { x: 245, y: 430 },
-    wallPos: { x: 282, y: 395 },
-    trajectory: "M 130 195 Q 185 300, 245 430 Q 268 420, 282 397",
+    bouncePos: { x: 235, y: 436 },
+    wallPos: { x: 280, y: 462 },
+    trajectory: "M 130 195 Q 190 300, 235 436 Q 262 444, 280 462",
     phases: [
       {
         phase: "1. Armado",
@@ -42,8 +42,8 @@ const PRESET_TACTICS = [
         desc: "Pique rasante a 1 metro de la pared de fondo.",
       },
       {
-        phase: "4. Malla",
-        desc: "Impacto en la reja metálica: rebote aleatorio hacia el piso.",
+        phase: "4. Cristal lateral",
+        desc: "Impacto en el cristal lateral junto a la esquina: rebote impredecible hacia adentro.",
       },
     ],
   },
@@ -55,7 +55,7 @@ const PRESET_TACTICS = [
     effectiveness: "94%",
     badge: "Potencia & Topspin · Avanzado",
     badgeColor: "badge-amber",
-    desc: "Remate con efecto liftado (topspin) buscando que la pelota pique antes de la línea de saque, impacte alto en el cristal de fondo y salga por el lateral de 3 metros.",
+    desc: "Remate con efecto liftado (topspin) buscando que la pelota pique antes de la línea de saque rival y salte por encima del lateral de 3 metros, fuera de la pista.",
     tip: "Ubicá el cuerpo debajo de la bola, arqueá la espalda e impactá en el punto más alto con aceleración de muñeca.",
     players: {
       p1: { x: 165, y: 210, label: "J1 (Vos)" },
@@ -63,9 +63,9 @@ const PRESET_TACTICS = [
       r1: { x: 100, y: 450, label: "R1" },
       r2: { x: 200, y: 450, label: "R2" },
     },
-    bouncePos: { x: 130, y: 400 },
-    wallPos: { x: 110, y: 470 },
-    trajectory: "M 165 210 L 130 400 L 110 472 Q 100 480, 290 485",
+    bouncePos: { x: 205, y: 345 },
+    wallPos: null,
+    trajectory: "M 165 210 L 205 345 Q 250 340, 292 385",
     phases: [
       {
         phase: "1. Salto",
@@ -76,12 +76,12 @@ const PRESET_TACTICS = [
         desc: "Impacto a las 12 en punto con 'muñecazo' hacia afuera.",
       },
       {
-        phase: "3. Rebote en el cristal",
-        desc: "Impacto en el cristal de fondo a más de 2,5 m de altura.",
+        phase: "3. Pique",
+        desc: "Pica antes de la línea de saque y sale disparada hacia el lateral con mucha rosca.",
       },
       {
         phase: "4. Salida x3",
-        desc: "La pelota supera la pared lateral y sale de la pista.",
+        desc: "La pelota supera la pared lateral de 3 m y sale de la pista.",
       },
     ],
   },
@@ -101,9 +101,9 @@ const PRESET_TACTICS = [
       r1: { x: 100, y: 190, label: "R1 (Red)" },
       r2: { x: 200, y: 190, label: "R2 (Red)" },
     },
-    bouncePos: { x: 48, y: 462 },
+    bouncePos: { x: 225, y: 60 },
     wallPos: null,
-    trajectory: "M 48 462 Q 90 280, 225 90",
+    trajectory: "M 95 440 Q 140 230, 225 60",
     phases: [
       {
         phase: "1. Espera",
@@ -180,7 +180,7 @@ const PRESET_TACTICS = [
     bouncePos: { x: 240, y: 410 },
     wallPos: { x: 275, y: 435 },
     trajectory:
-      "M 175 190 Q 215 300, 240 410 Q 260 425, 275 435 Q 265 470, 230 465",
+      "M 175 190 Q 215 300, 240 410 Q 260 425, 275 435 Q 268 468, 235 476",
     phases: [
       {
         phase: "1. Retroceso",
@@ -219,7 +219,7 @@ const PRESET_TACTICS = [
     bouncePos: { x: 165, y: 238 },
     wallPos: null,
     trajectory:
-      "M 130 150 Q 140 400, 140 460 Q 140 350, 140 285 Q 152 250, 165 238",
+      "M 130 150 L 110 400 L 95 478 Q 150 390, 140 285 Q 150 255, 165 238",
     phases: [
       {
         phase: "1. Anticipación",
@@ -639,7 +639,7 @@ export default function TacticalCourtSimulator() {
                 opacity="0.8"
                 fontWeight="600"
               >
-                RED CENTRAL
+                RED
               </text>
 
               {/* MODO ROPE: Danger Zone & Rope Line */}
@@ -737,7 +737,7 @@ export default function TacticalCourtSimulator() {
                       <circle r="3.5" fill="#E8722A" />
                       <text
                         x="0"
-                        y="-12"
+                        y={tactic.bouncePos.y > 330 ? 24 : -12}
                         fill="#E8722A"
                         fontSize="9.5"
                         textAnchor="middle"
@@ -760,11 +760,11 @@ export default function TacticalCourtSimulator() {
                         strokeWidth="1.5"
                       />
                       <text
-                        x="0"
-                        y="18"
+                        x={tactic.wallPos.x > 240 ? 6 : 0}
+                        y={tactic.wallPos.x > 240 ? (tactic.wallPos.y > 450 ? -13 : 20) : 18}
                         fill="#38bdf8"
                         fontSize="8.5"
-                        textAnchor="middle"
+                        textAnchor={tactic.wallPos.x > 240 ? "end" : "middle"}
                         fontWeight="bold"
                       >
                         Rebote
@@ -903,7 +903,7 @@ export default function TacticalCourtSimulator() {
                 <ScrollRow
                   axis="y"
                   className="tactic-buttons-list"
-                  style={{ maxHeight: 220, paddingRight: 4 }}
+                  style={{ maxHeight: 320, paddingRight: 4 }}
                 >
                   {PRESET_TACTICS.map((item) => (
                     <button
