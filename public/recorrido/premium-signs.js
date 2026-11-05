@@ -226,93 +226,7 @@
       );
     });
 
-    /* ---- vestuarios: cartel sin cortes + pictogramas ---- */
-    drop(
-      scene.children.find(
-        (o) =>
-          o.isMesh &&
-          Math.abs(o.position.x - 11.5) < 0.05 &&
-          Math.abs(o.position.y - 2.7) < 0.05 &&
-          Math.abs(o.position.z - 9.38) < 0.05,
-      ),
-    );
-    panel({
-      w: 1.3,
-      h: 0.42,
-      x: 11.5,
-      y: 2.7,
-      z: 9.375,
-      ry: Math.PI,
-      led: false,
-      draw: (g, w, h) => {
-        g.fillStyle = INK;
-        g.fillRect(0, 0, w, h);
-        g.fillStyle = ORANGE;
-        g.fillRect(0, h - 8, w, 8);
-        g.textAlign = "center";
-        g.fillStyle = WHITE;
-        fit(g, "VESTUARIOS", w - 40, 110, BEBAS);
-        g.fillText("VESTUARIOS", w / 2, h * 0.68);
-      },
-    });
-    const icon = (x, female) =>
-      panel({
-        w: 0.42,
-        h: 0.42,
-        x,
-        y: 1.75,
-        z: 9.375,
-        ry: Math.PI,
-        led: false,
-        px: 160,
-        draw: (g, w, h) => {
-          g.fillStyle = female ? "#d9488b" : "#2f6fd6";
-          g.fillRect(0, 0, w, h);
-          g.fillStyle = WHITE;
-          g.beginPath();
-          g.arc(w / 2, h * 0.26, h * 0.1, 0, 7);
-          g.fill();
-          g.beginPath();
-          if (female) {
-            g.moveTo(w / 2, h * 0.38);
-            g.lineTo(w * 0.7, h * 0.74);
-            g.lineTo(w * 0.3, h * 0.74);
-          } else {
-            g.rect(w * 0.34, h * 0.4, w * 0.32, h * 0.34);
-          }
-          g.closePath();
-          g.fill();
-          g.fillRect(w * 0.4, h * 0.74, w * 0.07, h * 0.16);
-          g.fillRect(w * 0.53, h * 0.74, w * 0.07, h * 0.16);
-        },
-      });
-    icon(9.9, false);
-    icon(13.1, true);
-    // marco de la puerta
-    [10.82, 12.18].forEach((x) => box(0.06, 2.4, 0.24, x, 1.2, 9.5, steel));
-    // paredes del vestuario menos quemadas por la luz
-    scene.traverse((o) => {
-      if (
-        o.isMesh &&
-        o.material &&
-        o.material.color &&
-        o.material.color.getHex() === 0xe8dcc4
-      ) {
-        o.material.color.setHex(0x6f6a62);
-        o.material.roughness = 0.9;
-      }
-    });
-
-    /* ---- mural fotográfico en la pared de los vestuarios (cara que mira a la cantina) ---- */
-    const photo = IMG.canchasVista;
-    if (photo && photo.naturalWidth) panel({ w: 5.2, h: 2.0, x: 8.87, y: 1.95, z: 13.65, ry: -Math.PI / 2, px: 160, glow: 1.0, draw: (g, w, h) => {
-      const k = Math.max(w / photo.naturalWidth, h / photo.naturalHeight), iw = photo.naturalWidth * k, ih = photo.naturalHeight * k;
-      g.drawImage(photo, (w - iw) / 2, (h - ih) / 2, iw, ih);
-      const gr = g.createLinearGradient(0, h * 0.55, 0, h); gr.addColorStop(0, 'rgba(10,12,18,0)'); gr.addColorStop(1, 'rgba(10,12,18,.85)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
-      g.fillStyle = ORANGE; g.font = '70px ' + BEBAS; g.textAlign = 'left'; g.fillText('JUGÁ. COMPARTÍ. REPETÍ.', 40, h - 36);
-    } });
-
-    /* ---- logo grande y panel de listones en el living (pared del frente) ---- */
+    /* ---- logo grande en la pared del frente, sobre las mesas ---- */
     panel({
       w: 4.4,
       h: 1.0,
@@ -338,23 +252,6 @@
       },
       glow: 1.18,
     });
-    const slats = new THREE.InstancedMesh(
-        new THREE.BoxGeometry(0.055, 2.5, 0.05),
-        std(0x9a6a3c, { roughness: 0.55 }),
-        90,
-      ),
-      tmp = new THREE.Object3D();
-    for (let i = 0; i < 90; i++) {
-      tmp.position.set(-13.5 + i * 0.122, 1.45, 17.8);
-      tmp.updateMatrix();
-      slats.setMatrixAt(i, tmp.matrix);
-    }
-    W.front.add(slats);
-    box(11.1, 2.55, 0.03, -8, 1.45, 17.84, std(0x14161b, { roughness: 0.9 }), {
-      parent: W.front,
-    });
-    box(11.1, 0.035, 0.06, -8, 2.74, 17.74, ledWarm, { parent: W.front });
-    box(11.1, 0.06, 0.07, -8, 0.2, 17.74, steel, { parent: W.front });
   }
 
   window.MuzzagaSigns = { install };
