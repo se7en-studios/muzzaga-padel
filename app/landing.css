@@ -2745,16 +2745,7 @@ body {
   transform: translateY(0);
 }
 
-.club-tour-wa {
-  background: rgba(37, 211, 102, 0.16);
-  border: 1px solid rgba(37, 211, 102, 0.45);
-  color: #5ee59a;
-}
-
-.club-tour-wa:hover {
-  background: rgba(37, 211, 102, 0.26);
-  box-shadow: 0 10px 24px -10px rgba(37, 211, 102, 0.5);
-}
+/* El botón de WhatsApp usa .btn-secondary-whatsapp (marca.css): verde lleno, igual que el del header. */
 
 @media (prefers-reduced-motion: reduce) {
   .club-tour-card-body,
@@ -2791,8 +2782,9 @@ body {
     font-size: 0.84rem;
     line-height: 1.4;
   }
+  /* "Recorrer el club" baja de renglón si no entra al lado de los dos botones */
   .club-tour-actions {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 6px 8px;
   }
   .club-tour-actions .btn {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buildWhatsAppLink } from "../data/club";
+import { WhatsAppLogo } from "./BrandLogos";
 
 // Cada toma corresponde a un tramo de la ruta de cámara de public/recorrido/index.html (modo ?embed=1).
 const STOPS = [
@@ -228,12 +229,12 @@ export default function ClubRecorrido() {
               Reservar turno
             </a>
             <a
-              className="btn club-tour-btn club-tour-wa"
+              className="btn btn-secondary-whatsapp club-tour-btn"
               href={WHATSAPP_HREF}
               target="_blank"
               rel="noopener noreferrer"
             >
-              WhatsApp
+              <WhatsAppLogo color="currentColor" /> WhatsApp
             </a>
             <a className="club-tour-link" href="/recorrido">
               Recorrer el club →
