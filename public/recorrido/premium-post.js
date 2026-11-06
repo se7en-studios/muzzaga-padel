@@ -57,6 +57,10 @@
       0.65,
       ctx.threshold || 0.95,
     );
+    // el bloom es un desenfoque: calcularlo a la mitad de resolución casi no se nota y le saca 3/4 del trabajo a la placa
+    const bloomSize = bloom.setSize.bind(bloom);
+    bloom.setSize = (w, h) => bloomSize(Math.max(1, Math.round(w / 2)), Math.max(1, Math.round(h / 2)));
+    bloom.setSize(size.x * pr, size.y * pr);
     composer.addPass(bloom);
     const fin = new THREE.ShaderPass(FINAL);
     composer.addPass(fin);

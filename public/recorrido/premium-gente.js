@@ -101,13 +101,20 @@
       };
 
       const q = new THREE.Quaternion(), qp = new THREE.Quaternion(), axis = new THREE.Vector3();
-      onFrame((dt) => {
+      // los que quedan fuera de la toma no se animan ni se dibujan (los personajes no usan el recorte automático de three)
+      const frustum = new THREE.Frustum(), pm = new THREE.Matrix4(), sph = new THREE.Sphere();
+      onFrame((dt, t, cam) => {
         if (!dt) return;
+        if (cam) frustum.setFromProjectionMatrix(pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
         crowd.forEach((c) => {
           const p = c.proxy.position, ud = c.proxy.userData;
           const d = Math.hypot(p.x - c.last.x, p.z - c.last.z);
           if (d < 2) c.spd += (d / dt - c.spd) * Math.min(1, dt * 8);
           c.last.copy(p);
+          sph.center.set(p.x, 0.9, p.z); sph.radius = 2.4; // margen: la sombra (sol bajo) y la paleta no aparecen de golpe en el borde
+          const inShot = !cam || frustum.intersectsSphere(sph);
+          if (c.holder.visible !== inShot) c.holder.visible = inShot;
+          if (!inShot) return;
           let clip;
           if (c.seated) clip = c.seatClip;
           else if (c.onCourt && ud.arm && ud.arm.rotation.x < -2.0) clip = 'Victory_Fist_Pump';
