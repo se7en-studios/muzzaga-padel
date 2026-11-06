@@ -177,7 +177,6 @@ export default function ClubRecorrido() {
   };
 
   const stop = STOPS[step];
-  const isLast = step === STOPS.length - 1;
 
   return (
     <section
@@ -223,7 +222,7 @@ export default function ClubRecorrido() {
           </div>
           <div className="club-tour-actions">
             <a
-              className={`btn club-tour-btn ${isLast ? "btn-orange-primary" : "btn-ghost"}`}
+              className="btn btn-orange-primary club-tour-btn"
               href="#turnos"
             >
               Reservar turno
