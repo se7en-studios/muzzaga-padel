@@ -2499,7 +2499,6 @@ body {
 .club-tour {
   position: relative;
   height: calc(var(--stops) * 100svh);
-  background: #141826;
 }
 
 .club-tour-sticky {
@@ -2507,8 +2506,32 @@ body {
   top: 0;
   height: 100svh;
   overflow: hidden;
+}
+
+/* La maqueta (foto + 3D + viñeta). Cuando el borde de arriba o el de abajo de la sección está
+   en pantalla, ClubRecorrido pone data-fade y sube --fade-top / --fade-bottom: la maqueta se funde
+   con la página en vez de cortarse en recto. Fija en pantalla no lleva máscara (nada que recortar). */
+.club-tour-scene {
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  position: absolute;
+  inset: 0;
   /* foto de la maqueta: se ve al instante mientras carga la 3D */
   background: #141826 url(/recorrido/poster-noche.jpg) center / cover no-repeat;
+}
+
+.club-tour-scene[data-fade] {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgb(0 0 0 / 0.35) calc(var(--fade-top) * 0.4),
+    rgb(0 0 0 / 0.8) calc(var(--fade-top) * 0.75),
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    rgb(0 0 0 / 0.8) calc(100% - var(--fade-bottom) * 0.75),
+    rgb(0 0 0 / 0.35) calc(100% - var(--fade-bottom) * 0.4),
+    transparent 100%
+  );
 }
 
 .club-tour-frame {
@@ -2635,7 +2658,7 @@ body {
 }
 
 /* Recorrido 3D: viñeta de cine, puntos de interés, animación de la tarjeta y microinteracciones */
-.club-tour-sticky::after {
+.club-tour-scene::after {
   content: "";
   position: absolute;
   inset: 0;
