@@ -54,6 +54,7 @@ const nearestPoi = (p) =>
 
 export default function ClubRecorrido() {
   const sectionRef = useRef(null);
+  const sceneRef = useRef(null);
   const frameRef = useRef(null);
   const [load, setLoad] = useState(false);
   const [ready, setReady] = useState(false);
@@ -113,9 +114,26 @@ export default function ClubRecorrido() {
     if (!el) return undefined;
     let raf = 0;
     let last = -1;
+    let fades = "";
     const update = () => {
       raf = 0;
       const rect = el.getBoundingClientRect();
+      // Bordes: mientras el arriba o el abajo de la sección está en pantalla, la maqueta se
+      // funde con la página. El degradado se achica hasta 0 justo cuando la sección queda fija.
+      const scene = sceneRef.current;
+      if (scene) {
+        const vh = window.innerHeight;
+        const size = Math.min(180, vh * 0.22);
+        const top = Math.round(Math.min(size, Math.max(0, rect.top)));
+        const bottom = Math.round(Math.min(size, Math.max(0, vh - rect.bottom)));
+        if (`${top},${bottom}` !== fades) {
+          fades = `${top},${bottom}`;
+          scene.style.setProperty("--fade-top", `${top}px`);
+          scene.style.setProperty("--fade-bottom", `${bottom}px`);
+          // sin borde a la vista, sin máscara: la 3D fija se dibuja como siempre
+          scene.toggleAttribute("data-fade", top > 0 || bottom > 0);
+        }
+      }
       const p = clamp01(
         -rect.top / Math.max(1, rect.height - window.innerHeight),
       );
@@ -187,16 +205,18 @@ export default function ClubRecorrido() {
       style={{ "--stops": STOPS.length }}
     >
       <div className="club-tour-sticky">
-        {load && (
-          <iframe
-            ref={frameRef}
-            className={`club-tour-frame${ready ? " is-ready" : ""}`}
-            src="/recorrido/index.html?embed=1&v=20261105"
-            title="Maqueta 3D del club Muzzaga"
-            tabIndex={-1}
-            aria-hidden="true"
-          />
-        )}
+        <div ref={sceneRef} className="club-tour-scene">
+          {load && (
+            <iframe
+              ref={frameRef}
+              className={`club-tour-frame${ready ? " is-ready" : ""}`}
+              src="/recorrido/index.html?embed=1&v=20261105"
+              title="Maqueta 3D del club Muzzaga"
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+          )}
+        </div>
         {!ready && <div className="club-tour-loading">Armando la maqueta…</div>}
 
         <nav className="club-tour-poi" aria-label="Zonas del club">
