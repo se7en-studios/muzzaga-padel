@@ -74,6 +74,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // La maqueta 3D tampoco: son ~12 MB (personajes y texturas) que no hacen
+  // falta sin conexión; la caché del navegador ya los guarda.
+  if (url.pathname.startsWith("/recorrido")) {
+    return;
+  }
+
   // Archivos con hash en el nombre: nunca cambian, primero el caché.
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(

@@ -1,5 +1,5 @@
 /* Muzzaga · iluminación local de la maqueta (modo atardecer).
-   Luces cálidas puntuales (living, entrada, barra), derrame de luz blanca sobre las canchas y
+   Luces puntuales (mesas, entrada y el LED azul de la barra), derrame de luz blanca sobre las canchas y
    sombras de contacto al pie de las paredes. Las luces nuevas se encienden de a poco (addFade).
    En pantallas chicas se omiten las luces puntuales para no pasarse del límite de uniformes. */
 (function () {
@@ -10,9 +10,9 @@
     /* ---- luces cálidas locales ---- */
     if (!mobile) {
       [
-        [0xffb468, 1.0, 6, -12.9, 1.7, 17.0],
+        [0xffb468, 0.8, 8, -9.0, 2.4, 13.0],
         [0xffa050, 1.0, 7, -15.3, 2.9, 6.8],
-        [0xff8a30, 0.5, 5, 3, 0.5, 14.6],
+        [0x4a6bff, 0.9, 5, 0.3, 0.5, 12.7],
       ].forEach(([c, k, d, x, y, z]) => {
         const l = new THREE.PointLight(c, k, d, 2);
         l.position.set(x, y, z);

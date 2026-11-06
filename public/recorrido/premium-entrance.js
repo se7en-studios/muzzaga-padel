@@ -93,22 +93,22 @@
     );
     sp.rotation.y = -Math.PI / 2;
 
-    /* ---- puerta de madera del vestuario, con bisagra en el marco ---- */
+    /* ---- puerta de madera del baño de hombres (costado del pasillito), con bisagra en el marco ---- */
     const piv = new THREE.Group();
-    piv.position.set(10.85, 0, 9.5);
+    piv.position.set(11.4, 0, 11.6);
     scene.add(piv);
     mesh(
-      new THREE.BoxGeometry(1.3, 2.28, 0.045),
+      new THREE.BoxGeometry(0.88, 2.2, 0.045),
       std(0x9a6a3c, { roughness: 0.55 }),
-      0.66,
+      0.45,
       1.15,
       0,
       piv,
     );
-    mesh(new THREE.BoxGeometry(0.03, 0.03, 0.12), steel, 1.18, 1.05, 0, piv);
-    for (let i = 0; i < 6; i++)
+    mesh(new THREE.BoxGeometry(0.03, 0.03, 0.12), steel, 0.8, 1.05, 0, piv);
+    for (let i = 0; i < 4; i++)
       mesh(
-        new THREE.BoxGeometry(0.015, 2.2, 0.052),
+        new THREE.BoxGeometry(0.015, 2.12, 0.052),
         std(0x6e4a28, { roughness: 0.6 }),
         0.15 + i * 0.2,
         1.15,
@@ -123,7 +123,7 @@
         l.g.position.z = 6.8 + l.sd * (0.8 + 1.4 * o);
         l.g.updateMatrixWorld(true);
       });
-      piv.rotation.y = 1.35 * k;
+      piv.rotation.y = -Math.PI / 2 + 1.35 * k;
       piv.updateMatrixWorld(true);
     });
 

@@ -2508,7 +2508,7 @@ body {
   height: 100svh;
   overflow: hidden;
   /* foto de la maqueta: se ve al instante mientras carga la 3D */
-  background: #141826 url(/recorrido/poster.jpg) center / cover no-repeat;
+  background: #141826 url(/recorrido/poster-noche.jpg) center / cover no-repeat;
 }
 
 .club-tour-frame {

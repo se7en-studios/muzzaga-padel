@@ -23,6 +23,13 @@ const CSP = [
   "frame-ancestors 'self'",
 ].join("; ");
 
+// La maqueta 3D (public/recorrido) lee las texturas de los personajes con
+// fetch desde URLs blob: que arma ella misma (GLTFLoader); solo ahí se permiten.
+const CSP_RECORRIDO = CSP.replace(
+  "connect-src 'self' https:",
+  "connect-src 'self' https: blob:",
+);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -91,7 +98,13 @@ const nextConfig = {
             key: "Cache-Control",
             value: "public, max-age=3600, stale-while-revalidate=86400",
           },
+          { key: "Content-Security-Policy", value: CSP_RECORRIDO },
         ],
+      },
+      {
+        // /recorrido sin barra final (se reescribe a /recorrido/index.html)
+        source: "/recorrido",
+        headers: [{ key: "Content-Security-Policy", value: CSP_RECORRIDO }],
       },
     ];
   },

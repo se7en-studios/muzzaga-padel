@@ -16,14 +16,14 @@ const STOPS = [
     text: "El Tano y La Vasca: cristal templado, cubiertas y sin viento.",
   },
   {
-    kick: "Recepción",
-    title: "Recepción y cantina",
+    kick: "Cantina",
+    title: "Barra y cantina",
     text: "Pizzas al horno, empanadas, tostados y cerveza fría. Con opciones sin TACC.",
   },
   {
     kick: "Tercer tiempo",
-    title: "Living y vestuarios",
-    text: "Sillones con vista a las canchas y baños y vestuarios para cambiarte antes y después de jugar.",
+    title: "Mesas, baños y duchas",
+    text: "Mesas con vista a las canchas para comentar el partido, y baños de hombres y de mujeres con duchas para cambiarte antes y después de jugar.",
   },
   {
     kick: "Te esperamos",
@@ -37,9 +37,9 @@ const STOPS = [
 const POIS = [
   { label: "Vista general", p: 0 },
   { label: "Canchas", p: 2 / 7 },
-  { label: "Recepción y cantina", p: 4 / 7 },
-  { label: "Zona de descanso", p: 5 / 7 },
-  { label: "Vestuarios", p: 6 / 7 },
+  { label: "Barra y cantina", p: 4 / 7 },
+  { label: "Mesas", p: 5 / 7 },
+  { label: "Baños y duchas", p: 6 / 7 },
 ];
 
 const WHATSAPP_HREF = buildWhatsAppLink("Hola! Quiero reservar una cancha");
@@ -63,7 +63,8 @@ export default function ClubRecorrido() {
     frameRef.current?.contentWindow?.postMessage(msg, window.location.origin);
   }, []);
 
-  // El iframe (three.js + texturas, ~1,3 MB) solo se pide cuando la sección está cerca.
+  // El iframe (three.js + texturas ~3 MB; los personajes, ~8 MB más, llegan después y aparecen solos)
+  // solo se pide cuando la sección está cerca.
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return undefined;
@@ -190,7 +191,7 @@ export default function ClubRecorrido() {
           <iframe
             ref={frameRef}
             className={`club-tour-frame${ready ? " is-ready" : ""}`}
-            src="/recorrido/index.html?embed=1"
+            src="/recorrido/index.html?embed=1&v=20261105"
             title="Maqueta 3D del club Muzzaga"
             tabIndex={-1}
             aria-hidden="true"
