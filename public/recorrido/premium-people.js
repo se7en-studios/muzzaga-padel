@@ -653,6 +653,8 @@
 
   function tick(dt, t, still) {
     people.forEach((g) => {
+      // oculto (lo reemplazó un personaje 3D): nadie lo ve, no hace falta animarle la cara ni las rodillas
+      if (!g.visible) return;
       const u = g.userData,
         ph = u.ph;
       const seated = u.legL.rotation.x < -0.8;

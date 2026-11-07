@@ -44,6 +44,7 @@
     const leaves = [-1, 1].map((sd) => {
       const g = new THREE.Group();
       g.position.set(-14.3, 0, 6.8 + sd * 0.8);
+      g.userData.anima = true; // se mueve: no se fusiona con las piezas fijas
       scene.add(g);
       mesh(new THREE.BoxGeometry(0.03, 2.62, 1.56), glass, 0, 1.33, 0, g);
       [
@@ -96,6 +97,7 @@
     /* ---- puerta de madera del baño de hombres (costado del pasillito), con bisagra en el marco ---- */
     const piv = new THREE.Group();
     piv.position.set(11.4, 0, 11.6);
+    piv.userData.anima = true; // se mueve: no se fusiona con las piezas fijas
     scene.add(piv);
     mesh(
       new THREE.BoxGeometry(0.88, 2.2, 0.045),

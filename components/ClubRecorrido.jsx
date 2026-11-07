@@ -210,7 +210,7 @@ export default function ClubRecorrido() {
             <iframe
               ref={frameRef}
               className={`club-tour-frame${ready ? " is-ready" : ""}`}
-              src="/recorrido/index.html?embed=1&v=20261105"
+              src="/recorrido/index.html?embed=1&v=20261106"
               title="Maqueta 3D del club Muzzaga"
               tabIndex={-1}
               aria-hidden="true"
