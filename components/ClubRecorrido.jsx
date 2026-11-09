@@ -77,7 +77,8 @@ export default function ClubRecorrido() {
           io.disconnect();
         }
       },
-      { rootMargin: "300% 0px" },
+      // ponytail: 300% caía dentro de la pantalla al abrir y armaba la maqueta (3 s de hilo bloqueado) en la carga inicial
+      { rootMargin: "100% 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -125,7 +126,9 @@ export default function ClubRecorrido() {
         const vh = window.innerHeight;
         const size = Math.min(180, vh * 0.22);
         const top = Math.round(Math.min(size, Math.max(0, rect.top)));
-        const bottom = Math.round(Math.min(size, Math.max(0, vh - rect.bottom)));
+        const bottom = Math.round(
+          Math.min(size, Math.max(0, vh - rect.bottom)),
+        );
         if (`${top},${bottom}` !== fades) {
           fades = `${top},${bottom}`;
           scene.style.setProperty("--fade-top", `${top}px`);
@@ -241,10 +244,7 @@ export default function ClubRecorrido() {
             <p className="club-tour-text">{stop.text}</p>
           </div>
           <div className="club-tour-actions">
-            <a
-              className="btn btn-orange-primary club-tour-btn"
-              href="#turnos"
-            >
+            <a className="btn btn-orange-primary club-tour-btn" href="#turnos">
               Reservar turno
             </a>
             <a

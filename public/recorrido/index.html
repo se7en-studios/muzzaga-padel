@@ -275,6 +275,8 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   const showErr = m => { const d = document.createElement('div'); d.id = 'err'; d.textContent = m; stage.appendChild(d); };
   if (!window.THREE) { showErr('No se pudo cargar el motor 3D. Revisá tu conexión y recargá.'); return; }
   const THREE = window.THREE;
+  /* ponytail: la escena se arma en tandas y se cede el hilo entre una y otra, para que la landing no se trabe mientras la maqueta carga */
+  const tick = () => (window.scheduler && scheduler.yield ? scheduler.yield() : new Promise(r => setTimeout(r)));
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true }); }
   catch (e) { showErr('Tu navegador no tiene WebGL activado, así que la maqueta 3D no puede arrancar.'); return; }
@@ -387,6 +389,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   }
   function photoTex(img, w, h) { return ctex(w, h, g => { if (img && img.naturalWidth) g.drawImage(img, 0, 0, w, h); else { g.fillStyle = '#222'; g.fillRect(0, 0, w, h); } }); }
 
+  await tick();
   /* ---------- luces ---------- */
   scene.add(new THREE.HemisphereLight(0xf4f8ff, 0xcfc4b0, 0.3));
   const sun = new THREE.DirectionalLight(0xfff0d8, 1.1);
@@ -396,6 +399,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   sun.shadow.bias = -0.0006; sun.shadow.radius = 3;
   scene.add(sun, sun.target);
 
+  await tick();
   /* ---------- texturas ---------- */
   const concreteTex = ctex(256, 256, (g, w, h) => {
     g.fillStyle = '#b4b8bd'; g.fillRect(0, 0, w, h);
@@ -423,6 +427,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
     g.fillStyle = '#fff'; g.fillRect(0, 0, w, 9);
   });
 
+  await tick();
   /* ---------- piso y entorno ---------- */
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), std(0xe9e5dc, { roughness: 1 }));
   ground.rotation.x = -Math.PI / 2; ground.position.y = -0.06; scene.add(ground);
@@ -440,6 +445,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   const streetName = new THREE.Mesh(new THREE.PlaneGeometry(10, 2.2), new THREE.MeshBasicMaterial({ map: textTex([{ t: 'CALLE CHUBUT', s: 150, c: '#f4f1ea' }], 1280, 280, { bg: 'rgba(0,0,0,0)' }) }));
   streetName.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); streetName.position.set(-26.9, 0.03, 6.8); scene.add(streetName);
 
+  await tick();
   /* ---------- paredes (se bajan las que miran a la cámara) ---------- */
   const WH = 6, LOW = 2.4, wallMat = std(0xf4f1ea, { roughness: 0.7 }), capMat = std(0xf26a1b, { roughness: 0.6 });
   const stripeTex = (rx, ry, c) => ctex(32, 8, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, c[0]); gr.addColorStop(0.35, c[1]); gr.addColorStop(0.5, c[2]); gr.addColorStop(1, c[0]); g.fillStyle = gr; g.fillRect(0, 0, w, h); }, rx, ry);
@@ -480,6 +486,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   box(1.4, 0.03, 3.2, -14.8, 0.03, 6.8, std(0x2a2a2a));
   solid(-24.8, -14.4, 0.4, 1.0); solid(-24.8, -14.4, 12.6, 13.2); solid(-24.8, -24.2, 0.4, 13.2);
 
+  await tick();
   /* ---------- canchas ---------- */
   const glassMat = new THREE.MeshStandardMaterial({ color: 0x9ccaf0, transparent: true, opacity: 0.2, roughness: 0.05, side: DS, depthWrite: false });
   const frameMat = std(0x14161b, { metalness: 0.5, roughness: 0.45 });
@@ -536,6 +543,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   }
   buildCourt(-6.5); buildCourt(6.5);
 
+  await tick();
   /* ---------- muebles y personajes ---------- */
   function racket(x, y, z, ry, col, grp) {
     const g = new THREE.Group();
@@ -644,6 +652,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   const bartender = person(0xf26a1b, 0xc68a63); bartender.position.set(0.4, 0, 14.1); bartender.rotation.y = Math.PI; bartender.userData.act = 'serve'; if (window.MuzzagaPeople) window.MuzzagaPeople.addTray({ THREE, std }, bartender); scene.add(bartender);
   const clerk = person(0x3e72d9); clerk.position.set(3.0, 0, 14.1); clerk.rotation.y = Math.PI; clerk.userData.act = 'reception'; scene.add(clerk);
 
+  await tick();
   /* ---------- Muzzaguito (avatar) ---------- */
   const avatar = new THREE.Group();
   (function () {
@@ -657,6 +666,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   })();
   avatar.position.set(-20, 0, 6.8); avatar.rotation.y = Math.PI / 2; scene.add(avatar);
 
+  await tick();
   /* ---------- lugares y pelotas ---------- */
   const SPOTS = [
     { x: -1.0, z: 11.6, name: 'Turnos y reservas', text: 'Elegís día y horario en tiempo real y confirmás con una seña por WhatsApp. También los sacás en la barra. El turno es de 90 minutos: $60.000, o $15.000 por jugador si son cuatro.' },
@@ -695,6 +705,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   });
 
   const movers = [];
+  await tick();
   /* ===== realismo: cielo, reflejos, entorno y detalles ===== */
   (function () {
     const aoTex = ctex(64, 64, (g, w, h) => { const gr = g.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,.9)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
@@ -858,6 +869,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     [5.0, 8.6].forEach(z => box(0.1, 3.2, 0.1, -16.5, 1.6, z, dk));
   })();
   const frameHooks = []; // animaciones de la escena (puertas, etc.)
+  await tick();
   /* ---------- calidad premium: materiales PBR, luces, cantina y mobiliario ---------- */
   try {
     if (window.MuzzagaScene && !/look=basic/.test(location.search)) { const pctx = { THREE, scene, renderer, std, box, plane, sign, ctex, itex, textTex, W, IMG, DS, solid, wood, darkMat, person, movers, reduceMotion, onFrame: f => frameHooks.push(f) }; window.MuzzagaScene.enhance(pctx); if (window.MuzzagaSigns) window.MuzzagaSigns.install(pctx); if (window.MuzzagaEnv) window.MuzzagaEnv.install(pctx); if (window.MuzzagaEntrance) window.MuzzagaEntrance.install(pctx); if (window.MuzzagaClub) window.MuzzagaClub.install(pctx); if (window.MuzzagaGente) window.MuzzagaGente.install(pctx); }
@@ -872,6 +884,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   scene.updateMatrixWorld(true); scene.autoUpdate = false; renderer.shadowMap.needsUpdate = true;
   const dyn = [avatar, bartender, clerk, ...players.map(p => p.g), ...ballsInPlay.map(b => b.m), ...balls.map(b => b.g), ...movers, ...turbines];
   SPOTS.forEach(s => dyn.push(s.ring, s.disc));
+  await tick();
   /* ---------- cámara orbital ---------- */
   const PRE = { '3d': { az: 215, el: 40, d: 46, fov: 32 }, side: { az: 270, el: 9, d: 62, fov: 32 }, top: { az: 0, el: 88, d: 62, fov: 32 }, plan: { az: 0, el: 89.5, d: 130, fov: 14 } };
   const cam = Object.assign({}, PRE['3d'], { az: 150, el: 60, d: 100 }), want = Object.assign({}, PRE['3d']);
