@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getDb, isFirebaseConfigured } from "../../../lib/firebase";
-import { todayInClub } from "../../../lib/booking";
+import { businessDayInClub } from "../../../lib/booking";
 import { getCantinaMenu } from "../../../lib/cantinaMenuServer";
 import { validateOrder } from "../../../lib/cantinaOrder";
 
@@ -99,7 +99,7 @@ export async function POST(request) {
     const ref = db.ref("cantinaOrders").push();
     await ref.set({
       ...checked.order,
-      date: todayInClub(),
+      date: businessDayInClub(),
       status: "nuevo",
       createdAt: Date.now(),
     });

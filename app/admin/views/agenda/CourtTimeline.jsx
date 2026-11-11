@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { paymentState, pendingAmount } from "../../../../lib/metrics";
-import { hasSlotStarted } from "../../../../lib/clubConfig";
+import { hasSlotStarted, minutesIntoNight } from "../../../../lib/clubConfig";
 import { isoWeekday } from "../../../../lib/booking";
 import { formatARS } from "../../../../lib/format";
 import { toWhatsappNumber } from "../../../../lib/phone";
@@ -52,14 +52,14 @@ export default function CourtTimeline({
 
   // Línea de "ahora": solo mirando hoy y dentro del horario del club.
   let nowTopPct = null;
-  if (now.isoDate === activeDate && rows.length) {
+  const current = minutesIntoNight(activeDate, now);
+  if (current !== null && rows.length) {
     const day = clubConfig.schedule[isoWeekday(activeDate)];
     const open = day?.open ? toMinutes(day.start) : 0;
     const rel = (hhmm) => {
       const m = toMinutes(hhmm);
       return m < open ? m + DAY_MIN : m;
     };
-    const current = toMinutes(now.hhmm);
     const first = rel(rows[0].start);
     const last = rel(rows[rows.length - 1].end) || first;
     const end = last <= first ? last + DAY_MIN : last;
