@@ -1178,3 +1178,9 @@
     display: none;
   }
 }
+
+/* Aviso de jornada (00:00 a 06:00): ocupa todo el ancho de la barra */
+.admin-root .admin-jornada-note {
+  flex-basis: 100%;
+  margin: 6px 0 0;
+}

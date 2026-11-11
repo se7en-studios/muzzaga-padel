@@ -24,7 +24,8 @@ import {
   adminGetDailyCashSummary,
   adminReopenDailyCash,
 } from "../actions";
-import { todayInClub, isoAddDays } from "../../../lib/booking";
+import { businessDayInClub, todayInClub, isoAddDays } from "../../../lib/booking";
+import { JornadaNote } from "../adminHelpers";
 import { CLUB_INFO } from "../../../data/club";
 
 const ICON = { size: 18, strokeWidth: 1.75, "aria-hidden": true };
@@ -66,7 +67,7 @@ function downloadCsv(filename, rows) {
 }
 
 export default function CajaView({ initialDate, onExpiredSession, onToast }) {
-  const [date, setDate] = useState(() => initialDate || todayInClub());
+  const [date, setDate] = useState(() => initialDate || businessDayInClub());
   const [summary, setSummary] = useState(null);
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -231,14 +232,14 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
         <button
           type="button"
           className="btn btn-secondary admin-btn-sm"
-          onClick={() => setDate(isoAddDays(todayInClub(), -1))}
+          onClick={() => setDate(isoAddDays(businessDayInClub(), -1))}
         >
           Ayer
         </button>
         <button
           type="button"
-          className={`btn admin-btn-sm ${date === todayInClub() ? "btn-linear-primary" : "btn-secondary"}`}
-          onClick={() => setDate(todayInClub())}
+          className={`btn admin-btn-sm ${date === businessDayInClub() ? "btn-linear-primary" : "btn-secondary"}`}
+          onClick={() => setDate(businessDayInClub())}
         >
           Hoy
         </button>
@@ -251,6 +252,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
           className="admin-date-sm"
         />
       </div>
+      <JornadaNote date={date} />
     </div>
   );
 

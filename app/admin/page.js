@@ -28,7 +28,11 @@ import {
   getAdminDayData,
   verifyAdminPassword,
 } from "./actions";
-import { nowInClubTimezone, todayInClub } from "../../lib/booking";
+import {
+  businessDayInClub,
+  nowInClubTimezone,
+  todayInClub,
+} from "../../lib/booking";
 import { normalizeConfig } from "../../lib/clubConfig";
 import { getClubStatus } from "../../data/horarios";
 import { formatARS, formatDate, formatPct, formatTime } from "../../lib/format";
@@ -97,7 +101,7 @@ export default function AdminPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Dashboard Data State (Agenda)
-  const [activeDate, setActiveDate] = useState(todayInClub);
+  const [activeDate, setActiveDate] = useState(businessDayInClub);
   const [dayData, setDayData] = useState(null);
   const [loading, setLoading] = useState(false);
 

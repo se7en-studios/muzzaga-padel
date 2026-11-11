@@ -6,7 +6,7 @@ import {
   isoAddDays,
   nextDays,
   nowInClubTimezone,
-  todayInClub,
+  businessDayInClub,
 } from "../../../lib/booking";
 import { hasSlotStarted } from "../../../lib/clubConfig";
 import { formatARS } from "../../../lib/format";
@@ -34,9 +34,10 @@ export default function AgendaView({
   onOpenDetail,
 }) {
   const [rangeStats, setRangeStats] = useState(null);
-  const todayIso = todayInClub();
+  // Jornada: a la 01:00 la agenda sigue mostrando los turnos de esa noche.
+  const todayIso = businessDayInClub();
   const now = nowInClubTimezone();
-  const days = nextDays(14);
+  const days = nextDays(14, todayIso);
 
   // Ocupación de los próximos 14 días para la tira
   useEffect(() => {

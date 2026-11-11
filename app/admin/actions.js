@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getDb, isFirebaseConfigured } from "../../lib/firebase";
 import {
   addMinutes,
+  businessDayInClub,
   isoAddDays,
   isoWeekday,
   nowInClubTimezone,
@@ -288,7 +289,7 @@ export async function getAdminDayData(isoDate) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
-  const date = isoDate || todayInClub();
+  const date = isoDate || businessDayInClub();
   if (!ISO_DATE.test(date)) return { ok: false, error: "Fecha inválida." };
   const config = await getClubConfig();
   const slotTimes = slotTimesFor(config, date);
@@ -782,7 +783,7 @@ export async function adminGetWeekStats() {
   const denied = await requireAdmin();
   if (denied) return denied;
 
-  const today = todayInClub();
+  const today = businessDayInClub();
   const dates = Array.from({ length: 7 }, (_, i) => isoAddDays(today, i - 6));
   const allDates = [isoAddDays(today, -7), ...dates];
   const shape = (summaries) => ({
@@ -1181,7 +1182,7 @@ export async function adminAddCantinaSale({
   if (!Array.isArray(items) || items.length === 0 || items.length > 60) {
     return { ok: false, error: "Agregá al menos un producto a la venta." };
   }
-  const saleDate = date || todayInClub();
+  const saleDate = date || businessDayInClub();
   if (!ISO_DATE.test(saleDate)) return { ok: false, error: "Fecha inválida." };
   if (!isFirebaseConfigured()) {
     return { ok: false, error: "Firebase no está configurado." };
@@ -1427,7 +1428,7 @@ export async function adminGetCantinaOrders(date) {
   if (denied) return denied;
 
   if (!isFirebaseConfigured()) return { ok: true, orders: [] };
-  const day = date || todayInClub();
+  const day = date || businessDayInClub();
   if (!ISO_DATE.test(day)) return { ok: false, error: "Fecha inválida." };
 
   try {
@@ -2571,7 +2572,7 @@ export async function adminGetDailyCashSummary(isoDate) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
-  const date = isoDate || todayInClub();
+  const date = isoDate || businessDayInClub();
   if (!ISO_DATE.test(date)) return { ok: false, error: "Fecha inválida." };
   let records = { bookings: [], sales: [], expenses: [], session: null };
 

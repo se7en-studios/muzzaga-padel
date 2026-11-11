@@ -13,6 +13,7 @@ import {
   isoAddDays,
   nowInClubTimezone,
   todayInClub,
+  JORNADA_CUTOFF,
 } from "../../../lib/booking";
 import { getClubTimeString } from "../../../data/horarios";
 import { isExpiredSessionError } from "../adminHelpers";
@@ -23,7 +24,7 @@ import "./monitor.css";
 const REFRESH_MS = 30000;
 const STALE_AFTER_MIN = 2;
 // Después de esta hora ya no queda nada de ayer en pista.
-const LATE_NIGHT_UNTIL = "06:00";
+const LATE_NIGHT_UNTIL = JORNADA_CUTOFF;
 const WARN_MIN = 5;
 const UPCOMING_MAX = 3;
 

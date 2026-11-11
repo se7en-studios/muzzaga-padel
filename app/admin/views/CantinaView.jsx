@@ -44,13 +44,13 @@ import { MENU_CATEGORIES } from "../../../lib/cantinaMenu";
 import CartaEditor from "./CartaEditor";
 import StaffPinModal from "../ui/StaffPinModal";
 import { usePinGate } from "../ui/usePinGate";
-import { todayInClub } from "../../../lib/booking";
+import { businessDayInClub, todayInClub } from "../../../lib/booking";
 import {
   computeDailyCash,
   isCountableBooking,
   onAccountTotal,
 } from "../../../lib/metrics";
-import { PAYMENT_METHODS, WhatsAppMiniIcon } from "../adminHelpers";
+import { JornadaNote, PAYMENT_METHODS, WhatsAppMiniIcon } from "../adminHelpers";
 
 const ICON = { size: 16, strokeWidth: 1.75, "aria-hidden": true };
 const METHODS = [...PAYMENT_METHODS, { value: "cuenta", label: "A cuenta" }];
@@ -72,7 +72,7 @@ function isTypingTarget(el) {
 }
 
 export default function CantinaView({ onExpiredSession, onToast }) {
-  const [date, setDate] = useState(todayInClub);
+  const [date, setDate] = useState(businessDayInClub);
   const [query, setQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState("all");
   const [cart, setCart] = useState([]); // [{ name, price, qty }]
@@ -125,7 +125,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
     seenOrderIds.current = null;
     setOrders(null);
     loadOrders();
-    if (date !== todayInClub()) return;
+    if (date !== businessDayInClub()) return;
     const id = setInterval(() => {
       if (document.visibilityState === "visible") loadOrders();
     }, ORDERS_POLL_MS);
@@ -813,6 +813,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
             onChange={(e) => e.target.value && setDate(e.target.value)}
           />
         </div>
+        <JornadaNote date={date} />
 
         {/* Barra de favoritos rápidos 1-click */}
         <div
