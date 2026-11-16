@@ -80,14 +80,11 @@ export default async function Home() {
     getCantinaMenu(),
     getOpenTournaments(),
   ]);
-  const { valle, pico, picoEnabled } = config.pricing;
-  // Se anuncia el precio más bajo ("desde") cuando hay horario pico.
-  const cheapest = picoEnabled && pico.court < valle.court ? pico : valle;
-  const pricing = {
-    total: cheapest.court,
-    perPlayer: cheapest.perPlayer || Math.round(cheapest.court / 4),
-  };
-  const priceFrom = picoEnabled && pico.court !== valle.court ? "Desde " : "";
+  const { valle, pico, picoEnabled, picoDesde } = config.pricing;
+  const ars = (n) => `$${n.toLocaleString("es-AR")}`;
+  const perPlayer = (b) => b.perPlayer || Math.round(b.court / 4);
+  // Con horario pico a otro precio se muestran los dos; si no, uno solo.
+  const twoPrices = picoEnabled && pico.court !== valle.court;
 
   return (
     <>
@@ -160,9 +157,13 @@ export default async function Home() {
             <div className="hero-mascot-ring" aria-hidden="true" />
             <HeroMascot src="/img/mascotas/muzzaguito-lentes-hero.webp" width={720} height={657} />
             <div className="hero-float-card hero-float-price" aria-hidden="true">
-              <span className="hero-float-label">{priceFrom ? "Turno desde" : "Turno"} · {config.slotDurationMin} min</span>
-              <strong>${pricing.total.toLocaleString("es-AR")}</strong>
-              <span className="hero-float-sub">${pricing.perPlayer.toLocaleString("es-AR")} c/u si son 4</span>
+              <span className="hero-float-label">{twoPrices ? "Turno desde" : "Turno"} · {config.slotDurationMin} min</span>
+              <strong>{ars(Math.min(valle.court, twoPrices ? pico.court : valle.court))}</strong>
+              <span className="hero-float-sub">
+                {twoPrices
+                  ? `${ars(pico.court)} desde las ${picoDesde}`
+                  : `${ars(perPlayer(valle))} c/u si son 4`}
+              </span>
             </div>
             <HeroLiveSlots />
           </div>
@@ -221,13 +222,26 @@ export default async function Home() {
               </p>
             </div>
             <div className="price-tag">
-              <div className="price-tag-main">
-                {priceFrom}${pricing.total.toLocaleString("es-AR")} por turno (
-                {config.slotDurationMin} min)
-              </div>
-              <div className="price-tag-sub">
-                ${pricing.perPlayer.toLocaleString("es-AR")} por jugador si son cuatro
-              </div>
+              {twoPrices ? (
+                <>
+                  <div className="price-tag-main">
+                    {ars(valle.court)} hasta las {picoDesde} · {ars(pico.court)} desde las {picoDesde}
+                  </div>
+                  <div className="price-tag-sub">
+                    Turno de {config.slotDurationMin} min · {ars(perPlayer(valle))} o{" "}
+                    {ars(perPlayer(pico))} por jugador si son cuatro
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="price-tag-main">
+                    {ars(valle.court)} por turno ({config.slotDurationMin} min)
+                  </div>
+                  <div className="price-tag-sub">
+                    {ars(perPlayer(valle))} por jugador si son cuatro
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

@@ -2178,6 +2178,9 @@ export async function adminSaveClubConfig(input, pin) {
     const db = getDb();
     await db.ref("clubConfig").set({ ...config, updatedAt: Date.now() });
     setCachedClubConfig(config);
+    // Precios y horarios se ven en la landing: se regenera al guardar, sin
+    // esperar los 5 min del revalidate.
+    revalidatePath("/", "layout");
     await audit(
       db,
       auth.staff,
