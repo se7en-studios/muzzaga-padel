@@ -269,7 +269,11 @@ export default function ConfiguracionView({
       setSaved(config);
       setForm(config);
       onSaved?.(config);
-      onToast?.("Configuración guardada");
+      onToast?.(
+        res.repriced
+          ? `Configuración guardada · ${res.repriced} turno${res.repriced === 1 ? "" : "s"} fijo${res.repriced === 1 ? "" : "s"} con el precio nuevo`
+          : "Configuración guardada",
+      );
     } else if (!onExpiredSession?.(res)) {
       setFieldErrors(res.fieldErrors || {});
       onToast?.(res.error || "No se pudo guardar la configuración.", {

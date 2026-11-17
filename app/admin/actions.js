@@ -12,6 +12,7 @@ import {
   todayInClub,
 } from "../../lib/booking";
 import {
+  bookingPriceFor,
   findCourtIn,
   isValidSlotFor,
   priceFor,
@@ -433,7 +434,12 @@ async function createBookingAt(db, config, date, input) {
   }
 
   const players = Math.min(8, Math.max(1, Number(playersCount) || 4));
-  const slotPricing = priceFor(config, date, startTime);
+  const slotPricing = bookingPriceFor(config, {
+    date,
+    startTime,
+    playersCount: players,
+    fullCourt,
+  });
   try {
     await bookingRef.set({
     courtId,
@@ -445,8 +451,7 @@ async function createBookingAt(db, config, date, input) {
     playerPhone: clip(playerPhone, 30),
     playersCount: players,
     fullCourt: fullCourt !== false,
-    total:
-      fullCourt !== false ? slotPricing.total : players * slotPricing.perPlayer,
+    total: slotPricing.total,
     priceBand: slotPricing.band,
     status: CREATABLE_STATUSES.includes(status) ? status : "confirmado",
     notes: clip(notes, 300),
@@ -460,6 +465,48 @@ async function createBookingAt(db, config, date, input) {
     throw err;
   }
   return { ok: true, bookingId: bookingRef.key };
+}
+
+/**
+ * Un turno fijo se carga hasta 26 semanas adelante con la tarifa de ese
+ * momento. Si después cambian los precios (p. ej. se activa horario valle),
+ * las semanas que faltan quedaban con el precio viejo: un fijo de las 17:00
+ * figuraba a $60.000 aunque el valle valga $40.000. Esto las pone al día con
+ * `config`, desde la jornada actual en adelante. No toca cancelados, bloqueos
+ * ni días con la caja cerrada.
+ * @returns {Promise<number>} cuántos turnos cambiaron de precio
+ */
+async function repriceUpcomingRecurring(db, config) {
+  const from = businessDayInClub();
+  const snap = await db
+    .ref("bookings")
+    .orderByChild("date")
+    .startAt(from)
+    .once("value");
+  const stale = snapToList(snap).filter((b) => {
+    if (!b.recurringId || !b.date || !b.startTime) return false;
+    if (b.status === "cancelado" || b.status === "bloqueado") return false;
+    const next = bookingPriceFor(config, b);
+    return b.total !== next.total || b.priceBand !== next.band;
+  });
+  if (stale.length === 0) return 0;
+
+  const closedByDate = new Map();
+  const updates = {};
+  let changed = 0;
+  for (const b of stale) {
+    if (!closedByDate.has(b.date)) {
+      closedByDate.set(b.date, await isCashClosed(db, b.date));
+    }
+    if (closedByDate.get(b.date)) continue;
+    const next = bookingPriceFor(config, b);
+    updates[`bookings/${b.id}/total`] = next.total;
+    updates[`bookings/${b.id}/priceBand`] = next.band;
+    updates[`bookings/${b.id}/updatedAt`] = Date.now();
+    if (b.total !== next.total) changed += 1;
+  }
+  if (Object.keys(updates).length > 0) await db.ref().update(updates);
+  return changed;
 }
 
 /**
@@ -2178,6 +2225,11 @@ export async function adminSaveClubConfig(input, pin) {
     const db = getDb();
     await db.ref("clubConfig").set({ ...config, updatedAt: Date.now() });
     setCachedClubConfig(config);
+    // Los turnos fijos que vienen toman los precios nuevos.
+    const repriced = await repriceUpcomingRecurring(db, config).catch((err) => {
+      console.error("Error al actualizar precios de turnos fijos", err);
+      return 0;
+    });
     // Precios y horarios se ven en la landing: se regenera al guardar, sin
     // esperar los 5 min del revalidate.
     revalidatePath("/", "layout");
@@ -2186,9 +2238,12 @@ export async function adminSaveClubConfig(input, pin) {
       auth.staff,
       "CONFIG_GUARDAR",
       "Configuración del club",
-      "Se guardó la configuración (precios, horarios, seña, pagos)",
+      "Se guardó la configuración (precios, horarios, seña, pagos)" +
+        (repriced
+          ? ` · ${repriced} turno${repriced === 1 ? "" : "s"} fijo${repriced === 1 ? "" : "s"} con precio actualizado`
+          : ""),
     ).catch(() => {});
-    return { ok: true, config };
+    return { ok: true, config, repriced };
   } catch (err) {
     return { ok: false, error: "No se pudo guardar la configuración." };
   }
