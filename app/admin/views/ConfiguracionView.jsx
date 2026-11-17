@@ -271,7 +271,7 @@ export default function ConfiguracionView({
       onSaved?.(config);
       onToast?.(
         res.repriced
-          ? `Configuración guardada · ${res.repriced} turno${res.repriced === 1 ? "" : "s"} fijo${res.repriced === 1 ? "" : "s"} con el precio nuevo`
+          ? `Configuración guardada · ${res.repriced} turno${res.repriced === 1 ? "" : "s"} con el precio nuevo`
           : "Configuración guardada",
       );
     } else if (!onExpiredSession?.(res)) {
