@@ -5,6 +5,7 @@ import {
   normalizeConfig,
   slotTimesFor,
   priceFor,
+  bookingPriceFor,
   depositFor,
   validateConfig,
   maskCbu,
@@ -126,4 +127,28 @@ test("turnos después de medianoche no cuentan como pasados a la tarde", async (
   assert.equal(hasSlotStarted(c, "2026-09-21", "00:30", now), false);
   assert.equal(hasSlotStarted(c, "2026-09-20", "20:00", now), true);
   assert.equal(hasSlotStarted(c, "2026-09-22", "14:00", now), false);
+});
+
+test("turno fijo con valle a $40.000: el precio sale de la franja, no del precio viejo", () => {
+  const c = normalizeConfig({
+    pricing: {
+      valle: { court: 40000 },
+      pico: { court: 60000 },
+      picoEnabled: true,
+      picoDesde: "18:30",
+    },
+  });
+  const monday = "2026-09-21";
+  // Un fijo cargado cuando todo valía $60.000.
+  const fijo = { date: monday, startTime: "17:00", total: 60000, fullCourt: true };
+  assert.deepEqual(bookingPriceFor(c, fijo), { band: "valle", total: 40000 });
+  assert.deepEqual(bookingPriceFor(c, { ...fijo, startTime: "18:30" }), {
+    band: "pico",
+    total: 60000,
+  });
+  // Por jugador: 3 × ($40.000 ÷ 4).
+  assert.equal(
+    bookingPriceFor(c, { ...fijo, fullCourt: false, playersCount: 3 }).total,
+    30000,
+  );
 });
