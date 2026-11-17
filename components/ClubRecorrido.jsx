@@ -43,6 +43,9 @@ const POIS = [
   { label: "Baños y duchas", p: 6 / 7 },
 ];
 
+// Toma (índice de STOPS) de cada cuadro clave de la ruta: el campo `shot` de KF en public/recorrido/index.html.
+const SHOTS = [0, 0, 1, 1, 2, 3, 3, 4];
+
 const WHATSAPP_HREF = buildWhatsAppLink("Hola! Quiero reservar una cancha");
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const nearestPoi = (p) =>
@@ -66,32 +69,36 @@ export default function ClubRecorrido() {
   }, []);
 
   // El iframe (three.js + texturas ~3 MB; los personajes, ~8 MB más, llegan después y aparecen solos)
-  // solo se pide cuando la sección está cerca.
+  // se pide con el primer gesto del visitante (scroll, toque o tecla) o cuando la sección está cerca,
+  // lo que pase primero. No en la carga inicial: armarla ahí dejaba la landing trabada ~3 s. Y no recién
+  // al llegar: el armado tarda varios segundos y la maqueta quedaba como una foto que no respondía.
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return undefined;
+    const gestos = ["scroll", "pointerdown", "touchstart", "keydown"];
+    const stop = () => {
+      io.disconnect();
+      gestos.forEach((g) => window.removeEventListener(g, start));
+    };
+    const start = () => {
+      setLoad(true);
+      stop();
+    };
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setLoad(true);
-          io.disconnect();
-        }
+        if (entry.isIntersecting) start();
       },
-      // ponytail: 300% caía dentro de la pantalla al abrir y armaba la maqueta (3 s de hilo bloqueado) en la carga inicial
       { rootMargin: "100% 0px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    gestos.forEach((g) => window.addEventListener(g, start, { passive: true }));
+    return stop;
   }, []);
 
   useEffect(() => {
     const onMessage = (e) => {
       if (e.origin !== window.location.origin) return;
       if (e.data?.muzzaga === "ready") setReady(true);
-      // la maqueta informa qué toma se está mostrando
-      if (e.data?.muzzaga === "shot") {
-        setStep(Math.min(STOPS.length - 1, Math.max(0, Number(e.data.i) || 0)));
-      }
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
@@ -143,6 +150,8 @@ export default function ClubRecorrido() {
       if (p === last) return;
       last = p;
       setPoi(nearestPoi(p));
+      // la tarjeta sigue al scroll aunque la 3D todavía se esté armando
+      setStep(SHOTS[Math.round(p * (SHOTS.length - 1))]);
       post({ muzzaga: "tour", p });
     };
     const onScroll = () => {
