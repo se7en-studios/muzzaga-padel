@@ -1147,6 +1147,31 @@ body {
   gap: 18px;
 }
 
+/* En el celu, las cuatro apiladas eran ~1200 px de scroll: pasan a una fila
+   que se desliza, como las otras listas largas del sitio. Se asoma la
+   siguiente para que se note que hay más. */
+@media (max-width: 640px) {
+  .tools-grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    margin-inline: -16px;
+    padding: 2px 16px 8px;
+    scrollbar-width: none;
+  }
+
+  .tools-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tools-grid > .club-tool-card {
+    flex: 0 0 82%;
+    scroll-snap-align: start;
+  }
+}
+
 .club-tool-card {
   position: relative;
   display: flex;
