@@ -2,9 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Maximize, Minimize, Users, Volume2, VolumeX } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock3,
+  Maximize,
+  Minimize,
+  User,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import Mascota from "../../../components/Mascota";
 import {
   adminGetClubConfig,
+  adminGetCantinaMenu,
   checkAdminSession,
   getAdminDayData,
 } from "../actions";
@@ -16,17 +26,27 @@ import {
   JORNADA_CUTOFF,
 } from "../../../lib/booking";
 import { getClubTimeString } from "../../../data/horarios";
+import { featuredItems, normalizeMenu } from "../../../lib/cantinaMenu";
+import { formatARS } from "../../../lib/format";
 import { isExpiredSessionError } from "../adminHelpers";
 import { courtSchedule, liveAndNext, toMinutes } from "./schedule";
 import { isMonitorDemo, monitorDemoData } from "./demo";
 import "./monitor.css";
 
 const REFRESH_MS = 30000;
+const MENU_REFRESH_MS = 10 * 60 * 1000;
+// Los minutos restantes cambian de a uno: no hace falta redibujar la pantalla
+// entera cada segundo (en un stick de TV se nota). El reloj va aparte.
+const NOW_TICK_MS = 10000;
 const STALE_AFTER_MIN = 2;
 // Después de esta hora ya no queda nada de ayer en pista.
 const LATE_NIGHT_UNTIL = JORNADA_CUTOFF;
 const WARN_MIN = 5;
-const UPCOMING_MAX = 3;
+const LATER_MAX = 2;
+const CANTINA_MAX = 6;
+// Anillo de la cuenta regresiva (viewBox 0 0 120 120).
+const RING_R = 52;
+const RING_C = 2 * Math.PI * RING_R;
 
 function playTurnChime(freq = 587.33) {
   try {
@@ -62,15 +82,33 @@ function inLabel(minutes) {
   return m ? `en ${h} h ${String(m).padStart(2, "0")}` : `en ${h} h`;
 }
 
+/** El único pedazo de la pantalla que cambia cada segundo. */
+function MonitorClock() {
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    const tick = () => setTime(getClubTimeString());
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="mon-clock" aria-label="Hora del club">
+      {(time || nowInClubTimezone().hhmm).replace(" hs", "")}
+      <small>hs</small>
+    </div>
+  );
+}
+
 export default function MonitorPage() {
   const [authorized, setAuthorized] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [dayData, setDayData] = useState(null);
   const [yesterdayBookings, setYesterdayBookings] = useState([]);
   const [slotDuration, setSlotDuration] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
   const [loadError, setLoadError] = useState(null); // null | "expired" | "offline"
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [currentTime, setCurrentTime] = useState("");
+  const [, setNowTick] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [demo, setDemo] = useState(false);
@@ -90,9 +128,7 @@ export default function MonitorPage() {
   }, []);
 
   useEffect(() => {
-    const tick = () => setCurrentTime(getClubTimeString());
-    tick();
-    const id = setInterval(tick, 1000);
+    const id = setInterval(() => setNowTick((n) => n + 1), NOW_TICK_MS);
     return () => clearInterval(id);
   }, []);
 
@@ -107,15 +143,27 @@ export default function MonitorPage() {
     if (demo) {
       setSlotDuration(90);
       setDayData(monitorDemoData());
+      setMenuItems(normalizeMenu(null).items);
       setLastUpdated(Date.now());
       return;
     }
     adminGetClubConfig().then((res) => {
       if (res.ok) setSlotDuration(res.config.slotDurationMin);
     });
+    const loadMenu = () =>
+      adminGetCantinaMenu()
+        .then((res) => {
+          if (res.ok) setMenuItems(res.menu.items);
+        })
+        .catch(() => {});
+    loadMenu();
     loadData();
     const id = setInterval(loadData, REFRESH_MS);
-    return () => clearInterval(id);
+    const menuId = setInterval(loadMenu, MENU_REFRESH_MS);
+    return () => {
+      clearInterval(id);
+      clearInterval(menuId);
+    };
   }, [authorized, demo]);
 
   async function loadData() {
@@ -156,9 +204,7 @@ export default function MonitorPage() {
       dayData?.bookings,
       yesterdayBookings,
     );
-    const upcoming = schedule
-      .filter((x) => x.start > currentMinutes)
-      .slice(0, UPCOMING_MAX);
+    const upcoming = schedule.filter((x) => x.start > currentMinutes);
     return {
       court,
       schedule,
@@ -232,10 +278,15 @@ export default function MonitorPage() {
     slotDuration
       ? `Cada turno dura ${slotDuration} minutos: terminá a horario para que el siguiente arranque puntual`
       : "Terminá a horario para que el turno siguiente arranque puntual",
-    "Cantina abierta: pizzas, empanadas y bebidas frías",
     "Preguntá en recepción por los próximos torneos",
+    "Hacé el test de nivel y sumate a partidos parejos de tu categoría",
     "Reservá tu turno online en muzzagapadel.com",
   ];
+  const destacados = featuredItems(menuItems);
+  const cantina = (destacados.length ? destacados : menuItems).slice(
+    0,
+    CANTINA_MAX,
+  );
 
   return (
     <div className="mon-root">
@@ -282,10 +333,7 @@ export default function MonitorPage() {
             )
           )}
 
-          <div className="mon-clock" aria-label="Hora del club">
-            {(currentTime || now.hhmm).replace(" hs", "")}
-            <small>hs</small>
-          </div>
+          <MonitorClock />
 
           <div className="mon-btns">
             <button
@@ -333,11 +381,12 @@ export default function MonitorPage() {
         {schedules.map(({ court, live, upcoming }) => {
           const match = live?.booking;
           const remaining = live ? Math.max(0, live.end - currentMinutes) : 0;
-          const elapsed = live ? Math.max(0, currentMinutes - live.start) : 0;
           const total = live ? Math.max(1, live.end - live.start) : 1;
-          const progress = Math.min(100, Math.round((elapsed / total) * 100));
+          const left = Math.min(1, remaining / total);
           const ending = match && remaining <= WARN_MIN;
           const nextUp = upcoming[0];
+          const later = upcoming.slice(1, 1 + LATER_MAX);
+          const players = Math.min(8, Math.max(1, Number(match?.playersCount) || 4));
 
           return (
             <section
@@ -361,23 +410,63 @@ export default function MonitorPage() {
                   <div className="mon-pista-lineas" />
                 </div>
 
+                {/* Rincón: quién entra después a esta cancha. */}
+                <aside className="mon-corner" aria-label="Próximo turno">
+                  <span className="mon-corner-label">Próximo turno</span>
+                  {nextUp ? (
+                    <>
+                      <span className="mon-corner-time">
+                        {nextUp.booking.startTime}
+                        <small>{inLabel(nextUp.start - currentMinutes)}</small>
+                      </span>
+                      <span className="mon-corner-name">
+                        {nextUp.booking.playerName}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="mon-corner-name is-empty">
+                      Sin más reservas hoy
+                    </span>
+                  )}
+                </aside>
+
                 <div className="mon-pista-centro">
                   {match ? (
                     <>
-                      <div className="mon-player">{match.playerName}</div>
-                      <div className="mon-count">
-                        <strong>{remaining}</strong>
-                        <span>
-                          {remaining === 1 ? "minuto" : "minutos"}
-                          <br />
-                          {remaining === 1 ? "restante" : "restantes"}
-                        </span>
+                      <div className="mon-who">
+                        <span className="mon-who-label">Reservó</span>
+                        <div className="mon-player">{match.playerName}</div>
+                        <div
+                          className="mon-players"
+                          aria-label={`${players} jugadores`}
+                        >
+                          {Array.from({ length: players }, (_, i) => (
+                            <User key={i} size={22} aria-hidden="true" />
+                          ))}
+                          <span>{players} jugando</span>
+                        </div>
+                        <div className="mon-slot">
+                          <Clock3 size={18} aria-hidden="true" />
+                          {match.startTime} a {match.endTime} hs
+                        </div>
                       </div>
-                      <div className="mon-slot">
-                        {match.startTime} a {match.endTime} hs
-                        <span aria-hidden="true">·</span>
-                        <Users size={16} aria-hidden="true" />
-                        {match.playersCount || 4} jugadores
+
+                      <div className="mon-ring">
+                        <svg viewBox="0 0 120 120" aria-hidden="true">
+                          <circle className="mon-ring-track" cx="60" cy="60" r={RING_R} />
+                          <circle
+                            className="mon-ring-fill"
+                            cx="60"
+                            cy="60"
+                            r={RING_R}
+                            strokeDasharray={RING_C}
+                            strokeDashoffset={RING_C * (1 - left)}
+                          />
+                        </svg>
+                        <div className="mon-ring-num">
+                          <strong>{remaining}</strong>
+                          <span>{remaining === 1 ? "min restante" : "min restantes"}</span>
+                        </div>
                       </div>
                     </>
                   ) : (
@@ -385,53 +474,52 @@ export default function MonitorPage() {
                       <div className="mon-free">Libre</div>
                       <div className="mon-slot">
                         {nextUp
-                          ? `Próximo turno ${nextUp.booking.startTime} hs · ${inLabel(nextUp.start - currentMinutes)}`
-                          : "Sin más reservas hoy"}
+                          ? `Disponible hasta las ${nextUp.booking.startTime} hs`
+                          : "Disponible el resto del día"}
                       </div>
                     </>
                   )}
                 </div>
-
-                {match && (
-                  <div className="mon-progress">
-                    <div className="mon-progress-meta">
-                      <span>
-                        {elapsed} de {total} min jugados
-                      </span>
-                      <strong>{progress}%</strong>
-                    </div>
-                    <div className="mon-progress-track">
-                      <div
-                        className="mon-progress-fill"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
-              <div className="mon-next">
-                <span className="mon-next-label">A continuación</span>
-                {upcoming.length ? (
-                  <ol>
-                    {upcoming.map(({ booking, start }) => (
-                      <li key={`${booking.id}-${booking.date}`}>
-                        <span className="mon-next-time">{booking.startTime}</span>
-                        <span className="mon-next-name">{booking.playerName}</span>
-                        <span className="mon-next-in">
-                          {inLabel(start - currentMinutes)}
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
+              <div className="mon-later">
+                <span className="mon-later-label">Más tarde</span>
+                {later.length ? (
+                  later.map(({ booking }) => (
+                    <span key={`${booking.id}-${booking.date}`} className="mon-later-item">
+                      <strong>{booking.startTime}</strong>
+                      {booking.playerName}
+                    </span>
+                  ))
                 ) : (
-                  <p className="mon-next-empty">Sin más reservas hoy</p>
+                  <span className="mon-later-item is-empty">Nada más por hoy</span>
                 )}
               </div>
             </section>
           );
         })}
       </div>
+
+      {cantina.length > 0 && (
+        <section className="mon-cantina" aria-label="Cantina">
+          <div className="mon-cantina-head">
+            <Mascota pose="pizza-cerveza" size="s" alt="" className="mon-cantina-mascota" />
+            <div>
+              <span className="mon-kicker">Tercer tiempo</span>
+              <h2>En la cantina</h2>
+              <p>Pedí en la barra</p>
+            </div>
+          </div>
+          <ul className="mon-cantina-items">
+            {cantina.map((item) => (
+              <li key={item.id}>
+                <span className="mon-cantina-name">{item.name}</span>
+                <strong className="mon-cantina-price">{formatARS(item.price)}</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Tira de la marca, como la de la home: mensajes con pelotas entre medio. */}
       <div className="mon-ticker">
