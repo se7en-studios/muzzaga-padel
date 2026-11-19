@@ -38,12 +38,14 @@ test("evaluatePlayerSkills maps quiz indices to descriptive labels", () => {
     wall: 2,
     net: 2,
     serve: 2,
+    position: 2,
     tactic: 2,
   });
   assert.equal(skills.experience, "Experimentado (+ 2 años)");
   assert.equal(skills.wallPlay, "Ataque profundo de pared");
   assert.equal(skills.netPlay, "Definición y smash agresivo");
   assert.equal(skills.serve, "Saque con efecto/potencia y cobertura total");
+  assert.equal(skills.position, "Suben y cierran la cancha en equipo");
   assert.equal(skills.tactic, "Compite en torneos/ligas federadas");
 
   const beginner = evaluatePlayerSkills({
@@ -51,8 +53,10 @@ test("evaluatePlayerSkills maps quiz indices to descriptive labels", () => {
     wall: 0,
     net: 0,
     serve: 0,
+    position: 0,
     tactic: 0,
   });
   assert.equal(beginner.experience, "Iniciación (< 6 meses)");
+  assert.equal(beginner.position, "Cada uno cubre lo suyo, sin coordinar");
   assert.equal(beginner.tactic, "Sin experiencia en torneos");
 });
