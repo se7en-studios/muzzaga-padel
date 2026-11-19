@@ -15,6 +15,7 @@ import {
   Tag,
   Trash2,
   Users,
+  Video,
   X,
 } from "lucide-react";
 import {
@@ -33,6 +34,7 @@ import {
 } from "../../../lib/clubConfig";
 import { isoAddDays, todayInClub } from "../../../lib/booking";
 import { formatARS, formatDate, plural } from "../../../lib/format";
+import { beelupStreamInfo } from "../../../lib/beelup";
 import { Skeleton } from "../ui/states";
 import StaffPinModal from "../ui/StaffPinModal";
 import { usePinGate } from "../ui/usePinGate";
@@ -68,6 +70,7 @@ const SECTIONS = [
   { id: "cobros", label: "Cobros", icon: CreditCard },
   { id: "cierres", label: "Cierres", icon: CalendarX },
   { id: "club", label: "Club", icon: Store },
+  { id: "camaras", label: "Cámaras", icon: Video },
   { id: "equipo", label: "Equipo", icon: Users },
   { id: "sitio", label: "Sitio web", icon: Images },
 ];
@@ -218,6 +221,7 @@ export default function ConfiguracionView({
             id: `cancha-${i + 1}`,
             name: `Cancha ${i + 1}`,
             type: "Cristal",
+            streamUrl: "",
           },
       );
       return { ...f, courts };
@@ -780,6 +784,77 @@ export default function ConfiguracionView({
               Con código de país, sin espacios: 549…
             </p>
           </div>
+        </section>
+
+        {/* CÁMARAS (Beelup) */}
+        <section id="cfg-camaras" className="admin-settings-card">
+          <h3 className="admin-section-title">
+            <Video {...ICON} /> Cámaras
+          </h3>
+          <p className="admin-field-hint" style={{ marginTop: 0 }}>
+            Se ven en el inicio, en la sección de cámaras debajo de las
+            reservas. Al guardar, la página se actualiza sola. Una cancha sin
+            link (o con el link vencido) muestra el loop de las canchas.
+          </p>
+
+          <div className="admin-field">
+            <label className="admin-field-label" htmlFor="cfg-beelup">
+              Link del club en Beelup
+            </label>
+            <input
+              id="cfg-beelup"
+              type="url"
+              inputMode="url"
+              placeholder="https://beelup.com/…"
+              value={form.beelupUrl}
+              onChange={(e) => set({ beelupUrl: e.target.value })}
+            />
+            <p className="admin-field-hint">
+              Lo abre la mascota y el botón &quot;Ver tus jugadas en Beelup&quot;.
+            </p>
+            {err("beelupUrl")}
+          </div>
+
+          {form.courts.map((c, i) => {
+            const info = beelupStreamInfo(c.streamUrl);
+            return (
+              <div key={c.id} className="admin-field">
+                <label className="admin-field-label" htmlFor={`cfg-stream-${i}`}>
+                  Cámara en vivo · {c.name || `Cancha ${i + 1}`}
+                </label>
+                <input
+                  id={`cfg-stream-${i}`}
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://beelup.com/ver.stream.m3u8.php?p1=…"
+                  value={c.streamUrl || ""}
+                  onChange={(e) => setCourt(i, { streamUrl: e.target.value })}
+                />
+                {c.streamUrl && (
+                  <p
+                    className={info.expired ? "admin-field-error" : "admin-field-hint"}
+                    role={info.expired ? "alert" : undefined}
+                  >
+                    {info.camera && `Cámara ${info.camera}. `}
+                    {info.expiresAt
+                      ? info.expired
+                        ? "Este link ya venció: pegá uno nuevo de Beelup."
+                        : `Beelup da este link hasta el ${new Date(
+                            info.expiresAt,
+                          ).toLocaleString("es-AR", {
+                            timeZone: "America/Argentina/Buenos_Aires",
+                            day: "2-digit",
+                            month: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })} hs; después hay que pegar uno nuevo.`
+                      : "Link sin fecha de vencimiento."}
+                  </p>
+                )}
+                {err(`courts.${i}.streamUrl`)}
+              </div>
+            );
+          })}
         </section>
 
         {/* EQUIPO */}
