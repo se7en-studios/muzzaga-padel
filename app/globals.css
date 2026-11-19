@@ -8442,6 +8442,104 @@ textarea:focus-visible {
   }
 }
 
+/* Mascota-link de la sección de cámaras: hereda el giro de .mascot-section-img
+   al hover (arriba), acá solo agregamos el affordance de que es clickeable. */
+.camaras-mascot-link {
+  display: block;
+}
+
+.camaras-mascot-link:focus-visible {
+  outline: 2px solid var(--color-accent-orange);
+  outline-offset: 4px;
+  border-radius: var(--radius-md);
+}
+
+/* Loop de cámaras: el video de las canchas con look de cámara de seguridad
+   (esquinas tipo visor + barra "LOOP"), sin pretender ser una cámara en
+   vivo real. */
+.camaras-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #11110f;
+  border: 1px solid var(--color-hairline-strong);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  margin-top: 24px;
+}
+
+.camaras-frame-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.85) contrast(1.05);
+}
+
+.camaras-frame-chrome {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent);
+  color: #fff;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.camaras-rec-dot {
+  color: #ff3b30;
+}
+
+.camaras-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  opacity: 0.8;
+}
+
+.camaras-corner--tl {
+  top: 10px;
+  left: 10px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.camaras-corner--tr {
+  top: 10px;
+  right: 10px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.camaras-corner--bl {
+  bottom: 10px;
+  left: 10px;
+  border-right: none;
+  border-top: none;
+}
+
+.camaras-corner--br {
+  bottom: 10px;
+  right: 10px;
+  border-left: none;
+  border-top: none;
+}
+
+.camaras-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
 /* Turnos flash: la mascota en su celda, a la izquierda, apoyada abajo. */
 .flash-card > .flash-mascot {
   flex: 0 0 auto;
