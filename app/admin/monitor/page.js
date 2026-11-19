@@ -13,7 +13,6 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import Mascota from "../../../components/Mascota";
 import {
   adminGetClubConfig,
   adminGetCantinaMenu,
@@ -574,7 +573,15 @@ export default function MonitorPage() {
       {cantina.length > 0 && (
         <section className="mon-cantina" aria-label="Cantina">
           <div className="mon-cantina-head">
-            <Mascota pose="pizza-cerveza" size="s" alt="" className="mon-cantina-mascota" />
+            {/* Archivo directo, como el logo: sin pasar por el optimizador de imágenes,
+                que en producción la dejaba rota. */}
+            <img
+              src="/img/mascotas/muzzaguito-pizza-cerveza.webp"
+              alt=""
+              width={720}
+              height={677}
+              className="mon-cantina-mascota"
+            />
             <div>
               <h2>En la cantina</h2>
               <p>Pedí en la barra</p>
