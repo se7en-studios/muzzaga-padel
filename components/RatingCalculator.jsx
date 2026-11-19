@@ -16,12 +16,13 @@ import {
   Trophy,
   MessageCircle,
   Activity,
+  Users,
   Medal,
   RotateCcw,
 } from "lucide-react";
 
-// 5 preguntas de 0 a 2 cubren toda la escala 1.0-7.0 (8va a 1era):
-// score = 1.0 + suma(respuestas) * 0.6.
+// 6 preguntas de 0 a 2 cubren toda la escala 1.0-7.0 (8va a 1era):
+// score = 1.0 + suma(respuestas) * 0.5.
 const QUESTIONS = [
   {
     key: "exp",
@@ -36,31 +37,41 @@ const QUESTIONS = [
   {
     key: "wall",
     emoji: "🧱",
-    question: "¿Cómo te manejás en el rebote con pared de cristal?",
+    question: "Te tiran una bola profunda que pega de lleno en la pared de fondo. ¿Qué hacés?",
     options: [
-      { emoji: "😅", label: "Me cuesta calcular el rebote", val: 0 },
-      { emoji: "🙂", label: "Paso la bola con control", val: 1 },
-      { emoji: "🔥", label: "Ataco de fondo y cambio ritmo", val: 2 },
+      { emoji: "😅", label: "Dudo el rebote y la devuelvo como puedo", val: 0 },
+      { emoji: "🙂", label: "Calculo el rebote y la paso con control", val: 1 },
+      { emoji: "🔥", label: "Ataco de fondo y cambio el ritmo del punto", val: 2 },
     ],
   },
   {
     key: "net",
     emoji: "🎯",
-    question: "En la red y definición:",
+    question: "Tu pareja te deja una bola cómoda cerca de la red. ¿Qué hacés?",
     options: [
-      { emoji: "🛡️", label: "Prefiero jugar en el fondo", val: 0 },
-      { emoji: "🙌", label: "Voleas firmes y bandeja", val: 1 },
-      { emoji: "💥", label: "Remate por 3 / definición", val: 2 },
+      { emoji: "🛡️", label: "Prefiero quedarme atrás, no me la juego en la red", val: 0 },
+      { emoji: "🙌", label: "Resuelvo con volea firme o bandeja", val: 1 },
+      { emoji: "💥", label: "Remato por 3 y busco cerrar el punto", val: 2 },
     ],
   },
   {
     key: "serve",
     emoji: "🚀",
-    question: "¿Cómo es tu saque y desplazamiento en la cancha?",
+    question: "Te toca sacar en un punto importante. ¿Cómo lo resolvés?",
     options: [
-      { emoji: "🤷", label: "Saque básico, me cuesta cubrir la cancha", val: 0 },
-      { emoji: "🎯", label: "Saque con variantes y buen desplazamiento", val: 1 },
-      { emoji: "⚡", label: "Saque con efecto/potencia y cobertura total", val: 2 },
+      { emoji: "🤷", label: "Saco básico y me cuesta cubrir la cancha después", val: 0 },
+      { emoji: "🎯", label: "Tengo variantes de saque y buen desplazamiento", val: 1 },
+      { emoji: "⚡", label: "Saco con efecto/potencia y cubro toda la cancha", val: 2 },
+    ],
+  },
+  {
+    key: "position",
+    emoji: "🧭",
+    question: "Tu pareja sube a la red. ¿Qué hacés vos?",
+    options: [
+      { emoji: "🙈", label: "Cada uno cubre lo que puede, sin coordinar mucho", val: 0 },
+      { emoji: "🤝", label: "Subo con ella/él, pero a veces dudamos quién cubre qué", val: 1 },
+      { emoji: "🧠", label: "Subimos juntos y cerramos la cancha en equipo", val: 2 },
     ],
   },
   {
@@ -75,7 +86,14 @@ const QUESTIONS = [
   },
 ];
 
-const DEFAULT_ANSWERS = { exp: 1, wall: 1, net: 1, serve: 1, tactic: 1 };
+const DEFAULT_ANSWERS = {
+  exp: 1,
+  wall: 1,
+  net: 1,
+  serve: 1,
+  position: 1,
+  tactic: 1,
+};
 
 const ANSWER_ADVANCE_DELAY = 380;
 const CONFETTI_DURATION = 1400;
@@ -157,8 +175,9 @@ export default function RatingCalculator() {
       quizAnswers.wall +
       quizAnswers.net +
       quizAnswers.serve +
+      quizAnswers.position +
       quizAnswers.tactic;
-    const score = 1.0 + sum * 0.6;
+    const score = 1.0 + sum * 0.5;
     return Math.min(7.0, Math.max(1.0, Number(score.toFixed(1)))).toFixed(1);
   }, [mode, raw, quizAnswers]);
 
@@ -197,9 +216,9 @@ export default function RatingCalculator() {
           onClick={() => setMode("quiz")}
         >
           {/* Un solo span: como hijos sueltos del botón (flex), el espacio antes
-              de "(5 preguntas)" se perdía. */}
+              de "(6 preguntas)" se perdía. */}
           <span>
-            Test guiado<span className="rating-tab-extra"> (5 preguntas)</span>
+            Test guiado<span className="rating-tab-extra"> (6 preguntas)</span>
           </span>
         </button>
         <button
@@ -458,6 +477,10 @@ export default function RatingCalculator() {
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, borderBottom: "1px dashed var(--color-hairline, #e2e8f0)", paddingBottom: 4 }}>
               <span style={{ color: "var(--color-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}><Activity size={20} className="icono-marca" aria-hidden="true" /> Saque y desplazamiento:</span>
               <strong style={{ color: "var(--color-ink)", textAlign: "right" }}>{skills.serve}</strong>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, borderBottom: "1px dashed var(--color-hairline, #e2e8f0)", paddingBottom: 4 }}>
+              <span style={{ color: "var(--color-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}><Users size={20} className="icono-marca" aria-hidden="true" /> Posicionamiento en pareja:</span>
+              <strong style={{ color: "var(--color-ink)", textAlign: "right" }}>{skills.position}</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
               <span style={{ color: "var(--color-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}><Medal size={20} className="icono-marca" aria-hidden="true" /> Experiencia competitiva:</span>
