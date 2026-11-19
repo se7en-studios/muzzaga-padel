@@ -16,8 +16,8 @@
   min-height: 100vh;
   height: 100vh;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: clamp(14px, 2.2vh, 26px);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: clamp(12px, 1.8vh, 22px);
   padding: clamp(14px, 2.4vh, 28px) clamp(16px, 2vw, 40px);
   background:
     radial-gradient(ellipse 70% 50% at 50% 0%, rgba(232, 114, 42, 0.1), transparent 70%),
@@ -402,25 +402,43 @@ body:has(.mon-root) {
   );
 }
 
-/* Lo que se lee de lejos, en un vidrio oscuro sobre la cancha. */
+/* Lo que se lee de lejos, en un vidrio oscuro sobre la cancha. Sin
+   backdrop-filter: en los sticks de TV el desenfoque en vivo pesa mucho y
+   un fondo casi opaco se lee igual. */
 .mon-pista-centro {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: center;
-  gap: clamp(4px, 1vh, 12px);
+  column-gap: clamp(18px, 2.4vw, 40px);
   margin: auto;
-  padding: clamp(14px, 2.4vh, 28px) clamp(20px, 3vw, 48px);
+  padding: clamp(10px, 2vh, 26px) clamp(18px, 2.4vw, 36px);
   max-width: calc(100% - 32px);
-  border-radius: 20px;
+  border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(7, 14, 40, 0.62);
-  backdrop-filter: blur(10px);
-  text-align: center;
+  background: rgba(7, 14, 40, 0.86);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.7);
 }
 
 .mon-court:not(.is-live) .mon-pista-centro {
-  background: rgba(14, 14, 13, 0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: rgba(14, 14, 13, 0.82);
+}
+
+.mon-who {
+  min-width: 0;
+  display: grid;
+  gap: clamp(4px, 0.8vh, 10px);
+}
+
+.mon-who-label {
+  color: var(--mon-naranja-claro);
+  font-size: clamp(12px, 1.5vh, 16px);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .mon-player {
@@ -429,34 +447,80 @@ body:has(.mon-root) {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--mon-display);
-  font-size: clamp(28px, 4.6vh, 54px);
+  font-size: clamp(30px, 5vh, 60px);
   font-weight: 800;
-  line-height: 1;
+  line-height: 0.95;
   text-transform: uppercase;
 }
 
-.mon-count {
+/* Un muñequito por jugador: se cuenta de un vistazo desde la barra. */
+.mon-players {
   display: flex;
   align-items: center;
-  gap: clamp(10px, 1.2vw, 18px);
+  flex-wrap: wrap;
+  gap: 2px;
+  color: var(--mon-naranja-claro);
+}
+
+.mon-players span {
+  margin-left: 10px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: clamp(14px, 1.9vh, 20px);
+  font-weight: 600;
+}
+
+/* Cuenta regresiva: el anillo se vacía a medida que pasa el turno. */
+.mon-ring {
+  position: relative;
+  width: clamp(112px, 21vh, 250px);
+  aspect-ratio: 1;
   color: var(--tone);
 }
 
-.mon-count strong {
-  font-family: var(--mon-display);
-  font-size: clamp(88px, 17vh, 200px);
-  font-weight: 800;
-  line-height: 0.82;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 40px color-mix(in srgb, var(--tone) 45%, transparent);
+.mon-ring svg {
+  width: 100%;
+  height: 100%;
+  rotate: -90deg;
 }
 
-.mon-count span {
+.mon-ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 9;
+}
+
+.mon-ring-fill {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 9;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 60%, transparent));
+}
+
+.mon-ring-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mon-ring-num strong {
   font-family: var(--mon-display);
-  font-size: clamp(18px, 2.6vh, 30px);
+  font-size: clamp(44px, 9.5vh, 118px);
+  font-weight: 800;
+  line-height: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.mon-ring-num span {
+  margin-top: 4px;
+  font-family: var(--mon-display);
+  font-size: clamp(13px, 1.8vh, 20px);
   font-weight: 700;
-  line-height: 1;
-  text-align: left;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -473,7 +537,6 @@ body:has(.mon-root) {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 8px;
   color: rgba(255, 255, 255, 0.82);
   font-size: clamp(14px, 1.9vh, 20px);
@@ -484,39 +547,60 @@ body:has(.mon-root) {
   color: var(--mon-naranja-claro);
 }
 
-/* Avance del turno: una franja al pie de la cancha. */
-.mon-progress {
-  padding: 28px clamp(14px, 1.6vw, 22px) clamp(12px, 1.6vh, 18px);
-  background: linear-gradient(180deg, transparent, rgba(7, 14, 40, 0.85) 55%);
+/* Rincón de arriba a la derecha: el próximo turno de la cancha. Va en el
+   flujo (no absoluto) para no pisar el cartel del centro en pantallas bajas. */
+.mon-corner {
+  align-self: flex-end;
+  display: grid;
+  gap: 2px;
+  min-width: min(260px, 60%);
+  max-width: min(340px, 70%);
+  margin: clamp(8px, 1.2vh, 16px) clamp(10px, 1vw, 16px) 0 0;
+  padding: clamp(6px, 1vh, 14px) clamp(12px, 1.2vw, 18px);
+  border-radius: 14px;
+  border: 1px solid rgba(232, 114, 42, 0.55);
+  border-left-width: 4px;
+  background: rgba(14, 14, 13, 0.88);
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.7);
 }
 
-.mon-progress-meta {
+.mon-corner-label {
+  color: var(--mon-naranja);
+  font-size: clamp(11px, 1.3vh, 14px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mon-corner-time {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  font-size: clamp(12px, 1.4vh, 15px);
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--mon-display);
+  font-size: clamp(26px, 3.6vh, 40px);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.mon-corner-time small {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-size: clamp(12px, 1.5vh, 16px);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  color: var(--mon-suave);
 }
 
-.mon-progress-meta strong {
-  color: #fff;
-}
-
-.mon-progress-track {
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.4);
+.mon-corner-name {
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(14px, 1.9vh, 20px);
+  font-weight: 600;
 }
 
-.mon-progress-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--tone);
-  box-shadow: 0 0 14px var(--tone);
-  transition: width 1s ease;
+.mon-corner-name.is-empty {
+  color: var(--mon-suave);
+  font-weight: 500;
 }
 
 /* Últimos minutos: la pastilla y el número laten. */
@@ -525,7 +609,7 @@ body:has(.mon-root) {
     animation: monLate 1.2s ease-out infinite;
   }
 
-  .mon-court.is-ending .mon-count strong {
+  .mon-court.is-ending .mon-ring-num strong {
     animation: monParpadeo 1.2s ease-in-out infinite;
   }
 }
@@ -542,74 +626,140 @@ body:has(.mon-root) {
   }
 }
 
-/* A continuación: los próximos turnos de la cancha. */
-.mon-next {
-  display: grid;
-  gap: 8px;
+/* Más tarde: los turnos que siguen al próximo, en una línea. */
+.mon-later {
+  display: flex;
+  align-items: center;
+  gap: 10px 14px;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.mon-next-label {
-  color: var(--mon-naranja);
-  font-size: clamp(12px, 1.4vh, 15px);
+.mon-later-label {
+  flex-shrink: 0;
+  color: var(--mon-suave);
+  font-size: clamp(11px, 1.3vh, 14px);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
-.mon-next ol {
+.mon-later-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--mon-linea);
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(14px, 1.8vh, 19px);
+  font-weight: 600;
+}
+
+.mon-later-item strong {
+  font-family: var(--mon-display);
+  font-size: 1.2em;
+  color: var(--mon-naranja);
+  font-variant-numeric: tabular-nums;
+}
+
+.mon-later-item.is-empty {
+  color: var(--mon-suave);
+  font-weight: 500;
+  border-style: dashed;
+}
+
+/* --------------------------------------------------------------------------
+   Cantina: los destacados de la carta con su precio (los que se cambian en
+   el panel, Cantina → Carta y precios).
+   -------------------------------------------------------------------------- */
+.mon-cantina {
   display: grid;
-  gap: 6px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(14px, 1.6vw, 28px);
+  padding: clamp(10px, 1.4vh, 16px) clamp(14px, 1.6vw, 24px);
+  border-radius: 20px;
+  border: 1px solid var(--mon-linea);
+  background: linear-gradient(90deg, rgba(232, 114, 42, 0.12), var(--mon-panel) 40%);
+}
+
+.mon-cantina-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mon-cantina-mascota {
+  width: clamp(56px, 8vh, 88px);
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5));
+}
+
+.mon-cantina-head h2 {
+  margin: 0;
+  font-family: var(--mon-display);
+  font-size: clamp(24px, 3.4vh, 38px);
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.mon-cantina-head p {
+  margin: 2px 0 0;
+  color: var(--mon-suave);
+  font-size: clamp(12px, 1.5vh, 15px);
+}
+
+.mon-cantina-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.mon-next li {
+.mon-cantina-items li {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-  padding: clamp(8px, 1.1vh, 12px) 16px;
+  gap: 2px;
+  padding: clamp(8px, 1.1vh, 12px) 14px;
   border-radius: 12px;
   border: 1px solid var(--mon-linea);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.mon-next li:first-child {
-  border-color: rgba(232, 114, 42, 0.35);
-  background: rgba(232, 114, 42, 0.08);
+.mon-cantina-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(14px, 1.8vh, 19px);
+  font-weight: 600;
 }
 
-.mon-next-time {
+.mon-cantina-price {
   font-family: var(--mon-display);
-  font-size: clamp(22px, 3vh, 32px);
+  font-size: clamp(22px, 3vh, 34px);
   font-weight: 800;
   line-height: 1;
   color: var(--mon-naranja);
   font-variant-numeric: tabular-nums;
 }
 
-.mon-next-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: clamp(15px, 2vh, 21px);
-  font-weight: 600;
-}
+@media (max-width: 900px) {
+  .mon-cantina {
+    grid-template-columns: 1fr;
+  }
 
-.mon-next-in {
-  color: var(--mon-suave);
-  font-size: clamp(13px, 1.6vh, 16px);
-  white-space: nowrap;
-}
+  .mon-pista-centro {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
 
-.mon-next-empty {
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px dashed var(--mon-linea);
-  color: var(--mon-suave);
-  font-size: clamp(14px, 1.8vh, 18px);
 }
 
 /* --------------------------------------------------------------------------
@@ -687,7 +837,7 @@ body:has(.mon-root) {
     animation: none;
   }
 
-  .mon-progress-fill,
+  .mon-ring-fill,
   .mon-court,
   .mon-pista-piso {
     transition: none;
