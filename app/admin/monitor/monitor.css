@@ -684,7 +684,9 @@ body:has(.mon-root) {
 }
 
 .mon-cantina-mascota {
+  flex-shrink: 0;
   width: clamp(60px, 9vh, 104px);
+  height: auto;
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5));
 }
 
