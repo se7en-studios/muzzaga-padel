@@ -53,6 +53,8 @@ export default function BookingCalendar({
   // cuando llega la disponibilidad de ese día.
   const [pendingPick, setPendingPick] = useState(null);
   const [courtFilter, setCourtFilter] = useState("all");
+  // Día cuyos horarios ya pasados se desplegaron (por defecto van colapsados).
+  const [pastOpenFor, setPastOpenFor] = useState(null);
   const [slots, setSlots] = useState(null);
   const [slotsDate, setSlotsDate] = useState(null);
   // Canchas de Configuración (vienen con la disponibilidad); COURTS es el
@@ -258,6 +260,21 @@ export default function BookingCalendar({
       ? slots
       : slots.filter((s) => s.courtId === courtFilter);
   }, [slots, courtFilter]);
+
+  // Horarios de hoy que ya pasaron en todas las canchas visibles. De tarde
+  // eran varias filas de "Finalizado" antes del primer turno libre (en el
+  // celu, casi una pantalla entera): van colapsadas en una sola línea.
+  const pastTimes = useMemo(() => {
+    if (!visibleSlots) return new Set();
+    const times = [...new Set(visibleSlots.map((s) => s.start))];
+    const past = times.filter((t) =>
+      visibleSlots.filter((s) => s.start === t).every((s) => s.past),
+    );
+    // Uno solo no vale la línea extra; si pasaron todos, se muestran tal cual.
+    if (past.length < 2 || past.length === times.length) return new Set();
+    return new Set(past);
+  }, [visibleSlots]);
+  const showPast = pastOpenFor === activeDate;
 
   const selectedPricing = useMemo(() => {
     if (!selected) return null;
@@ -493,7 +510,24 @@ export default function BookingCalendar({
             {/* Filas de la matriz por horario */}
             {/* Sin .sort(): los horarios ya vienen en orden de la noche, y un
                 00:30 (club abierto pasada la medianoche) iría primero. */}
-            {[...new Set(visibleSlots.map((s) => s.start))].map((time) => {
+            {pastTimes.size > 0 && (
+              <button
+                type="button"
+                className="booking-past-toggle"
+                aria-expanded={showPast}
+                onClick={() => setPastOpenFor(showPast ? null : activeDate)}
+              >
+                <span>
+                  {pastTimes.size} horarios de hoy ya pasaron
+                </span>
+                <span className="booking-past-toggle-action">
+                  {showPast ? "Ocultar" : "Ver"}
+                </span>
+              </button>
+            )}
+            {[...new Set(visibleSlots.map((s) => s.start))]
+              .filter((time) => showPast || !pastTimes.has(time))
+              .map((time) => {
               const rowCourts =
                 courtFilter === "all"
                   ? courts

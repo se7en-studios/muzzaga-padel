@@ -1401,6 +1401,32 @@ select:focus-visible,
   gap: 12px;
 }
 
+/* Horarios de hoy que ya pasaron: una línea en vez de varias filas grises. */
+.booking-past-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  background: var(--color-canvas-soft);
+  border: 1px dashed var(--color-hairline-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.booking-past-toggle-action {
+  font-weight: 700;
+  color: var(--color-accent-orange-text);
+}
+
+.booking-past-toggle:hover {
+  border-color: var(--color-accent-orange-border);
+}
+
 .booking-matrix-time-col {
   display: flex;
   flex-direction: column;
