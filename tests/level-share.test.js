@@ -33,11 +33,26 @@ test("buildLevelWhatsAppUrl returns valid WhatsApp link", () => {
 });
 
 test("evaluatePlayerSkills maps quiz indices to descriptive labels", () => {
-  const skills = evaluatePlayerSkills({ exp: 2, wall: 2, net: 2 });
+  const skills = evaluatePlayerSkills({
+    exp: 2,
+    wall: 2,
+    net: 2,
+    serve: 2,
+    tactic: 2,
+  });
   assert.equal(skills.experience, "Experimentado (+ 2 años)");
   assert.equal(skills.wallPlay, "Ataque profundo de pared");
   assert.equal(skills.netPlay, "Definición y smash agresivo");
+  assert.equal(skills.serve, "Saque con efecto/potencia y cobertura total");
+  assert.equal(skills.tactic, "Compite en torneos/ligas federadas");
 
-  const beginner = evaluatePlayerSkills({ exp: 0, wall: 0, net: 0 });
+  const beginner = evaluatePlayerSkills({
+    exp: 0,
+    wall: 0,
+    net: 0,
+    serve: 0,
+    tactic: 0,
+  });
   assert.equal(beginner.experience, "Iniciación (< 6 meses)");
+  assert.equal(beginner.tactic, "Sin experiencia en torneos");
 });

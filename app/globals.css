@@ -523,6 +523,39 @@ select:focus-visible,
   color: #a8501a;
 }
 
+/* Extremos de la escala de categorías (test de nivel): debut y élite, más
+   los escalones intermedios altos que el naranja de marca no puede cubrir
+   sin perder distinción entre 4ta/3era/2da/1era. */
+.badge-slate {
+  background: #eef1f4;
+  border-color: #c7d0da;
+  color: #475569;
+}
+
+.badge-violet {
+  background: #f1ecfb;
+  border-color: #cdbdf3;
+  color: #6d28d9;
+}
+
+.badge-rose {
+  background: #fdecf1;
+  border-color: #f5b8cd;
+  color: #be185d;
+}
+
+.badge-red {
+  background: #fdecec;
+  border-color: #f3b4b4;
+  color: #b91c1c;
+}
+
+.badge-gold {
+  background: #fdf3df;
+  border-color: #f0d28a;
+  color: #92700c;
+}
+
 .pulse-dot {
   width: 6px;
   height: 6px;
@@ -2312,19 +2345,6 @@ select:focus-visible,
   display: block;
 }
 
-.quiz-questions-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.quiz-question-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .quiz-label {
   font-size: 13px;
   font-weight: 500;
@@ -2366,6 +2386,152 @@ select:focus-visible,
   border-color: var(--color-accent-orange);
   color: var(--color-text-link);
   font-weight: 600;
+}
+
+.quiz-opt-emoji {
+  font-size: 15px;
+  margin-right: 6px;
+}
+
+/* Test guiado paso a paso: una pregunta a la vez con barra de progreso. */
+.quiz-progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  color: var(--color-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.quiz-progress-track {
+  height: 6px;
+  background: var(--color-surface-strong);
+  border: 1px solid var(--color-hairline);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff7a1a, #ff3300);
+  border-radius: 3px;
+  transition: width var(--t-hover) var(--ease);
+}
+
+.quiz-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quiz-step {
+    animation: quizStepIn 0.3s var(--ease) both;
+  }
+}
+
+@keyframes quizStepIn {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+.quiz-back-btn {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 2px 0;
+  text-decoration: underline;
+}
+
+.quiz-back-btn:hover {
+  color: var(--color-accent-orange-text);
+}
+
+.quiz-done-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-ink);
+  text-align: center;
+  margin: 0;
+  padding: 10px 0;
+}
+
+.quiz-restart-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--color-hairline-strong);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.quiz-restart-btn:hover {
+  border-color: var(--color-accent-orange);
+  color: var(--color-accent-orange-text);
+}
+
+/* Revelación del resultado: pop-in sutil cada vez que cambia la categoría. */
+@media (prefers-reduced-motion: no-preference) {
+  .rating-reveal {
+    animation: ratingRevealPop 0.4s var(--ease) both;
+  }
+}
+
+@keyframes ratingRevealPop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(6px);
+  }
+}
+
+.confetti-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  font-size: 16px;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .confetti-piece {
+    animation: confettiFall 1.1s ease-out forwards;
+  }
+}
+
+@keyframes confettiFall {
+  from {
+    opacity: 1;
+    transform: translateY(-10px) rotate(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(110px) rotate(180deg);
+  }
 }
 
 .rating-desc-text {
@@ -7860,6 +8026,38 @@ body:has(.footer-wordmark) {
   .badge-amber,
   .badge-indigo {
     color: var(--color-accent-orange-text);
+  }
+
+  /* Mismo criterio que la verde: colores saturados y legibles sobre fondo
+     oscuro para los escalones nuevos de categorías (test de nivel). */
+  .badge-slate {
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #cbd5e1;
+  }
+
+  .badge-violet {
+    background: rgba(167, 139, 250, 0.14);
+    border-color: rgba(167, 139, 250, 0.35);
+    color: #a78bfa;
+  }
+
+  .badge-rose {
+    background: rgba(244, 114, 182, 0.14);
+    border-color: rgba(244, 114, 182, 0.35);
+    color: #f472b6;
+  }
+
+  .badge-red {
+    background: rgba(248, 113, 113, 0.14);
+    border-color: rgba(248, 113, 113, 0.35);
+    color: #f87171;
+  }
+
+  .badge-gold {
+    background: rgba(250, 204, 21, 0.14);
+    border-color: rgba(250, 204, 21, 0.35);
+    color: #facc15;
   }
 
   /* La verde era una píldora clara que resaltaba entre las oscuras. Las
