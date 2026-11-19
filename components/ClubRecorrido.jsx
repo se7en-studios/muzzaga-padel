@@ -69,30 +69,40 @@ export default function ClubRecorrido() {
   }, []);
 
   // El iframe (three.js + texturas ~3 MB; los personajes, ~8 MB más, llegan después y aparecen solos)
-  // se pide con el primer gesto del visitante (scroll, toque o tecla) o cuando la sección está cerca,
-  // lo que pase primero. No en la carga inicial: armarla ahí dejaba la landing trabada ~3 s. Y no recién
-  // al llegar: el armado tarda varios segundos y la maqueta quedaba como una foto que no respondía.
+  // se pide cuando la sección está por llegar a pantalla, nunca antes: ese parseo de varios MB
+  // comparte el hilo principal con la landing (lo advierte el propio motor, ver index.html), así que
+  // pedirlo con "cualquier gesto en cualquier parte de la página" —como antes— trababa el scroll
+  // desde el primer toque, estés donde estés. El margen (40% del alto de pantalla) da tiempo a que
+  // termine de armarse antes de que se vea; si aun así se llega antes, queda la foto + "Armando la
+  // maqueta…" unos instantes, mejor que trabar toda la landing de entrada. Con ahorro de datos, se
+  // espera a que la sección esté realmente a la vista.
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return undefined;
-    const gestos = ["scroll", "pointerdown", "touchstart", "keydown"];
-    const stop = () => {
-      io.disconnect();
-      gestos.forEach((g) => window.removeEventListener(g, start));
-    };
+    const saveData = navigator.connection?.saveData === true;
+    let idleId = null;
+    let timerId = null;
     const start = () => {
-      setLoad(true);
-      stop();
+      io.disconnect();
+      const run = () => setLoad(true);
+      if ("requestIdleCallback" in window) {
+        idleId = window.requestIdleCallback(run, { timeout: 1500 });
+      } else {
+        timerId = window.setTimeout(run, 200);
+      }
     };
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) start();
       },
-      { rootMargin: "100% 0px" },
+      { rootMargin: saveData ? "0px" : "40% 0px" },
     );
     io.observe(el);
-    gestos.forEach((g) => window.addEventListener(g, start, { passive: true }));
-    return stop;
+    return () => {
+      io.disconnect();
+      if (idleId !== null) window.cancelIdleCallback(idleId);
+      if (timerId !== null) window.clearTimeout(timerId);
+    };
   }, []);
 
   useEffect(() => {
