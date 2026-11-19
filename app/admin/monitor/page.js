@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  CalendarClock,
   Clock3,
+  Info,
   Maximize,
   Minimize,
-  User,
+  Users,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -27,7 +29,7 @@ import {
 } from "../../../lib/booking";
 import { getClubTimeString } from "../../../data/horarios";
 import { featuredItems, normalizeMenu } from "../../../lib/cantinaMenu";
-import { formatARS } from "../../../lib/format";
+import { formatARS, formatDate } from "../../../lib/format";
 import { isExpiredSessionError } from "../adminHelpers";
 import { courtSchedule, liveAndNext, toMinutes } from "./schedule";
 import { isMonitorDemo, monitorDemoData } from "./demo";
@@ -42,8 +44,12 @@ const STALE_AFTER_MIN = 2;
 // Después de esta hora ya no queda nada de ayer en pista.
 const LATE_NIGHT_UNTIL = JORNADA_CUTOFF;
 const WARN_MIN = 5;
-const LATER_MAX = 2;
-const CANTINA_MAX = 6;
+const CANTINA_MAX = 5;
+// La maqueta 3D del club (la del recorrido) con la cámara fija sobre las
+// canchas. En modo monitor pinta el borde de cada cancha según su estado y
+// avisa dónde cae cada una en pantalla.
+const SCENE_SRC =
+  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261119";
 // Anillo de la cuenta regresiva (viewBox 0 0 120 120).
 const RING_R = 52;
 const RING_C = 2 * Math.PI * RING_R;
@@ -91,10 +97,38 @@ function MonitorClock() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
+  const date = formatDate(todayInClub(), "long");
   return (
     <div className="mon-clock" aria-label="Hora del club">
-      {(time || nowInClubTimezone().hhmm).replace(" hs", "")}
-      <small>hs</small>
+      <span className="mon-clock-time">
+        {(time || nowInClubTimezone().hhmm).replace(" hs", "")}
+        <small>hs</small>
+      </span>
+      <span className="mon-clock-date">
+        {date.charAt(0).toUpperCase() + date.slice(1)}
+      </span>
+    </div>
+  );
+}
+
+function Ring({ remaining, left }) {
+  return (
+    <div className="mon-ring">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle className="mon-ring-track" cx="60" cy="60" r={RING_R} />
+        <circle
+          className="mon-ring-fill"
+          cx="60"
+          cy="60"
+          r={RING_R}
+          strokeDasharray={RING_C}
+          strokeDashoffset={RING_C * (1 - left)}
+        />
+      </svg>
+      <div className="mon-ring-num">
+        <strong>{remaining}</strong>
+        <span>min</span>
+      </div>
     </div>
   );
 }
@@ -112,7 +146,10 @@ export default function MonitorPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [demo, setDemo] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false);
+  const [courtPts, setCourtPts] = useState(null);
   const firedChimes = useRef(new Set());
+  const frameRef = useRef(null);
 
   useEffect(() => {
     if (isMonitorDemo()) {
@@ -136,6 +173,26 @@ export default function MonitorPage() {
     const sync = () => setIsFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", sync);
     return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
+
+  // La maqueta avisa cuando terminó de armarse y dónde quedó cada cancha.
+  useEffect(() => {
+    const onMessage = (e) => {
+      if (e.origin !== window.location.origin || !e.data) return;
+      if (e.data.muzzaga === "ready") {
+        setSceneReady(true);
+        // Con ?cam= fijo, el primer "tour" deja la cámara en su lugar.
+        frameRef.current?.contentWindow?.postMessage(
+          { muzzaga: "tour", p: 0 },
+          window.location.origin,
+        );
+      }
+      if (e.data.muzzaga === "courtPts" && Array.isArray(e.data.pts)) {
+        setCourtPts(e.data.pts);
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
   }, []);
 
   useEffect(() => {
@@ -198,26 +255,46 @@ export default function MonitorPage() {
   const now = nowInClubTimezone();
   const currentMinutes = toMinutes(now.hhmm);
   const courts = dayData?.courts || COURTS;
-  const schedules = courts.map((court) => {
+  const views = courts.map((court, index) => {
     const schedule = courtSchedule(
       court.id,
       dayData?.bookings,
       yesterdayBookings,
     );
+    const { live } = liveAndNext(schedule, currentMinutes);
     const upcoming = schedule.filter((x) => x.start > currentMinutes);
+    const remaining = live ? Math.max(0, live.end - currentMinutes) : 0;
+    const total = live ? Math.max(1, live.end - live.start) : 1;
     return {
       court,
+      index,
       schedule,
-      upcoming,
-      ...liveAndNext(schedule, currentMinutes),
+      match: live?.booking || null,
+      remaining,
+      left: Math.min(1, remaining / total),
+      ending: Boolean(live) && remaining <= WARN_MIN,
+      tone: live ? timerTone(remaining) : null,
+      players: Math.min(8, Math.max(1, Number(live?.booking?.playersCount) || 4)),
+      nextUp: upcoming[0] || null,
     };
   });
+
+  // Borde de neón de cada cancha en la maqueta: el color del estado o nada.
+  const neonKey = views.map((v) => v.tone || "").join("|");
+  useEffect(() => {
+    if (!sceneReady) return;
+    frameRef.current?.contentWindow?.postMessage(
+      { muzzaga: "courts", s: views.map((v) => (v.tone ? { color: v.tone } : null)) },
+      window.location.origin,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sceneReady, neonKey]);
 
   // Aviso sonoro a 5 min del final y al terminar, una vez por turno. Se
   // marcan aunque el sonido esté apagado para que al prenderlo no suenen
   // avisos viejos de golpe.
   useEffect(() => {
-    schedules.forEach(({ schedule }) =>
+    views.forEach(({ schedule }) =>
       schedule.forEach(({ booking, end }) => {
         const remaining = end - currentMinutes;
         const key = `${booking.id}-${booking.date}`;
@@ -242,6 +319,7 @@ export default function MonitorPage() {
         }
       }),
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMinutes, dayData, yesterdayBookings, soundEnabled]);
 
   if (!sessionChecked) {
@@ -275,21 +353,67 @@ export default function MonitorPage() {
   const isStale =
     minutesSinceUpdate != null && minutesSinceUpdate >= STALE_AFTER_MIN;
   const tickerItems = [
-    slotDuration
-      ? `Cada turno dura ${slotDuration} minutos: terminá a horario para que el siguiente arranque puntual`
-      : "Terminá a horario para que el turno siguiente arranque puntual",
+    slotDuration ? `El turno dura ${slotDuration} minutos` : null,
+    "Terminá a horario para que el siguiente arranque puntual",
     "Preguntá en recepción por los próximos torneos",
     "Hacé el test de nivel y sumate a partidos parejos de tu categoría",
     "Reservá tu turno online en muzzagapadel.com",
-  ];
+  ].filter(Boolean);
   const destacados = featuredItems(menuItems);
   const cantina = (destacados.length ? destacados : menuItems).slice(
     0,
     CANTINA_MAX,
   );
+  // Las tarjetas en el mismo orden en que se ven las canchas (la de atrás arriba).
+  const cards = courtPts
+    ? [...views].sort(
+        (a, b) => (courtPts[a.index]?.[1] ?? 0) - (courtPts[b.index]?.[1] ?? 0),
+      )
+    : views;
+  const statusOf = (v) => (!v.match ? "Libre" : v.ending ? "Termina ya" : "En juego");
 
   return (
     <div className="mon-root">
+      <div className="mon-scene" aria-hidden="true">
+        <iframe
+          ref={frameRef}
+          className={`mon-scene-frame${sceneReady ? " is-ready" : ""}`}
+          src={SCENE_SRC}
+          title="Maqueta 3D del club"
+          tabIndex={-1}
+        />
+      </div>
+      <div className="mon-shade" aria-hidden="true" />
+
+      {/* Globos sobre cada cancha, donde la maqueta dice que cae. */}
+      {sceneReady &&
+        courtPts &&
+        views.map((v) => {
+          const pt = courtPts[v.index];
+          if (!pt) return null;
+          return (
+            <div
+              key={v.court.id}
+              className={`mon-callout${v.match ? " is-live" : ""}${v.ending ? " is-ending" : ""}`}
+              style={{
+                left: `${pt[0] * 100}%`,
+                top: `${pt[1] * 100}%`,
+                ...(v.tone ? { "--tone": v.tone } : {}),
+              }}
+              aria-hidden="true"
+            >
+              <div className="mon-callout-bubble">
+                <strong>
+                  Cancha {v.index + 1} · {v.court.name}
+                </strong>
+                <span className="mon-callout-state">{statusOf(v)}</span>
+              </div>
+              <span className="mon-callout-stem" />
+              <span className="mon-callout-dot" />
+            </div>
+          );
+        })}
+
       {loadError === "expired" && (
         <div className="mon-overlay" role="alert">
           <h2>Sesión vencida</h2>
@@ -303,11 +427,12 @@ export default function MonitorPage() {
 
       <header className="mon-header">
         <div className="mon-brand">
-          <img src="/img/logo_badge.png" alt="Muzzaga" />
-          <div>
-            <span className="mon-kicker">Muzzaga Pádel · Recepción</span>
-            <h1>Monitor de pistas</h1>
-          </div>
+          <img src="/img/logo_badge.png" alt="" />
+          <span>
+            Muzzaga
+            <br />
+            Pádel
+          </span>
         </div>
 
         <div className="mon-tools">
@@ -345,6 +470,7 @@ export default function MonitorPage() {
                 if (next) playTurnChime(659.25);
               }}
               aria-pressed={soundEnabled}
+              aria-label="Aviso sonoro"
               title="Aviso sonoro cuando faltan 5 min y al terminar cada turno"
             >
               {soundEnabled ? (
@@ -352,13 +478,12 @@ export default function MonitorPage() {
               ) : (
                 <VolumeX size={18} aria-hidden="true" />
               )}
-              {soundEnabled ? "Sonido" : "Sin sonido"}
             </button>
-
             <button
               type="button"
               className="mon-btn"
               onClick={toggleFullscreen}
+              aria-label={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
               title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
             >
               {isFullscreen ? (
@@ -366,146 +491,91 @@ export default function MonitorPage() {
               ) : (
                 <Maximize size={18} aria-hidden="true" />
               )}
-              {isFullscreen ? "Salir" : "Pantalla completa"}
             </button>
-
-            <Link href="/admin" className="mon-btn mon-back">
+            <Link
+              href="/admin"
+              className="mon-btn"
+              aria-label="Volver al admin"
+              title="Volver al admin"
+            >
               <ArrowLeft size={18} aria-hidden="true" />
-              Admin
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="mon-grid">
-        {schedules.map(({ court, live, upcoming }) => {
-          const match = live?.booking;
-          const remaining = live ? Math.max(0, live.end - currentMinutes) : 0;
-          const total = live ? Math.max(1, live.end - live.start) : 1;
-          const left = Math.min(1, remaining / total);
-          const ending = match && remaining <= WARN_MIN;
-          const nextUp = upcoming[0];
-          const later = upcoming.slice(1, 1 + LATER_MAX);
-          const players = Math.min(8, Math.max(1, Number(match?.playersCount) || 4));
+      <main className="mon-side">
+        <div className="mon-title">
+          <h1>Monitor de pistas</h1>
+          <p>Estado en tiempo real del club</p>
+        </div>
 
-          return (
-            <section
-              key={court.id}
-              className={`mon-court${match ? " is-live" : ""}${ending ? " is-ending" : ""}`}
-              style={match ? { "--tone": timerTone(remaining) } : undefined}
-            >
-              <div className="mon-court-head">
-                <div>
-                  <h2>{court.name}</h2>
-                  {court.type && <span>Pista de {court.type.toLowerCase()}</span>}
-                </div>
-                <div className={`mon-pill${match ? " is-live" : ""}`}>
-                  {!match ? "Libre" : ending ? "Termina ya" : "En juego"}
-                </div>
+        {cards.map((v) => (
+          <article
+            key={v.court.id}
+            className={`mon-card${v.match ? " is-live" : ""}${v.ending ? " is-ending" : ""}`}
+            style={v.tone ? { "--tone": v.tone } : undefined}
+          >
+            <div className="mon-card-head">
+              <img src="/img/iconos/icono-cristal.webp" alt="" className="mon-card-icon" />
+              <div className="mon-card-name">
+                <span>Cancha {v.index + 1}</span>
+                <h2>{v.court.name}</h2>
               </div>
+              <div className={`mon-pill${v.match ? " is-live" : ""}`}>{statusOf(v)}</div>
+            </div>
 
-              {/* La cancha vista desde arriba, como en Instalaciones. */}
-              <div className="mon-pista">
-                <div className="mon-pista-piso" aria-hidden="true">
-                  <div className="mon-pista-lineas" />
+            {v.match ? (
+              <div className="mon-card-body">
+                <div className="mon-card-info">
+                  <div className="mon-card-row">
+                    <Users size={20} aria-hidden="true" />
+                    <div>
+                      <strong>{v.match.playerName}</strong>
+                      <span>{v.players} jugando</span>
+                    </div>
+                  </div>
+                  <div className="mon-card-row">
+                    <Clock3 size={20} aria-hidden="true" />
+                    <strong>
+                      {v.match.startTime} a {v.match.endTime} hs
+                    </strong>
+                  </div>
                 </div>
-
-                {/* Rincón: quién entra después a esta cancha. */}
-                <aside className="mon-corner" aria-label="Próximo turno">
-                  <span className="mon-corner-label">Próximo turno</span>
-                  {nextUp ? (
-                    <>
-                      <span className="mon-corner-time">
-                        {nextUp.booking.startTime}
-                        <small>{inLabel(nextUp.start - currentMinutes)}</small>
-                      </span>
-                      <span className="mon-corner-name">
-                        {nextUp.booking.playerName}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="mon-corner-name is-empty">
-                      Sin más reservas hoy
-                    </span>
-                  )}
-                </aside>
-
-                <div className="mon-pista-centro">
-                  {match ? (
-                    <>
-                      <div className="mon-who">
-                        <span className="mon-who-label">Reservó</span>
-                        <div className="mon-player">{match.playerName}</div>
-                        <div
-                          className="mon-players"
-                          aria-label={`${players} jugadores`}
-                        >
-                          {Array.from({ length: players }, (_, i) => (
-                            <User key={i} size={22} aria-hidden="true" />
-                          ))}
-                          <span>{players} jugando</span>
-                        </div>
-                        <div className="mon-slot">
-                          <Clock3 size={18} aria-hidden="true" />
-                          {match.startTime} a {match.endTime} hs
-                        </div>
-                      </div>
-
-                      <div className="mon-ring">
-                        <svg viewBox="0 0 120 120" aria-hidden="true">
-                          <circle className="mon-ring-track" cx="60" cy="60" r={RING_R} />
-                          <circle
-                            className="mon-ring-fill"
-                            cx="60"
-                            cy="60"
-                            r={RING_R}
-                            strokeDasharray={RING_C}
-                            strokeDashoffset={RING_C * (1 - left)}
-                          />
-                        </svg>
-                        <div className="mon-ring-num">
-                          <strong>{remaining}</strong>
-                          <span>{remaining === 1 ? "min restante" : "min restantes"}</span>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="mon-free">Libre</div>
-                      <div className="mon-slot">
-                        {nextUp
-                          ? `Disponible hasta las ${nextUp.booking.startTime} hs`
-                          : "Disponible el resto del día"}
-                      </div>
-                    </>
-                  )}
-                </div>
+                <Ring remaining={v.remaining} left={v.left} />
               </div>
-
-              <div className="mon-later">
-                <span className="mon-later-label">Más tarde</span>
-                {later.length ? (
-                  later.map(({ booking }) => (
-                    <span key={`${booking.id}-${booking.date}`} className="mon-later-item">
-                      <strong>{booking.startTime}</strong>
-                      {booking.playerName}
-                    </span>
-                  ))
-                ) : (
-                  <span className="mon-later-item is-empty">Nada más por hoy</span>
-                )}
+            ) : (
+              <div className="mon-card-row is-free">
+                <CalendarClock size={20} aria-hidden="true" />
+                <strong>
+                  {v.nextUp
+                    ? `Disponible hasta las ${v.nextUp.booking.startTime} hs`
+                    : "Disponible el resto del día"}
+                </strong>
               </div>
-            </section>
-          );
-        })}
-      </div>
+            )}
+
+            <div className="mon-card-next">
+              <span className="mon-card-next-label">Próximo</span>
+              {v.nextUp ? (
+                <span className="mon-card-next-value">
+                  <strong>{v.nextUp.booking.startTime}</strong>
+                  <span className="mon-card-next-name">{v.nextUp.booking.playerName}</span>
+                  <em>{inLabel(v.nextUp.start - currentMinutes)}</em>
+                </span>
+              ) : (
+                <span className="mon-card-next-value is-empty">Sin más reservas hoy</span>
+              )}
+            </div>
+          </article>
+        ))}
+      </main>
 
       {cantina.length > 0 && (
         <section className="mon-cantina" aria-label="Cantina">
           <div className="mon-cantina-head">
             <Mascota pose="pizza-cerveza" size="s" alt="" className="mon-cantina-mascota" />
             <div>
-              <span className="mon-kicker">Tercer tiempo</span>
               <h2>En la cantina</h2>
               <p>Pedí en la barra</p>
             </div>
@@ -521,9 +591,11 @@ export default function MonitorPage() {
         </section>
       )}
 
-      {/* Tira de la marca, como la de la home: mensajes con pelotas entre medio. */}
       <div className="mon-ticker">
-        <div className="mon-ticker-tag">Muzzaga TV</div>
+        <div className="mon-ticker-tag">
+          <Info size={20} aria-hidden="true" />
+          Avisos
+        </div>
         <div className="mon-ticker-window">
           <div className="mon-ticker-track">
             {[0, 1].map((copy) => (
