@@ -1,27 +1,27 @@
-/* Monitor TV de recepción con la marca Muzzaga: negro cálido, naranja, la
-   cancha azul vista desde arriba (la misma de Instalaciones) y la tipografía
-   condensada de los títulos. Pensado para una tele de 1920×1080 sin scroll:
-   los tamaños escalan con el alto y el ancho de la pantalla. */
+/* Monitor TV de recepción. De fondo, la maqueta 3D del club (la misma del
+   recorrido de la home) con la cámara fija sobre las dos canchas en paralelo;
+   encima, el estado de cada cancha a la izquierda, globos sobre cada cancha,
+   la cantina y los avisos abajo. Pensado para una tele de 1920×1080 sin
+   scroll: todo escala con el alto de la pantalla. */
 
 .mon-root {
   --mon-naranja: #e8722a;
   --mon-naranja-claro: #ffb27f;
   --mon-negro: #0e0e0d;
-  --mon-panel: #1b1b19;
-  --mon-linea: rgba(255, 255, 255, 0.1);
-  --mon-suave: #a8a29e;
+  --mon-panel: rgba(14, 14, 13, 0.84);
+  --mon-linea: rgba(255, 255, 255, 0.12);
+  --mon-suave: #c7c2bd;
   --mon-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
-  --mon-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --tone: #a8a29e;
 
-  min-height: 100vh;
+  position: relative;
   height: 100vh;
   display: grid;
+  grid-template-columns: clamp(340px, 25vw, 500px) minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto auto;
-  gap: clamp(12px, 1.8vh, 22px);
-  padding: clamp(14px, 2.4vh, 28px) clamp(16px, 2vw, 40px);
-  background:
-    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(232, 114, 42, 0.1), transparent 70%),
-    var(--mon-negro);
+  gap: clamp(10px, 1.6vh, 20px) clamp(16px, 2vw, 36px);
+  padding: clamp(12px, 2vh, 26px) clamp(16px, 1.8vw, 36px);
+  background: var(--mon-negro);
   color: #fff;
   font-family: var(--font-poppins), system-ui, sans-serif;
   overflow: hidden;
@@ -33,14 +33,49 @@ body:has(.mon-root) {
   padding-bottom: 0;
 }
 
-/* En una pantalla baja o angosta (notebook, tablet) se deja scrollear. */
-@media (max-height: 640px), (max-width: 900px) {
-  .mon-root {
-    height: auto;
-    overflow: visible;
-  }
+.mon-root > :not(.mon-scene, .mon-shade, .mon-callout, .mon-overlay) {
+  position: relative;
+  z-index: 2;
 }
 
+/* --------------------------------------------------------------------------
+   Fondo: la maqueta. Mientras se arma (unos segundos) se ve su foto.
+   -------------------------------------------------------------------------- */
+.mon-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #141826 url("/recorrido/poster-noche.jpg") 70% 40% / cover no-repeat;
+}
+
+.mon-scene-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+
+.mon-scene-frame.is-ready {
+  opacity: 1;
+}
+
+/* Oscurece los bordes para que lo de encima se lea sobre cualquier parte. */
+.mon-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(10, 10, 9, 0.78) 0%, rgba(10, 10, 9, 0.35) 30%, transparent 48%),
+    linear-gradient(180deg, rgba(10, 10, 9, 0.7) 0%, transparent 16%, transparent 72%, rgba(10, 10, 9, 0.82) 100%);
+}
+
+/* --------------------------------------------------------------------------
+   Pantallas de sesión
+   -------------------------------------------------------------------------- */
 .mon-center {
   min-height: 100vh;
   display: flex;
@@ -48,7 +83,7 @@ body:has(.mon-root) {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: var(--mon-negro, #0e0e0d);
+  background: #0e0e0d;
   color: #fff;
   padding: 20px;
   text-align: center;
@@ -92,141 +127,6 @@ body:has(.mon-root) {
   background: #f08a45;
 }
 
-/* --------------------------------------------------------------------------
-   Header
-   -------------------------------------------------------------------------- */
-.mon-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px 24px;
-}
-
-.mon-brand {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.mon-brand img {
-  width: clamp(44px, 5.4vh, 60px);
-  height: clamp(44px, 5.4vh, 60px);
-  object-fit: contain;
-}
-
-.mon-kicker {
-  display: block;
-  color: var(--mon-naranja);
-  font-size: clamp(12px, 1.3vh, 15px);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.mon-brand h1 {
-  margin: 0;
-  font-family: var(--mon-display);
-  font-size: clamp(30px, 4.4vh, 50px);
-  font-weight: 800;
-  line-height: 0.95;
-  text-transform: uppercase;
-}
-
-.mon-tools {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 14px 18px;
-}
-
-.mon-clock {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  font-family: var(--mon-display);
-  font-size: clamp(44px, 7vh, 80px);
-  font-weight: 800;
-  line-height: 0.9;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-}
-
-.mon-clock small {
-  font-size: 0.36em;
-  font-weight: 700;
-  color: var(--mon-naranja);
-  text-transform: uppercase;
-}
-
-/* Los controles se usan una vez al prender la tele: quedan discretos. */
-.mon-btns {
-  display: flex;
-  gap: 8px;
-}
-
-.mon-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--mon-linea);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--mon-suave);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.mon-btn:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: #fff;
-}
-
-.mon-btn.is-on {
-  border-color: rgba(232, 114, 42, 0.55);
-  background: rgba(232, 114, 42, 0.14);
-  color: var(--mon-naranja-claro);
-}
-
-/* Estado de la conexión */
-.mon-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  background: rgba(34, 197, 94, 0.1);
-  color: #86efac;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.mon-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.mon-status.is-stale {
-  color: #fbbf24;
-  background: rgba(245, 158, 11, 0.12);
-  border-color: rgba(245, 158, 11, 0.4);
-}
-
-.mon-status.is-error {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.45);
-}
-
 .mon-overlay {
   position: fixed;
   inset: 0;
@@ -256,70 +156,226 @@ body:has(.mon-root) {
 }
 
 /* --------------------------------------------------------------------------
-   Canchas
+   Header
    -------------------------------------------------------------------------- */
-.mon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr));
-  gap: clamp(16px, 2vw, 32px);
-  min-height: 0;
-}
-
-.mon-court {
-  --tone: #57534e;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: clamp(12px, 1.8vh, 20px);
-  min-height: 0;
-  padding: clamp(16px, 2.2vh, 26px);
-  border-radius: 24px;
-  border: 1px solid var(--mon-linea);
-  background: linear-gradient(180deg, #1f1f1c 0%, var(--mon-panel) 100%);
-  box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.8);
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
-}
-
-.mon-court.is-live {
-  border-color: color-mix(in srgb, var(--tone) 70%, transparent);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--tone) 25%, transparent),
-    0 24px 60px -20px color-mix(in srgb, var(--tone) 45%, transparent);
-}
-
-.mon-court-head {
+.mon-header {
+  grid-column: 1 / -1;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 16px 24px;
 }
 
-.mon-court-head h2 {
-  margin: 0;
+.mon-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mon-brand img {
+  width: clamp(44px, 5.6vh, 64px);
+  height: clamp(44px, 5.6vh, 64px);
+  object-fit: contain;
+}
+
+.mon-brand span {
   font-family: var(--mon-display);
-  font-size: clamp(36px, 5.6vh, 64px);
+  font-size: clamp(20px, 2.8vh, 32px);
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.mon-tools {
+  display: flex;
+  align-items: center;
+  gap: 14px 22px;
+}
+
+.mon-clock {
+  display: grid;
+  justify-items: end;
+}
+
+.mon-clock-time {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--mon-display);
+  font-size: clamp(40px, 6vh, 72px);
   font-weight: 800;
   line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+
+.mon-clock-time small {
+  font-size: 0.36em;
+  color: var(--mon-naranja);
   text-transform: uppercase;
 }
 
-.mon-court-head span {
-  display: block;
+.mon-clock-date {
   margin-top: 4px;
   color: var(--mon-suave);
-  font-size: clamp(13px, 1.5vh, 16px);
+  font-size: clamp(13px, 1.6vh, 17px);
+  font-weight: 500;
+}
+
+/* Los controles se usan una vez al prender la tele: quedan discretos. */
+.mon-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.mon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--mon-linea);
+  background: rgba(14, 14, 13, 0.6);
+  color: var(--mon-suave);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.mon-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.mon-btn.is-on {
+  border-color: rgba(232, 114, 42, 0.55);
+  background: rgba(232, 114, 42, 0.18);
+  color: var(--mon-naranja-claro);
+}
+
+/* Estado de la conexión */
+.mon-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  background: rgba(10, 30, 18, 0.7);
+  color: #86efac;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mon-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.mon-status.is-stale {
+  color: #fbbf24;
+  background: rgba(40, 28, 6, 0.75);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.mon-status.is-error {
+  color: #fca5a5;
+  background: rgba(40, 10, 10, 0.75);
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   Columna izquierda: título y una tarjeta por cancha
+   -------------------------------------------------------------------------- */
+.mon-side {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 18px);
+  min-height: 0;
+}
+
+.mon-title h1 {
+  margin: 0;
+  font-size: clamp(26px, 3.6vh, 44px);
+  font-weight: 700;
+  line-height: 1.05;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6);
+}
+
+.mon-title p {
+  margin: 2px 0 0;
+  color: var(--mon-suave);
+  font-size: clamp(13px, 1.7vh, 18px);
+}
+
+.mon-card {
+  --tone: #a8a29e;
+  display: grid;
+  gap: clamp(6px, 1vh, 12px);
+  padding: clamp(10px, 1.4vh, 18px) clamp(14px, 1.2vw, 22px);
+  border-radius: 22px;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  background: var(--mon-panel);
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.8);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.mon-card.is-live {
+  border-color: var(--tone);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tone) 30%, transparent),
+    0 0 28px color-mix(in srgb, var(--tone) 35%, transparent),
+    0 20px 40px -20px rgba(0, 0, 0, 0.8);
+}
+
+.mon-card-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(10px, 1vw, 16px);
+}
+
+.mon-card-icon {
+  width: clamp(44px, 5.6vh, 68px);
+  height: clamp(44px, 5.6vh, 68px);
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+}
+
+.mon-card-name span {
+  display: block;
+  color: var(--mon-suave);
+  font-size: clamp(12px, 1.5vh, 16px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mon-card-name h2 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mon-display);
+  font-size: clamp(26px, 3.6vh, 42px);
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
 }
 
 .mon-pill {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 18px;
+  gap: 8px;
+  padding: 6px 14px;
   border-radius: 999px;
   border: 1px solid var(--mon-linea);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--mon-suave);
   font-family: var(--mon-display);
-  font-size: clamp(18px, 2.4vh, 26px);
+  font-size: clamp(15px, 2vh, 22px);
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -334,145 +390,121 @@ body:has(.mon-root) {
 
 .mon-pill.is-live::before {
   content: "";
-  width: 10px;
-  height: 10px;
+  width: 0.45em;
+  height: 0.45em;
   border-radius: 50%;
   background: currentColor;
   box-shadow: 0 0 0 0 currentColor;
 }
 
-/* La cancha: césped azul con sus líneas, vista desde arriba y acostada
-   (la red al medio). Libre se apaga; en juego se prende. */
-.mon-pista {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 220px;
-  border-radius: 18px;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.mon-pista-piso {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(ellipse 80% 70% at 50% 45%, rgba(255, 255, 255, 0.14), transparent 70%),
-    linear-gradient(rgba(10, 29, 92, 0.4), rgba(10, 29, 92, 0.4)),
-    url("/img/fondo/textura-cesped.jpg") center / 360px repeat,
-    #2350d6;
-  transition: filter 0.6s ease;
-}
-
-.mon-court:not(.is-live) .mon-pista-piso {
-  filter: saturate(0.35) brightness(0.45);
-}
-
-/* Perímetro, red y líneas de saque (a 6,95 m de la red en una cancha de 20). */
-.mon-pista-lineas {
-  position: absolute;
-  inset: 7% 4%;
-  border: 3px solid rgba(255, 255, 255, 0.75);
-}
-
-.mon-pista-lineas::before {
-  content: "";
-  position: absolute;
-  top: -7%;
-  bottom: -7%;
-  left: 50%;
-  width: 4px;
-  translate: -50% 0;
-  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0 6px, rgba(255, 255, 255, 0.35) 6px 10px);
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
-}
-
-.mon-pista-lineas::after {
-  content: "";
-  position: absolute;
-  inset: 0 15.25%;
-  border-inline: 2px solid rgba(255, 255, 255, 0.6);
-  background: linear-gradient(
-    180deg,
-    transparent calc(50% - 1px),
-    rgba(255, 255, 255, 0.6) calc(50% - 1px),
-    rgba(255, 255, 255, 0.6) calc(50% + 1px),
-    transparent calc(50% + 1px)
-  );
-}
-
-/* Lo que se lee de lejos, en un vidrio oscuro sobre la cancha. Sin
-   backdrop-filter: en los sticks de TV el desenfoque en vivo pesa mucho y
-   un fondo casi opaco se lee igual. */
-.mon-pista-centro {
+.mon-card-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  column-gap: clamp(18px, 2.4vw, 40px);
-  margin: auto;
-  padding: clamp(10px, 2vh, 26px) clamp(18px, 2.4vw, 36px);
-  max-width: calc(100% - 32px);
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(7, 14, 40, 0.86);
-  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.7);
+  gap: clamp(10px, 1vw, 18px);
 }
 
-.mon-court:not(.is-live) .mon-pista-centro {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  background: rgba(14, 14, 13, 0.82);
-}
-
-.mon-who {
-  min-width: 0;
+.mon-card-info {
   display: grid;
-  gap: clamp(4px, 0.8vh, 10px);
+  gap: clamp(6px, 1vh, 12px);
+  min-width: 0;
 }
 
-.mon-who-label {
+.mon-card-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  font-size: clamp(14px, 1.9vh, 20px);
+}
+
+.mon-card-row svg {
+  flex-shrink: 0;
   color: var(--mon-naranja-claro);
-  font-size: clamp(12px, 1.5vh, 16px);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
 }
 
-.mon-player {
-  max-width: 100%;
+.mon-card-row div {
+  display: grid;
+  min-width: 0;
+}
+
+.mon-card-row strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--mon-display);
-  font-size: clamp(30px, 5vh, 60px);
-  font-weight: 800;
-  line-height: 0.95;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
-/* Un muñequito por jugador: se cuenta de un vistazo desde la barra. */
-.mon-players {
+.mon-card-row span {
+  color: var(--mon-suave);
+  font-size: 0.9em;
+}
+
+.mon-card-row.is-free {
+  padding: clamp(4px, 0.8vh, 10px) 0;
+}
+
+/* Próximo turno: el pie de cada tarjeta, en una línea. */
+.mon-card-next {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 2px;
-  color: var(--mon-naranja-claro);
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  padding-top: clamp(6px, 1vh, 12px);
+  border-top: 1px solid var(--mon-linea);
 }
 
-.mon-players span {
-  margin-left: 10px;
-  color: rgba(255, 255, 255, 0.85);
+.mon-card-next-label {
+  color: var(--mon-naranja);
+  font-size: clamp(11px, 1.4vh, 14px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mon-card-next-value {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
   font-size: clamp(14px, 1.9vh, 20px);
   font-weight: 600;
+}
+
+.mon-card-next-value strong {
+  font-family: var(--mon-display);
+  font-size: 1.35em;
+  font-weight: 800;
+  color: var(--mon-naranja);
+  font-variant-numeric: tabular-nums;
+}
+
+.mon-card-next-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mon-card-next-value em {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--mon-suave);
+  font-size: 0.85em;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.mon-card-next-value.is-empty {
+  color: var(--mon-suave);
+  font-weight: 500;
 }
 
 /* Cuenta regresiva: el anillo se vacía a medida que pasa el turno. */
 .mon-ring {
   position: relative;
-  width: clamp(112px, 21vh, 250px);
+  width: clamp(88px, 11.5vh, 140px);
   aspect-ratio: 1;
   color: var(--tone);
 }
@@ -495,7 +527,6 @@ body:has(.mon-root) {
   stroke-width: 9;
   stroke-linecap: round;
   transition: stroke-dashoffset 1s ease;
-  filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 60%, transparent));
 }
 
 .mon-ring-num {
@@ -509,107 +540,111 @@ body:has(.mon-root) {
 
 .mon-ring-num strong {
   font-family: var(--mon-display);
-  font-size: clamp(44px, 9.5vh, 118px);
+  font-size: clamp(32px, 5vh, 60px);
   font-weight: 800;
   line-height: 0.85;
   font-variant-numeric: tabular-nums;
 }
 
 .mon-ring-num span {
-  margin-top: 4px;
-  font-family: var(--mon-display);
-  font-size: clamp(13px, 1.8vh, 20px);
+  margin-top: 2px;
+  font-size: clamp(12px, 1.6vh, 18px);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.mon-free {
+/* --------------------------------------------------------------------------
+   Globos sobre las canchas: la punta cae justo en la cancha.
+   -------------------------------------------------------------------------- */
+.mon-callout {
+  --tone: #e7e5e4;
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  translate: -50% -100%;
+  pointer-events: none;
+}
+
+.mon-callout-bubble {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: clamp(8px, 1.1vh, 12px) clamp(18px, 1.6vw, 28px);
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: rgba(10, 10, 9, 0.86);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+}
+
+.mon-callout.is-live .mon-callout-bubble {
+  border-color: var(--tone);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--tone) 45%, transparent),
+    0 12px 30px -10px rgba(0, 0, 0, 0.8);
+}
+
+.mon-callout-bubble strong {
   font-family: var(--mon-display);
-  font-size: clamp(64px, 12vh, 140px);
-  font-weight: 800;
-  line-height: 0.85;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(18px, 2.6vh, 30px);
+  font-weight: 700;
+  line-height: 1;
 }
 
-.mon-slot {
+.mon-callout-state {
   display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: clamp(14px, 1.9vh, 20px);
-  font-weight: 500;
-}
-
-.mon-slot svg {
-  color: var(--mon-naranja-claro);
-}
-
-/* Rincón de arriba a la derecha: el próximo turno de la cancha. Va en el
-   flujo (no absoluto) para no pisar el cartel del centro en pantallas bajas. */
-.mon-corner {
-  align-self: flex-end;
-  display: grid;
-  gap: 2px;
-  min-width: min(260px, 60%);
-  max-width: min(340px, 70%);
-  margin: clamp(8px, 1.2vh, 16px) clamp(10px, 1vw, 16px) 0 0;
-  padding: clamp(6px, 1vh, 14px) clamp(12px, 1.2vw, 18px);
-  border-radius: 14px;
-  border: 1px solid rgba(232, 114, 42, 0.55);
-  border-left-width: 4px;
-  background: rgba(14, 14, 13, 0.88);
-  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.7);
-}
-
-.mon-corner-label {
-  color: var(--mon-naranja);
-  font-size: clamp(11px, 1.3vh, 14px);
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  color: var(--mon-suave);
+  font-family: var(--mon-display);
+  font-size: clamp(14px, 2vh, 22px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.mon-corner-time {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  font-family: var(--mon-display);
-  font-size: clamp(26px, 3.6vh, 40px);
-  font-weight: 800;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
+.mon-callout.is-live .mon-callout-state {
+  color: var(--tone);
 }
 
-.mon-corner-time small {
-  font-family: var(--font-poppins), system-ui, sans-serif;
-  font-size: clamp(12px, 1.5vh, 16px);
-  font-weight: 600;
-  color: var(--mon-suave);
+.mon-callout.is-live .mon-callout-state::before {
+  content: "";
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: currentColor;
 }
 
-.mon-corner-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: clamp(14px, 1.9vh, 20px);
-  font-weight: 600;
+.mon-callout-stem {
+  width: 2px;
+  height: clamp(40px, 8vh, 96px);
+  background: rgba(255, 255, 255, 0.85);
 }
 
-.mon-corner-name.is-empty {
-  color: var(--mon-suave);
-  font-weight: 500;
+.mon-callout.is-live .mon-callout-stem {
+  background: var(--tone);
+}
+
+.mon-callout-dot {
+  width: 14px;
+  height: 14px;
+  margin-bottom: -7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
 }
 
 /* Últimos minutos: la pastilla y el número laten. */
 @media (prefers-reduced-motion: no-preference) {
-  .mon-court.is-ending .mon-pill::before {
+  .mon-card.is-ending .mon-pill::before {
     animation: monLate 1.2s ease-out infinite;
   }
 
-  .mon-court.is-ending .mon-ring-num strong {
+  .mon-card.is-ending .mon-ring-num strong,
+  .mon-callout.is-ending .mon-callout-state {
     animation: monParpadeo 1.2s ease-in-out infinite;
   }
 }
@@ -626,98 +661,52 @@ body:has(.mon-root) {
   }
 }
 
-/* Más tarde: los turnos que siguen al próximo, en una línea. */
-.mon-later {
-  display: flex;
-  align-items: center;
-  gap: 10px 14px;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.mon-later-label {
-  flex-shrink: 0;
-  color: var(--mon-suave);
-  font-size: clamp(11px, 1.3vh, 14px);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.mon-later-item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-  padding: 6px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--mon-linea);
-  background: rgba(255, 255, 255, 0.03);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: clamp(14px, 1.8vh, 19px);
-  font-weight: 600;
-}
-
-.mon-later-item strong {
-  font-family: var(--mon-display);
-  font-size: 1.2em;
-  color: var(--mon-naranja);
-  font-variant-numeric: tabular-nums;
-}
-
-.mon-later-item.is-empty {
-  color: var(--mon-suave);
-  font-weight: 500;
-  border-style: dashed;
-}
-
 /* --------------------------------------------------------------------------
    Cantina: los destacados de la carta con su precio (los que se cambian en
    el panel, Cantina → Carta y precios).
    -------------------------------------------------------------------------- */
 .mon-cantina {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(14px, 1.6vw, 28px);
-  padding: clamp(10px, 1.4vh, 16px) clamp(14px, 1.6vw, 24px);
-  border-radius: 20px;
-  border: 1px solid var(--mon-linea);
-  background: linear-gradient(90deg, rgba(232, 114, 42, 0.12), var(--mon-panel) 40%);
+  grid-template-columns: clamp(340px, 25vw, 500px) minmax(0, 1fr);
+  gap: clamp(12px, 1vw, 18px);
+  align-items: stretch;
 }
 
 .mon-cantina-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  padding: clamp(8px, 1.2vh, 14px) clamp(14px, 1.2vw, 22px);
+  border-radius: 20px;
+  border: 1.5px solid rgba(232, 114, 42, 0.6);
+  background: linear-gradient(110deg, rgba(232, 114, 42, 0.28), var(--mon-panel) 60%);
 }
 
 .mon-cantina-mascota {
-  width: clamp(56px, 8vh, 88px);
+  width: clamp(60px, 9vh, 104px);
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5));
 }
 
 .mon-cantina-head h2 {
   margin: 0;
+  color: var(--mon-naranja);
   font-family: var(--mon-display);
-  font-size: clamp(24px, 3.4vh, 38px);
+  font-size: clamp(26px, 3.6vh, 42px);
   font-weight: 800;
   line-height: 0.95;
   text-transform: uppercase;
 }
 
 .mon-cantina-head p {
-  margin: 2px 0 0;
-  color: var(--mon-suave);
-  font-size: clamp(12px, 1.5vh, 15px);
+  margin: 4px 0 0;
+  font-size: clamp(13px, 1.7vh, 18px);
 }
 
 .mon-cantina-items {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
+  gap: clamp(8px, 0.8vw, 14px);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -725,11 +714,12 @@ body:has(.mon-root) {
 
 .mon-cantina-items li {
   display: grid;
-  gap: 2px;
-  padding: clamp(8px, 1.1vh, 12px) 14px;
-  border-radius: 12px;
+  align-content: center;
+  gap: 4px;
+  padding: clamp(8px, 1.2vh, 14px) clamp(14px, 1vw, 20px);
+  border-radius: 16px;
   border: 1px solid var(--mon-linea);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--mon-panel);
 }
 
 .mon-cantina-name {
@@ -742,34 +732,22 @@ body:has(.mon-root) {
 
 .mon-cantina-price {
   font-family: var(--mon-display);
-  font-size: clamp(22px, 3vh, 34px);
+  font-size: clamp(24px, 3.4vh, 38px);
   font-weight: 800;
   line-height: 1;
   color: var(--mon-naranja);
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 900px) {
-  .mon-cantina {
-    grid-template-columns: 1fr;
-  }
-
-  .mon-pista-centro {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-  }
-
-}
-
 /* --------------------------------------------------------------------------
-   Tira de mensajes: la de la home, naranja con pelotas.
+   Avisos: la tira naranja con pelotas, como la de la home.
    -------------------------------------------------------------------------- */
 .mon-ticker {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   overflow: hidden;
-  border-radius: 14px;
+  border-radius: 999px;
   background: var(--mon-naranja);
   color: #1b1b19;
   box-shadow: 0 14px 30px -16px rgba(232, 114, 42, 0.8);
@@ -780,11 +758,13 @@ body:has(.mon-root) {
   align-self: stretch;
   display: flex;
   align-items: center;
-  padding: 0 18px;
-  background: #1b1b19;
-  color: var(--mon-naranja);
+  gap: 8px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: #c4561a;
+  color: #fff;
   font-family: var(--mon-display);
-  font-size: clamp(16px, 2vh, 22px);
+  font-size: clamp(16px, 2.2vh, 24px);
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -793,7 +773,7 @@ body:has(.mon-root) {
 .mon-ticker-window {
   flex: 1;
   overflow: hidden;
-  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
 }
 
 .mon-ticker-track {
@@ -809,7 +789,7 @@ body:has(.mon-root) {
 .mon-ticker-item {
   display: inline-flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   padding: clamp(8px, 1.2vh, 12px) 28px clamp(8px, 1.2vh, 12px) 0;
   font-family: var(--mon-display);
   font-size: clamp(18px, 2.4vh, 26px);
@@ -838,8 +818,40 @@ body:has(.mon-root) {
   }
 
   .mon-ring-fill,
-  .mon-court,
-  .mon-pista-piso {
+  .mon-card,
+  .mon-scene-frame {
     transition: none;
+  }
+}
+
+/* En una pantalla angosta (notebook chica, tablet) se apila y scrollea. */
+@media (max-width: 900px), (max-height: 600px) {
+  .mon-root {
+    height: auto;
+    min-height: 100vh;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 60vh auto auto auto;
+    overflow: visible;
+  }
+
+  .mon-scene {
+    position: relative;
+    grid-row: 2;
+    inset: auto;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .mon-shade,
+  .mon-callout {
+    display: none;
+  }
+
+  .mon-side {
+    grid-row: 3;
+  }
+
+  .mon-cantina {
+    grid-template-columns: 1fr;
   }
 }

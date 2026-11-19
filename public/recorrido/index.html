@@ -1090,13 +1090,15 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   }
 
   let lastDraw = 0, cost = 8;
+  // en la tele de recepción (?monitor=1) ~30 cuadros por segundo alcanzan y la placa del televisor trabaja la mitad
+  const MIN_GAP = /[?&]monitor=1/.test(location.search) ? 33 : 12.5;
   function frame(now) {
     requestAnimationFrame(frame);
     // fuera de la vista no se anima ni se dibuja nada: en la landing comparte el hilo con la página y le trababa el scroll
     if (!inView) { last = now; return; }
     // ritmo de dibujo: nunca más de ~72 cuadros por segundo, y si cada cuadro sale caro se dibuja menos seguido para
     // dejarle tiempo a la página (comparten el hilo). Con ~10 ms por cuadro: 60 en pantallas de 60/120 Hz y 48 en 144 Hz.
-    if (now - lastDraw < Math.max(12.5, cost * 1.5) - 1) return;
+    if (now - lastDraw < Math.max(MIN_GAP, cost * 1.5) - 1) return;
     lastDraw = now; const c0 = performance.now();
     const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
     if (introOn) { want.az = PRE['3d'].az + Math.sin(t * 0.25) * 20; want.d = 74; want.el = 36; }
@@ -1309,6 +1311,37 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
         let m = clones.get(o.material);
         if (!m) { m = o.material.clone(); m.clippingPlanes = [cutPlane]; m.clipShadows = true; clones.set(o.material, m); fadeItems.filter(f => f[0] === o.material).forEach(f => fadeItems.push([m, f[1]])); }
         o.material = m;
+      });
+    })();
+
+    /* ---- modo monitor (?monitor=1, la tele de recepción): cada cancha lleva un borde de neón que pinta la página
+       según su estado (verde en juego, rojo al terminar, apagado si está libre), y la maqueta le avisa a la página
+       dónde cae cada cancha en pantalla para que ponga ahí sus carteles. ---- */
+    if (EMBED && /[?&]monitor=1/.test(location.search)) (function () {
+      const neon = COURT_CARDS.map((c) => {
+        const g = new THREE.Group(); g.userData.anima = true; g.visible = false;
+        const mat = new THREE.MeshBasicMaterial({ color: 0x22c55e, toneMapped: false });
+        // 10 × 20 m, con el borde apenas por fuera de las líneas
+        [[0, -10.15, 10.6, 0.3], [0, 10.15, 10.6, 0.3], [-5.15, 0, 0.3, 20.6], [5.15, 0, 0.3, 20.6]].forEach(([x, z, w, d]) => {
+          const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.12, d), mat); m.position.set(x, 0.07, z); m.userData.noCast = true; m.castShadow = false; g.add(m);
+        });
+        g.position.set(c.pos.x, 0, COURT_Z); scene.add(g); g.updateMatrixWorld(true);
+        return { g, mat };
+      });
+      addEventListener('message', (e) => {
+        if (e.origin !== location.origin || !e.data || e.data.muzzaga !== 'courts' || !Array.isArray(e.data.s)) return;
+        e.data.s.forEach((st, i) => {
+          const n = neon[i]; if (!n) return;
+          n.g.visible = !!(st && st.color);
+          if (n.g.visible) { n.mat.color.set(st.color); n.mat.color.multiplyScalar(1.7); } // pasado de 1: lo agarra el bloom
+        });
+        renderer.shadowMap.needsUpdate = true;
+      });
+      const v = new THREE.Vector3(); let sent = '';
+      frameHooks.push((dt, t, cam) => {
+        const pts = COURT_CARDS.map((c) => { v.copy(c.pos).project(cam); return [+(v.x * 0.5 + 0.5).toFixed(3), +(-v.y * 0.5 + 0.5).toFixed(3)]; });
+        const key = pts.join('|'); if (key === sent) return; sent = key;
+        parent.postMessage({ muzzaga: 'courtPts', pts }, location.origin);
       });
     })();
 
