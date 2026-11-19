@@ -30,6 +30,7 @@ import { getCantinaMenu } from "../lib/cantinaMenuServer";
 import { HOME_FEATURED_COUNT, featuredItems } from "../lib/cantinaMenu";
 import { publicPayment } from "../lib/clubConfig";
 import { CLUB_INFO } from "../data/club";
+import { PRUEBA_STREAMS } from "../lib/beelup";
 import { todayInClub } from "../lib/booking";
 import { FAQS } from "../data/faq";
 import HeroVideo from "../components/HeroVideo";
@@ -258,7 +259,11 @@ export default async function Home() {
 
       {/* 3. LOOP DE CÁMARAS (debajo de reservar turnos) */}
       <CamarasSection
-        courts={config.courts.map(({ id, name, streamUrl }) => ({ id, name, streamUrl }))}
+        courts={config.courts.map(({ id, name, streamUrl }, i) => ({
+          id,
+          name,
+          streamUrl: streamUrl || PRUEBA_STREAMS[i] || "",
+        }))}
         beelupUrl={config.beelupUrl}
       />
 
