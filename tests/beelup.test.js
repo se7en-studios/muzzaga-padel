@@ -67,3 +67,19 @@ test("validateConfig rejects camera links that are not https", () => {
   assert.equal(good.ok, true);
   assert.equal(good.config.courts[0].streamUrl, STREAM);
 });
+
+test("youtubeEmbedUrl turns YouTube links into muted autoplay embeds", async () => {
+  const { youtubeEmbedUrl } = await import("../lib/beelup.js");
+  const vid = "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&playsinline=1&rel=0";
+  assert.equal(youtubeEmbedUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10"), vid);
+  assert.equal(youtubeEmbedUrl("https://youtu.be/dQw4w9WgXcQ"), vid);
+  assert.equal(youtubeEmbedUrl("https://youtube.com/live/dQw4w9WgXcQ?si=abc"), vid);
+  assert.equal(youtubeEmbedUrl("https://m.youtube.com/watch?v=dQw4w9WgXcQ"), vid);
+  assert.equal(
+    youtubeEmbedUrl("https://www.youtube.com/channel/UCabcdefghijklmnopqrstuv/live"),
+    "https://www.youtube.com/embed/live_stream?channel=UCabcdefghijklmnopqrstuv&autoplay=1&mute=1&playsinline=1&rel=0",
+  );
+  assert.equal(youtubeEmbedUrl(STREAM), null);
+  assert.equal(youtubeEmbedUrl("https://www.youtube.com/watch?v=corto"), null);
+  assert.equal(youtubeEmbedUrl("https://evil.com/watch?v=dQw4w9WgXcQ"), null);
+});

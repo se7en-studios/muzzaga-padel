@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, Play } from "lucide-react";
 import Mascota from "./Mascota";
-import { beelupStreamInfo } from "../lib/beelup";
+import { beelupStreamInfo, youtubeEmbedUrl } from "../lib/beelup";
 
 // Si no hay stream (o se cae), queda el loop de las canchas: el mismo video
 // liviano del hero.
@@ -15,7 +15,9 @@ const STALL_MS = 15000;
 function useAutoplayAllowed() {
   const [allowed, setAllowed] = useState(null);
   useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const saveData = navigator.connection?.saveData === true;
     setAllowed(!reduce && !saveData);
   }, []);
@@ -45,7 +47,9 @@ function Chrome({ live, label }) {
       <span className="camaras-corner camaras-corner--bl" aria-hidden="true" />
       <span className="camaras-corner camaras-corner--br" aria-hidden="true" />
       <div className="camaras-frame-chrome" aria-hidden="true">
-        <span className={`pulse-dot camaras-rec-dot${live ? " is-live" : ""}`} />
+        <span
+          className={`pulse-dot camaras-rec-dot${live ? " is-live" : ""}`}
+        />
         {live ? "EN VIVO" : "LOOP"} · {label}
       </div>
     </>
@@ -145,7 +149,10 @@ function StreamFrame({ name, url, autoplay, onFail }) {
   if (state === "error") return <LoopFrame label={name} autoplay={autoplay} />;
 
   return (
-    <div className={`camaras-frame${state === "live" ? " is-live" : ""}`} ref={wrapRef}>
+    <div
+      className={`camaras-frame${state === "live" ? " is-live" : ""}`}
+      ref={wrapRef}
+    >
       <video
         ref={videoRef}
         className="camaras-frame-video"
@@ -167,6 +174,41 @@ function StreamFrame({ name, url, autoplay, onFail }) {
         <span className="camaras-loading" role="status">
           Conectando la cámara…
         </span>
+      )}
+      <Chrome live label={name} />
+    </div>
+  );
+}
+
+/**
+ * Transmisión de YouTube (lo que ofrece Beelup para ver en vivo). YouTube se
+ * encarga de reproducirla en cualquier navegador; acá solo se monta cuando el
+ * cuadro está cerca de la pantalla.
+ */
+function YouTubeFrame({ name, embed, autoplay }) {
+  const wrapRef = useRef(null);
+  const near = useNearViewport(wrapRef);
+  const [wanted, setWanted] = useState(false);
+  const run = near && (autoplay || wanted);
+  return (
+    <div className="camaras-frame is-live" ref={wrapRef}>
+      {run ? (
+        <iframe
+          className="camaras-frame-video"
+          src={embed}
+          title={`Cámara en vivo de ${name}`}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      ) : (
+        <button
+          type="button"
+          className="camaras-play"
+          onClick={() => setWanted(true)}
+        >
+          <Play size={22} aria-hidden="true" /> Ver {name} en vivo
+        </button>
       )}
       <Chrome live label={name} />
     </div>
@@ -211,7 +253,10 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
       <div className="container">
         <div className="section-header-row">
           <div>
-            <span className="badge-linear badge-indigo" style={{ marginBottom: 8 }}>
+            <span
+              className="badge-linear badge-indigo"
+              style={{ marginBottom: 8 }}
+            >
               {live ? "Cámaras en vivo" : "Muzzaga Play"}
             </span>
             <h2 className="section-title">
@@ -242,17 +287,28 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
           </div>
         </div>
 
-        <div className={`camaras-grid${streams.length > 1 ? " is-double" : ""}`}>
+        <div
+          className={`camaras-grid${streams.length > 1 ? " is-double" : ""}`}
+        >
           {streams.length ? (
-            streams.map((c) => (
-              <StreamFrame
-                key={c.id}
-                name={c.name}
-                url={c.streamUrl}
-                autoplay={autoplay === true}
-                onFail={() => setFailed((f) => ({ ...f, [c.id]: true }))}
-              />
-            ))
+            streams.map((c) =>
+              youtubeEmbedUrl(c.streamUrl) ? (
+                <YouTubeFrame
+                  key={c.id}
+                  name={c.name}
+                  embed={youtubeEmbedUrl(c.streamUrl)}
+                  autoplay={autoplay === true}
+                />
+              ) : (
+                <StreamFrame
+                  key={c.id}
+                  name={c.name}
+                  url={c.streamUrl}
+                  autoplay={autoplay === true}
+                  onFail={() => setFailed((f) => ({ ...f, [c.id]: true }))}
+                />
+              ),
+            )
           ) : (
             <LoopFrame label="CANCHAS MUZZAGA" autoplay={autoplay === true} />
           )}

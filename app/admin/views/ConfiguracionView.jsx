@@ -34,7 +34,7 @@ import {
 } from "../../../lib/clubConfig";
 import { isoAddDays, todayInClub } from "../../../lib/booking";
 import { formatARS, formatDate, plural } from "../../../lib/format";
-import { beelupStreamInfo } from "../../../lib/beelup";
+import { beelupStreamInfo, youtubeEmbedUrl } from "../../../lib/beelup";
 import { Skeleton } from "../ui/states";
 import StaffPinModal from "../ui/StaffPinModal";
 import { usePinGate } from "../ui/usePinGate";
@@ -793,8 +793,10 @@ export default function ConfiguracionView({
           </h3>
           <p className="admin-field-hint" style={{ marginTop: 0 }}>
             Se ven en el inicio, en la sección de cámaras debajo de las
-            reservas. Al guardar, la página se actualiza sola. Una cancha sin
-            link (o con el link vencido) muestra el loop de las canchas.
+            reservas. Al guardar, la página se actualiza sola. Cada cancha
+            acepta la transmisión de YouTube que arma Beelup (recomendado: se
+            ve en cualquier celular o compu) o un link de stream de Beelup.
+            Una cancha sin link, o con el link vencido, muestra el loop.
           </p>
 
           <div className="admin-field">
@@ -826,7 +828,7 @@ export default function ConfiguracionView({
                   id={`cfg-stream-${i}`}
                   type="url"
                   inputMode="url"
-                  placeholder="https://beelup.com/ver.stream.m3u8.php?p1=…"
+                  placeholder="https://www.youtube.com/live/… o link de Beelup"
                   value={c.streamUrl || ""}
                   onChange={(e) => setCourt(i, { streamUrl: e.target.value })}
                 />
@@ -835,8 +837,11 @@ export default function ConfiguracionView({
                     className={info.expired ? "admin-field-error" : "admin-field-hint"}
                     role={info.expired ? "alert" : undefined}
                   >
-                    {info.camera && `Cámara ${info.camera}. `}
-                    {info.expiresAt
+                    {youtubeEmbedUrl(c.streamUrl)
+                      ? "Transmisión de YouTube: se ve en cualquier celular o compu."
+                      : null}
+                    {!youtubeEmbedUrl(c.streamUrl) && info.camera && `Cámara ${info.camera}. `}
+                    {youtubeEmbedUrl(c.streamUrl) ? null : info.expiresAt
                       ? info.expired
                         ? "Este link ya venció: pegá uno nuevo de Beelup."
                         : `Beelup da este link hasta el ${new Date(
