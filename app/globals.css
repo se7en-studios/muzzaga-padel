@@ -8483,15 +8483,68 @@ textarea:focus-visible {
 /* Loop de cámaras: el video de las canchas con look de cámara de seguridad
    (esquinas tipo visor + barra "LOOP"), sin pretender ser una cámara en
    vivo real. */
+/* Una cámara por cancha: de a dos en la compu, una abajo de la otra en el celu. */
+.camaras-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media (min-width: 768px) {
+  .camaras-grid.is-double {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .camaras-frame {
   position: relative;
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: #11110f;
+  background: #11110f url("/recorrido/poster-noche.jpg") center / cover no-repeat;
   border: 1px solid var(--color-hairline-strong);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  margin-top: 24px;
+}
+
+.camaras-frame.is-live {
+  border-color: rgba(255, 59, 48, 0.55);
+}
+
+/* Con "reducir movimiento" o ahorro de datos el vivo no arranca solo. */
+.camaras-play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(14, 14, 13, 0.82);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.camaras-play:hover,
+.camaras-play:focus-visible {
+  background: var(--color-accent-orange);
+}
+
+.camaras-loading {
+  position: absolute;
+  inset: auto 0 14px;
+  z-index: 2;
+  text-align: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
 }
 
 .camaras-frame-video {
@@ -8521,7 +8574,16 @@ textarea:focus-visible {
 }
 
 .camaras-rec-dot {
+  color: #ff9a5a;
+}
+
+.camaras-rec-dot.is-live {
   color: #ff3b30;
+}
+
+.camaras-frame-chrome,
+.camaras-corner {
+  z-index: 1;
 }
 
 .camaras-corner {

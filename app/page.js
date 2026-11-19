@@ -257,7 +257,10 @@ export default async function Home() {
       </section>
 
       {/* 3. LOOP DE CÁMARAS (debajo de reservar turnos) */}
-      <CamarasSection />
+      <CamarasSection
+        courts={config.courts.map(({ id, name, streamUrl }) => ({ id, name, streamUrl }))}
+        beelupUrl={config.beelupUrl}
+      />
 
       {/* RECORRIDO 3D POR SCROLL (después del loop de cámaras) */}
       <ClubRecorrido />

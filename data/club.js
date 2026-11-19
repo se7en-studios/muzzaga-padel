@@ -17,9 +17,6 @@ export const CLUB_INFO = {
   instagramHandle: "@muzzagapadel",
   mapsUrl: "https://maps.app.goo.gl/kR1h9mhdLqGLKatV7",
   wazeUrl: "https://waze.com/ul?ll=-37.8832905,-67.8005469&navigate=yes",
-  // Pendiente: URL real del club en Beluup (la tiene que pasar el dueño).
-  // Mientras sea null, la sección de cámaras no muestra el link.
-  beluupUrl: null,
   courtsCount: 2,
   courtType: "Canchas de cristal templado con césped sintético e iluminación LED",
 };
