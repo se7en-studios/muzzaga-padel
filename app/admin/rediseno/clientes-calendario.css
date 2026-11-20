@@ -1,0 +1,2246 @@
+/* Rediseño del admin: clientes-calendario. Se carga al final (después de padel.css), así que
+   pisa lo anterior con la misma especificidad. Todo bajo .admin-root. */
+
+/* ==========================================================================
+   FICHAS COMPARTIDAS
+   La cancha azul (césped + líneas) y la pelotita salen de padel.css; acá
+   quedan como variables para no repetir el SVG en cada bloque.
+   ========================================================================== */
+.admin-root {
+  --cc-court: #2350d6;
+  --cc-court-deep: #16349a;
+  --cc-court-ink: #1c3a9e;
+  --cc-court-tint: #e6ecfc;
+  --cc-ball: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  /* Verde WhatsApp oscurecido: el oficial (#25d366) con texto blanco no llega
+     a contraste AA. */
+  --cc-wa: #15803d;
+  --cc-wa-hover: #166534;
+  --cc-court-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='8' width='192' height='84' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.5'/%3E%3Cpath d='M31 8v84M169 8v84M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.28'/%3E%3C/svg%3E");
+}
+
+/* La pelotita suelta (leyenda del calendario, datos del mes). */
+.admin-root .cc-ball {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--cc-ball);
+  box-shadow: 0 0 0 1px rgba(110, 130, 10, 0.35);
+}
+
+/* ---------- Avatar con iniciales ----------
+   Color fijo por jugador (sale del nombre) para reconocerlo sin leer. */
+.admin-root .cc-avatar {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--cc-tone, #334155);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 -6px 12px rgba(0, 0, 0, 0.14);
+}
+
+.admin-root .cc-avatar[data-tone="0"] { --cc-tone: #2350d6; }
+.admin-root .cc-avatar[data-tone="1"] { --cc-tone: #c2410c; }
+.admin-root .cc-avatar[data-tone="2"] { --cc-tone: #0f766e; }
+.admin-root .cc-avatar[data-tone="3"] { --cc-tone: #6d28d9; }
+.admin-root .cc-avatar[data-tone="4"] { --cc-tone: #be185d; }
+.admin-root .cc-avatar[data-tone="5"] { --cc-tone: #15803d; }
+.admin-root .cc-avatar[data-tone="6"] { --cc-tone: #a16207; }
+.admin-root .cc-avatar[data-tone="7"] { --cc-tone: #334155; }
+
+/* VIP: aro amarillo pelota y la pelotita colgada abajo a la derecha. */
+.admin-root .cc-avatar[data-tier="vip"] {
+  box-shadow:
+    inset 0 -6px 12px rgba(0, 0, 0, 0.14),
+    0 0 0 2px #ffffff,
+    0 0 0 4px #cfe636;
+}
+
+.admin-root .cc-avatar[data-tier="vip"]::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background: var(--cc-ball);
+}
+
+/* Inactivo: el color se apaga, como "en el banco". */
+.admin-root .cc-avatar[data-inactive] {
+  filter: saturate(0.25) brightness(0.92);
+}
+
+/* ---------- Etiqueta de categoría ---------- */
+.admin-root .cc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.admin-root .cc-chip[data-tier="vip"] {
+  background: #f3fbc4;
+  border-color: #d5ea4a;
+  color: #3d4706;
+}
+
+.admin-root .cc-chip[data-tier="vip"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cc-ball);
+}
+
+.admin-root .cc-chip[data-tier="frecuente"] {
+  background: var(--cc-court-tint);
+  color: var(--cc-court-ink);
+}
+
+.admin-root .cc-chip[data-tier="nuevo"] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-root .cc-chip[data-tier="inactivo"] {
+  background: #fdeee6;
+  color: #9a3412;
+}
+
+/* ---------- Botón WhatsApp ---------- */
+.admin-root .cc-wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--cc-wa);
+  color: #ffffff;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 10px -6px rgba(21, 128, 61, 0.8);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-root .cc-wa:hover {
+  background: var(--cc-wa-hover);
+  color: #ffffff;
+  box-shadow: 0 6px 14px -6px rgba(21, 128, 61, 0.9);
+}
+
+.admin-root .cc-wa:focus-visible,
+.admin-root .cc-call:focus-visible,
+.admin-root .cc-trash:focus-visible,
+.admin-root .cc-board-tile:focus-visible,
+.admin-root .cc-player:focus-visible,
+.admin-root .cc-sort:focus-visible,
+.admin-root .cc-heat-cell:focus-visible,
+.admin-root .cc-day:focus-visible,
+.admin-root .cc-cal-arrow:focus-visible {
+  outline: 3px solid rgba(35, 80, 214, 0.45);
+  outline-offset: 2px;
+}
+
+.admin-root .cc-wa-sm {
+  height: 36px;
+  padding: 0 14px 0 12px;
+  font-size: 13.5px;
+}
+
+.admin-root .cc-wa-lg {
+  height: 50px;
+  font-size: 15.5px;
+}
+
+/* ==========================================================================
+   CLIENTES
+   ========================================================================== */
+.admin-root .cc-clientes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- Marcador de segmentos ---------- */
+.admin-root .cc-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-root .cc-board-tile {
+  --seg: #1b1b19;
+  --seg-bg: #f1ede4;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 14px 16px 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.admin-root .cc-board-tile[data-seg="vip"] { --seg: #3d4706; --seg-bg: var(--cc-ball); }
+.admin-root .cc-board-tile[data-seg="frecuente"] { --seg: #ffffff; --seg-bg: var(--cc-court); }
+.admin-root .cc-board-tile[data-seg="nuevo"] { --seg: #ffffff; --seg-bg: #15803d; }
+.admin-root .cc-board-tile[data-seg="inactivo"] { --seg: #ffffff; --seg-bg: #c2410c; }
+.admin-root .cc-board-tile[data-seg="all"] { --seg: #ffffff; --seg-bg: #1b1b19; }
+
+.admin-root .cc-board-tile:hover {
+  border-color: #9fb3ee;
+  box-shadow: 0 8px 18px -12px rgba(13, 31, 92, 0.45);
+}
+
+.admin-root .cc-board-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-root .cc-board-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--seg-bg);
+  color: var(--seg);
+}
+
+.admin-root .cc-board-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-root .cc-board-num {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .cc-board-tile[data-seg="inactivo"] .cc-board-num {
+  color: #c2410c;
+}
+
+.admin-root .cc-board-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Elegido: se vuelve cancha, con sus líneas y la pelotita en la esquina. */
+.admin-root .cc-board-tile[aria-pressed="true"] {
+  border-color: var(--cc-court-deep);
+  background-color: var(--cc-court);
+  background-image:
+    var(--cc-court-lines),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.25), rgba(11, 26, 77, 0.6)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 200px 200px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #ffffff;
+  box-shadow: 0 12px 22px -14px rgba(13, 31, 92, 0.85);
+}
+
+.admin-root .cc-board-tile[aria-pressed="true"] .cc-board-label,
+.admin-root .cc-board-tile[aria-pressed="true"] .cc-board-hint,
+.admin-root .cc-board-tile[aria-pressed="true"] .cc-board-num {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.admin-root .cc-board-tile[aria-pressed="true"] .cc-board-hint {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.admin-root .cc-board-tile[aria-pressed="true"] .cc-board-top {
+  padding-right: 16px; /* lugar para la pelotita de la esquina */
+}
+
+.admin-root .cc-board-tile[aria-pressed="true"] .cc-board-icon {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+
+.admin-root .cc-board-tile[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cc-ball);
+  box-shadow: 0 0 10px rgba(215, 240, 58, 0.7);
+}
+
+/* ---------- Aviso de inactivos ---------- */
+.admin-root .cc-invite {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border: 1px solid #f6c9ab;
+  border-radius: 16px;
+  background:
+    radial-gradient(180px 90px at 100% 0, rgba(232, 114, 42, 0.16), transparent 70%),
+    #fff6ef;
+}
+
+.admin-root .cc-invite-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #c2410c;
+  color: #ffffff;
+}
+
+.admin-root .cc-invite-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 200px;
+  color: #7c2d12;
+}
+
+.admin-root .cc-invite-text strong {
+  font-size: 15.5px;
+}
+
+.admin-root .cc-invite-text small {
+  font-size: 13.5px;
+  color: #9a3412;
+}
+
+.admin-root .cc-invite-list li {
+  gap: 12px;
+}
+
+/* insights.css pone todos los span de la fila en columna: el avatar vuelve
+   a grid para que las iniciales queden centradas. */
+.admin-root .cc-invite-list li > span.cc-avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  font-size: 13.5px;
+}
+
+.admin-root .cc-invite-who {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Tarjeta con la lista ---------- */
+.admin-root .cc-roster-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.admin-root .cc-roster-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-root .cc-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 320px;
+  max-width: 460px;
+  height: 44px;
+  padding: 0 8px 0 14px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-muted);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-root .cc-search:focus-within {
+  border-color: var(--cc-court);
+  box-shadow: 0 0 0 3px rgba(35, 80, 214, 0.15);
+  color: var(--cc-court);
+}
+
+/* Selector largo a propósito: tiene que ganarle al estilo general de inputs
+   de admin.css, que le pone borde propio y quedaba "caja dentro de caja". */
+.admin-root .admin-dashboard-layout .cc-search input:not([type="checkbox"]):not([type="radio"]) {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  box-shadow: none;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+}
+
+.admin-root .admin-dashboard-layout .cc-search input:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.admin-root .cc-search-clear {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: #f1ede4;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.admin-root .cc-roster-count {
+  font-size: 14px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-root .cc-roster-count strong {
+  color: var(--text);
+}
+
+.admin-root .cc-csv {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  margin-left: auto;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-root .cc-csv:hover:not(:disabled) {
+  border-color: var(--text);
+}
+
+.admin-root .cc-csv:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Tabla de jugadores ---------- */
+.admin-root .cc-roster-scroll {
+  overflow-x: auto;
+}
+
+.admin-root .cc-roster {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14.5px;
+}
+
+.admin-root .cc-roster thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.admin-root .cc-sort,
+.admin-root .cc-th-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.admin-root .cc-th-label {
+  cursor: default;
+}
+
+.admin-root .cc-sort:hover,
+.admin-root .cc-sort[aria-pressed="true"] {
+  color: var(--cc-court-ink);
+}
+
+.admin-root .cc-roster th[data-col="count"] { width: 170px; }
+.admin-root .cc-roster th[data-col="totalSpent"] { width: 150px; }
+.admin-root .cc-roster th[data-col="lastDate"] { width: 210px; }
+.admin-root .cc-roster th[data-col="contact"] { width: 170px; }
+
+.admin-root .cc-roster tbody tr {
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.admin-root .cc-roster tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1ede4;
+  vertical-align: middle;
+}
+
+.admin-root .cc-roster tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Al pasar el mouse, la franja azul cancha a la izquierda marca la fila.
+   Solo con mouse: en el celu el toque dejaba la ficha pintada. */
+@media (hover: hover) {
+  .admin-root .cc-roster tbody tr:not(.cc-roster-empty):hover {
+    background: rgba(35, 80, 214, 0.045);
+  }
+
+  .admin-root .cc-roster tbody tr:not(.cc-roster-empty):hover td:first-child {
+    box-shadow: inset 3px 0 0 var(--cc-court);
+  }
+}
+
+.admin-root .cc-roster-empty,
+.admin-root .cc-roster-empty:hover {
+  cursor: default;
+  background: none;
+}
+
+.admin-root .cc-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-root .cc-player-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-root .cc-player-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-root .cc-player-name strong {
+  font-size: 15.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-root .cc-player-phone {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .cc-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.admin-root .cc-count strong {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .cc-count span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Barrita relativa al jugador que más vino: se ve quién es "de la casa". */
+.admin-root .cc-count-bar {
+  display: block;
+  width: 100%;
+  max-width: 110px;
+  height: 5px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--cc-court-tint);
+  overflow: hidden;
+}
+
+.admin-root .cc-count-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6d8ce8, var(--cc-court));
+}
+
+.admin-root tr[data-tier="vip"] .cc-count-bar > span {
+  background: linear-gradient(90deg, var(--cc-court), #a9c41c);
+}
+
+.admin-root .cc-col-money {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.admin-root .cc-col-last {
+  white-space: nowrap;
+}
+
+.admin-root .cc-last {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 8px;
+}
+
+.admin-root .cc-last-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #a8a29e;
+}
+
+.admin-root .cc-last[data-fresh="fresh"] .cc-last-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.16);
+}
+
+.admin-root .cc-last[data-fresh="cold"] {
+  color: #9a3412;
+  font-weight: 600;
+}
+
+.admin-root .cc-last[data-fresh="cold"] .cc-last-dot {
+  background: #ea580c;
+}
+
+.admin-root .cc-contact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-root .cc-no-phone {
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.admin-root .cc-trash {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-root .cc-trash:hover {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+}
+
+/* Inactivos: la fila un poco más gris, sin perder lectura. */
+.admin-root .cc-roster tr[data-inactive] .cc-player-name strong {
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   CAJÓN DEL CLIENTE
+   ========================================================================== */
+.admin-root .admin-drawer.cc-drawer {
+  width: min(460px, 100%);
+  padding: 0 0 24px;
+  gap: 18px;
+  animation: none;
+}
+
+.admin-root .cc-drawer > :not(.cc-drawer-hero) {
+  margin-inline: 20px;
+}
+
+.admin-root .cc-drawer-hero {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 26px 56px 22px 20px;
+  border-bottom: 3px solid #ffffff;
+  background-color: var(--cc-court);
+  background-image:
+    var(--cc-court-lines),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.22), rgba(11, 26, 77, 0.66)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #ffffff;
+  box-shadow: 0 10px 20px -16px rgba(13, 31, 92, 0.9);
+}
+
+.admin-root .cc-avatar-xl {
+  width: 68px;
+  height: 68px;
+  font-size: 24px;
+  box-shadow:
+    inset 0 -8px 16px rgba(0, 0, 0, 0.16),
+    0 0 0 3px #ffffff;
+}
+
+.admin-root .cc-avatar-xl[data-tier="vip"] {
+  box-shadow:
+    inset 0 -8px 16px rgba(0, 0, 0, 0.16),
+    0 0 0 3px #ffffff,
+    0 0 0 6px #d7f03a;
+}
+
+.admin-root .cc-avatar-xl[data-tier="vip"]::after {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-root .cc-drawer-id {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-root .cc-drawer-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-root .cc-drawer-hero .cc-chip {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.admin-root .cc-drawer-hero h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  overflow-wrap: anywhere;
+}
+
+.admin-root .cc-drawer-phone {
+  font-size: 14.5px;
+  color: rgba(255, 255, 255, 0.9);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.admin-root .cc-drawer-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(7, 16, 52, 0.35);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-root .cc-drawer-close:hover {
+  background: rgba(7, 16, 52, 0.6);
+}
+
+.admin-root .cc-drawer-close:focus-visible {
+  outline: 3px solid #d7f03a;
+  outline-offset: 2px;
+}
+
+.admin-root .cc-drawer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-root .cc-drawer-actions .cc-wa {
+  flex: 1;
+}
+
+.admin-root .cc-call {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-root .cc-call:hover {
+  border-color: var(--cc-court);
+  color: var(--cc-court);
+}
+
+/* Si debe, que se vea antes que nada. */
+.admin-root .cc-debt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.admin-root .cc-debt > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-root .cc-debt strong {
+  font-size: 17px;
+}
+
+.admin-root .cc-debt small {
+  font-size: 13.5px;
+  color: #b91c1c;
+}
+
+.admin-root .cc-drawer-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.admin-root .cc-drawer-stats > div {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--surface-muted);
+  border: 1px solid #efeadf;
+}
+
+.admin-root .cc-drawer-stats dt {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .cc-drawer-stats dd {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .cc-drawer-stats dd.is-big {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--cc-court-ink);
+}
+
+.admin-root .cc-drawer-stats > div[data-inactive] dd {
+  color: #c2410c;
+}
+
+.admin-root .cc-drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-root .cc-drawer-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.admin-root .cc-drawer-section-head label,
+.admin-root .cc-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.admin-root .cc-drawer-section-head span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.admin-root .cc-drawer-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--cc-court-tint);
+  color: var(--cc-court-ink);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.admin-root .cc-drawer-count.is-money {
+  background: #fff4ec;
+  color: #9a3412;
+}
+
+.admin-root .cc-drawer-hint {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+/* Etiquetas rápidas: las que ya están en la nota se ven "puestas". */
+.admin-root .cc-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-root .cc-tag {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-root .cc-tag:hover {
+  border-color: var(--cc-court);
+  color: var(--cc-court-ink);
+}
+
+.admin-root .cc-tag[aria-pressed="true"] {
+  border: 1px solid var(--cc-court-deep);
+  background: var(--cc-court);
+  color: #ffffff;
+  cursor: default;
+}
+
+.admin-root .admin-dashboard-layout textarea.cc-note {
+  width: 100%;
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14.5px;
+  resize: vertical;
+}
+
+.admin-root .admin-dashboard-layout textarea.cc-note:focus {
+  outline: none;
+  border-color: var(--cc-court);
+  box-shadow: 0 0 0 3px rgba(35, 80, 214, 0.15);
+}
+
+.admin-root .cc-note-save {
+  align-self: flex-start;
+}
+
+/* ---------- Historial ---------- */
+.admin-root .cc-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-root .cc-history li {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.admin-root .cc-history li:last-child {
+  border-bottom: none;
+}
+
+.admin-root .cc-history li.is-voided {
+  opacity: 0.6;
+}
+
+.admin-root .cc-history li.is-voided .cc-history-main strong,
+.admin-root .cc-history li.is-voided .cc-history-amount {
+  text-decoration: line-through;
+}
+
+/* Fecha como mini cancha: número grande y el mes abajo. */
+.admin-root .cc-date-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+  border-radius: 10px;
+  background-color: var(--cc-court);
+  background-image:
+    var(--cc-court-lines),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.15), rgba(11, 26, 77, 0.5));
+  background-size: 100% 100%, auto;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.admin-root .cc-date-tile.is-soft {
+  background: #fff4ec;
+  color: #9a3412;
+  text-shadow: none;
+}
+
+.admin-root .cc-date-tile strong {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admin-root .cc-date-tile small {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-root .cc-history-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-root .cc-history-main strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.admin-root .cc-history-main small {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.admin-root .cc-history-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.admin-root .cc-history-amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .cc-history-owed {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.admin-root .cc-status {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #f1ede4;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-root .cc-status[data-status="pagado"] { background: #dcfce7; color: #166534; }
+.admin-root .cc-status[data-status="señado"] { background: #fef3c7; color: #854d0e; }
+.admin-root .cc-status[data-status="a-cuenta"] { background: #fef3c7; color: #854d0e; }
+.admin-root .cc-status[data-status="confirmado"] { background: var(--cc-court-tint); color: var(--cc-court-ink); }
+.admin-root .cc-status[data-status="cancelado"] { background: #f1f5f9; color: #475569; }
+
+/* ---------- Zona de peligro ---------- */
+.admin-root .cc-drawer-danger {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.admin-root .cc-danger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fff1f2;
+  color: #b91c1c;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-root .cc-danger-btn:hover {
+  background: #ffe4e6;
+  border-color: #fca5a5;
+}
+
+/* ==========================================================================
+   CALENDARIO DEL MES
+   ========================================================================== */
+.admin-root .cc-cal-card {
+  padding: 20px 22px 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.admin-root .cc-cal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-root .cc-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-root .cc-cal-month {
+  min-width: 230px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.admin-root .cc-cal-month span {
+  color: var(--cc-court);
+}
+
+.admin-root .cc-cal-arrow {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-root .cc-cal-arrow:hover {
+  border-color: var(--cc-court);
+  background: var(--cc-court);
+  color: #ffffff;
+}
+
+.admin-root .cc-cal-today {
+  height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid var(--brand, #e8722a);
+  border-radius: 999px;
+  background: #fff6ef;
+  color: #9a3412;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-root .cc-cal-today:hover {
+  background: var(--brand, #e8722a);
+  color: #ffffff;
+}
+
+.admin-root .cc-cal-facts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root .cc-cal-facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid #efeadf;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+.admin-root .cc-cal-facts li[data-kind="best"] {
+  background: #fff4ec;
+  border-color: #f8d3bb;
+  color: #7c2d12;
+}
+
+.admin-root .cc-cal-facts li[data-kind="best"] svg {
+  color: #ea580c;
+}
+
+.admin-root .cc-cal-facts li[data-kind="weekday"] {
+  background: var(--cc-court-tint);
+  border-color: #cdd8f7;
+  color: #14204a;
+}
+
+.admin-root .cc-cal-facts li.cc-cal-hint {
+  background: none;
+  border: none;
+  padding-inline: 4px;
+  color: var(--text-muted);
+}
+
+/* ---------- Grilla del mes ---------- */
+.admin-root .cc-heatmap {
+  gap: 8px;
+}
+
+.admin-root .cc-weekday {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0 4px 4px;
+}
+
+.admin-root .cc-weekday-name {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.admin-root .cc-weekday[data-weekend] .cc-weekday-name {
+  color: #c2410c;
+}
+
+/* Promedio de ocupación de ese día de la semana, alineado con su columna. */
+.admin-root .cc-weekday-avg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-root .cc-weekday-track {
+  flex: 1;
+  max-width: 90px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--cc-court-tint);
+  overflow: hidden;
+}
+
+.admin-root .cc-weekday-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cc-court);
+}
+
+.admin-root .cc-weekday-avg small {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nivel 3 un poco más oscuro que en padel.css: con texto blanco chico el
+   celeste anterior no llegaba a contraste AA. */
+.admin-root .cc-cal [data-heat="3"] {
+  --heat-bg: #3f63d8;
+}
+
+/* Las líneas de la cancha (padel.css) más suaves: la red pasaba justo por
+   arriba del porcentaje. */
+.admin-root .cc-heat-cell[data-heat="3"]::before,
+.admin-root .cc-heat-cell[data-heat="4"]::before {
+  opacity: 0.55;
+}
+
+.admin-root .cc-heat-cell {
+  justify-content: flex-start;
+  gap: 2px;
+  min-height: 98px;
+  padding: 10px 12px 14px;
+  border-radius: 12px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.15s ease;
+}
+
+.admin-root .cc-heat-cell[data-heat="0"] {
+  background: var(--surface);
+}
+
+.admin-root .cc-heat-cell.is-past[data-heat="0"] {
+  background: var(--surface-muted);
+}
+
+.admin-root .cc-heat-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-root .cc-heat-cell .admin-heat-day {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.admin-root .cc-heat-cell.is-past[data-heat="0"] .admin-heat-day {
+  color: var(--text-muted);
+}
+
+.admin-root .cc-heat-cell .admin-heat-pct {
+  margin-top: auto;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .cc-heat-cell[data-heat="0"] .admin-heat-pct {
+  font-size: 20px;
+  color: #b8b2a5;
+}
+
+.admin-root .cc-heat-cell .admin-heat-meta {
+  font-size: 12.5px;
+  font-weight: 600;
+  opacity: 0.92;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.admin-root .cc-heat-cell .admin-heat-closed {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: auto;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+/* Barra de ocupación abajo: azul en los días tranquilos, amarillo pelota
+   cuando el día ya es cancha llena. */
+.admin-root .cc-heat-bar {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 6px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(20, 32, 74, 0.1);
+  overflow: hidden;
+}
+
+.admin-root .cc-heat-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cc-court);
+}
+
+.admin-root .cc-heat-cell[data-heat="3"] .cc-heat-bar,
+.admin-root .cc-heat-cell[data-heat="4"] .cc-heat-bar {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.admin-root .cc-heat-cell[data-heat="3"] .cc-heat-bar > span,
+.admin-root .cc-heat-cell[data-heat="4"] .cc-heat-bar > span {
+  background: #d7f03a;
+}
+
+.admin-root .cc-heat-today {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--brand, #e8722a);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+/* Hoy: borde naranja de marca (la pelotita de la esquina viene de padel.css). */
+.admin-root .cc-heat-cell.is-today {
+  border-color: var(--brand, #e8722a);
+  box-shadow: 0 0 0 2px var(--brand, #e8722a);
+}
+
+.admin-root .cc-heat-cell:hover:not(:disabled) {
+  border-color: var(--cc-court);
+  box-shadow: 0 0 0 1px var(--cc-court), 0 10px 18px -12px rgba(13, 31, 92, 0.6);
+}
+
+.admin-root .cc-heat-cell.is-today:hover:not(:disabled) {
+  box-shadow: 0 0 0 2px var(--brand, #e8722a), 0 10px 18px -12px rgba(13, 31, 92, 0.6);
+}
+
+.admin-root .cc-heat-cell:disabled {
+  opacity: 0.85;
+}
+
+/* ---------- Leyenda ---------- */
+.admin-root .cc-legend {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 13px;
+}
+
+.admin-root .cc-legend-scale {
+  display: inline-flex;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.admin-root .cc-legend-scale .cc-legend-swatch {
+  width: 26px;
+  height: 14px;
+  border: none;
+  border-radius: 0;
+}
+
+.admin-root .cc-legend > .cc-legend-swatch {
+  width: 18px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.admin-root .cc-legend-sep {
+  width: 1px;
+  height: 16px;
+  margin: 0 6px;
+  background: var(--border-strong);
+}
+
+/* La tira de ritmo semanal es del celu; en la compu va en los encabezados. */
+.admin-root .cc-week-rhythm {
+  display: none;
+}
+
+/* ==========================================================================
+   PANTALLAS GRANDES (1920): más aire en la grilla del mes
+   ========================================================================== */
+@media (min-width: 1700px) {
+  .admin-root .cc-heat-cell {
+    min-height: 112px;
+    padding: 12px 14px 16px;
+  }
+
+  .admin-root .cc-heat-cell .admin-heat-pct {
+    font-size: 32px;
+  }
+
+  .admin-root .cc-heat-cell .admin-heat-meta {
+    font-size: 13.5px;
+  }
+}
+
+/* Tablet y compus chicas: el marcador baja a una grilla que se acomoda. */
+@media (min-width: 768px) and (max-width: 1180px) {
+  .admin-root .cc-board {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .admin-root .cc-roster th[data-col="lastDate"] { width: 180px; }
+  .admin-root .cc-roster th[data-col="contact"] { width: 150px; }
+  .admin-root .cc-wa-sm span { display: none; }
+  .admin-root .cc-wa-sm { width: 40px; padding: 0; }
+}
+
+/* ==========================================================================
+   CELU
+   ========================================================================== */
+@media (max-width: 767px) {
+  /* Marcador: tira horizontal que se desliza, con imán en cada tarjeta. */
+  .admin-root .cc-board {
+    display: flex;
+    gap: 10px;
+    margin-inline: -16px;
+    padding: 2px 16px 6px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .admin-root .cc-board::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-root .cc-board {
+    scroll-padding-inline: 16px;
+  }
+
+  .admin-root .cc-board-tile {
+    flex: 0 0 auto;
+    min-width: 118px;
+    scroll-snap-align: start;
+    padding: 10px 14px 10px 12px;
+    border-radius: 14px;
+  }
+
+  .admin-root .cc-board-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .admin-root .cc-board-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .admin-root .cc-board-label {
+    font-size: 12px;
+  }
+
+  .admin-root .cc-board-num {
+    margin-top: 4px;
+    font-size: 32px;
+  }
+
+  .admin-root .cc-board-hint {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .admin-root .cc-board-tile[aria-pressed="true"]::after {
+    top: 9px;
+    right: 9px;
+    width: 10px;
+    height: 10px;
+  }
+
+  .admin-root .cc-invite .cc-wa {
+    width: 100%;
+    height: 46px;
+  }
+
+  .admin-root .cc-roster-card {
+    border-radius: 16px;
+  }
+
+  .admin-root .cc-roster-toolbar {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .admin-root .cc-search {
+    flex-basis: 100%;
+    max-width: none;
+    height: 48px;
+  }
+
+  .admin-root .admin-dashboard-layout .cc-search input:not([type="checkbox"]):not([type="radio"]) {
+    font-size: 16px; /* 16px: iOS no hace zoom al tocar el campo */
+  }
+
+  .admin-root .cc-search {
+    padding-right: 2px;
+  }
+
+  .admin-root .cc-search-clear {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-root .cc-csv {
+    height: 44px;
+  }
+
+  .admin-root .cc-roster-scroll {
+    overflow: visible;
+  }
+
+  .admin-root .cc-roster,
+  .admin-root .cc-roster tbody,
+  .admin-root .cc-roster thead {
+    display: block;
+  }
+
+  /* El encabezado queda como fila de "ordenar por", con chips táctiles. */
+  .admin-root .cc-roster thead tr {
+    display: flex;
+    gap: 6px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-muted);
+    scrollbar-width: none;
+  }
+
+  .admin-root .cc-roster thead th {
+    position: static;
+    width: auto !important;
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  .admin-root .cc-roster thead th[data-col="contact"] {
+    display: none;
+  }
+
+  .admin-root .cc-sort {
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 12px;
+  }
+
+  .admin-root .cc-sort[aria-pressed="true"] {
+    border-color: var(--cc-court-deep);
+    background: var(--cc-court);
+    color: #ffffff;
+  }
+
+  .admin-root .cc-roster tbody {
+    padding: 10px;
+  }
+
+  /* Cada jugador es una ficha: arriba quién es con el WhatsApp a mano del
+     pulgar, abajo una tira con sus números. Compacta para ver varias por
+     pantalla. */
+  .admin-root .cc-roster tbody tr:not(.cc-roster-empty) {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "player player player contact"
+      "count money last last";
+    align-items: center;
+    gap: 10px 6px;
+    margin-bottom: 8px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .admin-root .cc-roster tbody tr[data-tier="vip"] {
+    border-color: #dcec7a;
+    background: linear-gradient(180deg, #fbfee8, var(--surface) 70%);
+  }
+
+  .admin-root .cc-roster tbody td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+  }
+
+  .admin-root .cc-roster td.cc-col-player { grid-area: player; }
+  .admin-root .cc-roster td.cc-col-count { grid-area: count; }
+  .admin-root .cc-roster td.cc-col-money { grid-area: money; }
+  .admin-root .cc-roster td.cc-col-last { grid-area: last; }
+  .admin-root .cc-roster td.cc-col-contact { grid-area: contact; }
+
+  .admin-root .cc-roster td.cc-col-count,
+  .admin-root .cc-roster td.cc-col-money,
+  .admin-root .cc-roster td.cc-col-last {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--surface-muted);
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+
+  .admin-root .cc-roster td.cc-col-last {
+    justify-self: start;
+    overflow: hidden;
+  }
+
+  .admin-root .cc-roster tbody tr[data-tier="vip"] td.cc-col-count,
+  .admin-root .cc-roster tbody tr[data-tier="vip"] td.cc-col-money,
+  .admin-root .cc-roster tbody tr[data-tier="vip"] td.cc-col-last {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: inset 0 0 0 1px #eef5c4;
+  }
+
+  .admin-root .cc-count {
+    gap: 4px;
+  }
+
+  .admin-root .cc-count strong {
+    font-size: 19px;
+  }
+
+  .admin-root .cc-count-bar {
+    display: none;
+  }
+
+  .admin-root .cc-col-money {
+    font-weight: 700;
+  }
+
+  .admin-root .cc-last {
+    margin-right: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-root .cc-col-last .cc-chip {
+    display: none; /* el punto naranja ya avisa y el avatar va apagado */
+  }
+
+  .admin-root .cc-player-name {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .admin-root .cc-player-name strong {
+    white-space: normal;
+    font-size: 16px;
+  }
+
+  .admin-root .cc-avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 16px;
+  }
+
+  .admin-root .cc-contact {
+    gap: 6px;
+  }
+
+  /* En el celu el WhatsApp es un botón redondo grande: se reconoce solo. */
+  .admin-root .cc-contact .cc-wa-sm {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+  }
+
+  .admin-root .cc-contact .cc-wa-sm svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .admin-root .cc-contact .cc-wa-sm span {
+    display: none; /* el enlace ya lleva aria-label con el nombre */
+  }
+
+  .admin-root .cc-no-phone {
+    max-width: 64px;
+    font-size: 12.5px;
+    line-height: 1.2;
+    text-align: right;
+  }
+
+  .admin-root .cc-trash {
+    width: 44px;
+    height: 48px;
+  }
+
+  .admin-root .cc-roster-empty,
+  .admin-root .cc-roster-empty td {
+    display: block;
+  }
+
+  /* ---------- Cajón a pantalla completa ---------- */
+  .admin-root .admin-drawer.cc-drawer {
+    width: 100%;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .admin-root .cc-drawer > :not(.cc-drawer-hero) {
+    margin-inline: 16px;
+  }
+
+  .admin-root .cc-drawer-hero {
+    padding: 22px 60px 20px 16px;
+  }
+
+  .admin-root .cc-drawer-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-root .cc-drawer-hero h3 {
+    font-size: 27px;
+  }
+
+  .admin-root .cc-tag {
+    height: 44px;
+    padding: 0 14px;
+    font-size: 14px;
+  }
+
+  .admin-root .cc-history li {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  /* ---------- Calendario en el celu ---------- */
+  .admin-root .cc-cal-card {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+
+  /* Grilla de una columna con minmax(0, 1fr): así la tira de datos que se
+     desliza no estira la tarjeta más allá de la pantalla. */
+  .admin-root .cc-cal-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .admin-root .cc-cal-nav {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .admin-root .cc-cal-month {
+    flex: 1;
+    min-width: 0;
+    font-size: 26px;
+  }
+
+  .admin-root .cc-cal-arrow {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-root .cc-cal-today {
+    order: 4;
+    width: 100%;
+    height: 44px;
+  }
+
+  /* Los datos del mes en una tira que se desliza, para no ocupar tres
+     renglones antes de llegar a los días. */
+  .admin-root .cc-cal-facts {
+    flex-wrap: nowrap;
+    margin-inline: -12px;
+    padding: 0 12px 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .admin-root .cc-cal-facts::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-root .cc-cal-facts li {
+    flex-shrink: 0;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .admin-root .cc-cal-facts li.cc-cal-hint {
+    display: none; /* en el celu se entiende solo: cada día tiene su flechita */
+  }
+
+  /* Ritmo de la semana: siete barritas verticales, la más alta en naranja. */
+  .admin-root .cc-week-rhythm {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 10px 10px 8px;
+    border-radius: 12px;
+    background: var(--surface-muted);
+  }
+
+  .admin-root .cc-week-rhythm::before {
+    content: "Ocupación promedio por día";
+    grid-column: 1 / -1;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .admin-root .cc-week-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .admin-root .cc-week-bar {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 26px;
+    height: 44px;
+    border-radius: 6px;
+    background: var(--cc-court-tint);
+    overflow: hidden;
+  }
+
+  .admin-root .cc-week-bar > span {
+    display: block;
+    width: 100%;
+    background: var(--cc-court);
+    border-radius: 6px 6px 0 0;
+  }
+
+  .admin-root .cc-week-col[data-best] .cc-week-bar > span {
+    background: var(--brand, #e8722a);
+  }
+
+  .admin-root .cc-week-col small {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .admin-root .cc-day-list {
+    gap: 8px;
+  }
+
+  .admin-root .cc-day-list .cc-day {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 20px;
+    grid-template-rows: auto;
+    align-items: center;
+    column-gap: 12px;
+    min-height: 66px;
+    padding: 8px 10px 8px 8px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .admin-root .cc-day-list .cc-day.is-past {
+    background: var(--surface-muted);
+  }
+
+  .admin-root .cc-day-list .cc-day.is-today {
+    border-color: var(--brand, #e8722a);
+    box-shadow: 0 0 0 1px var(--brand, #e8722a);
+  }
+
+  .admin-root .cc-day-list .cc-day:disabled {
+    opacity: 1;
+    background: var(--surface-muted);
+  }
+
+  /* La fecha va en un cuadrito pintado con el color de ocupación del día. */
+  .admin-root .cc-day-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    border-radius: 10px;
+    border: 1px solid rgba(20, 32, 74, 0.08);
+    background: var(--heat-bg);
+    color: var(--heat-fg);
+    overflow: hidden;
+  }
+
+  .admin-root .cc-day[data-heat="0"] .cc-day-tile {
+    background: var(--cc-court-tint);
+    color: #14204a;
+  }
+
+  .admin-root .cc-day[data-heat="4"] .cc-day-tile,
+  .admin-root .cc-day[data-heat="3"] .cc-day-tile {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  /* El más lleno lleva el césped, como la cancha de la agenda. */
+  .admin-root .cc-day[data-heat="4"] .cc-day-tile {
+    background-image:
+      linear-gradient(180deg, rgba(11, 26, 77, 0.15), rgba(11, 26, 77, 0.45)),
+      url("/img/fondo/textura-cesped.jpg");
+    background-size: auto, 160px 160px;
+  }
+
+  .admin-root .cc-day-tile small {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .admin-root .cc-day[data-weekend] .cc-day-tile small {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+  }
+
+  .admin-root .cc-day-tile strong {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .admin-root .cc-day-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .admin-root .cc-day-top {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .admin-root .cc-day-top strong {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .admin-root .cc-day[data-heat="0"] .cc-day-top strong {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .admin-root .cc-day:disabled .cc-day-top strong {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  .admin-root .cc-day-meta {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-root .cc-day:disabled .cc-day-meta {
+    margin-left: 0;
+  }
+
+  .admin-root .cc-day-bar {
+    display: block;
+    height: 6px;
+    border-radius: 999px;
+    background: #ece8df;
+    overflow: hidden;
+  }
+
+  .admin-root .cc-day-bar > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--cc-court);
+  }
+
+  .admin-root .cc-day[data-heat="4"] .cc-day-bar > span {
+    background: linear-gradient(90deg, var(--cc-court), #a9c41c);
+  }
+
+  .admin-root .cc-day-go {
+    color: var(--text-muted);
+  }
+}
+
+/* ==========================================================================
+   MOVIMIENTO (solo si la persona no pidió reducirlo)
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-drawer.cc-drawer {
+    animation: ccDrawerIn 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  @keyframes ccDrawerIn {
+    from {
+      transform: translateX(28px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  .admin-root .cc-board-tile:hover {
+    transform: translateY(-2px);
+  }
+
+  .admin-root .cc-heat-cell:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+
+  /* La pelotita del segmento elegido pica una vez al cambiar. */
+  .admin-root .cc-board-tile[aria-pressed="true"]::after {
+    animation: ccBallBounce 0.5s ease-out;
+  }
+
+  @keyframes ccBallBounce {
+    0% { transform: translateY(-10px) scale(0.8); }
+    55% { transform: translateY(0) scale(1.05, 0.9); }
+    75% { transform: translateY(-3px); }
+    100% { transform: none; }
+  }
+}

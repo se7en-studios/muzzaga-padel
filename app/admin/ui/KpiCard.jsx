@@ -34,13 +34,17 @@ export default function KpiCard({
     >
       <div className="admin-kravio-kpi-header">
         <span className="admin-kravio-kpi-title">{title}</span>
+        {/* El ícono en una fichita del color de la tarjeta: se reconoce
+            qué número es antes de leer el título. */}
         {Icon && (
-          <Icon
-            size={17}
-            strokeWidth={1.75}
-            className="admin-kpi-icon"
-            aria-hidden
-          />
+          <span className="admin-kpi-icon-chip" aria-hidden>
+            <Icon
+              size={18}
+              strokeWidth={1.75}
+              className="admin-kpi-icon"
+              aria-hidden
+            />
+          </span>
         )}
       </div>
       <div className="admin-kravio-kpi-content">

@@ -1,10 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { History, RefreshCw, Search } from "lucide-react";
+import {
+  CalendarDays,
+  Globe,
+  History,
+  RefreshCw,
+  Search,
+  Settings,
+  Trophy,
+  UserRound,
+  UtensilsCrossed,
+  Wallet,
+} from "lucide-react";
 import { adminGetAuditLog } from "../actions";
 import { EmptyState, SkeletonRows } from "../ui/states";
-import { formatDate, formatTime, normalizeSearch } from "../../../lib/format";
+import {
+  formatDate,
+  formatTime,
+  normalizeSearch,
+  plural,
+} from "../../../lib/format";
+import { isoAddDays, todayInClub } from "../../../lib/booking";
 
 /** Qué significa cada código del registro, en palabras del club. */
 const ACTIONS = {
@@ -72,15 +89,40 @@ const ACTIONS = {
 };
 
 const AREAS = [
-  { id: "all", label: "Todo" },
-  { id: "turnos", label: "Turnos" },
-  { id: "caja", label: "Caja" },
-  { id: "cantina", label: "Cantina" },
-  { id: "clientes", label: "Clientes" },
-  { id: "torneos", label: "Torneos" },
-  { id: "ajustes", label: "Ajustes y equipo" },
-  { id: "sitio", label: "Sitio web" },
+  { id: "all", label: "Todo", icon: History },
+  { id: "turnos", label: "Turnos", icon: CalendarDays },
+  { id: "caja", label: "Caja", icon: Wallet },
+  { id: "cantina", label: "Cantina", icon: UtensilsCrossed },
+  { id: "clientes", label: "Clientes", icon: UserRound },
+  { id: "torneos", label: "Torneos", icon: Trophy },
+  { id: "ajustes", label: "Ajustes y equipo", icon: Settings },
+  { id: "sitio", label: "Sitio web", icon: Globe },
 ];
+const AREA_BY_ID = Object.fromEntries(AREAS.map((a) => [a.id, a]));
+
+// Qué quiere decir cada color de la línea de tiempo (se muestra arriba).
+const TONES = [
+  { id: "danger", label: "Borró o canceló" },
+  { id: "warn", label: "Cambio delicado" },
+  { id: "ok", label: "Cierre de caja" },
+];
+
+/** Iniciales para el "dorsal" de cada persona. */
+const initials = (name) =>
+  String(name || "?")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() || "")
+    .join("");
+
+/** Un color fijo por persona (de una paleta legible sobre blanco). */
+const PERSON_HUES = [222, 18, 152, 268, 340, 196, 38];
+const hueFor = (name) => {
+  let h = 0;
+  for (const ch of String(name || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return PERSON_HUES[h % PERSON_HUES.length];
+};
 
 const describe = (code) =>
   ACTIONS[code] || {
@@ -152,6 +194,40 @@ export default function ActividadView({ onExpiredSession }) {
     });
   }, [logs, area, person, search]);
 
+  // Conteo por sección para los filtros (sobre lo que deja la persona y la búsqueda).
+  const areaCounts = useMemo(() => {
+    const q = normalizeSearch(search);
+    const counts = { all: 0 };
+    for (const l of logs || []) {
+      const info = describe(l.action);
+      if (person !== "all" && l.staffName !== person) continue;
+      if (
+        q &&
+        !normalizeSearch(
+          `${info.label} ${l.target || ""} ${l.details || ""} ${l.staffName || ""}`,
+        ).includes(q)
+      ) {
+        continue;
+      }
+      counts.all += 1;
+      counts[info.area] = (counts[info.area] || 0) + 1;
+    }
+    return counts;
+  }, [logs, person, search]);
+
+  const stats = useMemo(() => {
+    const names = new Set(filtered.map((l) => l.staffName).filter(Boolean));
+    return {
+      total: filtered.length,
+      delicate: filtered.filter((l) => describe(l.action).tone === "danger").length,
+      people: names.size,
+      last: filtered[0],
+    };
+  }, [filtered]);
+
+  const today = todayInClub();
+  const yesterday = isoAddDays(today, -1);
+
   const byDay = useMemo(() => {
     const days = [];
     for (const l of filtered) {
@@ -164,13 +240,49 @@ export default function ActividadView({ onExpiredSession }) {
   }, [filtered]);
 
   return (
-    <div className="admin-activity">
-      <p className="admin-field-hint" style={{ marginTop: 0 }}>
+    <div className="admin-activity admin-act">
+      <p className="admin-field-hint admin-act-intro">
         Cada vez que alguien del equipo borra, cancela, cierra la caja o cambia
         algo importante, queda anotado acá con su nombre (lo identifica su PIN).
       </p>
 
-      <div className="admin-view-toolbar">
+      {/* Marcador: el resumen de lo que se está viendo, como el tablero de la cancha. */}
+      {logs && logs.length > 0 && (
+        <dl className="admin-act-score" aria-label="Resumen de lo que se ve">
+          <div>
+            <dt>Movimientos</dt>
+            <dd>{stats.total}</dd>
+          </div>
+          <div className={stats.delicate ? "is-danger" : ""}>
+            <dt>Borró o canceló</dt>
+            <dd>{stats.delicate}</dd>
+          </div>
+          <div>
+            <dt>Personas</dt>
+            <dd>{stats.people}</dd>
+          </div>
+          <div className="admin-act-score-last">
+            <dt>Último</dt>
+            <dd>
+              {stats.last ? (
+                <>
+                  <strong>
+                    {stats.last.timestamp ? formatTime(stats.last.timestamp) : "—"}
+                  </strong>
+                  <span>
+                    {stats.last.staffName || "Alguien"} ·{" "}
+                    {describe(stats.last.action).label.toLowerCase()}
+                  </span>
+                </>
+              ) : (
+                "—"
+              )}
+            </dd>
+          </div>
+        </dl>
+      )}
+
+      <div className="admin-view-toolbar admin-act-toolbar">
         <div
           className="admin-kravio-search-field"
           style={{ minWidth: "min(260px, 100%)" }}
@@ -211,7 +323,7 @@ export default function ActividadView({ onExpiredSession }) {
       </div>
 
       <div
-        className="admin-chips"
+        className="admin-chips admin-act-chips"
         role="group"
         aria-label="Filtrar por sección"
       >
@@ -222,10 +334,25 @@ export default function ActividadView({ onExpiredSession }) {
             aria-pressed={area === a.id}
             onClick={() => setArea(a.id)}
           >
+            <a.icon size={15} strokeWidth={1.9} aria-hidden />
             {a.label}
+            {logs && (
+              <span className="admin-act-chip-count">{areaCounts[a.id] || 0}</span>
+            )}
           </button>
         ))}
       </div>
+
+      <ul className="admin-act-legend" aria-label="Qué significa cada color">
+        {TONES.map((t) => (
+          <li key={t.id} className={`is-${t.id}`}>
+            <i aria-hidden /> {t.label}
+          </li>
+        ))}
+        <li>
+          <i aria-hidden /> Otros cambios
+        </li>
+      </ul>
 
       {error && (
         <div className="admin-activity-error" role="alert">
@@ -251,59 +378,85 @@ export default function ActividadView({ onExpiredSession }) {
           />
         </div>
       ) : (
-        <div className="admin-activity-days">
+        <div className="admin-activity-days admin-act-days">
           {byDay.map(({ day, items }) => (
             <section
               key={day || "sin-fecha"}
-              className="admin-settings-card admin-activity-day"
+              className="admin-act-day"
+              aria-label={day ? formatDate(day, "long") : "Sin fecha"}
             >
-              <h2 className="admin-activity-day-title">
-                {day ? formatDate(day, "long") : "Sin fecha"}
+              {/* Cada día es un "set": encabezado pegado arriba mientras se lee. */}
+              <h2 className="admin-activity-day-title admin-act-day-title">
+                {day === today && <span className="admin-act-day-badge">Hoy</span>}
+                {day === yesterday && (
+                  <span className="admin-act-day-badge is-soft">Ayer</span>
+                )}
+                <span>{day ? formatDate(day, "long") : "Sin fecha"}</span>
+                <small>{plural(items.length, "movimiento", "movimientos")}</small>
               </h2>
-              <ul className="admin-activity-list">
+              <ol className="admin-activity-list admin-act-list">
                 {items.map((l) => {
                   const info = describe(l.action);
+                  const areaInfo = AREA_BY_ID[info.area];
+                  const AreaIcon = areaInfo?.icon || History;
                   return (
                     <li
                       key={l.id}
-                      className={`admin-activity-item ${TONE_CLASS[info.tone] || ""}`}
+                      className={`admin-activity-item admin-act-item ${TONE_CLASS[info.tone] || ""}`}
                     >
-                      <span className="admin-activity-time">
+                      <time className="admin-activity-time admin-act-time">
                         {l.timestamp ? formatTime(l.timestamp) : "—"}
-                      </span>
-                      <div className="admin-activity-body">
-                        <div>
-                          <strong>{l.staffName || "Alguien"}</strong>
-                          {l.staffRole && (
-                            <span className="admin-activity-role">
+                      </time>
+                      <span className="admin-act-dot" aria-hidden />
+                      <div className="admin-activity-body admin-act-card">
+                        <span
+                          className="admin-act-avatar"
+                          style={{ "--person-hue": hueFor(l.staffName) }}
+                          aria-hidden
+                        >
+                          {initials(l.staffName || "Alguien")}
+                        </span>
+                        <div className="admin-act-main">
+                          <p className="admin-act-line">
+                            <strong>{l.staffName || "Alguien"}</strong>
+                            <span className="admin-activity-what">
                               {" "}
-                              · {l.staffRole}
+                              {info.label.toLowerCase()}
                             </span>
+                          </p>
+                          {l.target && (
+                            <div className="admin-activity-target">
+                              {l.target}
+                            </div>
                           )}
-                          <span className="admin-activity-what">
-                            {" "}
-                            {info.label.toLowerCase()}
-                          </span>
-                        </div>
-                        {l.target && (
-                          <div className="admin-activity-target">
-                            {l.target}
+                          {l.details && (
+                            <div className="admin-cell-sub admin-act-details">
+                              {l.details}
+                            </div>
+                          )}
+                          <div className="admin-act-meta">
+                            {l.staffRole && (
+                              <span className="admin-activity-role">
+                                {l.staffRole}
+                              </span>
+                            )}
+                            <span className="admin-act-area">
+                              <AreaIcon size={13} strokeWidth={2} aria-hidden />
+                              {areaInfo?.label || "Otros"}
+                            </span>
                           </div>
-                        )}
-                        {l.details && (
-                          <div className="admin-cell-sub">{l.details}</div>
-                        )}
+                        </div>
                       </div>
                     </li>
                   );
                 })}
-              </ul>
+              </ol>
             </section>
           ))}
           {logs.length >= limit && limit < 500 && (
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary admin-act-more"
               onClick={() => {
                 const next = Math.min(500, limit + 150);
                 setLimit(next);

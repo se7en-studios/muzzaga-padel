@@ -199,7 +199,7 @@ export default function TournamentDetail({
         </div>
       </div>
 
-      <div className="tn-card">
+      <div className={`tn-card${editing ? "" : " tn-hero"}`}>
         {editing ? (
           <form className="tn-grid-form" onSubmit={saveInfo}>
             <label className="tn-field" style={{ gridColumn: "1 / -1" }}>
@@ -252,21 +252,24 @@ export default function TournamentDetail({
             </div>
           </form>
         ) : (
-          <div className="tn-row-between" style={{ alignItems: "flex-start" }}>
-            <div>
-              <h2 className="tn-card-title" style={{ fontSize: 28 }}>
-                {t.name}
-              </h2>
-              <div className="tn-list-meta">
-                <span>📅 {tournamentDates(t)}</span>
-                {t.price > 0 && <span>💰 {formatARS(t.price)} por pareja</span>}
-                <span>
-                  👥 {t.players.filter((p) => p.paid).length} de{" "}
+          <div className="tn-row-between tn-hero-row">
+            <div className="tn-hero-text">
+              <span className="tn-hero-kicker">Torneo de pádel</span>
+              <h2 className="tn-card-title tn-hero-title">{t.name}</h2>
+              <div className="tn-hero-chips">
+                <span className="tn-hero-chip">{tournamentDates(t)}</span>
+                {t.price > 0 && (
+                  <span className="tn-hero-chip">
+                    {formatARS(t.price)} por pareja
+                  </span>
+                )}
+                <span className="tn-hero-chip">
+                  {t.players.filter((p) => p.paid).length} de{" "}
                   {t.players.length} pagaron
                 </span>
               </div>
             </div>
-            <div className="tn-row">
+            <div className="tn-row tn-hero-tools">
               <select
                 className="admin-mini-select"
                 aria-label="Estado del torneo"

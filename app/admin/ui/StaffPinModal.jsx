@@ -12,8 +12,8 @@ const MAX_PIN = 6;
  * acción crítica (borrar, cancelar, cerrar caja). El PIN nunca se muestra ni
  * se valida en el navegador.
  *
- * Se monta en un portal sobre document.body para que Esc y los clics no
- * lleguen a los modales que tenga abajo.
+ * Se monta en un portal (sobre .admin-root, o <body> si no está) para que
+ * Esc y los clics no lleguen a los modales que tenga abajo.
  *
  * @param {{
  *   isOpen: boolean,
@@ -221,6 +221,8 @@ export default function StaffPinModal({
         </form>
       </div>
     </div>,
-    document.body,
+    // Dentro de .admin-root (y no suelto en <body>) para heredar la fuente
+    // Inter del panel; si no está, como antes, en <body>.
+    document.querySelector(".admin-root") || document.body,
   );
 }

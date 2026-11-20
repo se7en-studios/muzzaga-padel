@@ -259,16 +259,26 @@ function YouTubeFrame({ name, embed, autoplay }) {
 // Ícono de Beelup (redibujado en SVG a partir del logo que pasó el club).
 const BEELUP_ICON = "/img/marcas/beelup-icono.svg";
 
+// Muzzaga ya está en Beelup: si en el panel no se cargó el link del club, se
+// usa el de Beelup (ahí se elige Muzzaga Pádel, la cancha y el horario).
+export const BEELUP_DEFAULT_URL = "https://beelup.com/";
+
 /**
- * Mientras no haya cámaras cargadas en el panel: cartel "Próximamente" con
- * Beelup encima del loop de las canchas.
+ * Cartel sobre el loop de las canchas: el video de cada partido ya se puede
+ * ver en Beelup. Todo el cartel es un link.
  */
-function BeelupProximamente() {
+function BeelupCartel({ href }) {
   return (
-    <div className="camaras-proximamente">
-      <span className="camaras-proximamente-chip">Próximamente</span>
-      <p className="camaras-proximamente-titulo">
-        Partidos en vivo con
+    <a
+      className="camaras-proximamente is-link"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Reviví tu partido en Beelup (se abre en otra pestaña)"
+    >
+      <span className="camaras-proximamente-chip">Ya disponible</span>
+      <span className="camaras-proximamente-titulo">
+        Reviví tu partido en
         <span className="camaras-beelup-marca">
           <img
             src={BEELUP_ICON}
@@ -279,11 +289,12 @@ function BeelupProximamente() {
           />
           <span className="camaras-beelup-nombre">beelup</span>
         </span>
-      </p>
-      <p className="camaras-proximamente-sub">
-        Mirá las canchas en directo y llevate el video de tus mejores puntos.
-      </p>
-    </div>
+      </span>
+      <span className="camaras-proximamente-sub">
+        Elegí Muzzaga Pádel, tu cancha y el horario, y bajate tus mejores puntos.
+      </span>
+      <span className="camaras-proximamente-btn">Ver mi partido →</span>
+    </a>
   );
 }
 
@@ -293,7 +304,8 @@ function BeelupProximamente() {
  * cancha sin link, o con el link vencido, no se muestra; sin ninguno queda
  * el loop de las canchas.
  */
-export default function CamarasSection({ courts = [], beelupUrl = "" }) {
+export default function CamarasSection({ courts = [], beelupUrl: beelupUrlConfig = "" }) {
+  const beelupUrl = beelupUrlConfig || BEELUP_DEFAULT_URL;
   const autoplay = useAutoplayAllowed();
   const [debug, setDebug] = useState(false);
   useEffect(() => {
@@ -341,7 +353,7 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
             <p className="section-desc">
               {live
                 ? "Las cámaras de Beelup, en directo desde el club."
-                : "Muy pronto vas a ver las canchas en vivo y bajar el video de tu partido con Beelup."}{" "}
+                : "Cada partido queda grabado: reviví tus jugadas y compartilas con Beelup."}{" "}
               {beelupUrl &&
                 "Tocá a Muzzaguito y conseguí el video de tu propio partido en Beelup."}
             </p>
@@ -392,7 +404,7 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
               <LoopFrame label="CANCHAS MUZZAGA" autoplay={autoplay === true} />
             )}
           </div>
-          {!streams.length && <BeelupProximamente />}
+          {!streams.length && <BeelupCartel href={beelupUrl} />}
           {/* Zócalo de TV: repite lo que dice el encabezado, por eso va oculto
               para lectores de pantalla. */}
           <div className="camaras-zocalo" aria-hidden="true">
@@ -403,7 +415,7 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
             <span className="camaras-zocalo-texto">
               {live
                 ? "Cámaras Beelup · en directo"
-                : "Cámaras Beelup · próximamente"}
+                : "Cámaras Beelup · reviví tu partido"}
             </span>
             <span className="camaras-zocalo-lugar">Catriel · Río Negro</span>
           </div>

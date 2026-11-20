@@ -190,3 +190,17 @@
 .footer-info-bullet .icono-3d {
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
+
+/* El crédito ahora es un link a se7en: el usuario de Instagram al lado. */
+.footer-credit-ig {
+  color: #ff9a5a;
+  font-weight: 600;
+}
+
+a.footer-credit:hover {
+  color: #ffffff;
+}
+
+a.footer-credit:hover .footer-credit-ig {
+  text-decoration: underline;
+}

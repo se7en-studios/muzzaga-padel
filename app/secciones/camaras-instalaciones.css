@@ -721,3 +721,42 @@
     font-size: 30px;
   }
 }
+
+/* Beelup ya funciona: el cartel es un link (antes era solo un aviso). */
+.camaras-proximamente.is-link {
+  pointer-events: auto;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, translate 0.2s ease;
+}
+
+.camaras-proximamente.is-link:hover {
+  border-color: rgba(246, 162, 28, 0.8);
+}
+
+.camaras-proximamente.is-link:focus-visible {
+  outline: 3px solid #f6a21c;
+  outline-offset: 3px;
+}
+
+.camaras-proximamente-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 0 20px;
+  border-radius: 12px;
+  background: #f6a21c;
+  color: #1a1204;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 8px 18px -8px rgba(246, 162, 28, 0.8);
+}
+
+@media (max-width: 640px) {
+  .camaras-proximamente-btn {
+    min-height: 40px;
+    font-size: 14px;
+    margin-top: 2px;
+  }
+}

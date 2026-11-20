@@ -1,0 +1,1826 @@
+/* Rediseño del admin: ajustes-actividad. Se carga al final (después de padel.css), así que
+   pisa lo anterior con la misma especificidad. Todo bajo .admin-root. */
+
+/* ==========================================================================
+   AJUSTES DEL CLUB
+   Un formulario largo que tiene que dar confianza: índice que sigue al
+   scroll, cada sección numerada con "para qué sirve" y "cómo se guarda", la
+   semana dibujada como grilla de canchas y una barra de guardar que dice
+   exactamente qué secciones cambiaron.
+   ========================================================================== */
+
+.admin-root .admin-cfg,
+.admin-root .admin-act {
+  --cfg-blue: #2350d6;
+  --cfg-blue-deep: #16349a;
+  --cfg-blue-ink: #1c42b8;
+  --cfg-ball: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  /* Líneas de la cancha (perímetro, red punteada, saque y central), estiradas
+     a cualquier tamaño sin deformar el trazo. */
+  --cfg-court-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='3' y='6' width='194' height='88' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.55'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.3'/%3E%3C/svg%3E");
+  --cfg-court-bg:
+    var(--cfg-court-lines) center / 100% 100% no-repeat,
+    linear-gradient(180deg, rgba(11, 26, 77, 0.28), rgba(11, 26, 77, 0.62)),
+    url("/img/fondo/textura-cesped.jpg") 0 0 / 220px 220px repeat,
+    #2350d6;
+}
+
+.admin-root .admin-cfg {
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 28px;
+  max-width: 1360px;
+  /* La barra de guardar ahora va pegada al pie del formulario (sticky), ya
+     no hace falta reservarle lugar abajo. */
+  padding-bottom: 24px;
+}
+
+/* ---------- Índice lateral ---------- */
+.admin-root .admin-cfg-nav {
+  top: 16px;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-root .admin-cfg-nav-title {
+  margin: 2px 10px 8px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-cfg-nav button {
+  position: relative;
+  min-height: 44px;
+  padding: 8px 10px;
+  gap: 10px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.admin-root .admin-cfg-nav button:hover {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+
+.admin-root .admin-cfg-nav button[aria-current="true"] {
+  background: var(--cfg-court-bg);
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 16px -10px rgba(13, 31, 92, 0.8);
+}
+
+.admin-root .admin-cfg-nav-num {
+  min-width: 20px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-cfg-nav button[aria-current="true"] .admin-cfg-nav-num {
+  color: #e4f86a;
+}
+
+.admin-root .admin-cfg-nav-label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Punto naranja: esa sección tiene cambios sin guardar. */
+.admin-root .admin-cfg-nav-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 0 3px rgba(232, 114, 42, 0.25);
+}
+
+.admin-root .admin-cfg-nav button[aria-current="true"] .admin-cfg-nav-dot {
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.admin-root .admin-cfg-nav-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 12px 8px 4px;
+  border-top: 1px dashed var(--border-strong);
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-cfg-nav-legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-root .admin-cfg-nav-legend .is-form svg { color: var(--cfg-blue-ink); }
+.admin-root .admin-cfg-nav-legend .is-pin svg { color: #c2410c; }
+.admin-root .admin-cfg-nav-legend .is-live svg { color: #6b7f0a; }
+
+/* ---------- Portada: la cancha con el resumen y el estado ---------- */
+.admin-root .admin-cfg-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  padding: 20px 24px;
+  border: 1px solid var(--cfg-blue-deep);
+  border-radius: 18px;
+  background: var(--cfg-court-bg);
+  color: #ffffff;
+  box-shadow: 0 14px 28px -18px rgba(13, 31, 92, 0.85);
+}
+
+.admin-root .admin-cfg-hero-kicker {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e4f86a;
+}
+
+.admin-root .admin-cfg-hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.admin-root .admin-cfg-hero-facts strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.admin-root .admin-cfg-hero-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 340px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 14px;
+  background: rgba(7, 16, 52, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.admin-root .admin-cfg-hero-status > svg {
+  flex-shrink: 0;
+  padding: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #22c55e;
+  color: #052e14;
+}
+
+.admin-root .admin-cfg-hero-status strong,
+.admin-root .admin-cfg-hero-status small {
+  display: block;
+}
+
+.admin-root .admin-cfg-hero-status strong {
+  font-size: 15.5px;
+}
+
+.admin-root .admin-cfg-hero-status small {
+  margin-top: 2px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-root .admin-cfg-hero.is-dirty .admin-cfg-hero-status {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: #c2410c;
+}
+
+/* La pelotita de "hay cambios" (hero y barra de guardar). */
+.admin-root .admin-cfg-ball {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cfg-ball);
+  box-shadow: 0 0 0 3px rgba(215, 240, 58, 0.22), 0 0 12px rgba(215, 240, 58, 0.55);
+}
+
+/* ---------- Tarjeta de cada sección ---------- */
+.admin-root .admin-cfg .admin-cfg-card {
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  scroll-margin-top: 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-root .admin-cfg .admin-cfg-card.is-dirty {
+  border-color: rgba(232, 114, 42, 0.65);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+}
+
+.admin-root .admin-cfg-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  margin: 0 0 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px dashed var(--border);
+}
+
+/* El número de la sección como dorsal: cancha azul con el número blanco. */
+.admin-root .admin-cfg-head-num {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--cfg-court-bg);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.admin-root .admin-cfg-head .admin-section-title {
+  margin: 2px 0 4px;
+}
+
+.admin-root .admin-cfg-head-hint {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-cfg-save-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-root .admin-cfg-save-tag.is-form {
+  background: #e8eefd;
+  color: var(--cfg-blue-ink);
+}
+
+.admin-root .admin-cfg-save-tag.is-pin {
+  background: #fff1e6;
+  color: #9a3412;
+}
+
+.admin-root .admin-cfg-save-tag.is-live {
+  background: #f1f9cc;
+  color: #4a5806;
+}
+
+.admin-root .admin-cfg-save-tag.is-dirty {
+  background: #c2410c;
+  color: #ffffff;
+}
+
+.admin-root .admin-cfg-lead {
+  margin: -6px 0 16px;
+  line-height: 1.45;
+}
+
+/* ---------- Interruptores con pelotita ---------- */
+.admin-root .admin-cfg-switch {
+  min-height: 44px;
+  gap: 12px;
+  font-weight: 500;
+}
+
+.admin-root .admin-cfg-switch input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border: 1px solid #bdb5a3;
+  border-radius: 999px;
+  background: #d9d3c5;
+  cursor: pointer;
+}
+
+.admin-root .admin-cfg-switch input::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.admin-root .admin-cfg-switch input:checked {
+  border-color: var(--cfg-blue-deep);
+  background: var(--cfg-blue);
+}
+
+/* Prendido: la bolita se vuelve pelota de pádel. */
+.admin-root .admin-cfg-switch input:checked::before {
+  transform: translateX(18px);
+  background: var(--cfg-ball);
+}
+
+.admin-root .admin-cfg-switch input:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.admin-root .admin-cfg-pico-toggle {
+  margin: 6px 0 4px;
+}
+
+/* ---------- Canchas ---------- */
+.admin-root .admin-cfg .admin-stepper output {
+  min-width: 44px;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.admin-root .admin-cfg .admin-stepper .btn {
+  flex: 0 0 auto;
+  width: 52px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.admin-root .admin-cfg-courts {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.admin-root .admin-cfg .admin-cfg-court {
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 14px;
+  padding: 12px 14px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+/* Mini cancha con el número: la misma que se usa en Cámaras. */
+.admin-root .admin-cfg-court-mini {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 56px;
+  height: 36px;
+  margin-bottom: 15px;
+  border: 1px solid var(--cfg-blue-deep);
+  border-radius: 6px;
+  background: var(--cfg-court-bg);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Precios ---------- */
+.admin-root .admin-cfg .admin-price-band {
+  padding: 14px 16px 2px;
+  border-radius: 12px;
+  border-top-width: 4px;
+  background: var(--surface);
+}
+
+.admin-root .admin-cfg .admin-price-band.is-valle {
+  border-top-color: var(--cfg-blue);
+}
+
+.admin-root .admin-cfg .admin-price-band.is-pico {
+  border-top-color: var(--brand);
+}
+
+.admin-root .admin-cfg .admin-price-band legend {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e8eefd;
+  color: var(--cfg-blue-ink);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-cfg .admin-price-band.is-pico legend {
+  background: #fff1e6;
+  color: #9a3412;
+}
+
+.admin-root .admin-cfg .admin-computed strong {
+  font-family: var(--font-display);
+  font-size: 24px;
+}
+
+/* ---------- Horarios: la semana como grilla ---------- */
+.admin-root .admin-cfg-week {
+  margin: 0 0 20px;
+  padding: 16px 16px 12px;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 60% at 50% 0, rgba(35, 80, 214, 0.35), transparent 70%),
+    var(--night);
+  color: var(--on-night);
+}
+
+.admin-root .admin-cfg-week-cap {
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  color: var(--on-night-soft);
+}
+
+.admin-root .admin-cfg-week-cap strong {
+  color: #ffffff;
+}
+
+.admin-root .admin-cfg-week-grid {
+  display: grid;
+  grid-template-columns: 34px repeat(7, minmax(0, 1fr));
+  grid-template-rows: auto calc(var(--hours, 10) * 30px);
+  gap: 6px;
+}
+
+.admin-root .admin-cfg-week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: 4px 2px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.admin-root .admin-cfg-week-day:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-root .admin-cfg-week-day:focus-visible {
+  outline: 2px solid #d7f03a;
+  outline-offset: 2px;
+}
+
+.admin-root .admin-cfg-week-day strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-cfg-week-day small {
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--cfg-ball);
+  color: #253000;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.admin-root .admin-cfg-week-day.is-closed {
+  color: var(--on-night-soft);
+}
+
+.admin-root .admin-cfg-week-day.is-closed small {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--on-night-soft);
+}
+
+.admin-root .admin-cfg-week-axis {
+  position: relative;
+}
+
+.admin-root .admin-cfg-week-axis span {
+  position: absolute;
+  right: 2px;
+  transform: translateY(-50%);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--on-night-soft);
+}
+
+.admin-root .admin-cfg-week-col {
+  position: relative;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.04);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+  background-size: 100% calc(100% / var(--hours, 10));
+}
+
+.admin-root .admin-cfg-week-col.is-closed {
+  display: grid;
+  place-items: center;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.07) 0 6px,
+    transparent 6px 12px
+  );
+  background-size: auto;
+}
+
+.admin-root .admin-cfg-week-closed {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--on-night-soft);
+}
+
+/* Cada turno: una cancha azul a su hora. clip-path deja una rayita entre
+   turnos seguidos sin tocar la altura calculada. */
+.admin-root .admin-cfg-week-slot {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--cfg-court-bg);
+  clip-path: inset(1px 0 1px 0 round 4px);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.admin-root .admin-cfg-week-slot.is-pico {
+  background:
+    var(--cfg-court-lines) center / 100% 100% no-repeat,
+    linear-gradient(180deg, #e8722a, #b4400c);
+}
+
+.admin-root .admin-cfg-week-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 12px 0 0 40px;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--on-night-soft);
+}
+
+.admin-root .admin-cfg-week-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-root .admin-cfg-week-legend i {
+  width: 18px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.admin-root .admin-cfg-week-legend i.is-turno { background: var(--cfg-court-bg); }
+.admin-root .admin-cfg-week-legend i.is-pico { background: linear-gradient(180deg, #e8722a, #b4400c); }
+.admin-root .admin-cfg-week-legend i.is-closed {
+  background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.3) 0 3px, transparent 3px 6px);
+  outline: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Filas de cada día: una tabla prolija en la compu. */
+.admin-root .admin-cfg .admin-schedule {
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.admin-root .admin-cfg .admin-schedule-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) 140px auto 140px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: var(--surface);
+}
+
+.admin-root .admin-cfg .admin-schedule-row:nth-child(even) {
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-cfg .admin-schedule-row:focus-within {
+  background: #eef2fd;
+  box-shadow: inset 4px 0 0 var(--cfg-blue);
+}
+
+.admin-root .admin-cfg .admin-schedule-row input[type="time"] {
+  width: 100%;
+}
+
+.admin-root .admin-cfg .admin-schedule-row.is-closed .admin-cfg-day-sum {
+  grid-column: 2 / -1;
+  font-style: italic;
+}
+
+.admin-root .admin-cfg .admin-schedule-row .admin-field-error {
+  grid-column: 1 / -1;
+}
+
+.admin-root .admin-cfg .admin-schedule-day {
+  font-weight: 600;
+}
+
+.admin-root .admin-cfg-day-sum strong {
+  color: var(--text);
+}
+
+/* ---------- Cobros: la seña dibujada ---------- */
+.admin-root .admin-cfg-deposit {
+  max-width: 560px;
+  margin: -2px 0 20px;
+}
+
+.admin-root .admin-cfg-deposit-bar {
+  height: 14px;
+  border-radius: 999px;
+  background: #e6e0d2;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.admin-root .admin-cfg-deposit-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #e8722a, #c2410c);
+}
+
+.admin-root .admin-cfg-deposit-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-cfg-deposit-legend strong {
+  color: var(--text);
+}
+
+.admin-root .admin-cfg-deposit-legend .is-deposit strong {
+  color: #9a3412;
+}
+
+/* ---------- Cierres: cada día bloqueado como hoja de almanaque ---------- */
+.admin-root .admin-cfg-closed .admin-chip {
+  gap: 10px;
+  padding: 6px 6px 6px 6px;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-root .admin-cfg-closed-date {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
+  background: var(--night);
+  color: #ffffff;
+  line-height: 1;
+}
+
+.admin-root .admin-cfg-closed-date strong {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.admin-root .admin-cfg-closed-date small {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff9a5a;
+}
+
+.admin-root .admin-cfg-closed-label::first-letter {
+  text-transform: uppercase;
+}
+
+.admin-root .admin-cfg-closed .admin-chip button {
+  width: 36px;
+  height: 36px;
+}
+
+.admin-root .admin-cfg-empty {
+  padding: 12px 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+}
+
+/* ---------- Links para probar (WhatsApp, cámaras) ---------- */
+.admin-root .admin-cfg-try {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  min-height: 32px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cfg-blue-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Cámaras ---------- */
+.admin-root .admin-cfg-cams {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-root .admin-cfg .admin-cfg-cam {
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-cfg .admin-cfg-cam.is-bad {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: #fff6f5;
+}
+
+.admin-root .admin-cfg-cam-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.admin-root .admin-cfg-cam-head .admin-cfg-court-mini {
+  width: 44px;
+  height: 28px;
+  margin: 0;
+  font-size: 16px;
+}
+
+.admin-root .admin-cfg-cam-head .admin-field-label {
+  flex: 1;
+  min-width: 160px;
+}
+
+.admin-root .admin-cfg-cam-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-cfg-cam-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a8a29e;
+}
+
+.admin-root .admin-cfg-cam.is-ok .admin-cfg-cam-led {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.8);
+}
+
+.admin-root .admin-cfg-cam.is-bad .admin-cfg-cam-led {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+}
+
+.admin-root .admin-cfg-cam.is-bad .admin-cfg-cam-status {
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ---------- Equipo ---------- */
+.admin-root .admin-cfg-staff {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(460px, 100%), 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root .admin-cfg-staff-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.admin-root .admin-cfg-staff-card.is-off {
+  background: var(--surface-muted);
+  border-style: dashed;
+}
+
+.admin-root .admin-cfg-staff-card.is-off .admin-cfg-avatar,
+.admin-root .admin-cfg-staff-card.is-off .admin-cfg-staff-who {
+  opacity: 0.6;
+}
+
+.admin-root .admin-cfg-staff-card.is-editing {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+}
+
+/* Avatar con el color del rol, como la camiseta de cada uno. */
+.admin-root .admin-cfg-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--cfg-blue);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.admin-root [data-role="Administrador"] .admin-cfg-avatar { background: var(--night); }
+.admin-root [data-role="Encargado"] .admin-cfg-avatar { background: #c2410c; }
+.admin-root [data-role="Cantina"] .admin-cfg-avatar { background: #0f766e; }
+.admin-root [data-role="Profesor"] .admin-cfg-avatar { background: #6d28d9; }
+
+.admin-root .admin-cfg-staff-who {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-root .admin-cfg-staff-who strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-root .admin-cfg-role {
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-cfg-staff-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.admin-root .admin-cfg-staff-actions .btn {
+  min-height: 40px;
+  gap: 6px;
+}
+
+.admin-root .admin-cfg .admin-cfg-staff-form {
+  align-items: end;
+  padding: 14px 16px 2px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-cfg .admin-cfg-staff-form > .btn {
+  margin-bottom: 14px;
+}
+
+/* "Rol: Administrador" (primer integrante) con la misma altura que los
+   campos, para que no quede desalineado. */
+.admin-root .admin-cfg-staff-form output {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-control);
+  font-weight: 600;
+}
+
+.admin-root .admin-cfg-staff-form + .admin-field-hint,
+.admin-root .admin-cfg-staff-form ~ .admin-field-error {
+  margin-top: 10px;
+}
+
+.admin-root .admin-cfg-staff-form-title {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* ---------- Sitio web ---------- */
+.admin-root .admin-cfg-live-note {
+  display: flex;
+  gap: 10px;
+  margin: -4px 0 4px;
+  padding: 12px 14px;
+  border: 1px solid #cfe13a;
+  border-radius: 12px;
+  background: #f6fbd9;
+  color: #343e05;
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.admin-root .admin-cfg-live-note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #6b7f0a;
+}
+
+.admin-root .admin-cfg .admin-site-group {
+  border-top: 2px dashed var(--border);
+}
+
+.admin-root .admin-cfg .admin-site-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-cfg .admin-site-slot,
+.admin-root .admin-cfg .admin-site-tournament {
+  border-radius: 12px;
+}
+
+/* Ubicación en la compu: los datos a la izquierda y el mapa al lado, para
+   ver el punto mientras se cargan las coordenadas. */
+@media (min-width: 1200px) {
+  .admin-root .admin-cfg .admin-site-location {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 0 24px;
+    align-items: start;
+  }
+
+  .admin-root .admin-cfg .admin-site-location-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-root .admin-cfg .admin-site-map {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    max-width: none;
+    margin-top: 26px;
+  }
+
+  .admin-root .admin-cfg .admin-site-location .admin-site-form-actions {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+/* ---------- Barra de guardar ----------
+   Antes iba fija a 240px de la izquierda (el ancho del menú); ahora va
+   pegada al pie del formulario, así no depende del ancho del menú. Oscura y
+   con la pelotita: se nota que hay algo pendiente. */
+.admin-root .admin-cfg .admin-cfg-savebar {
+  position: sticky;
+  left: auto;
+  right: auto;
+  bottom: 16px;
+  grid-column: 1 / -1;
+  z-index: 40;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 4px;
+  padding: 12px 14px 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background:
+    radial-gradient(160px 90px at 0 50%, rgba(215, 240, 58, 0.14), transparent 70%),
+    var(--night);
+  color: var(--on-night);
+  box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.55);
+}
+
+.admin-root .admin-cfg-savebar-text {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 260px;
+}
+
+.admin-root .admin-cfg-savebar-text strong,
+.admin-root .admin-cfg-savebar-text small {
+  display: block;
+}
+
+.admin-root .admin-cfg-savebar-text strong {
+  font-family: var(--font-display);
+  font-size: 19px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-cfg-savebar-text small {
+  font-size: 13.5px;
+  color: var(--on-night-soft);
+}
+
+.admin-root .admin-cfg-savebar-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.admin-root .admin-cfg-savebar-actions .btn {
+  min-height: 44px;
+}
+
+.admin-root .admin-cfg-savebar-actions .btn-secondary {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: transparent;
+  color: var(--on-night);
+}
+
+.admin-root .admin-cfg-savebar-actions .btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- Pantallas grandes ---------- */
+@media (min-width: 1700px) {
+  .admin-root .admin-cfg {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+
+  .admin-root .admin-cfg-week-grid {
+    grid-template-rows: auto calc(var(--hours, 10) * 34px);
+  }
+}
+
+/* ---------- Tablet ---------- */
+@media (max-width: 1100px) and (min-width: 768px) {
+  .admin-root .admin-cfg {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .admin-root .admin-cfg-nav-legend {
+    display: none;
+  }
+
+  .admin-root .admin-cfg .admin-schedule-row {
+    grid-template-columns: minmax(140px, 1fr) 120px auto 120px;
+  }
+
+  .admin-root .admin-cfg .admin-schedule-row .admin-cfg-day-sum {
+    grid-column: 2 / -1;
+  }
+}
+
+/* ---------- Celu ---------- */
+@media (max-width: 767px) {
+  .admin-root .admin-cfg {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  /* El índice pasa a ser una tira horizontal pegada debajo de la barra negra
+     de arriba (44px de botón + 10px arriba y abajo + 3px de borde = 67px). */
+  .admin-root .admin-cfg-nav {
+    top: 67px;
+    z-index: 30;
+    margin: 0 -16px;
+    padding: 8px 16px;
+    gap: 6px;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    background: rgba(245, 242, 234, 0.95);
+    backdrop-filter: blur(8px);
+    box-shadow: none;
+    scrollbar-width: none;
+  }
+
+  .admin-root .admin-cfg-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-root .admin-cfg-nav-title,
+  .admin-root .admin-cfg-nav-legend,
+  .admin-root .admin-cfg-nav-num {
+    display: none;
+  }
+
+  .admin-root .admin-cfg-nav button {
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 14.5px;
+  }
+
+  .admin-root .admin-cfg-nav button[aria-current="true"] {
+    border-color: var(--cfg-blue-deep);
+  }
+
+  .admin-root .admin-cfg .admin-cfg-card {
+    padding: 16px;
+    border-radius: 14px;
+    scroll-margin-top: 132px;
+  }
+
+  .admin-root .admin-cfg-hero {
+    padding: 16px;
+  }
+
+  .admin-root .admin-cfg-hero-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+    font-size: 12px;
+  }
+
+  .admin-root .admin-cfg-hero-facts strong {
+    font-size: 28px;
+  }
+
+  .admin-root .admin-cfg-hero-status {
+    max-width: none;
+    width: 100%;
+  }
+
+  .admin-root .admin-cfg-head {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 12px;
+  }
+
+  .admin-root .admin-cfg-head-num {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .admin-root .admin-cfg-save-tag {
+    grid-column: 1 / -1;
+    justify-self: start;
+    white-space: normal;
+  }
+
+  .admin-root .admin-cfg .admin-cfg-court {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0 12px;
+  }
+
+  .admin-root .admin-cfg .admin-cfg-court .admin-cfg-court-mini {
+    grid-row: span 2;
+    align-self: center;
+    width: 44px;
+    height: 30px;
+    margin: 0;
+    font-size: 17px;
+  }
+
+  .admin-root .admin-cfg-week {
+    margin-inline: -4px;
+    padding: 12px 10px 10px;
+  }
+
+  .admin-root .admin-cfg-week-grid {
+    grid-template-columns: 24px repeat(7, minmax(0, 1fr));
+    grid-template-rows: auto calc(var(--hours, 10) * 22px);
+    gap: 4px;
+  }
+
+  .admin-root .admin-cfg-week-day {
+    min-height: 44px;
+    padding: 4px 0;
+  }
+
+  .admin-root .admin-cfg-week-day strong {
+    font-size: 15px;
+  }
+
+  .admin-root .admin-cfg-week-axis span {
+    font-size: 10.5px;
+  }
+
+  /* Muy angosto para escribir la hora en cada turno: queda la cancha sola. */
+  .admin-root .admin-cfg-week-slot span {
+    display: none;
+  }
+
+  .admin-root .admin-cfg-week-slot {
+    left: 2px;
+    right: 2px;
+  }
+
+  .admin-root .admin-cfg-week-legend {
+    margin-left: 0;
+  }
+
+  .admin-root .admin-cfg .admin-schedule-row {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 6px 8px;
+    padding: 8px 12px 10px;
+  }
+
+  .admin-root .admin-cfg .admin-schedule-row > .admin-toggle,
+  .admin-root .admin-cfg .admin-schedule-row .admin-cfg-day-sum,
+  .admin-root .admin-cfg .admin-schedule-row.is-closed .admin-cfg-day-sum {
+    grid-column: 1 / -1;
+  }
+
+  .admin-root .admin-cfg .admin-schedule-row > span[aria-hidden] {
+    text-align: center;
+  }
+
+  .admin-root .admin-cfg-try {
+    min-height: 44px;
+  }
+
+  .admin-root .admin-cfg-staff-card {
+    flex-wrap: wrap;
+  }
+
+  .admin-root .admin-cfg-staff-actions {
+    width: 100%;
+  }
+
+  .admin-root .admin-cfg-staff-actions .btn {
+    flex: 1;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .admin-root .admin-cfg .admin-cfg-savebar {
+    bottom: calc(70px + env(safe-area-inset-bottom));
+    padding: 12px;
+  }
+
+  .admin-root .admin-cfg-savebar-actions {
+    width: 100%;
+  }
+
+  .admin-root .admin-cfg-savebar-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Mientras hay cambios sin guardar, el botón flotante de "Nueva reserva"
+     taparía la barra: se esconde hasta guardar o descartar. */
+  .admin-root:has(.admin-cfg-savebar) .admin-fab {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   QUIÉN HIZO QUÉ: JUGADA A JUGADA
+   Un marcador arriba con el resumen, y abajo la línea de tiempo: cada día
+   es un "set" con su encabezado pegado, cada movimiento una pelotita sobre
+   la línea (roja si borró o canceló) con la tarjeta de quién y qué.
+   ========================================================================== */
+
+.admin-root .admin-act {
+  max-width: 1180px;
+}
+
+.admin-root .admin-act-intro {
+  margin: 0 0 14px;
+  max-width: 72ch;
+  line-height: 1.45;
+}
+
+/* ---------- Marcador ---------- */
+.admin-root .admin-act-score {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 2fr);
+  margin: 0 0 16px;
+  border-radius: 16px;
+  overflow: hidden;
+  background:
+    var(--cfg-court-lines) right -40px center / 360px 100% no-repeat,
+    radial-gradient(120% 120% at 100% 0, rgba(35, 80, 214, 0.45), transparent 60%),
+    var(--night);
+  color: var(--on-night);
+  box-shadow: 0 14px 28px -18px rgba(0, 0, 0, 0.6);
+}
+
+.admin-root .admin-act-score > div {
+  padding: 14px 18px 16px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-root .admin-act-score > div:last-child {
+  border-right: 0;
+}
+
+.admin-root .admin-act-score dt {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--on-night-soft);
+}
+
+.admin-root .admin-act-score dd {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.admin-root .admin-act-score .is-danger dd {
+  color: #ff8f80;
+}
+
+.admin-root .admin-act-score-last dd {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-root .admin-act-score-last dd strong {
+  color: #e4f86a;
+}
+
+.admin-root .admin-act-score-last dd span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--on-night);
+}
+
+/* ---------- Filtros ---------- */
+.admin-root .admin-act-chips {
+  margin-bottom: 10px;
+}
+
+.admin-root .admin-act-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 4px 8px 4px 13px;
+}
+
+.admin-root .admin-act-chips button[aria-pressed="true"] {
+  background: var(--cfg-court-bg);
+  border-color: var(--cfg-blue-deep);
+  color: #ffffff;
+}
+
+.admin-root .admin-act-chip-count {
+  min-width: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.admin-root .admin-act-chips button[aria-pressed="true"] .admin-act-chip-count {
+  border-color: transparent;
+  background: var(--cfg-ball);
+  color: #253000;
+}
+
+.admin-root .admin-act-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-act-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-root .admin-act-legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--cfg-ball);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.admin-root .admin-act-legend .is-danger i { background: #ef4444; }
+.admin-root .admin-act-legend .is-warn i { background: #f59e0b; }
+.admin-root .admin-act-legend .is-ok i { background: #22c55e; }
+
+/* ---------- Línea de tiempo ---------- */
+.admin-root .admin-act-days {
+  gap: 22px;
+}
+
+.admin-root .admin-act-day-title {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin: 0 0 10px;
+  padding: 8px 0;
+  background: linear-gradient(180deg, var(--bg) 75%, rgba(245, 242, 234, 0));
+  font-size: 21px;
+}
+
+.admin-root .admin-act-day-title small {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-act-day-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--cfg-ball);
+  color: #253000;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+}
+
+.admin-root .admin-act-day-badge.is-soft {
+  background: #e7e2d6;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-act-list {
+  position: relative;
+}
+
+.admin-root .admin-act .admin-act-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 58px 22px minmax(0, 1fr);
+  gap: 0 12px;
+  align-items: start;
+  padding: 0 0 12px;
+  border: 0;
+  box-shadow: none;
+}
+
+/* La línea: como la central de la cancha, une un movimiento con el
+   siguiente del mismo día. */
+.admin-root .admin-act .admin-act-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(58px + 12px + 10px);
+  width: 2px;
+  background: #d8d1c1;
+}
+
+.admin-root .admin-act .admin-act-item:first-child::before {
+  top: 18px;
+}
+
+.admin-root .admin-act .admin-act-item:last-child::before {
+  bottom: auto;
+  height: 18px;
+}
+
+.admin-root .admin-act .admin-act-item:only-child::before {
+  display: none;
+}
+
+.admin-root .admin-act-time {
+  padding-top: 12px;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.admin-root .admin-act-dot {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 16px;
+  border-radius: 50%;
+  background: var(--cfg-ball);
+  box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px rgba(0, 0, 0, 0.08);
+}
+
+.admin-root .admin-act-item.is-danger .admin-act-dot { background: radial-gradient(circle at 30% 30%, #fca5a5 0, #ef4444 50%, #b91c1c 100%); }
+.admin-root .admin-act-item.is-warn .admin-act-dot { background: radial-gradient(circle at 30% 30%, #fde68a 0, #f59e0b 50%, #b45309 100%); }
+.admin-root .admin-act-item.is-ok .admin-act-dot { background: radial-gradient(circle at 30% 30%, #bbf7d0 0, #22c55e 50%, #15803d 100%); }
+
+.admin-root .admin-act-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-left: 4px solid #d8d1c1;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  font-size: 15px;
+}
+
+.admin-root .admin-act-item.is-danger .admin-act-card { border-left-color: #ef4444; }
+.admin-root .admin-act-item.is-warn .admin-act-card { border-left-color: #f59e0b; }
+.admin-root .admin-act-item.is-ok .admin-act-card { border-left-color: #22c55e; }
+
+.admin-root .admin-act-item.is-danger .admin-act-card {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.05), transparent 40%), var(--surface);
+}
+
+.admin-root .admin-act-card:hover {
+  border-color: var(--border-strong);
+}
+
+/* Iniciales de cada persona, con su color fijo para reconocerla rápido. */
+.admin-root .admin-act-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: hsl(var(--person-hue, 222) 75% 92%);
+  color: hsl(var(--person-hue, 222) 65% 26%);
+  box-shadow: inset 0 0 0 1px hsl(var(--person-hue, 222) 50% 80%);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.admin-root .admin-act-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-root .admin-act-line {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.35;
+}
+
+.admin-root .admin-act .admin-activity-target {
+  margin-top: 3px;
+  color: var(--text);
+}
+
+.admin-root .admin-act-details {
+  margin-top: 2px;
+}
+
+.admin-root .admin-act-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.admin-root .admin-act .admin-activity-role,
+.admin-root .admin-act-area {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-act-more {
+  align-self: center;
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-cfg-switch input::before {
+    transition: transform 0.18s ease, background 0.18s ease;
+  }
+
+  .admin-root .admin-cfg-switch input {
+    transition: background-color 0.18s ease, border-color 0.18s ease;
+  }
+
+  .admin-root .admin-cfg .admin-cfg-savebar {
+    animation: adminCfgBarIn 0.22s ease-out;
+  }
+
+  .admin-root .admin-cfg-savebar .admin-cfg-ball,
+  .admin-root .admin-cfg-hero.is-dirty .admin-cfg-ball {
+    animation: adminCfgBounce 1.6s ease-in-out infinite;
+  }
+
+  .admin-root .admin-act-item {
+    animation: adminActIn 0.25s ease-out both;
+  }
+
+  .admin-root .admin-act-card {
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .admin-root .admin-act-card:hover {
+    transform: translateX(2px);
+  }
+
+  @keyframes adminCfgBarIn {
+    from { opacity: 0; transform: translateY(12px); }
+  }
+
+  @keyframes adminCfgBounce {
+    0%, 100% { transform: translateY(0); }
+    45% { transform: translateY(-4px); }
+    60% { transform: translateY(0) scale(1.08, 0.92); }
+  }
+
+  @keyframes adminActIn {
+    from { opacity: 0; transform: translateY(6px); }
+  }
+}
+
+@media (max-width: 767px) {
+  /* Angosto: sin las líneas de cancha de fondo, que cruzaban los números. */
+  .admin-root .admin-act-score {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background:
+      radial-gradient(120% 120% at 100% 0, rgba(35, 80, 214, 0.45), transparent 60%),
+      var(--night);
+  }
+
+  .admin-root .admin-act-score > div {
+    padding: 12px 12px 14px;
+  }
+
+  .admin-root .admin-act-score dd {
+    font-size: 32px;
+  }
+
+  .admin-root .admin-act-score dt {
+    font-size: 11px;
+  }
+
+  .admin-root .admin-act-score-last {
+    grid-column: 1 / -1;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .admin-root .admin-act-score-last dd {
+    font-size: 26px;
+  }
+
+  /* Los filtros en una tira que se desliza, en vez de tres renglones. */
+  .admin-root .admin-act-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -16px 10px;
+    padding: 2px 16px 4px;
+    scrollbar-width: none;
+  }
+
+  .admin-root .admin-act-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-root .admin-act-chips button {
+    flex-shrink: 0;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-act-day-title {
+    top: 67px;
+    font-size: 19px;
+  }
+
+  .admin-root .admin-act .admin-act-item {
+    grid-template-columns: 44px 16px minmax(0, 1fr);
+    gap: 0 8px;
+    padding-bottom: 10px;
+  }
+
+  .admin-root .admin-act .admin-act-item::before {
+    left: calc(44px + 8px + 7px);
+  }
+
+  .admin-root .admin-act-time {
+    font-size: 17px;
+  }
+
+  .admin-root .admin-act-dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .admin-root .admin-act-card {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .admin-root .admin-act-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+  }
+}

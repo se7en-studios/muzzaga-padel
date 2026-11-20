@@ -461,30 +461,80 @@ export default function ScheduleTab({
         </label>
       </div>
 
-      {byDay.map(({ day, list }) => (
-        <section key={day || "sin"}>
-          <h3 className="tn-day-title">
-            {day ? longDayLabel(day) : "Sin horario"}
-          </h3>
-          <div className="tn-day-list">
-            {list.map(({ m, c, fx, calc }) => (
-              <MatchRow
-                key={`${c.id}/${m.id}`}
-                match={m}
-                fixture={fx}
-                calc={calc}
-                pairsById={pairsById}
-                courts={courts}
-                courtName={courtName}
-                categoryName={withFixture.length > 1 ? c.name : ""}
-                defaultDate={days[0]?.date || t.date}
-                conflict={conflicts[`${c.id}/${m.id}`]}
-                onSave={(payload) => onSaveMatch(c.id, m.id, payload)}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+      {byDay.map(({ day, list }) => {
+        const row = (x, extra = {}) => (
+          <MatchRow
+            key={`${x.c.id}/${x.m.id}`}
+            match={x.m}
+            fixture={x.fx}
+            calc={x.calc}
+            pairsById={pairsById}
+            courts={courts}
+            courtName={courtName}
+            categoryName={withFixture.length > 1 ? x.c.name : ""}
+            defaultDate={days[0]?.date || t.date}
+            conflict={conflicts[`${x.c.id}/${x.m.id}`]}
+            onSave={(payload) => onSaveMatch(x.c.id, x.m.id, payload)}
+            {...extra}
+          />
+        );
+        const played = list.filter((x) => x.m.winner).length;
+        // Misma hora = misma fila; cada cancha en su columna, como la
+        // grilla de la cartelera.
+        const byTime = [];
+        for (const x of list) {
+          const last = byTime[byTime.length - 1];
+          if (last && last.time === x.m.time) last.items.push(x);
+          else byTime.push({ time: x.m.time, items: [x] });
+        }
+        return (
+          <section key={day || "sin"} className="tn-day">
+            <h3 className="tn-day-title">
+              <span>{day ? longDayLabel(day) : "Sin horario"}</span>
+              <small>
+                {list.length} {list.length === 1 ? "partido" : "partidos"}
+                {played > 0 && ` · ${played} jugados`}
+              </small>
+            </h3>
+            {day ? (
+              <div
+                className="tn-slots"
+                style={{ "--courts": Math.max(1, courts.length) }}
+              >
+                <div className="tn-slots-head" aria-hidden>
+                  <span />
+                  {courts.map((c) => (
+                    <span key={c.id} className="tn-slots-court">
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
+                {byTime.map(({ time, items }) => (
+                  <div key={time} className="tn-slot-row">
+                    <div className="tn-slot-time">{time}</div>
+                    <div className="tn-slot-cells">
+                      {items.map((x) => {
+                        const col = courts.findIndex((c) => c.id === x.m.court);
+                        return (
+                          <div
+                            key={`${x.c.id}/${x.m.id}`}
+                            className="tn-slot-cell"
+                            style={col >= 0 ? { "--court-col": col + 1 } : undefined}
+                          >
+                            {row(x, { slot: true })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="tn-day-list">{list.map((x) => row(x))}</div>
+            )}
+          </section>
+        );
+      })}
       {byDay.length === 0 && (
         <p className="tn-muted">No hay partidos con ese filtro.</p>
       )}

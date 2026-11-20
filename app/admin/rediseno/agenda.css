@@ -1,0 +1,1281 @@
+/* Rediseño del admin: agenda. Se carga al final (después de padel.css), así que
+   pisa lo anterior con la misma especificidad. Todo bajo .admin-root. */
+
+/* ==========================================================================
+   AGENDA DE HOY
+   La idea: de un vistazo desde el mostrador tiene que leerse qué se juega
+   ahora, qué viene, quién debe y qué está libre. Lo reservado es cancha azul
+   pintada; lo libre, cancha sin pintar (solo las líneas). Los números van en
+   un marcador oscuro, como el tablero de un torneo.
+   ========================================================================== */
+.admin-root .admin-agenda {
+  --court: #2350d6;
+  --court-deep: #16349a;
+  --court-ink: #1c42b8;
+  --ball: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  --ball-flat: #d7f03a;
+  --board-bg: var(--night, #1b1b19);
+  /* Líneas de una cancha vacía, en tinta muy suave: se lee "cancha" sin
+     competir con las reservadas. */
+  --court-lines-soft: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='%231b1b19'%3E%3Crect x='4' y='6' width='192' height='88' stroke-width='1' vector-effect='non-scaling-stroke' stroke-opacity='.12'/%3E%3Cpath d='M100 0v100' stroke-width='1.5' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.16'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='1' vector-effect='non-scaling-stroke' stroke-opacity='.08'/%3E%3C/svg%3E");
+  --court-lines-blue: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='%232350d6'%3E%3Crect x='4' y='6' width='192' height='88' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M100 0v100' stroke-width='2' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.5'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='1' vector-effect='non-scaling-stroke' stroke-opacity='.3'/%3E%3C/svg%3E");
+}
+
+.admin-root .admin-agenda kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ---------- Tira de días: un riel con los 14 días ---------- */
+.admin-root .admin-agenda .admin-daystrip {
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admin-root .admin-agenda .admin-daystrip-scroll {
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(27, 27, 25, 0.04);
+}
+
+/* Los chips ocupan todo el ancho en la compu: antes quedaba un hueco vacío
+   entre el último día y el botón de actualizar. */
+.admin-root .admin-agenda .admin-daychip {
+  position: relative;
+  flex: 1 0 56px;
+  height: 68px;
+  gap: 0;
+  padding: 6px 0 7px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-root .admin-agenda .admin-daychip.is-weekend:not([aria-selected="true"]):not(:disabled) {
+  background: #faf6ee;
+}
+
+.admin-root .admin-agenda .admin-daychip:hover:not(:disabled):not([aria-selected="true"]) {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-agenda .admin-daychip:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.admin-root .admin-agenda .admin-daychip-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-agenda .admin-daychip strong {
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hoy: el nombre en naranja, se encuentra aunque esté mirando otro día. */
+.admin-root .admin-agenda .admin-daychip.is-today .admin-daychip-name {
+  color: var(--brand-strong, #c2410c);
+}
+
+/* Elegido: oscuro como el menú, con la raya naranja abajo. */
+.admin-root .admin-agenda .admin-daychip[aria-selected="true"] {
+  border-color: var(--board-bg);
+  background: var(--board-bg);
+  color: #ffffff;
+  box-shadow:
+    inset 0 -3px 0 var(--brand),
+    0 6px 14px -8px rgba(0, 0, 0, 0.55);
+}
+
+.admin-root .admin-agenda .admin-daychip[aria-selected="true"] .admin-daychip-name {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.admin-root .admin-agenda .admin-daychip.is-today[aria-selected="true"] .admin-daychip-name {
+  color: #ffb07a;
+}
+
+.admin-root .admin-agenda .admin-daychip:disabled {
+  background: repeating-linear-gradient(135deg, transparent 0 6px, rgba(27, 27, 25, 0.035) 6px 12px);
+  opacity: 0.6;
+}
+
+/* Día cerrado al que se llegó con las flechas: se marca como elegido igual,
+   si no el chip quedaba blanco sobre rayado y no se leía. */
+.admin-root .admin-agenda .admin-daychip:disabled[aria-selected="true"] {
+  background: var(--night-soft, #262521);
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 1;
+}
+
+/* Cantidad de turnos del día, como globito. */
+.admin-root .admin-agenda .admin-daychip-count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--court);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-agenda .admin-daychip[aria-selected="true"] .admin-daychip-count {
+  background: var(--ball-flat);
+  color: var(--board-bg);
+}
+
+/* El 1° del mes: separador y el mes colgando arriba. */
+.admin-root .admin-agenda .admin-daychip.is-month-start {
+  margin-left: 6px;
+}
+
+.admin-root .admin-agenda .admin-daychip.is-month-start::after {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 10px;
+  bottom: 10px;
+  border-left: 2px dotted var(--border-strong);
+}
+
+.admin-root .admin-agenda .admin-daychip-month {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--brand);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 15px;
+  text-transform: uppercase;
+}
+
+/* Barrita de ocupación en escala de azul cancha: más llena, más cancha.
+   Igual que el calendario del mes. */
+.admin-root .admin-agenda .admin-daychip-bar {
+  width: 62%;
+  max-width: 40px;
+  height: 5px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: #ebe6da;
+}
+
+.admin-root .admin-agenda .admin-daychip-bar span,
+.admin-root .admin-agenda .admin-daychip-bar[data-tone="low"] span {
+  border-radius: inherit;
+  background: #8fa6ec;
+}
+
+.admin-root .admin-agenda .admin-daychip-bar[data-tone="mid"] span {
+  background: #4f72de;
+}
+
+.admin-root .admin-agenda .admin-daychip-bar[data-tone="high"] span {
+  background: var(--court);
+}
+
+.admin-root .admin-agenda .admin-daychip[aria-selected="true"] .admin-daychip-bar {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.admin-root .admin-agenda .admin-daychip[aria-selected="true"] .admin-daychip-bar span {
+  background: var(--ball-flat);
+}
+
+.admin-root .admin-agenda .admin-daystrip-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-root .admin-agenda .admin-daystrip-keys kbd + kbd {
+  margin-left: -1px;
+}
+
+@media (max-width: 1279px) {
+  .admin-root .admin-agenda .admin-daystrip-keys {
+    display: none;
+  }
+}
+
+/* ---------- Marcador del día ---------- */
+.admin-root .admin-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.5fr);
+  gap: 1px;
+  margin-bottom: 22px;
+  border-radius: 16px;
+  overflow: hidden;
+  /* El gap de 1px deja ver este fondo: son las divisiones del tablero. */
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid #0f0f0e;
+  box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.55);
+}
+
+.admin-root .admin-board-cell,
+.admin-root .admin-board-next.is-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 20px 12px;
+  background-color: var(--board-bg);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 9px);
+  color: var(--on-night, #f3f1e9);
+}
+
+.admin-root .admin-board-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--on-night-soft, #cfcabd);
+}
+
+.admin-root .admin-board-value {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.admin-root .admin-board-value small {
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.admin-root .admin-board-sub {
+  font-size: 13.5px;
+  color: var(--on-night-soft, #cfcabd);
+}
+
+.admin-root .admin-board-meter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-root .admin-board-meter-row em {
+  font-size: 12.5px;
+  font-style: normal;
+  font-weight: 700;
+  color: #e6f77a;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-board-meter {
+  display: block;
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.admin-root .admin-board-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #a9c41c, #d7f03a);
+  box-shadow: 0 0 10px rgba(215, 240, 58, 0.45);
+}
+
+.admin-root .admin-board-cell.is-cash .admin-board-value {
+  color: #4ade80;
+}
+
+.admin-root .admin-board-cell.is-cash .admin-board-label svg {
+  color: #4ade80;
+}
+
+.admin-root .admin-board-cell.is-owing .admin-board-value,
+.admin-root .admin-board-cell.is-owing .admin-board-label svg {
+  color: #4ade80;
+}
+
+/* Hay deuda: el número en rojo claro (se lee sobre el fondo oscuro) y una
+   raya roja arriba, para que se vea de lejos. */
+.admin-root .admin-board-cell.is-owing.has-debt {
+  box-shadow: inset 0 3px 0 #ef4444;
+}
+
+.admin-root .admin-board-cell.is-owing.has-debt .admin-board-value,
+.admin-root .admin-board-cell.is-owing.has-debt .admin-board-label svg {
+  color: #ff8577;
+}
+
+.admin-root .admin-board-cell.is-owing.has-debt .admin-board-sub {
+  color: #ffc2ba;
+  font-weight: 600;
+}
+
+/* Próximo turno: la misma cancha azul que se toca en la grilla. */
+.admin-root .admin-board-next:not(.is-empty) {
+  --court-line: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='6' width='192' height='88' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.5'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.28'/%3E%3C/svg%3E");
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px 20px 14px 24px;
+  border: none;
+  background-color: var(--court);
+  background-image:
+    var(--court-line),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.3), rgba(11, 26, 77, 0.62)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #ffffff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 5px 0 0 var(--state-pill, var(--brand));
+  transition: filter 0.15s ease;
+}
+
+.admin-root .admin-board-next:not(.is-empty):hover {
+  filter: brightness(1.08);
+}
+
+.admin-root .admin-board-next:not(.is-empty):focus-visible {
+  outline: 3px solid var(--ball-flat);
+  outline-offset: -3px;
+}
+
+.admin-root .admin-board-next:not(.is-empty) .admin-board-label {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.admin-root .admin-board-next:not(.is-empty) .admin-board-label::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ball);
+  box-shadow: 0 0 8px rgba(215, 240, 58, 0.6);
+}
+
+.admin-root .admin-board-next-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.admin-root .admin-board-next-time {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  color: #eaff6b;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.admin-root .admin-board-next-time small {
+  margin-left: 3px;
+  font-size: 18px;
+  color: rgba(234, 255, 107, 0.75);
+}
+
+.admin-root .admin-board-next-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-left: 14px;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.admin-root .admin-board-next-court {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.admin-root .admin-board-next-name {
+  overflow: hidden;
+  font-size: 19px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.admin-root .admin-board-next-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-root .admin-board-next-money {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #22c55e;
+  color: #052e14;
+  font-size: 13.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.admin-root .admin-board-next-money.is-owing {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.admin-root .admin-board-next-cta {
+  margin-left: auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--board-bg);
+  font-size: 14.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.admin-root .admin-board-next.is-empty {
+  justify-content: center;
+}
+
+.admin-root .admin-board-next-none {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Compus más angostas (o el menú abierto en 1280): el próximo turno baja a
+   su propia fila para no apretar los números. */
+@media (max-width: 1199px) {
+  .admin-root .admin-board {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-root .admin-board-next {
+    grid-column: 1 / -1;
+  }
+
+  .admin-root .admin-board-next:not(.is-empty) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 18px;
+  }
+
+  .admin-root .admin-board-next:not(.is-empty) .admin-board-label {
+    width: 100%;
+  }
+
+  .admin-root .admin-board-next-row {
+    flex: 1;
+  }
+}
+
+/* ---------- Encabezado de "Canchas del día" ---------- */
+.admin-root .admin-agenda .admin-day-courts-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin-bottom: 14px;
+}
+
+.admin-root .admin-agenda .admin-day-courts-titles .admin-section-title {
+  margin: 0;
+}
+
+.admin-root .admin-agenda .admin-day-courts-hint {
+  margin: 2px 0 0;
+  font-size: 14.5px;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-day-courts-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.admin-root .admin-live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.admin-root .admin-live-chip::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.admin-root .admin-live-chip.is-on {
+  border-color: #f6c39c;
+  background: #fff1e6;
+  color: #9a3412;
+}
+
+.admin-root .admin-live-chip.is-on::before {
+  background: var(--brand);
+  box-shadow: 0 0 0 3px rgba(232, 114, 42, 0.2);
+}
+
+/* Referencias del semáforo: para el que recién empieza en el mostrador. */
+.admin-root .admin-agenda-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-agenda-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-root .admin-agenda-legend li::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--state-pill, var(--brand));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.admin-root .admin-agenda-legend li.is-free::before {
+  background: #fbfaf6;
+  box-shadow: none;
+  border: 1.5px dashed #a39c8c;
+}
+
+/* ---------- Grilla de canchas ---------- */
+.admin-root .admin-agenda .admin-timeline {
+  --slot-h: 66px;
+  --time-col: 96px;
+  border-radius: 16px;
+  box-shadow: 0 10px 26px -20px rgba(27, 27, 25, 0.45);
+}
+
+.admin-root .admin-agenda .admin-timeline-head {
+  border-radius: 16px 16px 0 0;
+}
+
+.admin-root .admin-agenda .admin-timeline-head > span:first-child {
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
+}
+
+.admin-root .admin-agenda .admin-timeline-head > span:first-child::before {
+  content: "Hora";
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-root .admin-agenda .admin-timeline-head strong {
+  padding: 13px 14px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.admin-root .admin-agenda .admin-timeline-head small {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.admin-root .admin-agenda .admin-timeline-row {
+  transition: background-color 0.15s ease;
+}
+
+.admin-root .admin-agenda .admin-timeline-time {
+  gap: 1px;
+  padding: 0 16px;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-agenda .admin-timeline-time strong {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-agenda .admin-timeline-time span {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-agenda .admin-timeline-time span::before {
+  content: "a las ";
+}
+
+@media (min-width: 768px) {
+  .admin-root .admin-agenda .admin-timeline-time span::before {
+    content: "a ";
+  }
+
+  /* En la compu la franja en juego se marca en la columna de horarios
+     ("En juego") y la línea con la pelotita dice por dónde va. El cartelito
+     con la hora tapaba el horario y la hora ya está arriba de todo. */
+  .admin-root .admin-agenda .admin-timeline-live {
+    display: inline-flex;
+    margin-top: 5px;
+    background: #ffffff;
+    color: var(--brand-strong, #c2410c);
+  }
+
+  .admin-root .admin-agenda .admin-timeline-now span {
+    display: none;
+  }
+}
+
+.admin-root .admin-agenda .admin-timeline-row:hover .admin-timeline-time {
+  background: #f1ede4;
+}
+
+/* Lo que ya pasó se achica y se destiñe, así a la noche lo que viene entra
+   en pantalla sin bajar. Excepción: el turno que ya se jugó y todavía debe
+   (rojo o seña) queda con color, porque esa plata hay que cobrarla igual. */
+.admin-root .admin-agenda .admin-timeline-row.is-past {
+  opacity: 1;
+}
+
+.admin-root .admin-agenda .admin-timeline-row.is-past .admin-timeline-time {
+  opacity: 0.55;
+}
+
+.admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot.is-free {
+  opacity: 0.45;
+}
+
+.admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot.is-taken:is([data-state="pagado"], [data-state="prueba"], [data-state="bloqueado"]) {
+  filter: grayscale(0.7);
+  opacity: 0.55;
+}
+
+.admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot-free-cta {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .admin-root .admin-agenda .admin-timeline-row.is-past {
+    min-height: 0;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-past .admin-timeline-time {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-past .admin-timeline-time strong {
+    font-size: 19px;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-past .admin-timeline-time span {
+    display: none;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-past :is(.admin-slot-main, .admin-slot-assign) {
+    min-height: 36px;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot-main {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot.is-taken .admin-slot-badge {
+    align-self: center;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot.is-taken .admin-slot-name {
+    font-size: 15px;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot-free-label {
+    padding: 0 10px;
+    font-size: 14px;
+  }
+}
+
+/* La franja que se está jugando: horario en naranja y las canchas ocupadas
+   con un aro amarillo pelota. */
+.admin-root .admin-agenda .admin-timeline-row.is-current {
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+  box-shadow: none;
+}
+
+.admin-root .admin-agenda .admin-timeline-row.is-current .admin-timeline-time {
+  background: linear-gradient(160deg, #f08a45, var(--brand-strong, #c2410c));
+  border-right-color: var(--brand-strong, #c2410c);
+  color: #ffffff;
+}
+
+.admin-root .admin-agenda .admin-timeline-row.is-current .admin-timeline-time span {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-root .admin-agenda .admin-timeline-row.is-current .admin-slot.is-taken:not([data-state="bloqueado"]) {
+  box-shadow:
+    inset 4px 0 0 var(--state-pill, #e8722a),
+    0 0 0 2px #d7f03a,
+    0 8px 18px -8px rgba(13, 31, 92, 0.7);
+}
+
+/* Línea de "ahora": naranja (el rojo ya significa "debe") con la pelotita
+   donde arranca la cancha. La hora queda en la columna de horarios. */
+.admin-root .admin-agenda .admin-timeline-now {
+  left: calc(var(--time-col) - 2px);
+  border-top: 2px solid var(--brand);
+  box-shadow: 0 0 8px rgba(232, 114, 42, 0.55);
+}
+
+.admin-root .admin-agenda .admin-timeline-now::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -7px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ball);
+  box-shadow: 0 0 0 2px #ffffff, 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.admin-root .admin-agenda .admin-timeline-now span {
+  left: calc(-1 * var(--time-col) + 6px);
+  top: -11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--board-bg);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  box-shadow: 0 0 0 2px var(--brand);
+}
+
+/* Libre: cancha sin pintar, solo las líneas. Al pasar el mouse se pinta de
+   azul (padel.css) como adelanto de cómo queda reservada. */
+.admin-root .admin-agenda .admin-slot.is-free {
+  border: 1px solid var(--border);
+  background-color: #fbfaf6;
+  background-image: var(--court-lines-soft);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.admin-root .admin-agenda .admin-slot.is-free:hover,
+.admin-root .admin-agenda .admin-slot.is-free:focus-within {
+  border-color: var(--court);
+  background-color: rgba(35, 80, 214, 0.06);
+  background-image: var(--court-lines-blue);
+}
+
+.admin-root .admin-agenda .admin-slot-assign {
+  min-height: 54px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.admin-root .admin-agenda .admin-slot-free-label {
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.admin-root .admin-agenda .admin-slot-free-cta {
+  margin-left: 3px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-agenda .admin-slot-assign:hover .admin-slot-free-cta,
+.admin-root .admin-agenda .admin-slot-assign:focus-visible .admin-slot-free-cta {
+  color: var(--court-ink);
+}
+
+.admin-root .admin-agenda .admin-slot-assign:focus-visible {
+  outline: 2px solid var(--court);
+  outline-offset: -2px;
+}
+
+/* Reservado: nombre más grande, que es lo que se busca con la vista. */
+.admin-root .admin-agenda .admin-slot.is-taken .admin-slot-name {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.admin-root .admin-agenda .admin-slot.is-taken .admin-slot-main:focus-visible {
+  outline: 3px solid var(--ball-flat);
+  outline-offset: -3px;
+}
+
+.admin-root .admin-agenda .admin-closed-day {
+  padding: 40px 20px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  background-color: var(--surface);
+  background-image: var(--court-lines-soft);
+  background-size: 100% 100%;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* En pantallas grandes (1920) hay aire: filas un poco más altas y horarios
+   más grandes para leer de lejos desde el otro lado del mostrador. */
+@media (min-width: 1600px) {
+  .admin-root .admin-agenda .admin-timeline {
+    --slot-h: 72px;
+    --time-col: 104px;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-time strong {
+    font-size: 28px;
+  }
+
+  .admin-root .admin-board-value {
+    font-size: 48px;
+  }
+}
+
+/* ==========================================================================
+   GRÁFICO SEMANAL (WeekChart): turnos en azul cancha, cantina en naranja.
+   Los días anteriores van apagados para que "Hoy" resalte.
+   ========================================================================== */
+.admin-root .admin-weekchart {
+  border-radius: 16px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 10px 26px -20px rgba(27, 27, 25, 0.45);
+}
+
+.admin-root .admin-weekchart .admin-weekchart-axis {
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-weekchart .admin-weekchart-stack {
+  width: min(40px, 78%);
+}
+
+.admin-root .admin-weekchart .admin-weekchart-stack .is-turnos {
+  background-color: var(--court, #2350d6);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 60%);
+  border-radius: 0 0 4px 4px;
+}
+
+.admin-root .admin-weekchart .admin-weekchart-stack .is-cantina {
+  background: var(--brand);
+  border-radius: 5px 5px 0 0;
+}
+
+/* Si no hubo cantina, la columna de turnos lleva la punta redondeada. */
+.admin-root .admin-weekchart .admin-weekchart-stack .is-cantina[style*="height: 0%"] + .is-turnos {
+  border-radius: 5px 5px 4px 4px;
+}
+
+.admin-root .admin-weekchart .admin-weekchart-col:not(.is-today) .admin-weekchart-stack {
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+}
+
+.admin-root .admin-weekchart .admin-weekchart-col:hover .admin-weekchart-stack,
+.admin-root .admin-weekchart .admin-weekchart-col:focus-visible .admin-weekchart-stack {
+  opacity: 1;
+}
+
+.admin-root .admin-weekchart .admin-weekchart-col.is-today .is-turnos {
+  background-color: var(--court-deep, #16349a);
+}
+
+.admin-root .admin-weekchart .admin-weekchart-col.is-today .is-cantina {
+  background: var(--brand);
+}
+
+.admin-root .admin-weekchart .admin-weekchart-col.is-today .admin-weekchart-value {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--court-deep, #16349a);
+}
+
+.admin-root .admin-weekchart .admin-weekchart-col.is-today .admin-weekchart-stack {
+  position: relative;
+}
+
+/* Pelotita arriba de la barra de hoy. */
+.admin-root .admin-weekchart .admin-weekchart-col.is-today .admin-weekchart-stack::before {
+  content: "";
+  align-self: center;
+  width: 10px;
+  height: 10px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 0 6px rgba(169, 196, 28, 0.7);
+  flex-shrink: 0;
+}
+
+.admin-root .admin-weekchart .admin-weekchart-labels {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.admin-root .admin-weekchart .admin-weekchart-labels .is-today {
+  color: var(--brand-strong, #c2410c);
+}
+
+.admin-root .admin-weekchart .admin-weekchart-legend .is-turnos::before {
+  background: var(--court, #2350d6);
+}
+
+.admin-root .admin-weekchart .admin-weekchart-legend .is-cantina::before {
+  background: var(--brand);
+}
+
+/* ==========================================================================
+   CELU
+   ========================================================================== */
+@media (max-width: 767px) {
+  .admin-root .admin-agenda .admin-daystrip {
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .admin-root .admin-agenda .admin-daystrip-scroll {
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .admin-root .admin-agenda .admin-daychip {
+    flex: 0 0 58px;
+    scroll-snap-align: start;
+  }
+
+  /* Marcador 2 × 2: turnos y plata arriba, deuda y próximo turno abajo a lo
+     ancho, que son los que más se tocan. */
+  .admin-root .admin-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 22px;
+    border-radius: 14px;
+  }
+
+  .admin-root .admin-board-cell,
+  .admin-root .admin-board-next.is-empty {
+    padding: 13px 14px 12px;
+    gap: 4px;
+  }
+
+  .admin-root .admin-board-label {
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+  }
+
+  .admin-root .admin-board-value {
+    font-size: 34px;
+  }
+
+  .admin-root .admin-board-value small {
+    font-size: 20px;
+  }
+
+  .admin-root .admin-board-sub {
+    font-size: 13px;
+  }
+
+  .admin-root .admin-board-cell.is-owing {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .admin-root .admin-board-cell.is-owing .admin-board-value {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+  }
+
+  .admin-root .admin-board-next {
+    grid-column: 1 / -1;
+  }
+
+  .admin-root .admin-board-next:not(.is-empty) {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 13px 14px 13px 18px;
+  }
+
+  .admin-root .admin-board-next-time {
+    font-size: 34px;
+  }
+
+  .admin-root .admin-board-next-name {
+    font-size: 17px;
+  }
+
+  .admin-root .admin-board-next-cta {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 18px;
+  }
+
+  .admin-root .admin-board-next-none {
+    font-size: 20px;
+  }
+
+  .admin-root .admin-agenda .admin-day-courts-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-root .admin-agenda .admin-day-courts-hint {
+    font-size: 14px;
+  }
+
+  .admin-root .admin-agenda-legend {
+    font-size: 13px;
+    gap: 6px 12px;
+  }
+
+  /* Cada franja es un bloque; la que se juega ahora queda enmarcada en
+     naranja porque en el celu no está la línea de "ahora". */
+  .admin-root .admin-agenda .admin-timeline {
+    box-shadow: none;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row {
+    padding: 12px 0 14px;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-time {
+    background: transparent;
+    gap: 6px;
+    padding: 0 2px;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row:hover .admin-timeline-time {
+    background: transparent;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-time strong {
+    font-size: 24px;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-time span {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .admin-root .admin-agenda .admin-timeline-time span::before {
+    content: "a las ";
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-current {
+    margin: 4px -8px;
+    padding: 10px 8px 12px;
+    border: 1px solid #f6c39c;
+    border-bottom: 1px solid #f6c39c;
+    border-radius: 14px;
+    background: #fff3ea;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-current .admin-timeline-time {
+    background: transparent;
+    color: var(--brand-strong, #c2410c);
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row.is-current .admin-timeline-time span {
+    color: #9a3412;
+  }
+
+  /* Una cancha por renglón: en dos columnas el nombre y "Pagó seña · debe
+     $12.000" se partían en tres renglones. A lo ancho se leen de una, y el
+     libre queda como una barra baja que no ocupa de más. */
+  .admin-root .admin-agenda .admin-timeline-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .admin-root .admin-agenda .admin-slot-assign {
+    flex-direction: row;
+    justify-content: space-between;
+    min-height: 48px;
+    padding: 0 6px 0 14px;
+  }
+
+  .admin-root .admin-agenda .admin-slot.is-taken .admin-slot-main {
+    min-height: 58px;
+    padding-top: 7px;
+    padding-bottom: 8px;
+  }
+
+  .admin-root .admin-agenda .admin-slot.is-taken .admin-slot-badge {
+    white-space: nowrap;
+    border-radius: 999px;
+  }
+
+  .admin-root .admin-agenda .admin-slot.is-taken .admin-slot-name {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-agenda .admin-slot-court {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .admin-root .admin-agenda .admin-slot-free-label {
+    padding: 2px 10px;
+  }
+
+  .admin-root .admin-agenda .admin-slot.is-taken .admin-slot-name {
+    font-size: 16px;
+  }
+
+  .admin-root .admin-agenda .admin-closed-day {
+    font-size: 20px;
+  }
+}
+
+/* ==========================================================================
+   MOVIMIENTO: cortito y solo si la persona no pidió menos animaciones.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-board-meter span {
+    transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .admin-root .admin-board-next-cta {
+    transition: transform 0.15s ease;
+  }
+
+  .admin-root .admin-board-next:not(.is-empty):hover .admin-board-next-cta {
+    transform: translateX(3px);
+  }
+
+  .admin-root .admin-live-chip.is-on::before {
+    animation: adminAgendaLive 1.8s ease-in-out infinite;
+  }
+
+  .admin-root .admin-agenda .admin-slot.is-taken:not([data-state="bloqueado"]) {
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-row:not(.is-past) .admin-slot.is-taken:not([data-state="bloqueado"]):hover {
+    transform: translateY(-1px);
+  }
+
+  @keyframes adminAgendaLive {
+    50% {
+      box-shadow: 0 0 0 6px rgba(232, 114, 42, 0);
+      opacity: 0.55;
+    }
+  }
+}
+
+/* Gráfico semanal en el celu: siete montos no entran arriba de las barras;
+   queda solo el de hoy (el resto está al tocar cada barra). */
+@media (max-width: 767px) {
+  .admin-root .admin-weekchart .admin-weekchart-col:not(.is-today) .admin-weekchart-value {
+    visibility: hidden;
+  }
+}

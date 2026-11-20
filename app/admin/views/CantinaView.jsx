@@ -2,13 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowLeftRight,
   Ban,
+  Banknote,
   BookOpen,
   ClipboardList,
-  Coins,
   Minus,
+  NotebookPen,
   Plus,
-  Receipt,
+  QrCode,
   Search,
   ShoppingCart,
   Trash2,
@@ -56,6 +58,13 @@ import { JornadaNote, PAYMENT_METHODS, WhatsAppMiniIcon } from "../adminHelpers"
 const ICON = { size: 16, strokeWidth: 1.75, "aria-hidden": true };
 const METHODS = [...PAYMENT_METHODS, { value: "cuenta", label: "A cuenta" }];
 const methodLabel = (m) => METHODS.find((x) => x.value === m)?.label || m;
+// Un ícono por medio de pago: en el mostrador se elige por forma, no leyendo.
+const METHOD_ICON = {
+  efectivo: Banknote,
+  transferencia: ArrowLeftRight,
+  mercadopago: QrCode,
+  cuenta: NotebookPen,
+};
 const QUICK_FAVORITE_IDS = ["agua_500", "gatorade_500", "corona_330", "tubo_pelotas"];
 // Cada cuánto se buscan pedidos nuevos de la carta mientras la vista está abierta.
 const ORDERS_POLL_MS = 20000;
@@ -425,9 +434,17 @@ export default function CantinaView({ onExpiredSession, onToast }) {
         onClick={() => addToCart(item)}
         aria-label={`${item.name}, ${formatARS(item.price)}${qty ? `, ${qty} en la venta` : ""}. Agregar uno`}
       >
+        <span className="admin-product-icon" aria-hidden="true">
+          {productIcon(item.name, item.category)}
+        </span>
         <span className="admin-product-name">{item.name}</span>
         <span className="admin-product-price">{formatARS(item.price)}</span>
-        {qty > 0 && <span className="admin-product-qty">{qty}</span>}
+        {/* key={qty}: la pelotita se vuelve a montar y "rebota" en cada toque. */}
+        {qty > 0 && (
+          <span key={qty} className="admin-product-qty">
+            {qty}
+          </span>
+        )}
       </button>
     );
   };
@@ -437,6 +454,11 @@ export default function CantinaView({ onExpiredSession, onToast }) {
       <div className="admin-pos-cart-head">
         <h3 className="admin-section-title" style={{ margin: 0 }}>
           Venta actual
+          {cartCount > 0 && (
+            <span className="admin-pos-cart-count">
+              {plural(cartCount, "producto", "productos")}
+            </span>
+          )}
         </h3>
         {cart.length > 0 && (
           <button
@@ -468,13 +490,25 @@ export default function CantinaView({ onExpiredSession, onToast }) {
       )}
 
       {cart.length === 0 ? (
-        <p className="admin-field-hint">
-          Tocá un producto para sumarlo. Cada toque suma uno.
-        </p>
+        <div className="admin-pos-empty">
+          <img
+            src="/img/mascotas/muzzaguito-pizza-cerveza.webp"
+            alt=""
+            width={72}
+            height={72}
+            loading="lazy"
+          />
+          <p className="admin-field-hint">
+            Tocá un producto para sumarlo. Cada toque suma uno.
+          </p>
+        </div>
       ) : (
         <ul className="admin-pos-lines">
           {cart.map((it) => (
             <li key={it.name}>
+              <span className="admin-pos-line-icon" aria-hidden="true">
+                {productIcon(it.name, itemsByName.get(it.name)?.category)}
+              </span>
               <span className="admin-pos-line-name">
                 {it.name}
                 <small>{formatARS(it.price)} c/u</small>
@@ -518,20 +552,25 @@ export default function CantinaView({ onExpiredSession, onToast }) {
       </div>
 
       <div
-        className="admin-segmented admin-segmented-full"
+        className="admin-segmented admin-segmented-full admin-pos-methods"
         role="group"
         aria-label="Método de pago"
       >
-        {METHODS.map((m) => (
-          <button
-            key={m.value}
-            type="button"
-            aria-pressed={method === m.value}
-            onClick={() => setMethod(m.value)}
-          >
-            {m.label}
-          </button>
-        ))}
+        {METHODS.map((m) => {
+          const Icon = METHOD_ICON[m.value] || Banknote;
+          return (
+            <button
+              key={m.value}
+              type="button"
+              data-method={m.value}
+              aria-pressed={method === m.value}
+              onClick={() => setMethod(m.value)}
+            >
+              <Icon size={18} strokeWidth={1.9} aria-hidden />
+              {m.label}
+            </button>
+          );
+        })}
       </div>
 
       {method === "cuenta" && (
@@ -559,7 +598,8 @@ export default function CantinaView({ onExpiredSession, onToast }) {
 
       <button
         type="button"
-        className="btn btn-linear-primary admin-btn-block admin-btn-lg"
+        className="btn btn-linear-primary admin-btn-block admin-btn-lg admin-pos-charge"
+        data-method={method}
         disabled={
           cart.length === 0 || submitting || (method === "cuenta" && !chargeTo)
         }
@@ -575,7 +615,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
   );
 
   return (
-    <div>
+    <div className="admin-cantina">
       <div className="admin-segmented admin-cantina-tabs" role="group" aria-label="Cantina">
         <button type="button" aria-pressed={tab === "vender"} onClick={() => setTab("vender")}>
           <ShoppingCart {...ICON} /> Vender
@@ -602,56 +642,34 @@ export default function CantinaView({ onExpiredSession, onToast }) {
       </div>
 
       <div hidden={tab !== "vender"}>
-      {/* 3 KPI Cards de Cantina Estilo Kravio */}
-      <div className="admin-kpis-3" style={{ marginBottom: 20 }}>
-        <div className="admin-kravio-kpi-card">
-          <div className="admin-kravio-kpi-header">
-            <span className="admin-kravio-kpi-title">Recaudado Cantina</span>
-            <Coins size={17} style={{ color: "#15803d" }} />
-          </div>
-          <div className="admin-kravio-kpi-content">
-            <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: "#15803d" }}>
-                {formatARS(dayTotal)}
-              </div>
-              <span className="admin-cell-sub">Cobrado hoy en el bar</span>
-            </div>
-          </div>
+      {/* La venta actual queda a la derecha desde arriba de todo: se cobra
+          sin scrollear aunque haya pedidos de la carta abiertos. */}
+      <div className="admin-pos">
+        <div className="admin-pos-catalog">
+      {/* Marcador del bar: chico, para que los productos y la venta
+          entren en la primera pantalla del mostrador. */}
+      <dl className="admin-pos-stats">
+        <div>
+          <dt>Cobrado hoy</dt>
+          <dd className="is-cobrado">{formatARS(dayTotal)}</dd>
         </div>
-
-        <div className="admin-kravio-kpi-card">
-          <div className="admin-kravio-kpi-header">
-            <span className="admin-kravio-kpi-title">A Cuenta / Turnos</span>
-            <Receipt size={17} style={{ color: onAccount > 0 ? "#ea580c" : "#5f5b52" }} />
-          </div>
-          <div className="admin-kravio-kpi-content">
-            <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: onAccount > 0 ? "#ea580c" : "#141412" }}>
-                {formatARS(onAccount)}
-              </div>
-              <span className="admin-cell-sub">Cargado a cuentas de turnos</span>
-            </div>
-          </div>
+        <div>
+          <dt>A cuenta de turnos</dt>
+          <dd className={onAccount > 0 ? "is-pendiente" : undefined}>
+            {formatARS(onAccount)}
+          </dd>
         </div>
-
-        <div className="admin-kravio-kpi-card">
-          <div className="admin-kravio-kpi-header">
-            <span className="admin-kravio-kpi-title">Tickets del Día</span>
-            <ShoppingCart size={17} style={{ color: "#2563eb" }} />
-          </div>
-          <div className="admin-kravio-kpi-content">
-            <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: "#141412" }}>
-                {activeSalesCount}
-              </div>
-              <span className="admin-cell-sub">Ventas activas registradas</span>
-            </div>
-          </div>
+        <div>
+          <dt>Tickets</dt>
+          <dd>{activeSalesCount}</dd>
         </div>
-      </div>
+      </dl>
 
       {/* PEDIDOS DE LA CARTA (web) */}
-      <section className="admin-web-orders" aria-labelledby="web-orders-title">
+      <section
+        className={`admin-web-orders${openOrders.length === 0 ? " is-quiet" : ""}`}
+        aria-labelledby="web-orders-title"
+      >
         <h2 className="admin-section-title" id="web-orders-title">
           <ClipboardList {...ICON} /> Pedidos de la carta
           {openOrders.length > 0 && (
@@ -777,8 +795,6 @@ export default function CantinaView({ onExpiredSession, onToast }) {
         )}
       </section>
 
-      <div className="admin-pos">
-        <div className="admin-pos-catalog">
           <div className="admin-view-toolbar">
           <div className="admin-search-wrap admin-pos-search">
             <Search {...ICON} />
@@ -818,58 +834,26 @@ export default function CantinaView({ onExpiredSession, onToast }) {
         <JornadaNote date={date} />
 
         {/* Barra de favoritos rápidos 1-click */}
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            flexWrap: "wrap",
-            alignItems: "center",
-            marginBottom: 12,
-            padding: "8px 12px",
-            background: "rgba(234, 88, 12, 0.05)",
-            borderRadius: 10,
-            border: "1px solid rgba(234, 88, 12, 0.15)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 13.5,
-              fontWeight: 700,
-              color: "#ea580c",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            <Zap size={14} /> Rápidos:
+        <div className="admin-pos-quick">
+          <span className="admin-pos-quick-label">
+            <Zap size={14} aria-hidden /> Rápidos
           </span>
           {quickFavoriteItems.map((item) => (
             <button
               key={item.id}
               type="button"
-              className="btn btn-secondary"
-              style={{
-                padding: "3px 10px",
-                height: 28,
-                fontSize: 13.5,
-                borderRadius: 20,
-                background: "#ffffff",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-              }}
+              className="admin-pos-quick-btn"
               onClick={() => addToCart(item)}
+              aria-label={`Sumar ${item.name}, ${formatARS(item.price)}`}
             >
-              <Plus size={12} strokeWidth={2.5} style={{ color: "#ea580c" }} />
+              <span aria-hidden="true">{productIcon(item.name, item.category)}</span>
               <span>{item.name}</span>
-              <strong style={{ color: "#15803d", fontSize: 13 }}>
-                {formatARS(item.price)}
-              </strong>
+              <strong>{formatARS(item.price)}</strong>
             </button>
           ))}
         </div>
 
-        <div className="admin-chips" role="group" aria-label="Categorías">
+        <div className="admin-chips admin-pos-cats" role="group" aria-label="Categorías">
           {MENU_CATEGORIES.map((cat) => (
             <button
               key={cat.id}
@@ -877,6 +861,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
               aria-pressed={selectedCat === cat.id}
               onClick={() => setSelectedCat(cat.id)}
             >
+              <span aria-hidden="true">{productIcon("", cat.id)}</span>
               {plainLabel(cat.label)}
             </button>
           ))}
@@ -926,7 +911,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
         </section>
 
         {/* VENTAS DEL DÍA */}
-        <section style={{ marginTop: 28 }}>
+        <section className="admin-pos-sales">
           <h2 className="admin-section-title">
             Ventas del día · {plural(activeSalesCount, "venta", "ventas")} ·{" "}
             {formatARS(dayTotal)}
@@ -946,7 +931,11 @@ export default function CantinaView({ onExpiredSession, onToast }) {
           ) : (
             <ul className="admin-sales-list">
               {salesList.map((s) => (
-                <li key={s.id} className={s.voided ? "is-voided" : undefined}>
+                <li
+                  key={s.id}
+                  className={s.voided ? "is-voided" : undefined}
+                  data-method={s.method}
+                >
                   <span className="admin-sale-time">
                     {s.createdAt ? formatTime(s.createdAt) : "—"}
                   </span>
@@ -1016,7 +1005,6 @@ export default function CantinaView({ onExpiredSession, onToast }) {
                           onClick={() => setDeletingSale(s)}
                           aria-label="Eliminar venta definitivamente"
                           title="Eliminar definitivamente con PIN"
-                          style={{ color: "#dc2626" }}
                         >
                           <Trash2 {...ICON} />
                         </button>
@@ -1039,12 +1027,14 @@ export default function CantinaView({ onExpiredSession, onToast }) {
       </aside>
       <button
         type="button"
-        className="admin-pos-cartbar"
+        className={`admin-pos-cartbar${cartCount === 0 ? " is-empty" : ""}`}
         onClick={() => setIsCartOpen(true)}
         aria-label={`Ver venta actual: ${plural(cartCount, "producto", "productos")}, ${formatARS(cartTotal)}`}
       >
-        <ShoppingCart {...ICON} />
-        <span>{plural(cartCount, "producto", "productos")}</span>
+        <span className="admin-pos-cartbar-ball" aria-hidden="true">
+          {cartCount}
+        </span>
+        <span>{cartCount ? "Ver venta" : "Venta vacía"}</span>
         <strong>{formatARS(cartTotal)}</strong>
       </button>
 

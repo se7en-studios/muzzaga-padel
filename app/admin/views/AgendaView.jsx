@@ -8,14 +8,19 @@ import {
   nowInClubTimezone,
   businessDayInClub,
 } from "../../../lib/booking";
-import { hasSlotStarted } from "../../../lib/clubConfig";
-import { formatARS } from "../../../lib/format";
-import { isCountableBooking, pendingAmount } from "../../../lib/metrics";
+import { hasSlotStarted, minutesIntoNight } from "../../../lib/clubConfig";
+import { formatARS, formatPct } from "../../../lib/format";
+import {
+  isCountableBooking,
+  paymentState,
+  pendingAmount,
+} from "../../../lib/metrics";
 import { adminGetRangeStats } from "../actions";
 import CourtTimeline from "./agenda/CourtTimeline";
 import DayStrip from "./agenda/DayStrip";
-import KpiCard, { KpiGrid } from "../ui/KpiCard";
 import { SkeletonCards, SkeletonRows } from "../ui/states";
+
+const BOARD_ICON = { size: 15, strokeWidth: 1.9, "aria-hidden": true };
 
 /**
  * Agenda del día. Pensada para que la entienda cualquiera de un vistazo:
@@ -86,13 +91,13 @@ export default function AgendaView({
 
   if (!dayData) {
     return (
-      <>
+      <div className="admin-agenda">
         {strip}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <SkeletonCards count={3} />
           <SkeletonRows count={7} height={64} />
         </div>
-      </>
+      </div>
     );
   }
 
@@ -116,80 +121,159 @@ export default function AgendaView({
     : null;
   const nextOwes = nextSlot ? pendingAmount(nextSlot.booking) : 0;
 
+  // Lo que se está jugando ahora y lo libre que queda: mismos criterios que
+  // usa la grilla (empezó y no terminó / todavía no empezó).
+  const isLive = minutesIntoNight(activeDate, now) !== null;
+  const playing = isLive
+    ? dayData.slots.filter(
+        (s) =>
+          s.booking &&
+          isCountableBooking(s.booking) &&
+          hasSlotStarted(clubConfig, activeDate, s.start, now) &&
+          !hasSlotStarted(clubConfig, activeDate, s.end, now),
+      )
+    : [];
+  const freeLeft = dayData.slots.filter(
+    (s) => !s.isTaken && !hasSlotStarted(clubConfig, activeDate, s.start, now),
+  ).length;
+  const isClosed = stats.totalSlots === 0;
+  const occupancy = Math.min(100, Math.max(0, stats.ocupacionPct ?? 0));
+
   return (
-    <>
+    <div className="admin-agenda">
       {strip}
       <div className={loading ? "admin-content-loading" : ""}>
-        <KpiGrid min={200}>
-          <KpiCard
-            title="Turnos reservados"
-            value={summary.turnos}
-            sub={
-              stats.totalSlots > 0
-                ? `de ${stats.totalSlots} horarios del día`
-                : "El club está cerrado"
-            }
-            icon={CalendarDays}
-          />
-          <KpiCard
-            title="Plata que entró"
-            value={formatARS(summary.cobrado)}
-            sub="Turnos y cantina"
-            icon={Banknote}
-            tone="success"
-          />
-          <KpiCard
-            title="Falta cobrar"
-            value={formatARS(summary.porCobrar)}
-            sub={
-              owing > 0
-                ? `${owing} ${owing === 1 ? "turno debe" : "turnos deben"}`
-                : "Todo cobrado"
-            }
-            icon={summary.porCobrar > 0 ? CircleAlert : CircleCheck}
-            tone={summary.porCobrar > 0 ? "danger" : "success"}
-          />
-        </KpiGrid>
-
-        {nextSlot && (
-          <button
-            type="button"
-            className="admin-next-turn"
-            onClick={() => onOpenDetail(nextSlot.booking)}
-          >
-            <span className="admin-next-turn-label">Próximo turno</span>
-            <strong className="admin-next-turn-title">
-              {nextSlot.start} hs · {nextCourt} · {nextSlot.booking.playerName}
+        {/* Marcador del día: los tres números y el próximo turno en una sola
+            franja, así la grilla entra entera en la compu del mostrador. */}
+        <section className="admin-board" aria-label="Resumen del día">
+          <div className="admin-board-cell is-turnos">
+            <span className="admin-board-label">
+              <CalendarDays {...BOARD_ICON} /> Turnos reservados
+            </span>
+            <strong className="admin-board-value">
+              {summary.turnos}
+              {!isClosed && <small>/{stats.totalSlots}</small>}
             </strong>
-            <span
-              className={`admin-next-turn-money${nextOwes > 0 ? " is-owing" : ""}`}
+            {!isClosed && (
+              <span className="admin-board-meter-row">
+                <span className="admin-board-meter" aria-hidden>
+                  <span style={{ width: `${occupancy}%` }} />
+                </span>
+                <em>{formatPct(stats.ocupacionPct ?? 0)} ocupado</em>
+              </span>
+            )}
+            <span className="admin-board-sub">
+              {isClosed
+                ? "El club está cerrado"
+                : `${freeLeft} ${freeLeft === 1 ? "libre" : "libres"} por jugar`}
+            </span>
+          </div>
+
+          <div className="admin-board-cell is-cash">
+            <span className="admin-board-label">
+              <Banknote {...BOARD_ICON} /> Plata que entró
+            </span>
+            <strong className="admin-board-value">{formatARS(summary.cobrado)}</strong>
+            <span className="admin-board-sub">Turnos y cantina</span>
+          </div>
+
+          <div
+            className={`admin-board-cell is-owing${summary.porCobrar > 0 ? " has-debt" : ""}`}
+          >
+            <span className="admin-board-label">
+              {summary.porCobrar > 0 ? (
+                <CircleAlert {...BOARD_ICON} />
+              ) : (
+                <CircleCheck {...BOARD_ICON} />
+              )}{" "}
+              Falta cobrar
+            </span>
+            <strong className="admin-board-value">{formatARS(summary.porCobrar)}</strong>
+            <span className="admin-board-sub">
+              {owing > 0
+                ? `${owing} ${owing === 1 ? "turno debe" : "turnos deben"}`
+                : "Todo cobrado"}
+            </span>
+          </div>
+
+          {nextSlot ? (
+            <button
+              type="button"
+              className="admin-board-next"
+              data-state={paymentState(nextSlot.booking)}
+              onClick={() => onOpenDetail(nextSlot.booking)}
             >
-              {nextOwes > 0 ? `Debe ${formatARS(nextOwes)}` : "Pagado"}
-            </span>
-            <span className="admin-next-turn-cta">
-              {nextOwes > 0 ? "Cobrar →" : "Ver →"}
-            </span>
-          </button>
-        )}
+              <span className="admin-board-label">Próximo turno</span>
+              <span className="admin-board-next-row">
+                <strong className="admin-board-next-time">
+                  {nextSlot.start}
+                  <small>hs</small>
+                </strong>
+                <span className="admin-board-next-who">
+                  <span className="admin-board-next-court">{nextCourt}</span>
+                  <strong className="admin-board-next-name">
+                    {nextSlot.booking.playerName}
+                  </strong>
+                </span>
+              </span>
+              <span className="admin-board-next-foot">
+                <span
+                  className={`admin-board-next-money${nextOwes > 0 ? " is-owing" : ""}`}
+                >
+                  {nextOwes > 0 ? `Debe ${formatARS(nextOwes)}` : "Pagado"}
+                </span>
+                <span className="admin-board-next-cta">
+                  {nextOwes > 0 ? "Cobrar →" : "Ver →"}
+                </span>
+              </span>
+            </button>
+          ) : (
+            <div className="admin-board-next is-empty">
+              <span className="admin-board-label">Próximo turno</span>
+              <span className="admin-board-next-none">
+                {isClosed ? "Este día no se juega" : "No quedan turnos por empezar"}
+              </span>
+            </div>
+          )}
+        </section>
 
         <section
           className="admin-day-courts"
           aria-labelledby="admin-day-courts-title"
         >
           <div className="admin-day-courts-head">
-            <h2
-              id="admin-day-courts-title"
-              className="admin-section-title admin-m0"
-            >
-              Canchas del día
-            </h2>
-            <p className="admin-day-courts-hint">
-              Tocá un turno para cobrar o ver el detalle. Tocá un horario libre
-              para reservarlo.
-            </p>
+            <div className="admin-day-courts-titles">
+              <h2
+                id="admin-day-courts-title"
+                className="admin-section-title admin-m0"
+              >
+                Canchas del día
+              </h2>
+              <p className="admin-day-courts-hint">
+                Tocá un turno para cobrar o ver el detalle. Tocá un horario libre
+                para reservarlo.
+              </p>
+            </div>
+            <div className="admin-day-courts-meta">
+              {isLive && !isClosed && (
+                <span
+                  className={`admin-live-chip${playing.length > 0 ? " is-on" : ""}`}
+                >
+                  {playing.length > 0
+                    ? `En juego ahora: ${playing.length} de ${dayData.courts.length} ${dayData.courts.length === 1 ? "cancha" : "canchas"}`
+                    : "Ninguna cancha en juego ahora"}
+                </span>
+              )}
+              <ul className="admin-agenda-legend" aria-label="Qué significa cada color">
+                <li data-state="pagado">Pagado</li>
+                <li data-state="senado">Seña</li>
+                <li data-state="pendiente">Debe</li>
+                <li className="is-free">Libre</li>
+              </ul>
+            </div>
           </div>
 
-          {stats.totalSlots === 0 ? (
+          {isClosed ? (
             <div className="admin-settings-card admin-closed-day">
               El club no abre este día.
             </div>
@@ -206,6 +290,6 @@ export default function AgendaView({
           )}
         </section>
       </div>
-    </>
+    </div>
   );
 }

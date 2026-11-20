@@ -1,0 +1,1968 @@
+/* Rediseño del admin: base. Se carga al final (después de padel.css), así que
+   pisa lo anterior con la misma especificidad. Todo bajo .admin-root. */
+
+/* ==========================================================================
+   SISTEMA DEL PANEL: "LA CANCHA"
+   Tres colores con un trabajo cada uno, para que se lean sin pensar:
+   - Azul cancha: dónde estoy y qué está elegido (sección activa, foco,
+     cancha seleccionada).
+   - Naranja de marca: la acción principal ("Nueva reserva", "Guardar").
+   - Semáforo de cobro (verde, amarillo, rojo): solo plata. No se usa
+     para decorar.
+   El resto es crema, blanco y negro cálido. Los títulos y números van en
+   Barlow Condensed (la letra de los carteles del club); todo lo demás, en
+   Inter.
+   ========================================================================== */
+
+.admin-root .admin-dashboard-layout,
+.admin-root .admin-login-wrapper,
+.admin-root.admin-pin-backdrop {
+  --night: #1b1b19;
+  --night-soft: #262521;
+  --on-night: #f3f1e9;
+  --on-night-soft: #cfcabd;
+  --brand: #e8722a;
+  --brand-strong: #c2410c;
+  --brand-hover: #9a3412;
+  --brand-tint: rgba(232, 114, 42, 0.14);
+
+  --court: #2350d6;
+  --court-strong: #1c42b8;
+  --court-deep: #16349a;
+  --court-night: #0b1a4d;
+  --court-tint: rgba(35, 80, 214, 0.08);
+  --court-ring: 0 0 0 3px rgba(35, 80, 214, 0.22);
+  --ball: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  --turf: url("/img/fondo/textura-cesped.jpg");
+  /* Mini cancha vista desde arriba (perímetro, red, saque y central). */
+  --mini-court: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' fill='none' stroke='white'%3E%3Crect x='4' y='4' width='192' height='92' rx='3' stroke-width='5' stroke-opacity='.7'/%3E%3Cpath d='M100 0v100' stroke-width='8' stroke-dasharray='3 7' stroke-opacity='.85'/%3E%3Cpath d='M38 4v92M162 4v92M38 50h124' stroke-width='4' stroke-opacity='.5'/%3E%3C/svg%3E");
+
+  /* Colores de texto con contraste AA sobre blanco y sobre crema (los
+     anteriores verde/ámbar/celeste quedaban por debajo de 4.5:1 en letra
+     chica). */
+  --success: #047857;
+  --warning: #b45309;
+  --danger: #dc2626;
+  --info: #1c42b8;
+  --text-muted: #57544c;
+
+  --radius-card: 14px;
+  --radius-control: 10px;
+  --shadow-card: 0 1px 2px rgba(27, 27, 25, 0.05);
+  --shadow-raised: 0 14px 30px -16px rgba(27, 27, 25, 0.35);
+  --shadow-pop: 0 30px 70px -20px rgba(8, 12, 32, 0.5);
+  --card-pad: 20px;
+}
+
+/* El PIN se abre en un portal: no hereda la crema del panel. */
+.admin-root.admin-pin-backdrop {
+  --surface: #ffffff;
+  --surface-muted: #faf8f3;
+  --border: #e7e2d6;
+  --border-strong: #d3ccbd;
+  --text: #1b1b19;
+  --text-secondary: #3d3b35;
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Foco de teclado en azul cancha: se ve sobre crema, blanco y naranja (el
+   naranja sobre crema no llegaba al 3:1 que pide un contorno). */
+.admin-root .admin-dashboard-layout :focus-visible,
+.admin-root .admin-login-wrapper :focus-visible,
+.admin-root.admin-pin-backdrop :focus-visible {
+  outline: 2px solid var(--court);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   BOTONES
+   Todos de 44 px (se tocan con el dedo en el celu y con el mouse se
+   aciertan sin apuntar). Primario naranja oscuro: con blanco pasa el
+   contraste; el naranja de marca queda para detalles.
+   ========================================================================== */
+/* Sin display ni padding a propósito: varias vistas ocultan o achican sus
+   botones con reglas de igual peso, y esta hoja carga después. */
+.admin-root .admin-dashboard-layout .btn,
+.admin-root.admin-pin-backdrop .btn {
+  gap: 8px;
+  min-height: 44px;
+  border-radius: var(--radius-control);
+  font-size: 15px;
+  font-weight: 600;
+  transition: none;
+}
+
+.admin-root .admin-dashboard-layout .btn-linear-primary,
+.admin-root.admin-pin-backdrop .btn-linear-primary {
+  background: var(--brand-strong);
+  border: 1px solid var(--brand-hover);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 1px 2px rgba(154, 52, 18, 0.25),
+    0 8px 18px -10px rgba(194, 65, 12, 0.7);
+}
+
+.admin-root .admin-dashboard-layout .btn-linear-primary:hover:not(:disabled) {
+  background: var(--brand-hover);
+  border-color: #7c2d12;
+}
+
+.admin-root .admin-dashboard-layout .btn-secondary,
+.admin-root.admin-pin-backdrop .btn-secondary {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  box-shadow: 0 1px 1px rgba(27, 27, 25, 0.04);
+}
+
+.admin-root .admin-dashboard-layout .btn-secondary:hover:not(:disabled),
+.admin-root.admin-pin-backdrop .btn-secondary:hover:not(:disabled) {
+  background: var(--surface-muted);
+  border-color: #b9b09d;
+}
+
+.admin-root .admin-dashboard-layout .btn:disabled,
+.admin-root.admin-pin-backdrop .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.admin-root .admin-dashboard-layout .btn svg {
+  flex-shrink: 0;
+}
+
+/* Teclas como teclas: chiquitas, con relieve abajo. */
+.admin-root .admin-kbd {
+  display: inline-flex;
+  align-items: center;
+  min-width: 22px;
+  justify-content: center;
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   CAMPOS
+   Blancos, borde cálido, y al enfocarlos se "pintan" de cancha. Los
+   desplegables llevan su flechita propia para verse igual en todos lados.
+   ========================================================================== */
+.admin-root
+  :is(.admin-dashboard-layout, .admin-login-wrapper)
+  :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background-color: var(--surface);
+  color: var(--text);
+  min-height: 44px;
+  padding: 9px 12px;
+  font-size: 16px;
+  box-shadow: inset 0 1px 2px rgba(27, 27, 25, 0.04);
+}
+
+.admin-root
+  :is(.admin-dashboard-layout, .admin-login-wrapper)
+  :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):hover:not(:focus):not(:disabled) {
+  border-color: #b9b09d;
+}
+
+.admin-root
+  :is(.admin-dashboard-layout, .admin-login-wrapper)
+  :is(input, select, textarea):focus {
+  outline: none;
+  border-color: var(--court);
+  box-shadow: var(--court-ring);
+}
+
+.admin-root .admin-dashboard-layout select:not([multiple]):not([size]) {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2357544c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+  cursor: pointer;
+}
+
+.admin-root .admin-dashboard-layout .admin-search-wrap:focus-within {
+  border-color: var(--court);
+  box-shadow: var(--court-ring);
+}
+
+.admin-root .admin-dashboard-layout input[type="checkbox"],
+.admin-root .admin-dashboard-layout input[type="radio"] {
+  accent-color: var(--brand-strong);
+}
+
+/* ==========================================================================
+   TARJETAS
+   Blancas sobre crema, borde fino y una sombra apenas: la jerarquía la da
+   el espacio, no las sombras.
+   ========================================================================== */
+.admin-root
+  :is(
+    .admin-kpi-card,
+    .admin-cashclose-card,
+    .admin-report-summary-card,
+    .admin-court-col,
+    .admin-table-wrapper,
+    .admin-cantina-cart,
+    .admin-tournament-card
+  ) {
+  border-color: var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-root .admin-section-title {
+  letter-spacing: 0.02em;
+}
+
+/* ==========================================================================
+   TARJETA DE NÚMEROS (KpiCard)
+   Como un marcador: arriba una franja del color del dato, el título y su
+   ícono en una fichita, y el número grande en la letra de los carteles.
+   La mini cancha de fondo (padel.css) sigue abajo a la derecha.
+   ========================================================================== */
+.admin-root .admin-kravio-kpi-card {
+  --kpi-accent: var(--court);
+  --kpi-chip: var(--court-tint);
+  padding: 18px 20px 16px;
+  min-height: 136px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  transition: none;
+}
+
+.admin-root .admin-kravio-kpi-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--kpi-accent);
+  z-index: 2;
+}
+
+.admin-root .admin-kravio-kpi-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-root .admin-kravio-kpi-card.is-clickable:hover {
+  border-color: #b9b09d;
+  box-shadow: var(--shadow-raised);
+}
+
+.admin-root .admin-kpi-tone-success { --kpi-accent: #16a34a; --kpi-chip: rgba(22, 163, 74, 0.1); }
+.admin-root .admin-kpi-tone-brand { --kpi-accent: var(--brand); --kpi-chip: var(--brand-tint); }
+.admin-root .admin-kpi-tone-danger { --kpi-accent: #dc2626; --kpi-chip: rgba(220, 38, 38, 0.09); }
+.admin-root .admin-kpi-tone-warning { --kpi-accent: #f59e0b; --kpi-chip: rgba(245, 158, 11, 0.14); }
+.admin-root .admin-kpi-tone-info { --kpi-accent: var(--court); --kpi-chip: var(--court-tint); }
+
+.admin-root .admin-kravio-kpi-header {
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.admin-root .admin-kravio-kpi-title {
+  padding-top: 6px;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-kpi-icon-chip {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--kpi-chip);
+}
+
+.admin-root .admin-kravio-kpi-card .admin-kpi-icon {
+  color: var(--kpi-accent);
+}
+
+/* El tono "info" usaba celeste: en el panel el azul es el de la cancha. */
+.admin-root .admin-kpi-tone-info .admin-kravio-kpi-number {
+  color: var(--court-strong);
+}
+
+.admin-root .admin-kravio-kpi-number {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.admin-root .admin-kpi-sub-text {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+/* En tarjetas angostas la comparación baja de renglón en vez de cortarse. */
+.admin-root .admin-kravio-kpi-delta {
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+.admin-root .admin-kravio-kpi-delta.is-positive {
+  color: var(--success);
+}
+
+.admin-root .admin-kravio-kpi-delta.is-negative {
+  color: var(--danger);
+}
+
+/* La oscura ("Esperado en cajón"): de noche, con la pelotita de foco. */
+.admin-root .admin-kpi-tone-dark.admin-kravio-kpi-card {
+  --kpi-accent: var(--brand);
+  --kpi-chip: rgba(232, 114, 42, 0.2);
+  border-color: var(--night);
+  background:
+    radial-gradient(160px 110px at 100% 0, rgba(232, 114, 42, 0.28), transparent 70%),
+    var(--night);
+}
+
+.admin-root .admin-kpi-tone-dark .admin-kravio-kpi-title,
+.admin-root .admin-kpi-tone-dark .admin-kpi-sub-text {
+  color: var(--on-night-soft);
+}
+
+.admin-root .admin-kpi-tone-dark .admin-kravio-kpi-number {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   ESQUELETO DEL PANEL
+   ========================================================================== */
+.admin-root .admin-main-inner {
+  padding: 22px 32px 80px;
+}
+
+@media (min-width: 1680px) {
+  .admin-root .admin-main-inner {
+    padding: 26px 44px 80px;
+  }
+}
+
+/* ==========================================================================
+   BARRA LATERAL
+   Negra como la noche del club, con la cancha dibujada abajo. La sección
+   en la que estás es una cancha azul con su pelotita: la misma pieza que un
+   turno reservado en la agenda, así se entiende "estoy acá".
+   ========================================================================== */
+@media (min-width: 768px) {
+  .admin-root .admin-sidebar {
+    width: 252px;
+    background-color: #161614;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 200' fill='none' stroke='white' stroke-opacity='.08'%3E%3Crect x='3' y='3' width='94' height='194' rx='3' stroke-width='2'/%3E%3Cpath d='M0 100h100' stroke-width='3' stroke-dasharray='1 3'/%3E%3Cpath d='M3 31h94M3 169h94M50 31v138' stroke-width='1.5'/%3E%3C/svg%3E"),
+      radial-gradient(130% 42% at 50% 100%, rgba(35, 80, 214, 0.3), transparent 70%),
+      linear-gradient(180deg, #1d1d1a 0%, #141412 100%);
+    background-size: 160px 320px, 100% 100%, 100% 100%;
+    background-position: 50% calc(100% + 170px), 0 0, 0 0;
+    background-repeat: no-repeat;
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
+    transition: none;
+  }
+
+  .admin-root .admin-sidebar.collapsed {
+    width: 76px;
+    background-size: 60px 120px, 100% 100%, 100% 100%;
+    background-position: 50% calc(100% + 50px), 0 0, 0 0;
+  }
+}
+
+.admin-root .admin-sidebar-brand {
+  padding: 24px 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.admin-root .admin-sidebar-logo {
+  width: 146px;
+}
+
+.admin-root .admin-sidebar-collapse-btn {
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: #a8a294;
+}
+
+.admin-root .admin-sidebar.collapsed .admin-sidebar-brand {
+  padding: 16px 8px 14px;
+}
+
+.admin-root .admin-sidebar-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.admin-root .admin-sidebar-nav {
+  gap: 18px;
+  padding: 18px 12px 18px;
+}
+
+.admin-root .admin-sidebar-group {
+  gap: 2px;
+}
+
+/* Título de grupo con una línea punteada al lado: la red. */
+.admin-root .admin-sidebar-group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 6px;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #a8a294;
+}
+
+.admin-root .admin-sidebar-group-title::after {
+  content: "";
+  flex: 1;
+  height: 0;
+  border-top: 2px dotted rgba(255, 255, 255, 0.14);
+}
+
+.admin-root .admin-sidebar-link {
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-control);
+  border: 1px solid transparent;
+  color: #ebe7dc;
+  font-size: 15px;
+  font-weight: 500;
+  transition: none;
+}
+
+.admin-root .admin-sidebar-link svg {
+  color: #b5ae9f;
+}
+
+.admin-root .admin-sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.admin-root .admin-sidebar-link:hover svg {
+  color: #ffffff;
+}
+
+.admin-root .admin-sidebar-link.active::before {
+  display: none;
+}
+
+.admin-root .admin-sidebar-link.active {
+  border-color: rgba(255, 255, 255, 0.16);
+  background-color: var(--court);
+  background-image:
+    var(--mini-court),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.12), rgba(11, 26, 77, 0.5)),
+    var(--turf);
+  background-size: 50px 26px, auto, 200px 200px;
+  background-position: right 9px center, 0 0, 0 0;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 10px 20px -12px rgba(35, 80, 214, 0.9);
+}
+
+.admin-root .admin-sidebar-link.active svg {
+  color: #ffffff;
+}
+
+/* La pelotita, picando sobre la mini cancha. */
+.admin-root .admin-sidebar-link.active::after {
+  right: 22px;
+  width: 11px;
+  height: 11px;
+  margin-top: -6px;
+  background: var(--ball);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45), 0 0 10px rgba(215, 240, 58, 0.5);
+}
+
+.admin-root .admin-sidebar.collapsed .admin-sidebar-nav {
+  padding: 14px 10px;
+  gap: 12px;
+}
+
+.admin-root .admin-sidebar.collapsed .admin-sidebar-group + .admin-sidebar-group {
+  padding-top: 12px;
+  border-top: 2px dotted rgba(255, 255, 255, 0.12);
+}
+
+.admin-root .admin-sidebar.collapsed .admin-sidebar-link {
+  justify-content: center;
+  padding: 0;
+  min-height: 46px;
+}
+
+.admin-root .admin-sidebar.collapsed .admin-sidebar-link.active {
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.12), rgba(11, 26, 77, 0.5)),
+    var(--turf);
+  background-size: auto, 200px 200px;
+  background-position: 0 0, 0 0;
+  background-repeat: no-repeat, repeat;
+}
+
+.admin-root .admin-sidebar.collapsed .admin-sidebar-link.active::after {
+  right: 5px;
+  top: 5px;
+  margin-top: 0;
+  width: 9px;
+  height: 9px;
+}
+
+.admin-root .admin-sidebar-footer {
+  gap: 2px;
+  padding: 10px 12px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.admin-root .admin-sidebar-footer .admin-sidebar-link {
+  min-height: 42px;
+  font-size: 14.5px;
+  color: var(--on-night-soft);
+}
+
+.admin-root .admin-sidebar-footer .admin-sidebar-logout:hover {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fecaca;
+}
+
+.admin-root .admin-sidebar-footer .admin-sidebar-logout:hover svg {
+  color: #fca5a5;
+}
+
+/* ==========================================================================
+   BARRA DE ARRIBA Y ENCABEZADO DEL PANEL
+   Compu: arriba el buscador (con forma de campo, así se entiende que ahí se
+   escribe) y los avisos; abajo el marcador del día y el título grande con
+   las dos acciones a la derecha. Celu: barra negra fija con la marca.
+   ========================================================================== */
+.admin-root .admin-topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 240px;
+  max-width: 480px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 8px 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: text;
+  box-shadow: inset 0 1px 2px rgba(27, 27, 25, 0.04);
+}
+
+.admin-root .admin-topbar-search:hover {
+  border-color: #b9b09d;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-topbar-search svg {
+  flex-shrink: 0;
+  color: var(--court);
+}
+
+.admin-root .admin-topbar-search-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-root .admin-top-icon-btn {
+  height: 44px;
+  min-width: 44px;
+  border-color: var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 600;
+  transition: none;
+}
+
+.admin-root .admin-top-icon-btn:hover {
+  background: var(--surface-muted);
+  border-color: #b9b09d;
+  color: var(--text);
+}
+
+/* Con avisos pendientes, la campana se marca en naranja. */
+.admin-root .admin-top-alerts:has(.admin-bell-badge) {
+  border-color: rgba(194, 65, 12, 0.45);
+  background: #fff7f0;
+  color: #9a3412;
+}
+
+.admin-root .admin-bell-badge {
+  top: -7px;
+  right: -7px;
+  min-width: 20px;
+  height: 20px;
+  border: 2px solid var(--bg);
+  background: var(--brand-strong);
+  color: #ffffff;
+  font-size: 12px;
+}
+
+@media (min-width: 768px) {
+  .admin-root .admin-kravio-topbar {
+    float: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px 12px;
+    margin: 0 0 20px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* El marcador a la derecha, separado de Avisos/TV por una rayita. */
+  .admin-root .admin-topbar-scoreboard {
+    margin: 0 0 0 auto;
+    padding-right: 14px;
+    border-right: 1px solid var(--border);
+  }
+
+  .admin-root .admin-greeting-sub.admin-header-scoreboard {
+    display: none;
+  }
+
+  .admin-root .admin-kravio-top-tools {
+    gap: 8px;
+  }
+
+  .admin-root .admin-main-header {
+    align-items: center;
+  }
+
+  /* En compu el buscador ya está arriba: el botón del encabezado sobra. */
+  .admin-root .admin-quick-actions .admin-palette-trigger {
+    display: none;
+  }
+}
+
+.admin-root .admin-main-header {
+  align-items: flex-end;
+  gap: 14px 24px;
+  margin-bottom: 24px;
+}
+
+.admin-root .admin-header-text {
+  min-width: 0;
+}
+
+/* El marcador: fecha en versalitas y la hora en un cartelito negro con
+   números amarillo pelota, como el tablero de la cancha. */
+.admin-root .admin-greeting-sub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-header-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-root .admin-header-date > span[aria-hidden="true"] {
+  display: none;
+}
+
+.admin-root .admin-header-clock {
+  display: inline-block;
+  padding: 2px 8px 1px;
+  border-radius: 6px;
+  background: var(--night);
+  color: #e4f75a;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.08);
+}
+
+.admin-root .admin-live-pill {
+  gap: 7px;
+  padding: 4px 11px 4px 9px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.admin-root .admin-live-pill::before {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-root .admin-live-pill.is-open {
+  background: #ecfdf3;
+  border-color: rgba(4, 120, 87, 0.28);
+  color: #046c4e;
+}
+
+.admin-root .admin-live-pill.is-open::before {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+}
+
+.admin-root .admin-live-pill.is-closing {
+  color: #92400e;
+}
+
+.admin-root .admin-live-pill.is-closed {
+  color: #4a473f;
+}
+
+.admin-root .admin-page-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.admin-root .admin-wave-hand {
+  font-size: 0.8em;
+  animation: none;
+}
+
+/* Sin conexión / sin base: cartel rojo en su propio renglón. */
+.admin-root .admin-header-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #dc2626;
+  border-radius: var(--radius-control);
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.admin-root .admin-header-alert svg {
+  flex-shrink: 0;
+}
+
+.admin-root .admin-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-root .admin-quick-actions .btn {
+  padding: 0 16px;
+}
+
+.admin-root .admin-quick-actions .admin-cta-new {
+  padding: 0 20px 0 16px;
+  font-size: 16px;
+}
+
+/* ==========================================================================
+   LOGIN
+   La ficha del club sobre la cancha (fondo y piezas en brand.css). Acá se
+   afina: el campo con el mismo borde grueso que el botón, para que se lean
+   como una sola pieza impresa.
+   ========================================================================== */
+.admin-root .admin-login-wrapper input.admin-login-input.admin-input-field {
+  height: 54px;
+  padding: 0 16px;
+  border: 2px solid #1b1b19;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 17px;
+  box-shadow: 0 4px 0 #1b1b19;
+}
+
+.admin-root .admin-login-wrapper input.admin-login-input.admin-input-field:focus {
+  border-color: var(--court);
+  box-shadow: 0 4px 0 var(--court), 0 0 0 4px rgba(35, 80, 214, 0.18);
+}
+
+.admin-root .admin-login-wrapper .admin-error-text {
+  margin-top: 14px;
+  padding: 9px 12px;
+  border-left: 4px solid #dc2626;
+  border-radius: 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.admin-root .admin-login-sub {
+  color: #3d3b35;
+}
+
+/* "Verificando sesión": una pelotita que pica sobre la línea de la cancha. */
+.admin-root .admin-session-check {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 0 auto;
+  padding: 26px 34px 20px;
+  border-radius: 16px;
+  background: rgba(11, 26, 77, 0.72);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.6);
+}
+
+.admin-root .admin-session-check p {
+  margin: 0;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.admin-root .admin-session-ball {
+  position: relative;
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ball);
+  box-shadow: inset -2px -3px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* ==========================================================================
+   BUSCADOR CTRL K
+   ========================================================================== */
+.admin-root .admin-palette-backdrop {
+  padding-top: 11vh;
+  background: rgba(10, 12, 22, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.admin-root .admin-palette {
+  width: min(600px, 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  box-shadow: var(--shadow-pop);
+}
+
+.admin-root .admin-palette-input {
+  gap: 12px;
+  padding: 0 14px 0 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-root .admin-palette-input > svg {
+  color: var(--court);
+}
+
+.admin-root .admin-palette-input input {
+  min-height: 60px !important;
+  padding: 0 !important;
+  font-size: 17px;
+}
+
+.admin-root .admin-palette-list {
+  padding: 6px 8px 8px;
+}
+
+.admin-root .admin-palette-group {
+  padding: 12px 10px 6px;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-palette-item {
+  gap: 12px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: var(--radius-control);
+  font-size: 15.5px;
+  font-weight: 500;
+}
+
+.admin-root .admin-palette-item > svg {
+  box-sizing: content-box;
+  flex-shrink: 0;
+  padding: 7px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-palette-item[aria-selected="true"] {
+  background: var(--court-tint);
+  color: var(--court-night);
+  font-weight: 600;
+}
+
+.admin-root .admin-palette-item[aria-selected="true"] > svg {
+  border-color: var(--court-strong);
+  background: var(--court);
+  color: #ffffff;
+}
+
+/* Enter abre lo marcado: se avisa con la tecla al costado. */
+.admin-root .admin-palette-item[aria-selected="true"]::after {
+  content: "↵";
+  margin-left: 8px;
+  padding: 0 6px;
+  border: 1px solid rgba(35, 80, 214, 0.3);
+  border-radius: 6px;
+  color: var(--court-strong);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.admin-root .admin-palette-item small {
+  font-size: 13.5px;
+}
+
+.admin-root .admin-palette-item[aria-selected="true"] small {
+  color: var(--court-deep);
+}
+
+.admin-root .admin-palette-item:not(:has(small))[aria-selected="true"]::after {
+  margin-left: auto;
+}
+
+.admin-root .admin-palette-empty {
+  padding: 28px 24px;
+  font-size: 15px;
+}
+
+.admin-root .admin-palette-foot {
+  display: flex;
+  gap: 18px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.admin-root .admin-palette-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* En pantallas táctiles no hay flechas ni Enter. */
+@media (hover: none), (max-width: 767px) {
+  .admin-root .admin-palette-foot {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   AVISOS (Toaster)
+   Negros como el sidebar, con una franja del color del resultado: verde
+   salió bien, rojo hubo un problema.
+   ========================================================================== */
+.admin-root .admin-toaster {
+  right: 24px;
+  bottom: 24px;
+  gap: 10px;
+  width: min(400px, calc(100vw - 32px));
+}
+
+.admin-root .admin-toast {
+  gap: 12px;
+  padding: 12px 10px 12px 16px;
+  border-radius: 12px;
+  background: var(--night, #1b1b19);
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1.35;
+  box-shadow:
+    inset 4px 0 0 #22c55e,
+    0 16px 36px -14px rgba(0, 0, 0, 0.55);
+  animation: none;
+}
+
+.admin-root .admin-toast > svg:first-child {
+  flex-shrink: 0;
+  color: #4ade80;
+}
+
+.admin-root .admin-toast[data-tone="error"] {
+  background: #3a1212;
+  box-shadow:
+    inset 4px 0 0 #ef4444,
+    0 16px 36px -14px rgba(0, 0, 0, 0.55);
+}
+
+.admin-root .admin-toast[data-tone="error"] > svg:first-child {
+  color: #fca5a5;
+}
+
+.admin-root .admin-toast button {
+  min-height: 36px;
+  min-width: 36px;
+  border-radius: 8px;
+}
+
+.admin-root .admin-toast .admin-toast-action {
+  padding: 0 12px;
+  background: rgba(232, 114, 42, 0.18);
+  color: #ffb27f;
+}
+
+.admin-root .admin-toast .admin-toast-action:hover {
+  background: rgba(232, 114, 42, 0.3);
+}
+
+/* ==========================================================================
+   ESTADOS VACÍOS Y DE CARGA
+   ========================================================================== */
+.admin-root .admin-empty {
+  gap: 8px;
+  padding: 36px 16px;
+}
+
+.admin-root .admin-empty strong {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-empty p {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* El ícono suelto como una pelotita "de cancha": círculo con la línea
+   punteada de la red alrededor. */
+.admin-root .admin-empty-icon {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  border: 2px dashed rgba(35, 80, 214, 0.35);
+  background: var(--court-tint);
+  color: var(--court);
+}
+
+.admin-root .admin-skeleton {
+  border-radius: var(--radius-control);
+  background: linear-gradient(90deg, #ebe5d9 0%, #f6f2ea 50%, #ebe5d9 100%);
+  background-size: 200% 100%;
+}
+
+/* ==========================================================================
+   MODALES COMPARTIDOS (Nueva reserva y Detalle del turno)
+   Arriba una tapa azul cancha; título grande; campos con su etiqueta clara.
+   En el celu suben desde abajo, con la manija para entender que se cierran
+   bajando o con "Cerrar".
+   ========================================================================== */
+.admin-root .admin-modal-backdrop {
+  background: rgba(10, 12, 22, 0.55);
+  backdrop-filter: blur(5px);
+  animation: none;
+}
+
+.admin-root .admin-modal-card {
+  border: none;
+  border-radius: 18px;
+  padding: 28px 28px 26px;
+  box-shadow: var(--shadow-pop);
+  animation: none;
+}
+
+.admin-root .admin-modal-card.admin-detail {
+  max-width: 580px;
+  box-shadow:
+    inset 0 5px 0 var(--court),
+    var(--shadow-pop);
+}
+
+.admin-root .admin-detail-head {
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-root .admin-detail-when:not(.admin-detail-court) {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-detail-name {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admin-root .admin-detail-close {
+  min-height: 40px;
+  padding: 0 14px 0 12px;
+  border-color: var(--border-strong);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 14.5px;
+}
+
+.admin-root .admin-detail-close:hover {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+
+.admin-root .admin-detail .admin-field-label {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-detail-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Reserva / Bloqueo: control segmentado sobre una pista gris. */
+.admin-root .admin-create-type {
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f1ede4;
+}
+
+.admin-root .admin-create-type button {
+  min-height: 54px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 15.5px;
+}
+
+.admin-root .admin-create-type button small {
+  color: var(--text-muted);
+}
+
+.admin-root .admin-create-type button:hover:not([aria-checked="true"]) {
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text);
+}
+
+.admin-root .admin-create-type button[aria-checked="true"] {
+  border-color: var(--border);
+  background: var(--surface);
+  color: #9a3412;
+  box-shadow:
+    inset 0 -3px 0 var(--brand),
+    0 2px 6px rgba(27, 27, 25, 0.1);
+}
+
+.admin-root .admin-create-row {
+  gap: 12px;
+}
+
+/* Las casillas como renglones tocables enteros, no un cuadradito suelto. */
+.admin-root .admin-create-form .admin-create-check {
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-muted);
+  font-size: 15.5px;
+  font-weight: 500;
+}
+
+.admin-root .admin-create-form .admin-create-check:hover {
+  border-color: var(--border-strong);
+}
+
+.admin-root .admin-create-form .admin-create-check:has(input:checked) {
+  border-color: rgba(194, 65, 12, 0.4);
+  background: #fff7f0;
+}
+
+.admin-root .admin-create-court {
+  min-height: 46px;
+}
+
+/* El resumen como un ticket: con los dos mordiscos a los costados. */
+.admin-root .admin-create-summary {
+  position: relative;
+  padding: 16px 22px;
+}
+
+.admin-root .admin-create-summary::before,
+.admin-root .admin-create-summary::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.admin-root .admin-create-summary::before {
+  left: -8px;
+}
+
+.admin-root .admin-create-summary::after {
+  right: -8px;
+}
+
+.admin-root .admin-dashboard-layout .admin-detail-submit {
+  min-height: 52px;
+  font-size: 17px;
+}
+
+/* Detalle: el cartel de plata con la franja del semáforo a la izquierda. */
+.admin-root .admin-detail-money {
+  padding: 16px 18px 16px 20px;
+  border-radius: var(--radius-card);
+  box-shadow: inset 5px 0 0 var(--border-strong);
+}
+
+.admin-root .admin-detail-money.is-owing {
+  box-shadow: inset 5px 0 0 #dc2626;
+}
+
+.admin-root .admin-detail-money.is-paid {
+  box-shadow: inset 5px 0 0 #16a34a;
+}
+
+.admin-root .admin-detail-money strong {
+  font-size: 36px;
+  line-height: 1.05;
+}
+
+.admin-root .admin-detail-question {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-detail-pay-btn {
+  border-radius: 12px;
+  box-shadow: 0 2px 0 rgba(21, 128, 61, 0.25);
+}
+
+.admin-root .admin-detail-subtitle {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-detail-payments li {
+  border: 1px solid var(--border);
+}
+
+.admin-root .admin-detail-wa a {
+  border-radius: var(--radius-control);
+}
+
+.admin-root .admin-detail-wa a:hover {
+  border-color: #16a34a;
+  background: #dcfce7;
+}
+
+.admin-root .admin-detail-more summary {
+  border-radius: var(--radius-control);
+}
+
+.admin-root .admin-detail-more summary:hover {
+  color: var(--text);
+}
+
+.admin-root .admin-detail-danger {
+  border-radius: var(--radius-control);
+}
+
+.admin-root .admin-detail-danger:hover {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+/* ==========================================================================
+   PIN DEL EQUIPO
+   ========================================================================== */
+.admin-root.admin-pin-backdrop {
+  background: rgba(10, 12, 22, 0.6);
+  backdrop-filter: blur(5px);
+  animation: none;
+}
+
+.admin-root .admin-pin-card {
+  max-width: 420px;
+  border: none;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 5px 0 var(--brand),
+    var(--shadow-pop);
+  animation: none;
+}
+
+.admin-root .admin-pin-card.is-danger {
+  box-shadow:
+    inset 0 5px 0 #dc2626,
+    var(--shadow-pop);
+}
+
+.admin-root .admin-pin-head {
+  gap: 14px;
+  padding: 22px 20px 16px;
+  background: transparent;
+}
+
+.admin-root .admin-pin-card.is-danger .admin-pin-head {
+  background: transparent;
+}
+
+.admin-root .admin-pin-head h3 {
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-pin-head > div span {
+  display: block;
+  margin-top: 3px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-pin-head-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--brand-tint);
+  color: var(--brand-strong);
+}
+
+.admin-root .admin-pin-card.is-danger .admin-pin-head-icon {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-root .admin-pin-close {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.admin-root .admin-pin-body {
+  padding: 18px 20px 20px;
+}
+
+.admin-root .admin-pin-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-pin-body .admin-field-label {
+  display: block;
+  margin: 2px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-pin-input {
+  height: 60px;
+  margin-bottom: 14px;
+  border: 2px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-muted);
+  font-size: 28px;
+}
+
+.admin-root .admin-pin-input:focus {
+  border-color: var(--court);
+  background: #ffffff;
+  box-shadow: var(--court-ring);
+}
+
+.admin-root .admin-pin-body .admin-input-field {
+  min-height: 46px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: #ffffff;
+  font-size: 16px;
+}
+
+.admin-root .admin-pin-body .admin-input-field:focus {
+  border-color: var(--court);
+  box-shadow: var(--court-ring);
+}
+
+.admin-root .admin-pin-keypad button {
+  height: 54px;
+  border-radius: 12px;
+  font-size: 20px;
+  box-shadow: 0 2px 0 var(--border);
+}
+
+.admin-root .admin-pin-actions .btn {
+  height: auto;
+  min-height: 46px;
+}
+
+/* El naranja de marca con letra blanca no pasa contraste: va el oscuro. */
+.admin-root .admin-pin-submit {
+  background: var(--brand-strong);
+  border: 1px solid var(--brand-hover);
+  color: #ffffff;
+}
+
+.admin-root .admin-pin-submit:hover:not(:disabled) {
+  background: var(--brand-hover);
+}
+
+.admin-root .admin-pin-submit.is-danger {
+  background: #b91c1c;
+  border-color: #991b1b;
+}
+
+.admin-root .admin-pin-submit.is-danger:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+/* ==========================================================================
+   CELU (< 768 px)
+   ========================================================================== */
+@media (max-width: 767px) {
+  .admin-root .admin-main-inner {
+    padding: 16px 16px calc(150px + env(safe-area-inset-bottom));
+  }
+
+  /* Barra de arriba negra y fija, con la marca y los avisos. */
+  .admin-root .admin-kravio-topbar {
+    margin: -16px -16px 18px;
+    padding: 10px 16px;
+    background-color: var(--night);
+    background-image:
+      radial-gradient(120% 140% at 100% 0, rgba(35, 80, 214, 0.35), transparent 60%);
+    border-bottom: 3px solid var(--brand);
+  }
+
+  .admin-root .admin-topbar-search {
+    display: none;
+  }
+
+  .admin-root .admin-topbar-brand strong {
+    font-size: 23px;
+    font-weight: 800;
+  }
+
+  .admin-root .admin-kravio-topbar .admin-top-icon-btn {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+  }
+
+  .admin-root .admin-kravio-topbar .admin-top-alerts:has(.admin-bell-badge) {
+    border-color: rgba(232, 114, 42, 0.6);
+    background: rgba(232, 114, 42, 0.18);
+  }
+
+  .admin-root .admin-bell-badge {
+    border-color: var(--night);
+  }
+
+  .admin-root .admin-main-header {
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .admin-root .admin-greeting-sub.admin-topbar-scoreboard,
+  .admin-root .admin-dashboard-layout .admin-quick-actions .admin-cta-new {
+    display: none;
+  }
+
+  .admin-root .admin-header-scoreboard {
+    margin-bottom: 8px;
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .admin-root .admin-page-title {
+    font-size: 34px;
+  }
+
+  .admin-root .admin-header-alert {
+    display: flex;
+    font-size: 14px;
+  }
+
+  .admin-root .admin-quick-actions {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .admin-root .admin-quick-actions > .btn {
+    flex: 1 1 auto;
+    min-height: 48px;
+  }
+
+  .admin-root .admin-quick-actions .admin-palette-trigger {
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 0 16px;
+  }
+
+  .admin-root .admin-kravio-kpi-card {
+    padding: 14px 14px 12px;
+  }
+
+  .admin-root .admin-kpi-icon-chip {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .admin-root .admin-kravio-kpi-title {
+    padding-top: 4px;
+    font-size: 13.5px;
+  }
+
+  .admin-root .admin-kravio-kpi-number {
+    font-size: 30px;
+  }
+
+  .admin-root .admin-kpi-sub-text {
+    font-size: 13.5px;
+  }
+
+  /* Navegación de abajo: la sección activa con la raya naranja arriba, como
+     una línea de la cancha. */
+  .admin-root .admin-bottom-nav {
+    gap: 2px;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    background: var(--night);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .admin-root .admin-bottom-nav button {
+    position: relative;
+    gap: 4px;
+    min-height: 58px;
+    border-radius: 12px;
+    color: #c9c3b5;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  .admin-root .admin-bottom-nav button[aria-current="page"] {
+    background: rgba(232, 114, 42, 0.16);
+    color: #ffffff;
+  }
+
+  .admin-root .admin-bottom-nav button[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 26px;
+    height: 3px;
+    margin-left: -13px;
+    border-radius: 0 0 3px 3px;
+    background: var(--brand);
+  }
+
+  .admin-root .admin-fab {
+    right: 16px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    height: 54px;
+    gap: 8px;
+    padding: 0 22px 0 18px;
+    border: 1px solid var(--brand-hover);
+    background: var(--brand-strong);
+    font-size: 16.5px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 12px 24px -8px rgba(154, 52, 18, 0.65);
+  }
+
+  .admin-root .admin-toaster {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: calc(150px + env(safe-area-inset-bottom));
+  }
+
+  /* Los modales suben desde abajo con su manija. */
+  .admin-root .admin-modal-card {
+    border-radius: 22px 22px 0 0;
+    padding: 12px 16px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-modal-card.admin-detail::before {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 5px;
+    margin: 4px auto 14px;
+    border-radius: 3px;
+    background: var(--border-strong);
+  }
+
+  .admin-root .admin-detail-head {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+  }
+
+  .admin-root .admin-detail-name {
+    font-size: 30px;
+  }
+
+  .admin-root .admin-detail-close {
+    min-height: 44px;
+  }
+
+  .admin-root .admin-create-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-root .admin-palette-backdrop {
+    padding: 12px;
+  }
+
+  .admin-root.admin-pin-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .admin-root .admin-pin-card {
+    max-width: none;
+    max-height: 94dvh;
+    border-radius: 22px 22px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .admin-root .admin-pin-actions .btn {
+    flex: 1;
+    min-height: 50px;
+  }
+}
+
+/* ---------- Hoja "Más" del celu ---------- */
+.admin-root .admin-sheet-backdrop {
+  background: rgba(10, 12, 22, 0.55);
+}
+
+.admin-root .admin-sheet {
+  padding: 8px 14px calc(14px + env(safe-area-inset-bottom));
+  border-radius: 22px 22px 0 0;
+  animation: none;
+}
+
+.admin-root .admin-sheet-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  margin: 4px auto 12px;
+}
+
+.admin-root .admin-sheet-title {
+  margin: 0 4px 10px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.admin-root .admin-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-root .admin-sheet .admin-sheet-grid button {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 78px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.admin-root .admin-sheet .admin-sheet-grid button svg {
+  width: 22px;
+  height: 22px;
+  color: var(--court);
+}
+
+/* Si estás en una de estas secciones, su ficha es la cancha azul. */
+.admin-root .admin-sheet .admin-sheet-grid button[aria-current="page"] {
+  border-color: var(--court-deep);
+  background-color: var(--court);
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.15), rgba(11, 26, 77, 0.55)),
+    var(--turf);
+  background-size: auto, 200px 200px;
+  color: #ffffff;
+}
+
+.admin-root .admin-sheet .admin-sheet-grid button[aria-current="page"] svg {
+  color: #ffffff;
+}
+
+.admin-root .admin-sheet-foot {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.admin-root .admin-sheet .admin-sheet-foot :is(a, button) {
+  min-height: 50px;
+  font-size: 15.5px;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-sheet .admin-sheet-foot .admin-sheet-logout {
+  color: #b91c1c;
+}
+
+/* ==========================================================================
+   MOVIMIENTO
+   Solo si la persona no pidió reducirlo, y corto: que acompañe, no que
+   distraiga mientras se trabaja.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-dashboard-layout .btn,
+  .admin-root .admin-sidebar-link,
+  .admin-root .admin-top-icon-btn,
+  .admin-root .admin-topbar-search,
+  .admin-root .admin-kravio-kpi-card,
+  .admin-root .admin-palette-item {
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .admin-root .admin-dashboard-layout .btn-linear-primary:hover:not(:disabled),
+  .admin-root .admin-kravio-kpi-card.is-clickable:hover {
+    transform: translateY(-1px);
+  }
+
+  .admin-root .admin-dashboard-layout .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .admin-root .admin-sidebar {
+    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* El saludo saluda una vez al entrar, no todo el día. */
+  .admin-root .admin-wave-hand {
+    animation: waveHand 1.6s ease-in-out 0.4s 1;
+  }
+
+  /* Muzzaguito se mueve un par de veces y se queda quieto. */
+  .admin-root .admin-empty-mascot {
+    animation-iteration-count: 2;
+  }
+
+  .admin-root .admin-modal-backdrop,
+  .admin-root.admin-pin-backdrop,
+  .admin-root .admin-palette-backdrop,
+  .admin-root .admin-sheet-backdrop {
+    animation: adminBaseFade 0.16s ease-out;
+  }
+
+  .admin-root .admin-modal-card,
+  .admin-root .admin-pin-card,
+  .admin-root .admin-palette {
+    animation: adminBaseRise 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-root .admin-toast {
+    animation: adminBaseToast 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-root .admin-sheet {
+    animation: adminBaseSheet 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-root .admin-login-card {
+    animation: adminBaseRise 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-root .admin-session-ball {
+    animation: adminBaseBounce 0.7s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+  }
+
+  @media (max-width: 767px) {
+    .admin-root .admin-modal-card,
+    .admin-root .admin-pin-card {
+      animation: adminBaseSheet 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  }
+
+  @keyframes adminBaseFade {
+    from { opacity: 0; }
+  }
+
+  @keyframes adminBaseRise {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  }
+
+  @keyframes adminBaseToast {
+    from { opacity: 0; transform: translateX(16px); }
+  }
+
+  @keyframes adminBaseSheet {
+    from { transform: translateY(100%); }
+  }
+
+  @keyframes adminBaseBounce {
+    from { transform: translateY(-16px); }
+    to { transform: translateY(0) scale(1.06, 0.92); }
+  }
+}
+
+/* ---------- Impresión: la barra de arriba no va al PDF ---------- */
+@media print {
+  .admin-root .admin-kravio-topbar {
+    display: none !important;
+  }
+}
+
+/* ---------- "Hecho por se7en" (login y menú lateral) ---------- */
+.admin-root .admin-se7en {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  min-height: 40px;
+  font-size: 12px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.15s ease;
+}
+
+.admin-root .admin-se7en img {
+  height: 16px;
+  width: auto;
+}
+
+.admin-root .admin-se7en-ig {
+  color: #ff9a5a;
+  font-weight: 600;
+}
+
+.admin-root .admin-se7en:hover {
+  color: #ffffff;
+}
+
+.admin-root .admin-se7en:focus-visible {
+  outline: 2px solid var(--brand, #e8722a);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.admin-root .admin-se7en-sidebar {
+  margin: 10px 12px 4px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* En el login va en su propio renglón, debajo de "Volver a la web", sobre
+   una pastilla oscura para que se lea encima de la foto del césped. */
+.admin-root .admin-se7en-login {
+  display: flex;
+  width: fit-content;
+  margin: 14px 0 0 6px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(8, 12, 28, 0.55);
+  color: rgba(255, 255, 255, 0.8);
+}

@@ -2,18 +2,24 @@
 
 import { useEffect, useState } from "react";
 import {
+  ArrowLeftRight,
+  Banknote,
   Coins,
   Download,
   Lock,
   LockOpen,
+  Package,
+  QrCode,
   Receipt,
   Scale,
   Send,
+  Snowflake,
+  SprayCan,
   Trash2,
+  Wrench,
 } from "lucide-react";
 import { EmptyState, SkeletonCards, SkeletonRows } from "../ui/states";
 import StaffPinModal from "../ui/StaffPinModal";
-import KpiCard, { KpiGrid } from "../ui/KpiCard";
 import { formatARS, formatDate, formatTime, plural } from "../../../lib/format";
 import { cashDiffTone } from "../../../lib/metrics";
 import {
@@ -38,6 +44,17 @@ const CATEGORIES = [
 ];
 const categoryLabel = (id) =>
   CATEGORIES.find((c) => c.id === id)?.label || "Otros";
+// Ícono por categoría de egreso: se reconoce el gasto sin leer la etiqueta.
+const CATEGORY_ICON = {
+  hielo: Snowflake,
+  limpieza: SprayCan,
+  mantenimiento: Wrench,
+  otros: Package,
+};
+const CategoryIcon = ({ id, ...props }) => {
+  const Icon = CATEGORY_ICON[id] || Package;
+  return <Icon size={15} strokeWidth={2} aria-hidden {...props} />;
+};
 const DIFF_TEXT = {
   ok: "Cuadra exacto",
   minor: "Diferencia chica",
@@ -258,7 +275,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
 
   if (!summary) {
     return (
-      <div>
+      <div className="admin-caja">
         {header}
         {loadError ? (
           <div role="alert" className="admin-settings-card admin-error-card">
@@ -284,7 +301,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
   const tone = liveDiff == null ? null : cashDiffTone(liveDiff);
 
   return (
-    <div className={loading ? "admin-content-loading" : ""}>
+    <div className={`admin-caja${loading ? " admin-content-loading" : ""}`}>
       {header}
 
       {isClosed && (
@@ -333,47 +350,93 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
         </div>
       )}
 
-      <KpiGrid>
-        <KpiCard
-          title="Efectivo turnos"
-          icon={Coins}
-          tone="success"
-          value={formatARS(summary.cashTurnos)}
-          sub="Cobrado en mano por turnos"
-        />
-        <KpiCard
-          title="Efectivo cantina"
-          icon={Receipt}
-          tone="brand"
-          value={formatARS(summary.cashCantina)}
-          sub="Ventas del tercer tiempo"
-        />
-        <KpiCard
-          title="Egresos"
-          icon={Receipt}
-          tone={summary.totalExpenses > 0 ? "danger" : "default"}
-          value={formatARS(-summary.totalExpenses)}
-          sub="Hielo, limpieza y mantenimiento"
-        />
-        <KpiCard
-          title="Esperado en cajón"
-          icon={Scale}
-          tone="dark"
-          value={formatARS(summary.expectedCash)}
-          sub="Efectivo físico a controlar"
-        />
-      </KpiGrid>
-      <p className="admin-field-hint admin-cash-outside">
-        Fuera del cajón: Transferencias{" "}
-        {formatARS(summary.transferTurnos + summary.transferCantina)} · Mercado
-        Pago {formatARS(summary.mpTurnos + summary.mpCantina)}
-      </p>
+      {/* La cuenta del cajón escrita como una suma: se ve de dónde sale cada
+          peso del "Esperado" sin tener que hacer la cuenta de cabeza. */}
+      <section className="admin-caja-drawer" aria-labelledby="caja-drawer-title">
+        <h3 className="admin-caja-drawer-title" id="caja-drawer-title">
+          <Banknote {...ICON} /> Efectivo en el cajón
+        </h3>
+        <ol className="admin-caja-formula">
+          <li className="is-in">
+            <span className="admin-caja-formula-label">Efectivo turnos</span>
+            <strong className="admin-caja-amount is-cobrado">
+              {formatARS(summary.cashTurnos)}
+            </strong>
+            <small>Cobrado en mano por turnos</small>
+          </li>
+          <li className="admin-caja-op" aria-hidden="true">+</li>
+          <li className="is-in">
+            <span className="admin-caja-formula-label">Efectivo cantina</span>
+            <strong className="admin-caja-amount is-cobrado">
+              {formatARS(summary.cashCantina)}
+            </strong>
+            <small>Ventas del tercer tiempo</small>
+          </li>
+          <li className="admin-caja-op" aria-hidden="true">−</li>
+          <li className="is-out">
+            <span className="admin-caja-formula-label">Egresos</span>
+            <strong className="admin-caja-amount">
+              {formatARS(-summary.totalExpenses)}
+            </strong>
+            <small>
+              {summary.expensesList.length
+                ? plural(summary.expensesList.length, "salida", "salidas")
+                : "Sin salidas cargadas"}
+            </small>
+          </li>
+          <li className="admin-caja-op" aria-hidden="true">=</li>
+          <li className="is-result">
+            <span className="admin-caja-formula-label">Esperado en cajón</span>
+            <strong className="admin-caja-amount">
+              {formatARS(summary.expectedCash)}
+            </strong>
+            <small>Efectivo físico a controlar</small>
+          </li>
+        </ol>
+      </section>
+
+      {/* Lo que entró por otros medios no se cuenta en el cajón: aparte y
+          con su desglose, para que nadie lo busque entre los billetes. */}
+      <section className="admin-caja-outside" aria-label="Cobrado fuera del cajón">
+        <span className="admin-caja-outside-title">Fuera del cajón</span>
+        <div className="admin-caja-method">
+          <ArrowLeftRight {...ICON} />
+          <div>
+            <span>Transferencias</span>
+            <strong className="admin-caja-amount is-cobrado">
+              {formatARS(summary.transferTurnos + summary.transferCantina)}
+            </strong>
+            <small>
+              Turnos {formatARS(summary.transferTurnos)} · Cantina{" "}
+              {formatARS(summary.transferCantina)}
+            </small>
+          </div>
+        </div>
+        <div className="admin-caja-method">
+          <QrCode {...ICON} />
+          <div>
+            <span>Mercado Pago</span>
+            <strong className="admin-caja-amount is-cobrado">
+              {formatARS(summary.mpTurnos + summary.mpCantina)}
+            </strong>
+            <small>
+              Turnos {formatARS(summary.mpTurnos)} · Cantina{" "}
+              {formatARS(summary.mpCantina)}
+            </small>
+          </div>
+        </div>
+      </section>
 
       <div className="admin-cash-grid">
         {/* EGRESOS */}
         <section className="admin-settings-card">
-          <h3 className="admin-section-title">
+          <h3 className="admin-section-title admin-caja-card-title">
             <Receipt {...ICON} /> Egresos del día
+            {summary.totalExpenses > 0 && (
+              <span className="admin-caja-card-total">
+                {formatARS(-summary.totalExpenses)}
+              </span>
+            )}
           </h3>
 
           {!isClosed && (
@@ -392,6 +455,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                       setExpense((x) => ({ ...x, category: c.id }))
                     }
                   >
+                    <CategoryIcon id={c.id} />
                     {c.label}
                   </button>
                 ))}
@@ -413,8 +477,10 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                 </div>
                 <div className="admin-field">
                   <label className="admin-field-label" htmlFor="exp-amount">
-                    Monto ($)
+                    Monto
                   </label>
+                  <div className="admin-caja-money">
+                  <span aria-hidden="true">$</span>
                   <input
                     id="exp-amount"
                     type="number"
@@ -426,11 +492,12 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                       setExpense((x) => ({ ...x, amount: e.target.value }))
                     }
                   />
+                  </div>
                 </div>
               </div>
               <button
                 type="submit"
-                className="btn btn-secondary"
+                className="btn btn-secondary admin-caja-expense-submit"
                 disabled={addingExpense || !expense.amount}
               >
                 {addingExpense ? "Cargando…" : "Cargar egreso"}
@@ -454,7 +521,10 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
               {summary.expensesList.map((x) => (
                 <li key={x.id} className="admin-expense-row">
                   <div className="admin-expense-main">
-                    <span className="admin-tag">{categoryLabel(x.category)}</span>
+                    <span className="admin-caja-cat" data-cat={x.category}>
+                      <CategoryIcon id={x.category} />
+                      {categoryLabel(x.category)}
+                    </span>
                     <span className="admin-expense-concept">
                       {x.concept}
                       {x.notes && <small> · {x.notes}</small>}
@@ -484,13 +554,15 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
 
         {/* ARQUEO */}
         <section className="admin-settings-card">
-          <h3 className="admin-section-title">
+          <h3 className="admin-section-title admin-caja-card-title">
             <Scale {...ICON} /> Arqueo y cierre
           </h3>
           <div className="admin-field">
             <label className="admin-field-label" htmlFor="cash-counted">
-              Efectivo contado en el cajón ($)
+              Efectivo contado en el cajón
             </label>
+            <div className="admin-caja-money admin-caja-money-lg">
+            <span aria-hidden="true">$</span>
             <input
               id="cash-counted"
               type="number"
@@ -502,6 +574,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
               readOnly={isClosed}
               onChange={(e) => setCounted(e.target.value)}
             />
+            </div>
             {!isClosed && (
               <div className="admin-bill-calc-wrap">
                 <button
@@ -521,8 +594,8 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                 {showBillCalc && (
                   <div className="admin-bill-calc">
                     {BILL_DENOMINATIONS.map((denom) => (
-                      <label key={denom} className="admin-bill-field">
-                        <span>{formatARS(denom)}</span>
+                      <label key={denom} className="admin-bill-field" data-denom={denom}>
+                        <span className="admin-bill-note">{formatARS(denom)}</span>
                         <input
                           type="number"
                           min={0}
@@ -533,6 +606,11 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                             handleBillChange(denom, e.target.value)
                           }
                         />
+                        <small className="admin-bill-sub">
+                          {(parseInt(billCounts[denom], 10) || 0) > 0
+                            ? formatARS(denom * parseInt(billCounts[denom], 10))
+                            : "—"}
+                        </small>
                       </label>
                     ))}
                     <div className="admin-bill-calc-foot">
@@ -555,13 +633,26 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
 
           {liveDiff != null && (
             <div
-              className="admin-cash-diff"
+              className="admin-cash-diff admin-caja-score"
               data-tone={tone}
               role="status"
               aria-live="polite"
             >
-              <span>{DIFF_TEXT[tone]}</span>
-              <strong>{diffLabel(liveDiff)}</strong>
+              {/* Marcador: esperado contra contado, y el resultado abajo. */}
+              <dl className="admin-caja-score-row">
+                <div>
+                  <dt>Esperado</dt>
+                  <dd>{formatARS(summary.expectedCash)}</dd>
+                </div>
+                <div>
+                  <dt>Contado</dt>
+                  <dd>{formatARS(Number(counted))}</dd>
+                </div>
+              </dl>
+              <div className="admin-caja-score-result">
+                <span>{DIFF_TEXT[tone]}</span>
+                <strong>{diffLabel(liveDiff)}</strong>
+              </div>
             </div>
           )}
 
@@ -581,7 +672,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
               </div>
               <button
                 type="button"
-                className="btn btn-linear-primary admin-btn-block"
+                className="btn btn-linear-primary admin-btn-block admin-btn-lg admin-caja-close-btn"
                 disabled={counted === ""}
                 onClick={() => setIsClosing(true)}
               >
@@ -615,8 +706,8 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
               <thead>
                 <tr>
                   <th>Fecha</th>
-                  <th>Esperado</th>
-                  <th>Contado</th>
+                  <th className="admin-caja-num">Esperado</th>
+                  <th className="admin-caja-num">Contado</th>
                   <th>Diferencia</th>
                   <th>Cerró</th>
                 </tr>
@@ -646,10 +737,12 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                             {formatDate(h.date, "long")}
                           </button>
                         </td>
-                        <td data-label="Esperado">
+                        <td data-label="Esperado" className="admin-caja-num">
                           {formatARS(h.expectedCash)}
                         </td>
-                        <td data-label="Contado">{formatARS(h.actualCash)}</td>
+                        <td data-label="Contado" className="admin-caja-num">
+                          {formatARS(h.actualCash)}
+                        </td>
                         <td data-label="Diferencia">
                           <span className="admin-diff-pill" data-tone={t}>
                             {diffLabel(h.difference)}

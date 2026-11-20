@@ -257,6 +257,7 @@ export function MatchRow({
   categoryName,
   defaultDate,
   compact = false,
+  slot = false,
   conflict = "",
   onSave,
 }) {
@@ -264,12 +265,15 @@ export function MatchRow({
   const a = sideInfo(calc, fixture, pairsById, match.a);
   const b = sideInfo(calc, fixture, pairsById, match.b);
   const ready = !a.tbd && !b.tbd;
+  // Si el resultado no se entiende como sets (ej. "W.O."), va como texto.
+  const rawScore =
+    match.score && !parseScore(match.score).sets.length ? match.score : "";
 
   return (
     <div
-      className={`tn-match${compact ? " is-compact" : ""}${conflict ? " is-conflict" : ""}`}
+      className={`tn-match${compact ? " is-compact" : ""}${slot ? " is-slot" : ""}${match.winner ? " is-played" : ""}${conflict ? " is-conflict" : ""}`}
     >
-      {!compact && (
+      {!compact && !slot && (
         <div className="tn-match-when">
           {match.time ? (
             <>
@@ -283,35 +287,43 @@ export function MatchRow({
       )}
       <div className="tn-match-sides">
         <span className="tn-match-tag">
-          {categoryName ? `${categoryName} · ` : ""}
-          {matchLabel(match)}
-          {compact && match.time
-            ? ` · ${dayLabel(match.date)} ${match.time} · ${courtName(match.court)}`
-            : ""}
+          {categoryName && (
+            <span className="tn-match-cat">{categoryName}</span>
+          )}
+          <span>{matchLabel(match)}</span>
+          {slot && match.court && (
+            <span className="tn-match-court">{courtName(match.court)}</span>
+          )}
         </span>
-        <span
-          className={`tn-match-side${match.winner === "a" ? " is-winner" : ""}${a.tbd ? " is-tbd" : ""}`}
-        >
-          {match.winner === "a" && "🏆 "}
-          {a.name}
-        </span>
-        <span
-          className={`tn-match-side${match.winner === "b" ? " is-winner" : ""}${b.tbd ? " is-tbd" : ""}`}
-        >
-          {match.winner === "b" && "🏆 "}
-          {b.name}
-        </span>
-        {conflict && (
-          <span className="tn-muted" style={{ color: "var(--danger)" }}>
-            ⚠ {conflict}
+        {compact && (
+          <span className="tn-match-chip">
+            {match.time
+              ? `${dayLabel(match.date)} · ${match.time} · ${courtName(match.court)}`
+              : "Sin horario"}
           </span>
         )}
+        {[
+          ["a", a],
+          ["b", b],
+        ].map(([k, side]) => (
+          <span
+            key={k}
+            className={`tn-match-side${match.winner === k ? " is-winner" : ""}${match.winner && match.winner !== k ? " is-loser" : ""}${side.tbd ? " is-tbd" : ""}`}
+          >
+            <span className="tn-match-name">
+              {match.winner === k && <span className="sr-only">Ganó: </span>}
+              {side.name}
+            </span>
+            <SetScores score={match.score} side={k} className="tn-sets" />
+          </span>
+        ))}
+        {conflict && <span className="tn-match-conflict">⚠ {conflict}</span>}
       </div>
       <div className="tn-match-actions">
-        {match.score && <span className="tn-score">{match.score}</span>}
+        {rawScore && <span className="tn-score">{rawScore}</span>}
         <button
           type="button"
-          className="tn-icon-btn"
+          className={`tn-icon-btn tn-result-btn${!match.winner && ready ? " is-due" : ""}`}
           onClick={() => setEditing(editing === "result" ? null : "result")}
           disabled={!ready}
           title={

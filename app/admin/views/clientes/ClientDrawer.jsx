@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, UtensilsCrossed, X, Trash2 } from "lucide-react";
+import {
+  CalendarDays,
+  Phone,
+  TriangleAlert,
+  UtensilsCrossed,
+  X,
+  Trash2,
+} from "lucide-react";
 import {
   adminGetClientDetail,
   adminSaveClientNote,
@@ -15,7 +22,10 @@ import {
 } from "../../../../lib/format";
 import { formatPhoneAR, toWhatsappNumber } from "../../../../lib/phone";
 import { todayInClub } from "../../../../lib/booking";
-import { categorizeClient } from "../../../../lib/clientsExport";
+import {
+  categorizeClient,
+  isInactiveClient,
+} from "../../../../lib/clientsExport";
 import { EmptyState, SkeletonRows } from "../../ui/states";
 import { WhatsAppMiniIcon } from "../../adminHelpers";
 import StaffPinModal from "../../ui/StaffPinModal";
@@ -35,6 +45,18 @@ export function initials(name) {
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() || "")
     .join("");
+}
+
+// Paleta de avatares: 8 tonos con texto blanco legible (AA). Cada jugador
+// cae siempre en el mismo color, así se lo reconoce de un vistazo.
+const AVATAR_TONES = 8;
+const QUICK_TAGS = ["8va", "7ma", "6ta", "5ta", "4ta", "Drive", "Revés"];
+const MONTH_ABBR = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+export function avatarTone(name) {
+  let h = 0;
+  for (const ch of String(name || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h % AVATAR_TONES;
 }
 
 /** Panel lateral con historial, consumo en cantina, notas y WhatsApp. */
@@ -82,59 +104,104 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
   }
 
   const cat = categorizeClient(client.count);
+  const tier = cat.category.toLowerCase();
+  const inactive = isInactiveClient(client, today);
   const cantinaTotal = detail?.cantina.reduce((s, c) => s + c.total, 0) || 0;
+  // Solo para mostrar: lo que quedó sin cobrar en turnos no cancelados.
+  const owed = (detail?.bookings || []).filter(
+    (b) => b.status !== "cancelado" && b.total > b.paid,
+  );
+  const owedTotal = owed.reduce((s, b) => s + (b.total - b.paid), 0);
 
   return (
-    <div className="admin-drawer-backdrop" onClick={onClose}>
+    <div className="admin-drawer-backdrop cc-drawer-backdrop" onClick={onClose}>
       <aside
-        className="admin-drawer"
+        className="admin-drawer cc-drawer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="client-drawer-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="admin-drawer-head">
-          <span className="admin-avatar admin-avatar-lg" aria-hidden>
-            {initials(client.name)}
-          </span>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <h3 id="client-drawer-title">{client.name}</h3>
-            <span className="admin-cell-sub">
-              {client.phone ? formatPhoneAR(client.phone) : "Sin teléfono"} ·{" "}
-              {cat.category}
-            </span>
-          </div>
+        {/* Ficha del jugador: la cancha azul de fondo, como en la agenda. */}
+        <header className="cc-drawer-hero" data-tier={tier}>
           <button
             type="button"
-            className="admin-modal-close"
+            className="cc-drawer-close"
             onClick={onClose}
             aria-label="Cerrar"
           >
-            <X size={16} strokeWidth={1.75} aria-hidden />
+            <X size={18} strokeWidth={2} aria-hidden />
           </button>
+          <span
+            className="cc-avatar cc-avatar-xl"
+            data-tone={avatarTone(client.name)}
+            data-tier={tier}
+            data-inactive={inactive || undefined}
+            aria-hidden
+          >
+            {initials(client.name)}
+          </span>
+          <div className="cc-drawer-id">
+            <span className="cc-drawer-chips">
+              <span className="cc-chip" data-tier={tier}>
+                {cat.category}
+              </span>
+              {inactive && (
+                <span className="cc-chip" data-tier="inactivo">
+                  Inactivo
+                </span>
+              )}
+            </span>
+            <h3 id="client-drawer-title">{client.name}</h3>
+            <span className="cc-drawer-phone">
+              {client.phone ? formatPhoneAR(client.phone) : "Sin teléfono"}
+            </span>
+          </div>
         </header>
 
         {client.phone && (
-          <a
-            className="btn btn-whatsapp admin-btn-block"
-            href={`https://wa.me/${toWhatsappNumber(client.phone)}?text=${encodeURIComponent(`Hola ${client.name.split(" ")[0]}! Te escribimos de Muzzaga Pádel 🎾`)}`}
-            target="_blank"
-            rel="noopener"
-          >
-            <WhatsAppMiniIcon size={16} /> Escribir por WhatsApp
-          </a>
+          <div className="cc-drawer-actions">
+            <a
+              className="cc-wa cc-wa-lg"
+              href={`https://wa.me/${toWhatsappNumber(client.phone)}?text=${encodeURIComponent(`Hola ${client.name.split(" ")[0]}! Te escribimos de Muzzaga Pádel 🎾`)}`}
+              target="_blank"
+              rel="noopener"
+            >
+              <WhatsAppMiniIcon size={18} /> Escribir por WhatsApp
+            </a>
+            <a
+              className="cc-call"
+              href={`tel:${client.phone}`}
+              aria-label={`Llamar a ${client.name}`}
+              title="Llamar"
+            >
+              <Phone size={18} strokeWidth={1.9} aria-hidden />
+            </a>
+          </div>
         )}
 
-        <dl className="admin-drawer-stats">
+        {owedTotal > 0 && (
+          <div className="cc-debt" role="status">
+            <TriangleAlert size={18} strokeWidth={2} aria-hidden />
+            <span>
+              <strong>Debe {formatARS(owedTotal)}</strong>
+              <small>
+                {plural(owed.length, "turno con saldo", "turnos con saldo")}
+              </small>
+            </span>
+          </div>
+        )}
+
+        <dl className="cc-drawer-stats">
           <div>
             <dt>Turnos</dt>
-            <dd>{client.count}</dd>
+            <dd className="is-big">{client.count}</dd>
           </div>
           <div>
             <dt>Total en turnos</dt>
             <dd>{formatARS(client.totalSpent)}</dd>
           </div>
-          <div>
+          <div data-inactive={inactive || undefined}>
             <dt>Último turno</dt>
             <dd>{formatRelativeDays(client.lastDate, today)}</dd>
           </div>
@@ -144,34 +211,31 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
           </div>
         </dl>
 
-        <section className="admin-drawer-section">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <label className="admin-field-label" htmlFor="client-note" style={{ margin: 0 }}>
-              Notas internas del staff
-            </label>
-            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-              Visible solo para recepción
-            </span>
+        <section className="cc-drawer-section">
+          <div className="cc-drawer-section-head">
+            <label htmlFor="client-note">Notas y etiquetas</label>
+            <span>Solo las ve el staff</span>
           </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-            {["8va", "7ma", "6ta", "5ta", "4ta", "Drive", "Revés"].map((tag) => (
+          <div className="cc-tags" role="group" aria-label="Agregar etiqueta">
+            {QUICK_TAGS.map((tag) => (
               <button
                 key={tag}
                 type="button"
-                className="btn btn-secondary"
-                style={{ padding: "2px 8px", height: 24, fontSize: 13, borderRadius: 12 }}
+                className="cc-tag"
+                aria-pressed={note.includes(tag)}
                 onClick={() => {
                   if (!note.includes(tag)) {
                     setNote((prev) => (prev.trim() ? `${prev.trim()} · ${tag}` : tag));
                   }
                 }}
               >
-                +{tag}
+                {note.includes(tag) ? tag : `+ ${tag}`}
               </button>
             ))}
           </div>
           <textarea
             id="client-note"
+            className="cc-note"
             rows={3}
             maxLength={1000}
             placeholder="Nivel, preferencias, posición de juego, si debe algo…"
@@ -181,7 +245,7 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
           {note.trim() !== savedNote && (
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary cc-note-save"
               onClick={saveNote}
               disabled={saving}
             >
@@ -190,33 +254,44 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
           )}
         </section>
 
-        <section className="admin-drawer-section">
-          <h4>
-            <CalendarDays size={16} strokeWidth={1.75} aria-hidden /> Historial
+        <section className="cc-drawer-section">
+          <h4 className="cc-drawer-title">
+            <CalendarDays size={16} strokeWidth={1.9} aria-hidden /> Historial
             de reservas
+            {detail && detail.bookings.length > 0 && (
+              <span className="cc-drawer-count">{detail.bookings.length}</span>
+            )}
           </h4>
           {!detail ? (
             <SkeletonRows count={4} height={40} />
           ) : detail.bookings.length === 0 ? (
             <EmptyState icon={CalendarDays} title="Sin reservas registradas" />
           ) : (
-            <ul className="admin-drawer-list">
+            <ul className="cc-history">
               {detail.bookings.map((b) => (
                 <li
                   key={b.id}
                   className={b.status === "cancelado" ? "is-voided" : undefined}
                 >
-                  <span>
-                    <strong>{formatDate(b.date)}</strong> {b.startTime}
-                    <small>{b.courtName}</small>
+                  <span className="cc-date-tile" aria-hidden>
+                    <strong>{Number(b.date.slice(8, 10))}</strong>
+                    <small>{MONTH_ABBR[Number(b.date.slice(5, 7)) - 1]}</small>
                   </span>
-                  <span className="admin-tag">
-                    {STATUS_LABEL[b.status] || b.status}
+                  <span className="cc-history-main">
+                    <strong>
+                      {b.startTime} · {b.courtName}
+                    </strong>
+                    <small>{formatDate(b.date, "long")}</small>
                   </span>
-                  <span className="admin-drawer-amount">
-                    {formatARS(b.total)}
+                  <span className="cc-history-end">
+                    <span className="cc-status" data-status={b.status}>
+                      {STATUS_LABEL[b.status] || b.status}
+                    </span>
+                    <span className="cc-history-amount">
+                      {formatARS(b.total)}
+                    </span>
                     {b.total > b.paid && b.status !== "cancelado" && (
-                      <small className="is-warning">
+                      <small className="cc-history-owed">
                         Debe {formatARS(b.total - b.paid)}
                       </small>
                     )}
@@ -227,78 +302,67 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
           )}
         </section>
 
-        <section className="admin-drawer-section">
-          <h4>
-            <UtensilsCrossed size={16} strokeWidth={1.75} aria-hidden /> Consumo
+        <section className="cc-drawer-section">
+          <h4 className="cc-drawer-title">
+            <UtensilsCrossed size={16} strokeWidth={1.9} aria-hidden /> Consumo
             en cantina
             {cantinaTotal > 0 && (
-              <span className="admin-cell-sub">
-                {" "}
-                · {formatARS(cantinaTotal)}
+              <span className="cc-drawer-count is-money">
+                {formatARS(cantinaTotal)}
               </span>
             )}
           </h4>
           {!detail ? (
             <SkeletonRows count={2} height={40} />
           ) : detail.cantina.length === 0 ? (
-            <p className="admin-field-hint">
+            <p className="cc-drawer-hint">
               Sin consumos cargados a sus turnos. Las ventas al paso no quedan
               asociadas a un cliente.
             </p>
           ) : (
-            <ul className="admin-drawer-list">
+            <ul className="cc-history">
               {detail.cantina.map((c) => (
                 <li key={c.id}>
-                  <span>
-                    <strong>{formatDate(c.date)}</strong>
-                    <small>
+                  <span className="cc-date-tile is-soft" aria-hidden>
+                    <strong>{Number(c.date.slice(8, 10))}</strong>
+                    <small>{MONTH_ABBR[Number(c.date.slice(5, 7)) - 1]}</small>
+                  </span>
+                  <span className="cc-history-main">
+                    <strong>
                       {c.items.map((it) => `${it.qty}× ${it.name}`).join(", ")}
-                    </small>
+                    </strong>
+                    <small>{formatDate(c.date, "long")}</small>
                   </span>
-                  <span className="admin-tag">
-                    {c.settled ? "Cobrado" : "A cuenta"}
-                  </span>
-                  <span className="admin-drawer-amount">
-                    {formatARS(c.total)}
+                  <span className="cc-history-end">
+                    <span
+                      className="cc-status"
+                      data-status={c.settled ? "pagado" : "a-cuenta"}
+                    >
+                      {c.settled ? "Cobrado" : "A cuenta"}
+                    </span>
+                    <span className="cc-history-amount">
+                      {formatARS(c.total)}
+                    </span>
                   </span>
                 </li>
               ))}
             </ul>
           )}
           {detail && (
-            <p className="admin-field-hint">
+            <p className="cc-drawer-hint">
               {plural(detail.cantina.length, "consumo", "consumos")}
             </p>
           )}
         </section>
 
-        {/* Zona de peligro: eliminar cliente */}
-        <section
-          className="admin-drawer-section"
-          style={{
-            borderTop: "1px solid var(--border)",
-            paddingTop: 16,
-            marginTop: 10,
-          }}
-        >
+        {/* Zona de peligro: abajo de todo y separada, para no tocarla sin querer. */}
+        <section className="cc-drawer-danger">
           <button
             type="button"
-            className="btn btn-secondary"
-            style={{
-              width: "100%",
-              color: "#dc2626",
-              borderColor: "#fca5a5",
-              background: "#fff1f2",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              fontSize: 14.5,
-              fontWeight: 600,
-            }}
+            className="cc-danger-btn"
             onClick={() => setIsPinModalOpen(true)}
           >
-            <Trash2 size={15} /> Eliminar cliente del sistema
+            <Trash2 size={15} aria-hidden /> Eliminar cliente del sistema
           </button>
         </section>
       </aside>
