@@ -265,3 +265,57 @@
     border-radius: 10px;
   }
 }
+
+/* ==========================================================================
+   CANTINA: CADA PRODUCTO CON SU ÍCONO
+   Con muchas tarjetas iguales había que leer el nombre de cada una. El
+   ícono de la categoría (abajo a la derecha) y un tinte del mismo color
+   ayudan a encontrar "la cerveza" o "la pizza" de un vistazo en la barra.
+   ========================================================================== */
+.admin-root .admin-product {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--cat, #999) 7%, transparent), transparent 65%),
+    var(--surface);
+  padding-right: 44px;
+  transition:
+    border-color 0.12s ease,
+    transform 0.06s ease,
+    box-shadow 0.18s ease;
+}
+
+.admin-root .admin-product::after {
+  content: var(--cat-icon, "");
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  font-size: 24px;
+  line-height: 1;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.15));
+  transition: transform 0.18s ease;
+  pointer-events: none;
+}
+
+.admin-root .admin-product:hover {
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.25);
+}
+
+.admin-root .admin-product:hover::after {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+.admin-root .admin-product[data-category="buffet"] { --cat-icon: "🍕"; }
+.admin-root .admin-product[data-category="bebidas-sin"] { --cat-icon: "🥤"; }
+.admin-root .admin-product[data-category="bebidas-con"] { --cat-icon: "🍺"; }
+.admin-root .admin-product[data-category="kiosco"] { --cat-icon: "🍫"; }
+.admin-root .admin-product[data-category="accesorios"] { --cat-icon: "🎾"; }
+
+.admin-root .admin-product.is-in-cart {
+  background:
+    linear-gradient(135deg, rgba(232, 114, 42, 0.12), transparent 70%),
+    #fffaf6;
+}
+
+.admin-root .admin-product-name {
+  padding-right: 0;
+}

@@ -3092,3 +3092,47 @@ html:has(#turnos) body {
     color: #052e14;
   }
 }
+
+/* ==========================================================================
+   TURNOS LIBRES DEL INICIO: también son canchas
+   Las mismas canchas azules de la grilla de turnos, para que se entienda
+   que son horarios para tomar ya. "Reservar" en naranja, como en todo el
+   sitio; el día (HOY / mañana) en el verde de la pelota.
+   ========================================================================== */
+.flash-chip:not(.is-skeleton) {
+  border-color: #16349a;
+  background-color: #2350d6;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='7' width='192' height='86' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.55'/%3E%3Cpath d='M31 7v86M169 7v86M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.3'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.3), rgba(11, 26, 77, 0.62)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 200px 200px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  box-shadow: 0 8px 16px -10px rgba(13, 31, 92, 0.7);
+}
+
+.flash-chip:not(.is-skeleton):hover {
+  border-color: #ffffff;
+  filter: brightness(1.08);
+}
+
+.flash-chip:not(.is-skeleton) .flash-chip-time {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.flash-chip:not(.is-skeleton) .flash-chip-court {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.flash-chip:not(.is-skeleton) .flash-chip-day,
+.flash-chip.is-other-day:not(.is-skeleton) .flash-chip-day,
+.flash-card.is-week .flash-chip.is-other-day:not(.is-skeleton) .flash-chip-day {
+  color: #d7f03a;
+}
+
+.flash-chip:not(.is-skeleton) .flash-chip-cta {
+  background: var(--color-accent-orange);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
