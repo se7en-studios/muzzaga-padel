@@ -597,3 +597,127 @@
     gap: 6px 8px;
   }
 }
+
+/* ==========================================================================
+   CÁMARAS · PRÓXIMAMENTE CON BEELUP
+   Mientras no haya cámaras cargadas, un cartel sobre el loop avisa que
+   viene la transmisión en vivo. Va abajo y centrado para no tapar la placa
+   ni el sello de arriba.
+   ========================================================================== */
+.camaras-proximamente {
+  position: absolute;
+  left: 50%;
+  bottom: 64px;
+  z-index: 3;
+  width: min(440px, calc(100% - 40px));
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 18px 16px;
+  border-radius: 16px;
+  background: rgba(8, 12, 28, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 36px -18px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  text-align: center;
+  pointer-events: none;
+}
+
+.camaras-proximamente-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #d7f03a;
+  color: #1d2606;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.camaras-proximamente-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+/* Marca de Beelup: el hexágono y el nombre en blanco, como su logo. */
+.camaras-beelup-marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.camaras-beelup-logo {
+  height: 32px;
+  width: auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.camaras-beelup-nombre {
+  color: #ffffff;
+  font-family: var(--font-poppins, inherit);
+  font-size: 24px;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: -0.02em;
+}
+
+.camaras-proximamente-sub {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+@media (max-width: 640px) {
+  .camaras-proximamente {
+    bottom: 56px;
+    padding: 10px 14px 12px;
+    gap: 4px;
+  }
+
+  .camaras-proximamente-titulo {
+    font-size: 19px;
+  }
+
+  .camaras-beelup-nombre {
+    font-size: 19px;
+  }
+
+  .camaras-beelup-logo {
+    height: 26px;
+  }
+
+  .camaras-proximamente-sub {
+    font-size: 12px;
+  }
+}
+
+/* En compu el video es alto: el cartel va al medio, a la vista. */
+@media (min-width: 900px) {
+  .camaras-proximamente {
+    top: 50%;
+    bottom: auto;
+    translate: -50% -50%;
+    width: min(520px, calc(100% - 80px));
+    padding: 20px 26px 22px;
+  }
+
+  .camaras-proximamente-titulo {
+    font-size: 30px;
+  }
+}

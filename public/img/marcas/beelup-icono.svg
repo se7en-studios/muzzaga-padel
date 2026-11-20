@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 170" role="img" aria-label="Beelup">
+  <polygon points="80,8 148,47 148,125 80,164 12,125 12,47" fill="#F6A21C" stroke="#111" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M80 70 L134 101 L134 118 L80 149 L26 118 L26 101 Z" fill="#fff"/>
+  <path d="M56 54 C30 76 30 120 56 142 C82 120 82 76 56 54 Z" fill="#fff" stroke="#111" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M104 54 C78 76 78 120 104 142 C130 120 130 76 104 54 Z" fill="#fff" stroke="#111" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M18 52 Q42 22 64 50" fill="none" stroke="#111" stroke-width="10" stroke-linecap="round"/>
+  <path d="M142 52 Q118 22 96 50" fill="none" stroke="#111" stroke-width="10" stroke-linecap="round"/>
+</svg>

@@ -256,6 +256,37 @@ function YouTubeFrame({ name, embed, autoplay }) {
   );
 }
 
+// Ícono de Beelup (redibujado en SVG a partir del logo que pasó el club).
+const BEELUP_ICON = "/img/marcas/beelup-icono.svg";
+
+/**
+ * Mientras no haya cámaras cargadas en el panel: cartel "Próximamente" con
+ * Beelup encima del loop de las canchas.
+ */
+function BeelupProximamente() {
+  return (
+    <div className="camaras-proximamente">
+      <span className="camaras-proximamente-chip">Próximamente</span>
+      <p className="camaras-proximamente-titulo">
+        Partidos en vivo con
+        <span className="camaras-beelup-marca">
+          <img
+            src={BEELUP_ICON}
+            alt=""
+            className="camaras-beelup-logo"
+            width={30}
+            height={32}
+          />
+          <span className="camaras-beelup-nombre">beelup</span>
+        </span>
+      </p>
+      <p className="camaras-proximamente-sub">
+        Mirá las canchas en directo y llevate el video de tus mejores puntos.
+      </p>
+    </div>
+  );
+}
+
 /**
  * Cámaras debajo de las reservas. Los links se cargan en el panel
  * (Configuración → Cámaras): el de cada cancha y el del club en Beelup. Una
@@ -310,7 +341,7 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
             <p className="section-desc">
               {live
                 ? "Las cámaras de Beelup, en directo desde el club."
-                : "Un loop de nuestras canchas de cristal templado."}{" "}
+                : "Muy pronto vas a ver las canchas en vivo y bajar el video de tu partido con Beelup."}{" "}
               {beelupUrl &&
                 "Tocá a Muzzaguito y conseguí el video de tu propio partido en Beelup."}
             </p>
@@ -361,6 +392,7 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
               <LoopFrame label="CANCHAS MUZZAGA" autoplay={autoplay === true} />
             )}
           </div>
+          {!streams.length && <BeelupProximamente />}
           {/* Zócalo de TV: repite lo que dice el encabezado, por eso va oculto
               para lectores de pantalla. */}
           <div className="camaras-zocalo" aria-hidden="true">
@@ -371,7 +403,7 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
             <span className="camaras-zocalo-texto">
               {live
                 ? "Cámaras Beelup · en directo"
-                : "Canchas de cristal templado"}
+                : "Cámaras Beelup · próximamente"}
             </span>
             <span className="camaras-zocalo-lugar">Catriel · Río Negro</span>
           </div>
