@@ -22,14 +22,32 @@ const EN_SERVIDOR = typeof window === "undefined";
 // en /torneos, dejaría la carga colgada), así que se carga ya.
 let paginaHidratada = false;
 
-// En el servidor el módulo se pide apenas se carga este archivo y se le
-// entrega a React sin esperar (un "then" que responde en el acto). Si React
-// tuviera que esperarlo, mandaría la sección al final del HTML, oculta hasta
-// que corre un script, y un enlace a /#faq desde otra página no la encontraría.
-function alInstante(cargar) {
-  let listo = null;
-  const pedido = cargar().then((m) => (listo = m));
-  return () => (listo ? { then: (ok) => ok(listo) } : pedido);
+// Al abrir /#faq (enlace desde otra página o compartido) estas secciones
+// llegan al final del HTML, ocultas (<div hidden id="S:…">) hasta que React
+// las acomoda: el navegador a veces no encuentra el ancla, o la encuentra y
+// después las secciones que aparecen arriba la empujan. Cuando ya no queda
+// ninguna oculta se vuelve al ancla, salvo que el usuario ya se haya movido.
+if (!EN_SERVIDOR && window.location.hash.length > 1) {
+  let destino = "";
+  try {
+    destino = decodeURIComponent(window.location.hash.slice(1));
+  } catch {}
+  let seMovio = false;
+  const moverse = () => (seMovio = true);
+  const gestos = ["touchstart", "wheel", "keydown", "pointerdown"];
+  gestos.forEach((g) => window.addEventListener(g, moverse, { once: true, passive: true }));
+  const desde = Date.now();
+  const mirar = () => {
+    const el = destino && document.getElementById(destino);
+    const ocultas = document.querySelector('div[hidden][id^="S:"]');
+    if (el && !ocultas) {
+      if (!seMovio) el.scrollIntoView();
+      gestos.forEach((g) => window.removeEventListener(g, moverse));
+      return;
+    }
+    if (Date.now() - desde < 5000) setTimeout(mirar, 100);
+  };
+  mirar();
 }
 
 function diferida(id, cargar) {
@@ -41,7 +59,10 @@ function diferida(id, cargar) {
   let porNavegacion = 0;
   const permiso = EN_SERVIDOR ? null : new Promise((r) => (soltar = r));
 
-  const Seccion = lazy(EN_SERVIDOR ? alInstante(cargar) : () => permiso.then(cargar));
+  // En el servidor se renderiza completa (el HTML sale entero en la página
+  // estática). React la manda dentro del mismo HTML pero al final, y la
+  // acomoda en su lugar con un script apenas termina de llegar.
+  const Seccion = lazy(EN_SERVIDOR ? cargar : () => permiso.then(cargar));
 
   function liberar(navegacion) {
     if (soltada) return;

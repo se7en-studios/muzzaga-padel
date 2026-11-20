@@ -454,6 +454,8 @@ body:has(.mon-root) {
   min-height: 0;
   overflow: hidden;
   padding: 1.1vh 2vh 1.1vh 2.2vh;
+  /* El anillo y la pelota se achican si la tarjeta queda baja (cqh). */
+  container-type: size;
 }
 
 .mon-card-info {
@@ -492,8 +494,8 @@ body:has(.mon-root) {
 
 /* Libre: una pelota grande donde iría la cuenta regresiva. */
 .mon-card-ball {
-  width: 11vh;
-  height: 11vh;
+  width: min(11vh, 100cqh);
+  height: min(11vh, 100cqh);
   object-fit: contain;
   filter: drop-shadow(0 1vh 1.2vh rgba(0, 0, 0, 0.5));
 }
@@ -560,7 +562,7 @@ body:has(.mon-root) {
 /* Cuenta regresiva: el anillo se vacía a medida que pasa el turno. */
 .mon-ring {
   position: relative;
-  width: 13.4vh;
+  width: min(13.4vh, 100cqh);
   aspect-ratio: 1;
   color: var(--tone, var(--state));
 }
@@ -625,15 +627,16 @@ body:has(.mon-root) {
 
 .mon-callout.is-der {
   align-items: flex-start;
-  translate: -3.8vh -100%;
+  translate: -0.8vh -100%;
 }
 
-.mon-callout.is-der .mon-callout-dot {
-  margin-left: 3vh;
+/* El palito sale de la punta de abajo a la izquierda, como un banderín. */
+.mon-callout.is-der .mon-callout-bubble {
+  border-bottom-left-radius: 0.6vh;
 }
 
 .mon-callout.is-der .mon-callout-stem {
-  margin-left: calc(3vh + 0.625vh);
+  margin-left: 0.625vh;
 }
 
 .mon-callout-bubble {
@@ -766,7 +769,7 @@ body:has(.mon-root) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 2vh;
+  font-size: 1.8vh;
   font-weight: 600;
 }
 
@@ -796,7 +799,7 @@ body:has(.mon-root) {
   gap: 2.2vh;
   min-width: 0;
   overflow: hidden;
-  padding: 1.2vh 2.2vh 1.2vh 1.8vh;
+  padding: 1.1vh 2.2vh 1.1vh 1.8vh;
   border-radius: 1.8vh;
   border: 0.25vh solid #f6a21c;
   background: #0a0a0a;
@@ -825,14 +828,14 @@ body:has(.mon-root) {
 }
 
 .mon-beelup-brand img {
-  width: 7.2vh;
+  width: 5.8vh;
   height: auto;
 }
 
 .mon-beelup-brand span {
   color: #fff;
   font-family: var(--font-poppins), var(--mon-texto);
-  font-size: 2.6vh;
+  font-size: 2.3vh;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -895,14 +898,14 @@ body:has(.mon-root) {
   counter-increment: paso;
   display: inline-flex;
   align-items: center;
-  gap: 0.7vh;
-  min-width: 0;
-  padding: 0.5vh 1.1vh 0.5vh 0.5vh;
+  flex-shrink: 0;
+  gap: 0.6vh;
+  padding: 0.45vh 1vh 0.45vh 0.45vh;
   border-radius: 999px;
   border: 1px solid rgba(246, 162, 28, 0.55);
   background: rgba(246, 162, 28, 0.12);
   font-family: var(--mon-display);
-  font-size: 2.3vh;
+  font-size: 1.95vh;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -912,10 +915,11 @@ body:has(.mon-root) {
 
 .mon-beelup-steps li::before {
   content: counter(paso);
+  flex-shrink: 0;
   display: inline-grid;
   place-items: center;
-  width: 2.4vh;
-  height: 2.4vh;
+  width: 2.2vh;
+  height: 2.2vh;
   border-radius: 50%;
   background: #f6a21c;
   color: #0a0a0a;
@@ -926,18 +930,18 @@ body:has(.mon-root) {
 /* Flecha entre paso y paso. */
 .mon-beelup-steps li + li {
   position: relative;
-  margin-left: 2vh;
+  margin-left: 1.6vh;
 }
 
 .mon-beelup-steps li + li::after {
   content: "";
   position: absolute;
-  left: -2.25vh;
+  left: -1.85vh;
   top: 50%;
-  width: 1.1vh;
-  height: 1.1vh;
-  border-top: 0.35vh solid #f6a21c;
-  border-right: 0.35vh solid #f6a21c;
+  width: 0.9vh;
+  height: 0.9vh;
+  border-top: 0.3vh solid #f6a21c;
+  border-right: 0.3vh solid #f6a21c;
   transform: translateY(-50%) rotate(45deg);
 }
 
@@ -996,7 +1000,7 @@ body:has(.mon-root) {
   display: inline-flex;
   align-items: center;
   gap: 1.4vh;
-  padding: 1.2vh 3vh 1.2vh 0;
+  padding: 1vh 3vh 1vh 0;
   font-family: var(--mon-display);
   font-size: 2.8vh;
   font-weight: 700;
@@ -1123,6 +1127,19 @@ body:has(.mon-root) {
     border-width: 3px;
   }
 
+  .mon-card-body {
+    container-type: normal;
+  }
+
+  .mon-ring {
+    width: 104px;
+  }
+
+  .mon-card-ball {
+    width: 80px;
+    height: 80px;
+  }
+
   .mon-card-name h2 {
     font-size: 32px;
   }
@@ -1142,21 +1159,12 @@ body:has(.mon-root) {
     font-size: 15px;
   }
 
-  .mon-ring {
-    width: 104px;
-  }
-
   .mon-ring-num strong {
     font-size: 44px;
   }
 
   .mon-ring-num span {
     font-size: 13px;
-  }
-
-  .mon-card-ball {
-    width: 80px;
-    height: 80px;
   }
 
   .mon-bottom,

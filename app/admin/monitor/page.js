@@ -587,7 +587,7 @@ export default function MonitorPage() {
               ) : v.state === "proximo" ? (
                 <>
                   <div className="mon-card-info">
-                    <span className="mon-card-kicker">Arranca {v.nextUp.booking.startTime} hs</span>
+                    <span className="mon-card-kicker">Turno de</span>
                     <strong className="mon-card-who">{v.nextUp.booking.playerName}</strong>
                     <span className="mon-card-meta">
                       {v.nextUp.booking.startTime} a {v.nextUp.booking.endTime} hs
