@@ -87,3 +87,181 @@
   width: 8px;
   height: 8px;
 }
+
+/* ==========================================================================
+   AGENDA: CADA TURNO RESERVADO ES UNA CANCHA
+   Césped azul con las líneas blancas (perímetro, red al medio, líneas de
+   saque y central). El semáforo de cobro sigue: la franja de la izquierda y
+   la etiqueta van en verde (pagado), amarillo (seña) o rojo (debe).
+   ========================================================================== */
+.admin-root .admin-slot.is-taken:not([data-state="bloqueado"]) {
+  --court-line: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='6' width='192' height='88' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.55'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.7'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3C/svg%3E");
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #16349a;
+  background-color: #2350d6;
+  background-image:
+    var(--court-line),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.35), rgba(11, 26, 77, 0.6)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #ffffff;
+  box-shadow:
+    inset 4px 0 0 var(--state-pill, #e8722a),
+    0 6px 14px -8px rgba(13, 31, 92, 0.65);
+}
+
+.admin-root .admin-slot.is-taken:not([data-state="bloqueado"]) .admin-slot-name {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.admin-root .admin-slot.is-taken:not([data-state="bloqueado"]) .admin-slot-court {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.admin-root .admin-slot.is-taken:not([data-state="bloqueado"]) .admin-slot-badge {
+  align-self: flex-start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--state-pill, #e8722a);
+  color: var(--state-pill-fg, #ffffff);
+  font-size: 13px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.admin-root .admin-slot.is-taken:not([data-state="bloqueado"]) .admin-slot-main {
+  padding-left: 16px;
+}
+
+.admin-root .admin-slot.is-taken:not([data-state="bloqueado"]) .admin-slot-main:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-root .admin-slot.is-taken:not([data-state="bloqueado"]) .admin-slot-whatsapp {
+  border-left-color: rgba(255, 255, 255, 0.18);
+  background: rgba(7, 16, 52, 0.35);
+  color: #4ade80;
+}
+
+.admin-root .admin-slot.is-taken:not([data-state="bloqueado"]) .admin-slot-whatsapp:hover {
+  background: rgba(7, 16, 52, 0.55);
+}
+
+.admin-root [data-state="pagado"] {
+  --state-pill: #22c55e;
+  --state-pill-fg: #052e14;
+}
+
+.admin-root [data-state="senado"] {
+  --state-pill: #fbbf24;
+  --state-pill-fg: #422006;
+}
+
+.admin-root [data-state="pendiente"] {
+  --state-pill: #ef4444;
+  --state-pill-fg: #ffffff;
+}
+
+/* Turno de prueba: cancha más apagada, para no confundirlo con uno real. */
+.admin-root [data-state="prueba"] {
+  --state-pill: #cbd5e1;
+  --state-pill-fg: #1e293b;
+}
+
+.admin-root .admin-slot.is-taken[data-state="prueba"] {
+  filter: saturate(0.35) brightness(1.1);
+}
+
+/* Libre: al pasar el mouse se "pinta" la cancha, como adelanto de cómo va
+   a quedar reservada. */
+.admin-root .admin-slot.is-free {
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.admin-root .admin-slot.is-free:hover {
+  border-color: #2350d6;
+  border-style: solid;
+  background-color: rgba(35, 80, 214, 0.07);
+}
+
+.admin-root .admin-slot.is-free .admin-slot-assign:hover,
+.admin-root .admin-slot.is-free .admin-slot-assign:focus-visible {
+  background: transparent;
+  color: #1c42b8;
+}
+
+/* ---------- Encabezado de la grilla: la red ---------- */
+.admin-root .admin-timeline-head {
+  background-color: #141412;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 9px);
+  border-bottom: 3px solid #f1efe9;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.admin-root .admin-timeline-head strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-root .admin-timeline-head strong::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 0 8px rgba(215, 240, 58, 0.5);
+}
+
+/* ==========================================================================
+   AMBIENTE GENERAL
+   ========================================================================== */
+
+/* Barra lateral: una cancha dibujada abajo, en vertical, como si el menú
+   estuviera parado al costado de la pista. */
+@media (min-width: 768px) {
+  .admin-root .admin-sidebar {
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 200' fill='none' stroke='white' stroke-opacity='.09'%3E%3Crect x='3' y='3' width='94' height='194' rx='3' stroke-width='2'/%3E%3Cpath d='M0 100h100' stroke-width='3' stroke-dasharray='1 3'/%3E%3Cpath d='M3 31h94M3 169h94M50 31v138' stroke-width='1.5'/%3E%3C/svg%3E"),
+      radial-gradient(120% 40% at 50% 100%, rgba(35, 80, 214, 0.28), transparent 70%);
+    background-size: 150px 300px, 100% 100%;
+    background-position: 50% calc(100% + 150px), 0 0;
+    background-repeat: no-repeat;
+    background-attachment: local, scroll;
+  }
+
+  .admin-root .admin-sidebar.collapsed {
+    background-size: 56px 112px, 100% 100%;
+    background-position: 50% calc(100% + 40px), 0 0;
+  }
+}
+
+/* Fondo del contenido: la cancha grande, apenas marcada, en la esquina de
+   abajo. Fija, así queda de ambientación detrás de las tarjetas. */
+.admin-root .admin-main {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' fill='none' stroke='%23141412' stroke-opacity='.07'%3E%3Crect x='2' y='2' width='196' height='96' rx='2' stroke-width='1.2'/%3E%3Cpath d='M100 0v100' stroke-width='2' stroke-dasharray='1 2.5'/%3E%3Cpath d='M31 2v96M169 2v96M31 50h138' stroke-width='.8'/%3E%3C/svg%3E");
+  background-size: min(900px, 70vw) auto;
+  background-position: right -120px bottom -90px;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+
+/* En el celu la tarjeta es angosta: la etiqueta de cobro puede ir en dos
+   renglones en vez de cortarse ("Debe $60...."). */
+@media (max-width: 767px) {
+  .admin-root .admin-slot.is-taken:not([data-state="bloqueado"]) .admin-slot-badge {
+    white-space: normal;
+    border-radius: 10px;
+  }
+}
