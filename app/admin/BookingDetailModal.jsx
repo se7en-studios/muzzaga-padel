@@ -134,7 +134,7 @@ export default function BookingDetailModal({
       >
         <div className="admin-detail-head">
           <div>
-            <p className="admin-detail-when">
+            <p className="admin-detail-when admin-detail-court">
               {booking.courtName} · {formatDate(booking.date)} ·{" "}
               {booking.startTime}
               {booking.endTime ? ` a ${booking.endTime}` : ""} hs
@@ -207,6 +207,12 @@ export default function BookingDetailModal({
               <span>
                 Turno {formatARS(total)} · Ya pagó {formatARS(paid)}
               </span>
+              {/* Con seña: cuánto del turno ya está cobrado, de un vistazo. */}
+              {pending > 0 && paid > 0 && total > 0 && (
+                <span className="admin-detail-progress" aria-hidden="true">
+                  <span style={{ width: `${Math.min(100, Math.round((paid / total) * 100))}%` }} />
+                </span>
+              )}
             </div>
           )
         )}
