@@ -427,9 +427,9 @@
 .admin-root .tn-zone-head {
   padding: 12px 14px;
   background-color: var(--tr-court);
-  background-image: var(--tr-court-bg);
-  background-size: var(--tr-court-size);
-  background-repeat: no-repeat, no-repeat, repeat;
+  background-image: var(--tr-court-plain);
+  background-size: auto, 220px 220px;
+  background-repeat: no-repeat, repeat;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
@@ -826,6 +826,15 @@
   font-size: 12.5px;
 }
 
+/* El horario puede bajar de renglón: mejor eso que "Can..." cortado. */
+.admin-root .bk-screen .bk-head {
+  white-space: normal;
+}
+
+.admin-root .bk-screen .bk-head > span:first-child {
+  overflow: visible;
+}
+
 .admin-root .bk-screen .bk-when strong {
   color: #ffffff;
   font-size: 14px;
@@ -1062,6 +1071,7 @@
 
   .admin-root .tn-match-court {
     display: inline;
+    order: -1;
   }
 
   .admin-root .tn-match.is-slot {
