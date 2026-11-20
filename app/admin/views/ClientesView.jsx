@@ -347,6 +347,16 @@ export default function ClientesView({
                               <span className="cc-chip" data-tier={tier}>
                                 {cat.category}
                               </span>
+                              {/* Al lado del nombre para verlo sin abrir la
+                                  ficha; mismo criterio que el aviso de la ficha. */}
+                              {c.owed > 0 && (
+                                <span
+                                  className="cc-chip cc-owe"
+                                  title={plural(c.owedCount, "turno con saldo", "turnos con saldo")}
+                                >
+                                  Debe {formatARS(c.owed)}
+                                </span>
+                              )}
                             </span>
                             <span className="cc-player-phone">
                               {c.phone ? formatPhoneAR(c.phone) : "Sin teléfono"}

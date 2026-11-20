@@ -1028,6 +1028,80 @@
   background: var(--brand);
 }
 
+/* ---------- Últimos 7 días (debajo de la grilla) ----------
+   Va al final porque lo urgente del mostrador es la grilla; esto es para
+   mirar cómo viene la semana. */
+.admin-root .admin-agenda .admin-week {
+  margin-top: 30px;
+}
+
+.admin-root .admin-agenda .admin-week-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 18px;
+  margin-bottom: 12px;
+}
+
+.admin-root .admin-agenda .admin-week-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-agenda .admin-week-totals strong {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--court-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-agenda .admin-week-empty {
+  padding: 28px 20px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  background-color: var(--surface);
+  background-image: var(--court-lines-soft);
+  background-size: 100% 100%;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Fila con la cantidad de turnos de cada día, en números de marcador. */
+.admin-root .admin-weekchart .admin-weekchart-turnos {
+  align-items: baseline;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
+.admin-root .admin-weekchart .admin-weekchart-turnos > span {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+
+.admin-root .admin-weekchart .admin-weekchart-turnos strong {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-weekchart .admin-weekchart-turnos strong.is-today {
+  color: var(--court-deep, #16349a);
+}
+
 /* ==========================================================================
    CELU
    ========================================================================== */
@@ -1277,5 +1351,17 @@
 @media (max-width: 767px) {
   .admin-root .admin-weekchart .admin-weekchart-col:not(.is-today) .admin-weekchart-value {
     visibility: hidden;
+  }
+
+  /* El monto de hoy cae en la última columna, que es angosta: más chico y
+     pegado a la derecha para que no se salga de la tarjeta. */
+  .admin-root .admin-weekchart .admin-weekchart-col.is-today .admin-weekchart-value {
+    align-self: flex-end;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-weekchart .admin-weekchart-turnos strong {
+    font-size: 17px;
   }
 }

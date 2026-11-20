@@ -1,52 +1,21 @@
 import { SITE_URL } from "../lib/site";
 
-const BASE_URL = SITE_URL;
+// Solo las páginas públicas (el admin y la API quedan afuera, ver robots.js).
+// Sin lastModified: con la fecha de cada pedido Google lo ignora igual.
+const PAGES = [
+  { path: "/", changeFrequency: "daily", priority: 1.0 },
+  { path: "/torneos", changeFrequency: "weekly", priority: 0.9 },
+  { path: "/menu", changeFrequency: "weekly", priority: 0.8 },
+  { path: "/herramientas/nivel", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/herramientas/americano", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/herramientas/dividir-gastos", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/herramientas/pizarra", changeFrequency: "monthly", priority: 0.6 },
+];
 
 export default function sitemap() {
-  const now = new Date().toISOString();
-
-  return [
-    {
-      url: `${BASE_URL}/`,
-      lastModified: now,
-      changeFrequency: "daily",
-      priority: 1.0,
-    },
-    {
-      url: `${BASE_URL}/torneos`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/menu`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/herramientas/dividir-gastos`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/herramientas/nivel`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/herramientas/pizarra`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/herramientas/americano`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-  ];
+  return PAGES.map(({ path, ...rest }) => ({
+    // Sin barra final en la home: igual que el canónico que arma Next.
+    url: path === "/" ? SITE_URL : `${SITE_URL}${path}`,
+    ...rest,
+  }));
 }

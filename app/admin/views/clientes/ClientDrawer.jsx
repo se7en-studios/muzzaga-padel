@@ -29,6 +29,7 @@ import {
 import { EmptyState, SkeletonRows } from "../../ui/states";
 import { WhatsAppMiniIcon } from "../../adminHelpers";
 import StaffPinModal from "../../ui/StaffPinModal";
+import { PADEL_LEVELS } from "../../../../data/levels";
 
 const STATUS_LABEL = {
   confirmado: "Confirmado",
@@ -50,7 +51,9 @@ export function initials(name) {
 // Paleta de avatares: 8 tonos con texto blanco legible (AA). Cada jugador
 // cae siempre en el mismo color, así se lo reconoce de un vistazo.
 const AVATAR_TONES = 8;
-const QUICK_TAGS = ["8va", "7ma", "6ta", "5ta", "4ta", "Drive", "Revés"];
+// Etiquetas rápidas: todas las categorías (8va a 1era, salen de la misma
+// lista que usa la web, así no falta ninguna) más la posición de juego.
+const QUICK_TAGS = [...PADEL_LEVELS.map((l) => l.shortName), "Drive", "Revés"];
 const MONTH_ABBR = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 export function avatarTone(name) {

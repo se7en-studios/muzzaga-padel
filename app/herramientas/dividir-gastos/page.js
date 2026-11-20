@@ -9,9 +9,9 @@ import { getCantinaMenu } from "../../../lib/cantinaMenuServer";
 import { featuredItems } from "../../../lib/cantinaMenu";
 
 export const metadata = pageMetadata({
-  title: "Calculadora para dividir cancha y cantina · Muzzaga Pádel",
+  title: "Dividir cancha y cantina entre amigos · Muzzaga Pádel Catriel",
   description:
-    "Dividí en segundos el costo del turno de pádel y las consumiciones de cantina entre tus amigos. Copiá el desglose directo a WhatsApp.",
+    "Dividí en segundos el turno de pádel y lo de la cantina de Muzzaga Pádel (Catriel) entre tus amigos, con los precios actuales. Copiá el desglose a WhatsApp.",
   path: "/herramientas/dividir-gastos",
 });
 

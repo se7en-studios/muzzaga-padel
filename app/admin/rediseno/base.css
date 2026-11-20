@@ -1245,6 +1245,93 @@
   min-height: 46px;
 }
 
+/* Quiénes juegan (opcional): 4 casilleros en 2 × 2, y en el detalle una
+   fila de fichas con el que reservó resaltado en azul cancha. */
+.admin-root .admin-players {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.admin-root .admin-players legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.admin-root .admin-players-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-root .admin-players-fields label {
+  display: block;
+  min-width: 0;
+}
+
+.admin-root .admin-players-toggle {
+  align-self: flex-start;
+  margin-top: 0;
+  text-align: left;
+}
+
+.admin-root .admin-detail-players {
+  display: flex;
+  flex-direction: column;
+  margin: -6px 0 18px;
+}
+
+.admin-root .admin-detail-players form.admin-players {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-players-view {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.admin-root .admin-players-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root .admin-players-list li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.admin-root .admin-players-list li.is-owner {
+  border-color: var(--court-deep, #16349a);
+  background: var(--court, #2350d6);
+  color: #ffffff;
+}
+
+.admin-root .admin-players-view .admin-players-toggle {
+  padding: 4px 0;
+  font-size: 14.5px;
+}
+
 /* El resumen como un ticket: con los dos mordiscos a los costados. */
 .admin-root .admin-create-summary {
   position: relative;

@@ -367,6 +367,9 @@ export default function AdminPage() {
   async function loadWeekStats() {
     const res = await adminGetWeekStats();
     if (res.ok) setWeekStats(res.days);
+    // Si falla y no había nada, el gráfico de la Agenda avisa en vez de
+    // quedarse cargando para siempre.
+    else setWeekStats((prev) => prev || false);
   }
 
   async function handleToggleTest(booking) {
@@ -969,6 +972,7 @@ export default function AdminPage() {
                 onRefresh={() => loadDayData(activeDate)}
                 onOpenCreate={openCreateModal}
                 onOpenDetail={openDetail}
+                weekStats={weekStats}
               />
             )}
             {view === "calendario" && (
@@ -1078,6 +1082,7 @@ export default function AdminPage() {
           sales={dayData?.sales || []}
           onSalesChanged={refreshMoney}
           onToast={showToast}
+          onBookingChanged={() => loadDayData(activeDate)}
           onDeletedBooking={() => {
             loadDayData(activeDate);
             loadClients();

@@ -8,9 +8,9 @@ import { pageMetadata } from "../../lib/pageMeta";
 import { getCantinaMenu } from "../../lib/cantinaMenuServer";
 
 export const metadata = pageMetadata({
-  title: "Menú de la cantina · Muzzaga Pádel",
+  title: "Menú de la cantina en Catriel · Muzzaga Pádel",
   description:
-    "Carta completa de la cantina de Muzzaga Pádel: pizzas caseras, tostados, sándwiches de mila, cervezas heladas, bebidas frías y kiosco en Catriel.",
+    "Carta de la cantina de Muzzaga Pádel en Catriel, Río Negro: pizzas caseras, tostados, sándwiches de mila, cervezas heladas y bebidas para el tercer tiempo.",
   path: "/menu",
 });
 

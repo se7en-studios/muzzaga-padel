@@ -9,7 +9,10 @@ import {
   adminMoveBooking,
   adminSettleCantinaSale,
   adminDeleteBooking,
+  adminSetBookingPlayers,
 } from "./actions";
+import { readPlayerNames } from "../../lib/playerNames";
+import PlayerNamesFields from "./ui/PlayerNamesFields";
 import { bookingTotal, onAccountTotal } from "../../lib/metrics";
 import { formatDate, plural } from "../../lib/format";
 import StaffPinModal from "./ui/StaffPinModal";
@@ -49,6 +52,7 @@ export default function BookingDetailModal({
   sales = [],
   onSalesChanged,
   onToast,
+  onBookingChanged,
 }) {
   const [isMoving, setIsMoving] = useState(false);
   const [isOtherAmount, setIsOtherAmount] = useState(false);
@@ -60,6 +64,29 @@ export default function BookingDetailModal({
   );
   const [moveSubmitting, setMoveSubmitting] = useState(false);
   const [moveError, setMoveError] = useState("");
+  // Jugadores: lo guardado se muestra al toque, sin esperar que se recargue
+  // el día (savedPlayers pisa lo que trae el turno hasta entonces).
+  const [savedPlayers, setSavedPlayers] = useState(null);
+  const [playersDraft, setPlayersDraft] = useState(null);
+  const [playersSaving, setPlayersSaving] = useState(false);
+  const playerNames = savedPlayers ?? readPlayerNames(booking);
+
+  async function savePlayers(e) {
+    e.preventDefault();
+    setPlayersSaving(true);
+    const res = await adminSetBookingPlayers(booking.id, playersDraft || []);
+    setPlayersSaving(false);
+    if (!res.ok) {
+      onToast?.(res.error || "No se pudieron guardar los jugadores.", {
+        tone: "error",
+      });
+      return;
+    }
+    setSavedPlayers(res.playerNames);
+    setPlayersDraft(null);
+    onToast?.("Jugadores guardados");
+    onBookingChanged?.();
+  }
 
   async function handleMoveSubmit(e) {
     e.preventDefault();
@@ -187,6 +214,68 @@ export default function BookingDetailModal({
             <IconClose size={16} /> Cerrar
           </button>
         </div>
+
+        {/* Quiénes juegan: opcional, además del que reserva. Los bloqueos
+            de cancha no llevan. */}
+        {booking.status !== "bloqueado" && (
+          <div className="admin-detail-players">
+            {playersDraft ? (
+              <form onSubmit={savePlayers} className="admin-players">
+                <span className="admin-field-label">
+                  Quiénes juegan con {booking.playerName}
+                </span>
+                <PlayerNamesFields
+                  idPrefix="admin-detail-player"
+                  value={playersDraft}
+                  onChange={setPlayersDraft}
+                />
+                <div className="admin-detail-row">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setPlayersDraft(null)}
+                  >
+                    Volver
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-linear-primary"
+                    disabled={playersSaving}
+                  >
+                    {playersSaving ? "Guardando…" : "Guardar jugadores"}
+                  </button>
+                </div>
+              </form>
+            ) : playerNames.length > 0 ? (
+              <div className="admin-players-view">
+                <span className="admin-field-label">Juegan</span>
+                <ul className="admin-players-list">
+                  <li className="is-owner" title="Hizo la reserva">
+                    {booking.playerName}
+                  </li>
+                  {playerNames.map((name, i) => (
+                    <li key={`${name}-${i}`}>{name}</li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  className="admin-detail-link admin-players-toggle"
+                  onClick={() => setPlayersDraft(playerNames)}
+                >
+                  Cambiar
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="admin-detail-link admin-players-toggle"
+                onClick={() => setPlayersDraft([])}
+              >
+                + Anotar quiénes juegan (opcional)
+              </button>
+            )}
+          </div>
+        )}
 
         {/* ¿ME PAGÓ? */}
         {booking.isTest ? (

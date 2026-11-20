@@ -4,12 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  CalendarClock,
-  Clock3,
   Info,
   Maximize,
   Minimize,
-  Users,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -43,7 +40,21 @@ const STALE_AFTER_MIN = 2;
 // Después de esta hora ya no queda nada de ayer en pista.
 const LATE_NIGHT_UNTIL = JORNADA_CUTOFF;
 const WARN_MIN = 5;
-const CANTINA_MAX = 5;
+// Con Beelup al lado entran cuatro productos sin cortar los nombres.
+const CANTINA_MAX = 4;
+// Una cancha libre que arranca en menos de esto ya se anuncia como "próximo":
+// la gente que llega mira la tele para saber si le toca.
+const PROXIMO_MIN = 30;
+// Un color por estado, el mismo en la tarjeta, el globo y el borde de la
+// maqueta. Tiene que distinguirse a 4 metros: verde, rojo, naranja y blanco.
+const ESTADOS = {
+  juego: { label: "En juego", color: "#22c55e", ink: "#052e14" },
+  termina: { label: "Termina ya", color: "#ef4444", ink: "#ffffff" },
+  proximo: { label: "Próximo", color: "#e8722a", ink: "#1b1b19" },
+  libre: { label: "Libre", color: "#f3f1e9", ink: "#1c42b8" },
+};
+// Así aparecen las canchas en Beelup (no siempre coincide con el panel).
+const BEELUP_CANCHAS = "El Tano / La Vasca";
 // La maqueta 3D del club (la del recorrido) con la cámara fija sobre las
 // canchas. En modo monitor pinta el borde de cada cancha según su estado,
 // avisa dónde cae cada una en pantalla y queda quieta después de armarse.
@@ -110,9 +121,15 @@ function MonitorClock() {
   );
 }
 
-function Ring({ remaining, left }) {
+/** "Cancha 1" sola si el nombre es genérico; si tiene apodo, también el apodo. */
+function courtTitle(court, index) {
+  const generic = /^cancha\s*\d+$/i.test(String(court.name || "").trim());
+  return { kicker: generic ? null : `Cancha ${index + 1}`, name: court.name || `Cancha ${index + 1}` };
+}
+
+function Ring({ remaining, left, tone }) {
   return (
-    <div className="mon-ring">
+    <div className="mon-ring" style={{ "--tone": tone }}>
       <svg viewBox="0 0 120 120" aria-hidden="true">
         <circle className="mon-ring-track" cx="60" cy="60" r={RING_R} />
         <circle
@@ -264,26 +281,46 @@ export default function MonitorPage() {
     const upcoming = schedule.filter((x) => x.start > currentMinutes);
     const remaining = live ? Math.max(0, live.end - currentMinutes) : 0;
     const total = live ? Math.max(1, live.end - live.start) : 1;
+    const nextUp = upcoming[0] || null;
+    const startsIn = nextUp ? nextUp.start - currentMinutes : null;
+    const ending = Boolean(live) && remaining <= WARN_MIN;
+    const state = live
+      ? ending
+        ? "termina"
+        : "juego"
+      : startsIn != null && startsIn <= PROXIMO_MIN
+        ? "proximo"
+        : "libre";
     return {
       court,
       index,
       schedule,
+      title: courtTitle(court, index),
       match: live?.booking || null,
       remaining,
       left: Math.min(1, remaining / total),
-      ending: Boolean(live) && remaining <= WARN_MIN,
+      state,
       tone: live ? timerTone(remaining) : null,
       players: Math.min(8, Math.max(1, Number(live?.booking?.playersCount) || 4)),
-      nextUp: upcoming[0] || null,
+      nextUp,
+      startsIn,
+      // En "próximo" el turno que viene ya está en el cuerpo: el pie muestra el siguiente.
+      footer: state === "proximo" ? upcoming[1] || null : nextUp,
     };
   });
 
-  // Borde de neón de cada cancha en la maqueta: el color del estado o nada.
-  const neonKey = views.map((v) => v.tone || "").join("|");
+  // Borde de neón de cada cancha en la maqueta: el color del estado, o
+  // apagado si está libre (así se distingue también en la maqueta).
+  const neonKey = views.map((v) => v.state).join("|");
   useEffect(() => {
     if (!sceneReady) return;
     frameRef.current?.contentWindow?.postMessage(
-      { muzzaga: "courts", s: views.map((v) => (v.tone ? { color: v.tone } : null)) },
+      {
+        muzzaga: "courts",
+        s: views.map((v) =>
+          v.state === "libre" ? null : { color: ESTADOS[v.state].color },
+        ),
+      },
       window.location.origin,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -357,6 +394,7 @@ export default function MonitorPage() {
     "Preguntá en recepción por los próximos torneos",
     "Hacé el test de nivel y sumate a partidos parejos de tu categoría",
     "Reservá tu turno online en muzzagapadel.com",
+    "Reviví tu partido en video en beelup.com",
   ].filter(Boolean);
   const destacados = featuredItems(menuItems);
   const cantina = (destacados.length ? destacados : menuItems).slice(
@@ -369,7 +407,11 @@ export default function MonitorPage() {
         (a, b) => (courtPts[a.index]?.[1] ?? 0) - (courtPts[b.index]?.[1] ?? 0),
       )
     : views;
-  const statusOf = (v) => (!v.match ? "Libre" : v.ending ? "Termina ya" : "En juego");
+  // Variables de color del estado, para tarjeta y globo.
+  const stateVars = (v) => ({
+    "--state": ESTADOS[v.state].color,
+    "--state-ink": ESTADOS[v.state].ink,
+  });
 
   return (
     <div className="mon-root">
@@ -398,19 +440,24 @@ export default function MonitorPage() {
           return (
             <div
               key={v.court.id}
-              className={`mon-callout${v.match ? " is-live" : ""}${v.ending ? " is-ending" : ""}`}
+              // Si la cancha cae cerca de las tarjetas, el globo se abre hacia
+              // la derecha: centrado quedaba medio tapado por la columna.
+              className={`mon-callout is-${v.state}${pt[0] < 0.5 ? " is-der" : ""}`}
               style={{
                 left: `${pt[0] * 100}%`,
                 top: `${pt[1] * 100}%`,
-                ...(v.tone ? { "--tone": v.tone } : {}),
+                ...stateVars(v),
               }}
               aria-hidden="true"
             >
               <div className="mon-callout-bubble">
                 <strong>
-                  Cancha {v.index + 1} · {v.court.name}
+                  {v.title.kicker ? `${v.title.kicker} · ${v.title.name}` : v.title.name}
                 </strong>
-                <span className="mon-callout-state">{statusOf(v)}</span>
+                {/* key: al cambiar de estado se vuelve a montar y hace el "pop". */}
+                <span key={v.state} className="mon-callout-state">
+                  {ESTADOS[v.state].label}
+                </span>
               </div>
               <span className="mon-callout-stem" />
               <span className="mon-callout-dot" />
@@ -432,11 +479,10 @@ export default function MonitorPage() {
       <header className="mon-header">
         <div className="mon-brand">
           <img src="/img/logo_badge.png" alt="" />
-          <span>
-            Muzzaga
-            <br />
-            Pádel
-          </span>
+          <div>
+            <h1>Muzzaga Pádel</h1>
+            <p>Canchas en vivo</p>
+          </div>
         </div>
 
         <div className="mon-tools">
@@ -508,100 +554,140 @@ export default function MonitorPage() {
         </div>
       </header>
 
-      <main className="mon-side">
-        <div className="mon-title">
-          <h1>Monitor de pistas</h1>
-          <p>Estado en tiempo real del club</p>
-        </div>
-
+      <main className="mon-side" aria-label="Estado de las canchas">
         {cards.map((v) => (
           <article
             key={v.court.id}
-            className={`mon-card${v.match ? " is-live" : ""}${v.ending ? " is-ending" : ""}`}
-            style={v.tone ? { "--tone": v.tone } : undefined}
+            className={`mon-card is-${v.state}`}
+            style={stateVars(v)}
           >
-            <div className="mon-card-head">
-              <img src="/img/iconos/icono-cristal.webp" alt="" className="mon-card-icon" />
+            {/* Cabecera de césped azul con las líneas: se lee "cancha" de lejos. */}
+            <header className="mon-card-head">
               <div className="mon-card-name">
-                <span>Cancha {v.index + 1}</span>
-                <h2>{v.court.name}</h2>
+                {v.title.kicker && <span>{v.title.kicker}</span>}
+                <h2>{v.title.name}</h2>
               </div>
-              <div className={`mon-pill${v.match ? " is-live" : ""}`}>{statusOf(v)}</div>
+              <div key={v.state} className="mon-state">
+                {ESTADOS[v.state].label}
+              </div>
+            </header>
+
+            <div className="mon-card-body">
+              {v.match ? (
+                <>
+                  <div className="mon-card-info">
+                    <span className="mon-card-kicker">Juega</span>
+                    <strong className="mon-card-who">{v.match.playerName}</strong>
+                    <span className="mon-card-meta">
+                      {v.players} jugadores · {v.match.startTime} a {v.match.endTime} hs
+                    </span>
+                  </div>
+                  <Ring remaining={v.remaining} left={v.left} tone={v.tone} />
+                </>
+              ) : v.state === "proximo" ? (
+                <>
+                  <div className="mon-card-info">
+                    <span className="mon-card-kicker">Turno de</span>
+                    <strong className="mon-card-who">{v.nextUp.booking.playerName}</strong>
+                    <span className="mon-card-meta">
+                      {v.nextUp.booking.startTime} a {v.nextUp.booking.endTime} hs
+                    </span>
+                  </div>
+                  {/* El anillo se vacía a medida que se acerca la hora de arrancar. */}
+                  <Ring
+                    remaining={v.startsIn}
+                    left={Math.min(1, v.startsIn / PROXIMO_MIN)}
+                    tone={ESTADOS.proximo.color}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="mon-card-info">
+                    <span className="mon-card-kicker">Disponible</span>
+                    <strong className="mon-card-who">
+                      {v.nextUp ? `Hasta las ${v.nextUp.booking.startTime} hs` : "Todo el día"}
+                    </strong>
+                    <span className="mon-card-meta">Reservá en recepción o en la web</span>
+                  </div>
+                  <img
+                    src="/img/iconos/pelota.webp"
+                    alt=""
+                    width={160}
+                    height={160}
+                    className="mon-card-ball"
+                  />
+                </>
+              )}
             </div>
 
-            {v.match ? (
-              <div className="mon-card-body">
-                <div className="mon-card-info">
-                  <div className="mon-card-row">
-                    <Users size={20} aria-hidden="true" />
-                    <div>
-                      <strong>{v.match.playerName}</strong>
-                      <span>{v.players} jugando</span>
-                    </div>
-                  </div>
-                  <div className="mon-card-row">
-                    <Clock3 size={20} aria-hidden="true" />
-                    <strong>
-                      {v.match.startTime} a {v.match.endTime} hs
-                    </strong>
-                  </div>
-                </div>
-                <Ring remaining={v.remaining} left={v.left} />
-              </div>
-            ) : (
-              <div className="mon-card-row is-free">
-                <CalendarClock size={20} aria-hidden="true" />
-                <strong>
-                  {v.nextUp
-                    ? `Disponible hasta las ${v.nextUp.booking.startTime} hs`
-                    : "Disponible el resto del día"}
-                </strong>
-              </div>
-            )}
-
-            <div className="mon-card-next">
-              <span className="mon-card-next-label">Próximo</span>
-              {v.nextUp ? (
+            <footer className="mon-card-next">
+              <span className="mon-card-next-label">
+                {v.state === "proximo" ? "Después" : "Próximo"}
+              </span>
+              {v.footer ? (
                 <span className="mon-card-next-value">
-                  <strong>{v.nextUp.booking.startTime}</strong>
-                  <span className="mon-card-next-name">{v.nextUp.booking.playerName}</span>
-                  <em>{inLabel(v.nextUp.start - currentMinutes)}</em>
+                  <strong>{v.footer.booking.startTime}</strong>
+                  <span className="mon-card-next-name">{v.footer.booking.playerName}</span>
+                  <em>{inLabel(v.footer.start - currentMinutes)}</em>
                 </span>
               ) : (
                 <span className="mon-card-next-value is-empty">Sin más reservas hoy</span>
               )}
-            </div>
+            </footer>
           </article>
         ))}
       </main>
 
-      {cantina.length > 0 && (
-        <section className="mon-cantina" aria-label="Cantina">
-          <div className="mon-cantina-head">
-            {/* Archivo directo, como el logo: sin pasar por el optimizador de imágenes,
-                que en producción la dejaba rota. */}
-            <img
-              src="/img/mascotas/muzzaguito-pizza-cerveza.webp"
-              alt=""
-              width={720}
-              height={677}
-              className="mon-cantina-mascota"
-            />
-            <div>
-              <h2>En la cantina</h2>
-              <p>Pedí en la barra</p>
+      <div className="mon-bottom">
+        {cantina.length > 0 && (
+          <section className="mon-cantina" aria-label="Cantina">
+            <div className="mon-cantina-head">
+              {/* Archivo directo, como el logo: sin pasar por el optimizador de imágenes,
+                  que en producción la dejaba rota. */}
+              <img
+                src="/img/mascotas/muzzaguito-pizza-cerveza.webp"
+                alt=""
+                width={720}
+                height={677}
+                className="mon-cantina-mascota"
+              />
+              <div>
+                <h2>En la cantina</h2>
+                <p>Pedí en la barra</p>
+              </div>
             </div>
+            <ul className="mon-cantina-items">
+              {cantina.map((item) => (
+                <li key={item.id}>
+                  <span className="mon-cantina-name">{item.name}</span>
+                  <strong className="mon-cantina-price">{formatARS(item.price)}</strong>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Beelup filma las canchas: los jugadores buscan ahí el video de su partido. */}
+        <section className="mon-beelup" aria-label="Beelup: reviví tu partido">
+          <div className="mon-beelup-brand">
+            <img src="/img/marcas/beelup-icono.svg" alt="" width={160} height={170} />
+            <span>beelup</span>
           </div>
-          <ul className="mon-cantina-items">
-            {cantina.map((item) => (
-              <li key={item.id}>
-                <span className="mon-cantina-name">{item.name}</span>
-                <strong className="mon-cantina-price">{formatARS(item.price)}</strong>
-              </li>
-            ))}
-          </ul>
+          <div className="mon-beelup-body">
+            <div className="mon-beelup-top">
+              <h2>
+                Reviví tu partido <span>en Beelup</span>
+              </h2>
+              <strong className="mon-beelup-url">beelup.com</strong>
+            </div>
+            <ol className="mon-beelup-steps">
+              <li>Muzzaga Pádel</li>
+              <li>{BEELUP_CANCHAS}</li>
+              <li>Día y horario</li>
+            </ol>
+          </div>
         </section>
-      )}
+      </div>
 
       <div className="mon-ticker">
         <div className="mon-ticker-tag">
