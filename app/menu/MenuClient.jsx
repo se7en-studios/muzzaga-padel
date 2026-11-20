@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MENU_CATEGORIES } from "../../data/menu";
 import { CLUB_INFO } from "../../data/club";
+import { productIcon } from "../../lib/productIcon";
 import ScrollRow from "../../components/ScrollRow";
 import CantinaCart, { QtyStepper } from "../../components/CantinaCart";
 import {
@@ -280,6 +281,9 @@ export default function MenuClient({ items }) {
             const qty = cart[item.id] || 0;
             return (
             <div key={item.id} className="carta-item">
+              <span className="carta-item-icon" aria-hidden="true">
+                {productIcon(item.name, item.category)}
+              </span>
               <div className="carta-item-info">
                 <strong className="carta-item-name">{item.name}</strong>
                 {item.tag && (
