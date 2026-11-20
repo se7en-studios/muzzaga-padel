@@ -2854,3 +2854,78 @@ html:has(#turnos),
 html:has(#turnos) body {
   touch-action: pan-x pan-y;
 }
+
+/* ==========================================================================
+   RESERVA EN EL CELU: filas más bajas y sin texto repetido.
+   El encabezado ya dice qué columna es cada cancha, así que la tarjeta del
+   turno muestra solo el estado (el nombre sigue en el aria-label). La
+   aclaración "(Cristal)" queda para pantallas anchas: en 375px cortaba las
+   pastillas de filtro.
+   ========================================================================== */
+@media (max-width: 640px) {
+  .booking-court-wide {
+    display: none;
+  }
+
+  .booking-court-tab {
+    padding: 0 16px;
+  }
+
+  .booking-matrix-container {
+    gap: 8px;
+  }
+
+  .booking-matrix-header {
+    position: sticky;
+    top: 72px;
+    z-index: 2;
+    padding: 8px 4px;
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-canvas, #fff) 95%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    font-size: 11px;
+  }
+
+  .booking-matrix-time-col {
+    padding: 4px 2px;
+    border-radius: var(--radius-md);
+  }
+
+  .booking-matrix-time-col span {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .booking-matrix-row .booking-slot {
+    min-height: 54px;
+    padding: 8px 6px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+  }
+
+  .booking-matrix-row .booking-slot .slot-meta {
+    display: none;
+  }
+
+  .booking-matrix-row .slot-badge {
+    font-size: 12.5px;
+    padding: 5px 12px;
+  }
+
+  /* Libre se lee de un vistazo: borde verde suave en la tarjeta entera. */
+  .booking-matrix-row .booking-slot:not(:disabled):not(.selected) {
+    border-color: #a8dfc8;
+  }
+}
+
+/* Resumen del turno: el día arriba y el horario en su propio renglón (antes
+   el "hs" quedaba huérfano en la segunda línea). */
+.booking-summary-hours {
+  display: block;
+  white-space: nowrap;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 1.05em;
+  margin-top: 2px;
+}

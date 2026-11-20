@@ -402,7 +402,7 @@ export default function BookingCalendar({
           onClick={() => setCourtFilter("all")}
           aria-pressed={courtFilter === "all"}
         >
-          Todas las canchas
+          Todas<span className="booking-court-wide"> las canchas</span>
         </button>
         {courts.map((court) => (
           <button
@@ -412,7 +412,8 @@ export default function BookingCalendar({
             onClick={() => setCourtFilter(court.id)}
             aria-pressed={courtFilter === court.id}
           >
-            {court.name} ({court.type})
+            {court.name}
+            <span className="booking-court-wide"> ({court.type})</span>
           </button>
         ))}
       </ScrollRow>
@@ -464,7 +465,8 @@ export default function BookingCalendar({
                 : courts.filter((c) => c.id === courtFilter)
               ).map((c) => (
                 <div key={c.id}>
-                  {c.name} ({c.type})
+                  {c.name}
+                  <span className="booking-court-wide"> ({c.type})</span>
                 </div>
               ))}
             </div>
@@ -502,7 +504,8 @@ export default function BookingCalendar({
                 : courts.filter((c) => c.id === courtFilter)
               ).map((c) => (
                 <div key={c.id}>
-                  {c.name} ({c.type})
+                  {c.name}
+                  <span className="booking-court-wide"> ({c.type})</span>
                 </div>
               ))}
             </div>
@@ -528,6 +531,7 @@ export default function BookingCalendar({
             {[...new Set(visibleSlots.map((s) => s.start))]
               .filter((time) => showPast || !pastTimes.has(time))
               .map((time) => {
+              const rowEnd = visibleSlots.find((s) => s.start === time)?.end;
               const rowCourts =
                 courtFilter === "all"
                   ? courts
@@ -537,7 +541,7 @@ export default function BookingCalendar({
                 <div key={time} className="booking-matrix-row">
                   <div className="booking-matrix-time-col">
                     <strong>{time}</strong>
-                    <span>hs</span>
+                    <span>{rowEnd ? `a ${rowEnd}` : "hs"}</span>
                   </div>
 
                   {rowCourts.map((court) => {
@@ -652,7 +656,10 @@ export default function BookingCalendar({
                     <div className="booking-summary-time">
                       <span className="summary-label">Día y horario</span>
                       <strong>
-                        {activeDay?.dayName} {activeDay?.dayNumber} {activeDay?.monthName} · {selected.start} hs ({selected.end} hs)
+                        {activeDay?.dayName} {activeDay?.dayNumber} {activeDay?.monthName}
+                        <span className="booking-summary-hours">
+                          {selected.start} a {selected.end} hs
+                        </span>
                       </strong>
                     </div>
                     <div className="booking-summary-price">
