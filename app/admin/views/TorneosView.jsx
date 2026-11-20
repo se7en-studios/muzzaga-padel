@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { DollarSign, Plus, Trophy, Users, X } from "lucide-react";
 import { EmptyState, SkeletonRows } from "../ui/states";
-import { formatARS, plural } from "../../../lib/format";
+import { formatARS } from "../../../lib/format";
 import { todayInClub } from "../../../lib/booking";
 import { CATEGORY_PRESETS, isByeMatch } from "../../../lib/tournament";
 import {
@@ -445,51 +445,80 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
         </div>
       ) : (
         <div className={`tn-list${loading ? " admin-content-loading" : ""}`}>
-          {visible.map((t) => {
-            const status = STATUS_LABELS[t.status] || STATUS_LABELS.abierto;
-            const { total, played } = tournamentProgress(t);
-            const paid = (t.players || []).filter((p) => p.paid).length;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                className="tn-list-item"
-                onClick={() => setSelectedId(t.id)}
-              >
-                <div className="tn-row-between">
-                  <span className={`badge-linear ${status.tone}`}>
-                    {status.label}
-                  </span>
-                  <span className="tn-muted">📅 {tournamentDates(t)}</span>
-                </div>
-                <span className="tn-list-name">{t.name}</span>
-                <div className="tn-list-meta">
-                  <span>🏆 {t.categories.map((c) => c.name).join(" · ")}</span>
-                  <span>
-                    👥 {plural(t.players.length, "pareja", "parejas")} ({paid}{" "}
-                    pagaron)
-                  </span>
-                </div>
-                {total > 0 && (
-                  <>
-                    <div className="tn-progress" aria-hidden>
-                      <span
-                        style={{
-                          width: `${Math.round((played / total) * 100)}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="tn-muted">
-                      {played} de {total} partidos jugados
-                    </span>
-                  </>
-                )}
-              </button>
-            );
-          })}
+          {visible.map((t) => (
+            <TournamentCard
+              key={t.id}
+              t={t}
+              onOpen={() => setSelectedId(t.id)}
+            />
+          ))}
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Tarjeta de un torneo en la lista: arriba la cancha azul con el nombre (se
+ * reconoce de lejos), abajo categorías, cobro y cuánto falta jugar.
+ */
+export function TournamentCard({ t, onOpen }) {
+  const status = STATUS_LABELS[t.status] || STATUS_LABELS.abierto;
+  const { total, played } = tournamentProgress(t);
+  const players = t.players || [];
+  const paid = players.filter((p) => p.paid).length;
+  const owe = players.length - paid;
+  const pct = total ? Math.round((played / total) * 100) : 0;
+  return (
+    <button
+      type="button"
+      className="tn-list-item tn-tcard"
+      data-status={t.status}
+      onClick={onOpen}
+    >
+      <span className="tn-tcard-court">
+        <span className="tn-tcard-top">
+          <span className={`badge-linear ${status.tone}`}>{status.label}</span>
+          <span className="tn-tcard-date">{tournamentDates(t)}</span>
+        </span>
+        <span className="tn-list-name">{t.name}</span>
+      </span>
+      <span className="tn-tcard-body">
+        <span className="tn-tcard-cats">
+          {t.categories.map((c) => (
+            <span key={c.id} className="tn-tcard-cat">
+              {c.name}
+            </span>
+          ))}
+        </span>
+        <span className="tn-tcard-stats">
+          <span>
+            <strong>{players.length}</strong>{" "}
+            {players.length === 1 ? "pareja" : "parejas"}
+          </span>
+          <span className="is-paid">
+            <strong>{paid}</strong> pagaron
+          </span>
+          {owe > 0 && (
+            <span className="is-owe">
+              <strong>{owe}</strong> {owe === 1 ? "debe" : "deben"}
+            </span>
+          )}
+        </span>
+        {total > 0 ? (
+          <span className="tn-tcard-progress">
+            <span className="tn-progress" aria-hidden>
+              <span style={{ width: `${pct}%` }} />
+            </span>
+            <span className="tn-muted">
+              {played} de {total} partidos jugados
+            </span>
+          </span>
+        ) : (
+          <span className="tn-muted">Sin sorteo todavía</span>
+        )}
+      </span>
+    </button>
   );
 }
 

@@ -17,6 +17,7 @@ import {
 } from "../../../lib/cantinaMenu";
 import { formatARS, formatTime, normalizeSearch, plural } from "../../../lib/format";
 import { EmptyState, SkeletonRows } from "../ui/states";
+import { productIcon } from "../../../lib/productIcon";
 import { usePinGate } from "../ui/usePinGate";
 
 const ICON = { size: 16, strokeWidth: 1.75, "aria-hidden": true };
@@ -56,6 +57,10 @@ function MenuRow({ item, original, error, flash, onChange, onRemove }) {
         .join(" ")}
     >
       <div className="admin-carta-name">
+        {/* El mismo ícono que en la caja: se ve qué producto es sin leer. */}
+        <span className="admin-carta-emoji" aria-hidden="true">
+          {productIcon(item.name, item.category)}
+        </span>
         <input
           type="text"
           aria-label="Nombre del producto"
@@ -66,7 +71,7 @@ function MenuRow({ item, original, error, flash, onChange, onRemove }) {
         />
         {!original && <span className="admin-tag admin-carta-badge">Nuevo</span>}
       </div>
-      <label className="admin-carta-price">
+      <label className={`admin-carta-price${priceChanged ? " is-changed" : ""}`}>
         <span aria-hidden="true">$</span>
         <input
           type="text"
@@ -120,7 +125,12 @@ function MenuRow({ item, original, error, flash, onChange, onRemove }) {
       </button>
       {(priceChanged || error) && (
         <p className={error ? "admin-field-error admin-carta-note" : "admin-carta-note"} role={error ? "alert" : undefined}>
-          {error || `Antes ${formatARS(original.price)}`}
+          {error || (
+            <span className="admin-carta-was">
+              Antes <s>{formatARS(original.price)}</s> → ahora{" "}
+              <strong>{formatARS(item.price)}</strong>
+            </span>
+          )}
         </p>
       )}
     </li>
@@ -449,7 +459,7 @@ export default function CartaEditor({
           </div>
         </div>
 
-        <div className="admin-chips" role="group" aria-label="Categorías">
+        <div className="admin-chips admin-pos-cats" role="group" aria-label="Categorías">
           {MENU_CATEGORIES.map((c) => (
             <button
               key={c.id}
@@ -457,7 +467,9 @@ export default function CartaEditor({
               aria-pressed={cat === c.id}
               onClick={() => setCat(c.id)}
             >
-              {c.label} ({countIn(c.id)})
+              <span aria-hidden="true">{productIcon("", c.id)}</span>
+              {c.label}
+              <span className="admin-carta-chip-count">{countIn(c.id)}</span>
             </button>
           ))}
         </div>
@@ -481,9 +493,19 @@ export default function CartaEditor({
         ) : (
           groups.map((g) => (
             <section key={g.id} className="admin-carta-group" aria-label={categoryLabel(g.id)}>
-              <h3 className="admin-pos-group-title">
+              <h3 className="admin-pos-group-title admin-carta-group-title">
+                <span aria-hidden="true">{productIcon("", g.id)}</span>
                 {categoryLabel(g.id)} · {plural(g.items.length, "producto", "productos")}
               </h3>
+              {/* Encabezado de columnas (solo en pantalla ancha, por CSS). */}
+              <div className="admin-carta-cols" aria-hidden="true">
+                <span>Producto</span>
+                <span>Precio</span>
+                <span>Categoría</span>
+                <span>Etiqueta</span>
+                <span>Dest.</span>
+                <span />
+              </div>
               <ul className="admin-carta-list">
                 {g.items.map((item) => (
                   <MenuRow
@@ -508,7 +530,7 @@ export default function CartaEditor({
             {plural(diff.count, "cambio", "cambios")} sin guardar
             <small>{describeMenuDiff(diff)}</small>
           </span>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="admin-carta-unsaved-actions">
             <button
               type="button"
               className="btn btn-secondary"

@@ -10,6 +10,7 @@ import {
   LoaderCircle,
   MapPin,
   RotateCcw,
+  Zap,
   Trash2,
   Upload,
   X,
@@ -42,6 +43,29 @@ import { usePinGate } from "../ui/usePinGate";
 
 const ICON = { size: 18, strokeWidth: 1.75, "aria-hidden": true };
 const SMALL = { size: 14, strokeWidth: 1.75, "aria-hidden": true };
+
+/** Mismo encabezado que el resto de Ajustes (es la sección 08 del índice). */
+function SiteHead() {
+  return (
+    <header className="admin-cfg-head">
+      <span className="admin-cfg-head-num" aria-hidden>
+        08
+      </span>
+      <div className="admin-cfg-head-text">
+        <h3 className="admin-section-title">
+          <Images {...ICON} /> Sitio web
+        </h3>
+        <p className="admin-cfg-head-hint">
+          Fotos, ubicación y galería de torneos de la página.
+        </p>
+      </div>
+      <span className="admin-cfg-save-tag is-live">
+        <Zap size={14} strokeWidth={2} aria-hidden />
+        Se publica al instante
+      </span>
+    </header>
+  );
+}
 
 /** Botón que abre el selector de archivos (en el celu ofrece cámara o galería). */
 function FilePicker({
@@ -647,10 +671,8 @@ export default function SitioWebSection({ onExpiredSession, onToast }) {
 
   if (!content) {
     return (
-      <section id="cfg-sitio" className="admin-settings-card" aria-busy="true">
-        <h3 className="admin-section-title">
-          <Images {...ICON} /> Sitio web
-        </h3>
+      <section id="cfg-sitio" className="admin-settings-card admin-cfg-card" aria-busy="true">
+        <SiteHead />
         <Skeleton height={260} radius={12} />
       </section>
     );
@@ -726,14 +748,15 @@ export default function SitioWebSection({ onExpiredSession, onToast }) {
   }
 
   return (
-    <section id="cfg-sitio" className="admin-settings-card">
-      <h3 className="admin-section-title">
-        <Images {...ICON} /> Sitio web
-      </h3>
-      <p className="admin-field-hint" style={{ marginTop: 0 }}>
-        Las fotos y la ubicación que se ven en la página. Cada cambio se
-        publica al toque (no hace falta tocar Guardar): en uno o dos minutos
-        ya se ve en la web.
+    <section id="cfg-sitio" className="admin-settings-card admin-cfg-card">
+      <SiteHead />
+      <p className="admin-cfg-live-note">
+        <Zap size={16} strokeWidth={2} aria-hidden />
+        <span>
+          <strong>Ojo: acá no hace falta tocar Guardar.</strong> Las fotos y la
+          ubicación que se ven en la página se publican al toque: en uno o dos
+          minutos ya se ven en la web.
+        </span>
       </p>
 
       {!storageReady && (
@@ -745,7 +768,9 @@ export default function SitioWebSection({ onExpiredSession, onToast }) {
       )}
 
       <div className="admin-site-group">
-        <h4 className="admin-site-group-title">Ubicación</h4>
+        <h4 className="admin-site-group-title">
+          <MapPin {...SMALL} /> Ubicación
+        </h4>
         <p className="admin-field-hint">
           La dirección y el mapa de la sección &quot;Ubicación y horarios&quot; del
           inicio y del pie de todas las páginas. Si el club se muda, cambiala acá.
@@ -817,7 +842,9 @@ export default function SitioWebSection({ onExpiredSession, onToast }) {
       ))}
 
       <div className="admin-site-group">
-        <h4 className="admin-site-group-title">Galería de torneos</h4>
+        <h4 className="admin-site-group-title">
+          <Images {...SMALL} /> Galería de torneos
+        </h4>
         <p className="admin-field-hint">
           La página de Torneos: cada torneo con sus fotos de jugadores y de
           ganadores. Podés elegir varias fotos a la vez.

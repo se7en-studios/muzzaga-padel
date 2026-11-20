@@ -1,22 +1,27 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarX,
+  Check,
   Clock,
   Copy,
   CreditCard,
+  ExternalLink,
   Eye,
   EyeOff,
   Images,
+  KeyRound,
   Pencil,
   Plus,
+  Save,
   Store,
   Tag,
   Trash2,
   Users,
   Video,
   X,
+  Zap,
 } from "lucide-react";
 import {
   adminGetClubConfig,
@@ -27,6 +32,7 @@ import {
 } from "../actions";
 import {
   MAX_COURTS,
+  bandFor,
   depositFor,
   maskCbu,
   normalizeConfig,
@@ -64,16 +70,223 @@ const WEEKDAYS = [
 // Se muestra lunes primero, como lo piensa el club.
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
+// `save` dice cómo se guarda cada sección, para que nadie crea que ya
+// aplicó un cambio que todavía espera el botón Guardar (o al revés).
 const SECTIONS = [
-  { id: "canchas", label: "Canchas y precios", icon: Tag },
-  { id: "horarios", label: "Horarios", icon: Clock },
-  { id: "cobros", label: "Cobros", icon: CreditCard },
-  { id: "cierres", label: "Cierres", icon: CalendarX },
-  { id: "club", label: "Club", icon: Store },
-  { id: "camaras", label: "Cámaras", icon: Video },
-  { id: "equipo", label: "Equipo", icon: Users },
-  { id: "sitio", label: "Sitio web", icon: Images },
+  {
+    id: "canchas",
+    label: "Canchas y precios",
+    icon: Tag,
+    hint: "Cuántas canchas hay, cómo se llaman y cuánto sale el turno.",
+    save: "form",
+  },
+  {
+    id: "horarios",
+    label: "Horarios",
+    icon: Clock,
+    hint: "Qué días abre el club, de qué hora a qué hora y cuánto dura cada turno.",
+    save: "form",
+  },
+  {
+    id: "cobros",
+    label: "Cobros",
+    icon: CreditCard,
+    hint: "La seña que se pide al reservar y los datos para transferir.",
+    save: "form",
+  },
+  {
+    id: "cierres",
+    label: "Cierres",
+    title: "Días de cierre extraordinario",
+    icon: CalendarX,
+    hint: "Feriados, mantenimiento o eventos: ese día no se puede reservar ni en la web ni en la agenda.",
+    save: "form",
+  },
+  {
+    id: "club",
+    label: "Club",
+    icon: Store,
+    hint: "El WhatsApp al que escriben los clientes desde la web.",
+    save: "form",
+  },
+  {
+    id: "camaras",
+    label: "Cámaras",
+    icon: Video,
+    hint: "Los links de Beelup o YouTube que se ven en el inicio, uno por cancha.",
+    save: "form",
+  },
+  {
+    id: "equipo",
+    label: "Equipo",
+    icon: Users,
+    hint: "Quién usa el panel. Cada uno firma con su PIN lo que borra o cancela.",
+    save: "pin",
+  },
+  {
+    id: "sitio",
+    label: "Sitio web",
+    icon: Images,
+    hint: "Fotos, ubicación y galería de torneos de la página.",
+    save: "live",
+  },
 ];
+const SECTION_BY_ID = Object.fromEntries(SECTIONS.map((s) => [s.id, s]));
+
+const SAVE_TAGS = {
+  form: { icon: Save, text: "Se aplica al tocar Guardar" },
+  pin: { icon: KeyRound, text: "Cada cambio se confirma con PIN" },
+  live: { icon: Zap, text: "Se publica al instante" },
+};
+
+const SHORT_DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const toMin = (hhmm) => {
+  const [h, m] = String(hhmm || "0:0").split(":").map(Number);
+  return h * 60 + m;
+};
+const hourLabel = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}`;
+const monthShort = new Intl.DateTimeFormat("es-AR", {
+  month: "short",
+  timeZone: "UTC",
+});
+const initials = (name) =>
+  String(name || "?")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() || "")
+    .join("");
+
+/** Encabezado de cada sección: número, título, para qué sirve y cómo se guarda. */
+function SectionHead({ id, dirty }) {
+  const index = SECTIONS.findIndex((s) => s.id === id);
+  const { label, title, icon: Icon, hint, save } = SECTIONS[index];
+  const tag = SAVE_TAGS[save];
+  return (
+    <header className="admin-cfg-head">
+      <span className="admin-cfg-head-num" aria-hidden>
+        {String(index + 1).padStart(2, "0")}
+      </span>
+      <div className="admin-cfg-head-text">
+        <h3 className="admin-section-title">
+          <Icon {...ICON} /> {title || label}
+        </h3>
+        <p className="admin-cfg-head-hint">{hint}</p>
+      </div>
+      <span className={`admin-cfg-save-tag is-${save}${dirty ? " is-dirty" : ""}`}>
+        <tag.icon size={14} strokeWidth={2} aria-hidden />
+        {dirty ? "Con cambios sin guardar" : tag.text}
+      </span>
+    </header>
+  );
+}
+
+/**
+ * La semana como grilla: una columna por día y cada turno como una cancha
+ * azul a su hora. Se redibuja mientras se editan los horarios de abajo, así
+ * se ve el efecto antes de guardar. Tocar un día lleva a su fila.
+ */
+function WeekGrid({ form, onPickDay }) {
+  const days = WEEK_ORDER.map((weekday) => {
+    const day = form.schedule[weekday];
+    if (!day.open) return { weekday, open: false, slots: [] };
+    const date = nextDateFor(weekday);
+    const open = toMin(day.start);
+    const slots = slotTimesFor({ ...form, blockedDates: [] }, date).map((s) => {
+      const raw = toMin(s.start);
+      // Los turnos de la madrugada son de esa misma noche.
+      const from = raw < open ? raw + 1440 : raw;
+      return {
+        ...s,
+        from,
+        to: from + form.slotDurationMin,
+        pico: bandFor(form, date, s.start) === "pico",
+      };
+    });
+    return { weekday, open: true, slots };
+  });
+  const all = days.flatMap((d) => d.slots);
+  const min = all.length ? Math.floor(Math.min(...all.map((s) => s.from)) / 60) * 60 : 8 * 60;
+  const max = all.length ? Math.ceil(Math.max(...all.map((s) => s.to)) / 60) * 60 : 24 * 60;
+  const span = Math.max(60, max - min);
+  const hours = [];
+  for (let m = min; m <= max; m += 60) hours.push(m);
+  const pct = (m) => `${((m - min) / span) * 100}%`;
+  const perCourt = all.length;
+  const courts = form.courts.length;
+
+  return (
+    <figure className="admin-cfg-week" style={{ "--hours": span / 60 }}>
+      <figcaption className="admin-cfg-week-cap">
+        <strong>{plural(perCourt, "turno", "turnos")} por semana en cada cancha</strong>
+        {courts > 1 && (
+          <span>
+            {" "}
+            · {perCourt * courts} entre las {courts} canchas
+          </span>
+        )}
+      </figcaption>
+      <div className="admin-cfg-week-grid">
+        <span className="admin-cfg-week-corner" aria-hidden />
+        {days.map(({ weekday, open, slots }) => (
+          <button
+            key={weekday}
+            type="button"
+            className={`admin-cfg-week-day${open ? "" : " is-closed"}`}
+            onClick={() => onPickDay(weekday)}
+            aria-label={`${WEEKDAYS[weekday]}: ${open ? plural(slots.length, "turno", "turnos") : "cerrado"}. Ir a editar`}
+          >
+            <strong>{SHORT_DAYS[weekday]}</strong>
+            <small>{open ? slots.length : "—"}</small>
+          </button>
+        ))}
+
+        <div className="admin-cfg-week-axis" aria-hidden>
+          {hours.map((m) => (
+            <span key={m} style={{ top: pct(m) }}>
+              {hourLabel(m)}
+            </span>
+          ))}
+        </div>
+        {days.map(({ weekday, open, slots }) => (
+          <div
+            key={weekday}
+            className={`admin-cfg-week-col${open ? "" : " is-closed"}`}
+            aria-hidden
+          >
+            {open ? (
+              slots.map((s) => (
+                <span
+                  key={s.start}
+                  className={`admin-cfg-week-slot${s.pico ? " is-pico" : ""}`}
+                  style={{ top: pct(s.from), height: pct(min + (s.to - s.from)) }}
+                  title={`${WEEKDAYS[weekday]} ${s.start} a ${s.end}${s.pico ? " · pico" : ""}`}
+                >
+                  <span>{s.start}</span>
+                </span>
+              ))
+            ) : (
+              <span className="admin-cfg-week-closed">Cerrado</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <ul className="admin-cfg-week-legend" aria-hidden>
+        <li>
+          <i className="is-turno" /> Turno{form.pricing.picoEnabled ? " valle" : ""}
+        </li>
+        {form.pricing.picoEnabled && (
+          <li>
+            <i className="is-pico" /> Turno pico (desde {form.pricing.picoDesde})
+          </li>
+        )}
+        <li>
+          <i className="is-closed" /> Cerrado
+        </li>
+      </ul>
+    </figure>
+  );
+}
 
 /** Próximo día de la semana `weekday` desde hoy, para previsualizar turnos. */
 function nextDateFor(weekday) {
@@ -98,6 +311,7 @@ export default function ConfiguracionView({
   const [newBlockedDate, setNewBlockedDate] = useState("");
   const [showCbu, setShowCbu] = useState(false);
   const [activeSection, setActiveSection] = useState("canchas");
+  const navRef = useRef(null);
 
   // Equipo (PINs de staff)
   const [staff, setStaff] = useState(null);
@@ -187,6 +401,53 @@ export default function ConfiguracionView({
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [isDirty]);
+
+  // Qué secciones tienen cambios sin guardar: se marcan en el índice y en
+  // la barra de guardar, para saber exactamente qué se va a aplicar.
+  const dirtySections = useMemo(() => {
+    if (!form || !saved) return [];
+    const picks = {
+      canchas: (c) => [c.courts.map(({ name, type }) => [name, type]), c.pricing],
+      horarios: (c) => [c.slotDurationMin, c.schedule],
+      cobros: (c) => [c.depositPct, c.paymentAlias, c.paymentTitular, c.paymentCbu],
+      cierres: (c) => c.blockedDates,
+      club: (c) => c.clubPhone,
+      camaras: (c) => [c.beelupUrl, c.courts.map((x) => x.streamUrl || "")],
+    };
+    return Object.keys(picks).filter(
+      (id) => JSON.stringify(picks[id](form)) !== JSON.stringify(picks[id](saved)),
+    );
+  }, [form, saved]);
+
+  // El índice sigue al scroll: queda marcada la sección que se está viendo.
+  const ready = Boolean(form);
+  useEffect(() => {
+    if (!ready || typeof IntersectionObserver === "undefined") return;
+    const els = SECTIONS.map(({ id }) => document.getElementById(`cfg-${id}`)).filter(Boolean);
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const top = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (top) setActiveSection(top.target.id.slice(4));
+      },
+      { rootMargin: "-12% 0px -72% 0px" },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [ready]);
+
+  // En el celu el índice es una tira horizontal: la sección activa se corre
+  // al medio para que no quede escondida fuera de la pantalla.
+  useEffect(() => {
+    const nav = navRef.current;
+    const btn = nav?.querySelector('[aria-current="true"]');
+    if (!nav || !btn || nav.scrollWidth <= nav.clientWidth) return;
+    nav.scrollTo({
+      left: btn.offsetLeft - nav.clientWidth / 2 + btn.offsetWidth / 2,
+      behavior: "smooth",
+    });
+  }, [activeSection]);
 
   if (!form) {
     return (
@@ -286,11 +547,23 @@ export default function ConfiguracionView({
     }
   }
 
+  const smooth = () =>
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+
   function goTo(id) {
     setActiveSection(id);
     document
       .getElementById(`cfg-${id}`)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      ?.scrollIntoView({ behavior: smooth(), block: "start" });
+  }
+
+  // Desde la grilla de la semana: lleva a la fila de ese día y la enfoca.
+  function pickDay(weekday) {
+    const el =
+      document.getElementById(`cfg-day-${weekday}-start`) ||
+      document.getElementById(`cfg-day-${weekday}-open`);
+    el?.scrollIntoView({ behavior: smooth(), block: "center" });
+    el?.focus({ preventScroll: true });
   }
 
   const err = (key) =>
@@ -305,32 +578,102 @@ export default function ConfiguracionView({
   const autoPerPlayer = (court) => Math.round((Number(court) || 0) / 4);
   const cbuDigits = form.paymentCbu.replace(/\D/g, "");
   const cbuInvalid = cbuDigits.length > 0 && cbuDigits.length !== 22;
+  const isSectionDirty = (id) => dirtySections.includes(id);
+  const dirtyLabels = dirtySections.map((id) => SECTION_BY_ID[id].label);
+  const depositPctShown = Math.min(100, Math.max(0, Number(form.depositPct) || 0));
+  const depositSample = depositFor(form, valle.court);
+  const phoneDigits = form.clubPhone.replace(/\D/g, "");
+  const isHttp = (url) => /^https?:\/\//i.test(String(url || "").trim());
 
   return (
-    <div className="admin-settings">
+    <div className="admin-settings admin-cfg">
       <nav
-        className="admin-settings-nav"
+        ref={navRef}
+        className="admin-settings-nav admin-cfg-nav"
         aria-label="Secciones de configuración"
       >
-        {SECTIONS.map(({ id, label, icon: Icon }) => (
+        <p className="admin-cfg-nav-title" aria-hidden>
+          Índice
+        </p>
+        {SECTIONS.map(({ id, label, icon: Icon }, i) => (
           <button
             key={id}
             type="button"
             aria-current={activeSection === id ? "true" : undefined}
             onClick={() => goTo(id)}
           >
+            <span className="admin-cfg-nav-num" aria-hidden>
+              {String(i + 1).padStart(2, "0")}
+            </span>
             <Icon {...ICON} />
-            {label}
+            <span className="admin-cfg-nav-label">{label}</span>
+            {isSectionDirty(id) && (
+              <span className="admin-cfg-nav-dot" title="Con cambios sin guardar">
+                <span className="sr-only">(con cambios sin guardar)</span>
+              </span>
+            )}
           </button>
         ))}
+        <div className="admin-cfg-nav-legend" aria-hidden>
+          {Object.entries(SAVE_TAGS).map(([k, t]) => (
+            <span key={k} className={`is-${k}`}>
+              <t.icon size={13} strokeWidth={2} /> {t.text}
+            </span>
+          ))}
+        </div>
       </nav>
 
       <div className="admin-settings-body">
+        {/* Portada: la cancha del club con un resumen y el estado de guardado. */}
+        <div className={`admin-cfg-hero${isDirty ? " is-dirty" : ""}`}>
+          <div className="admin-cfg-hero-text">
+            <p className="admin-cfg-hero-kicker">Así está armado el club hoy</p>
+            <ul className="admin-cfg-hero-facts">
+              <li>
+                <strong>{form.courts.length}</strong>
+                {form.courts.length === 1 ? "cancha" : "canchas"}
+              </li>
+              <li>
+                <strong>{form.slotDurationMin}</strong>min por turno
+              </li>
+              <li>
+                <strong>{formatARS(valle.court)}</strong>
+                {form.pricing.picoEnabled ? "turno valle" : "el turno"}
+              </li>
+              <li>
+                <strong>{form.depositPct}%</strong>de seña
+              </li>
+            </ul>
+          </div>
+          <div className="admin-cfg-hero-status" role="status">
+            {isDirty ? (
+              <>
+                <span className="admin-cfg-ball" aria-hidden />
+                <span>
+                  <strong>Cambios sin guardar</strong>
+                  <small>
+                    {dirtyLabels.length ? dirtyLabels.join(" · ") : "Revisalos y tocá Guardar"}
+                  </small>
+                </span>
+              </>
+            ) : (
+              <>
+                <Check size={18} strokeWidth={2.5} aria-hidden />
+                <span>
+                  <strong>Todo guardado</strong>
+                  <small>Probá tranquilo: nada se aplica hasta tocar Guardar</small>
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* CANCHAS Y PRECIOS */}
-        <section id="cfg-canchas" className="admin-settings-card">
-          <h3 className="admin-section-title">
-            <Tag {...ICON} /> Canchas y precios
-          </h3>
+        <section
+          id="cfg-canchas"
+          className={`admin-settings-card admin-cfg-card${isSectionDirty("canchas") ? " is-dirty" : ""}`}
+        >
+          <SectionHead id="canchas" dirty={isSectionDirty("canchas")} />
 
           <div className="admin-field">
             <label className="admin-field-label" htmlFor="cfg-court-count">
@@ -363,9 +706,12 @@ export default function ConfiguracionView({
             </p>
           </div>
 
-          <div className="admin-court-names">
+          <div className="admin-court-names admin-cfg-courts">
             {form.courts.map((c, i) => (
-              <div key={c.id} className="admin-field-row">
+              <div key={c.id} className="admin-field-row admin-cfg-court">
+                <span className="admin-cfg-court-mini" aria-hidden>
+                  {i + 1}
+                </span>
                 <div className="admin-field">
                   <label
                     className="admin-field-label"
@@ -402,7 +748,7 @@ export default function ConfiguracionView({
           </div>
           {err("courts")}
 
-          <label className="admin-toggle">
+          <label className="admin-toggle admin-cfg-switch admin-cfg-pico-toggle">
             <input
               type="checkbox"
               checked={form.pricing.picoEnabled}
@@ -427,7 +773,7 @@ export default function ConfiguracionView({
                 ? [["pico", "Horario pico", pico]]
                 : []),
             ].map(([band, label, value]) => (
-              <fieldset key={band} className="admin-price-band">
+              <fieldset key={band} className={`admin-price-band is-${band}`}>
                 <legend>{label}</legend>
                 <div className="admin-field">
                   <label
@@ -526,10 +872,13 @@ export default function ConfiguracionView({
         </section>
 
         {/* HORARIOS */}
-        <section id="cfg-horarios" className="admin-settings-card">
-          <h3 className="admin-section-title">
-            <Clock {...ICON} /> Horarios
-          </h3>
+        <section
+          id="cfg-horarios"
+          className={`admin-settings-card admin-cfg-card${isSectionDirty("horarios") ? " is-dirty" : ""}`}
+        >
+          <SectionHead id="horarios" dirty={isSectionDirty("horarios")} />
+
+          <WeekGrid form={form} onPickDay={pickDay} />
 
           <div className="admin-field" style={{ maxWidth: 220 }}>
             <label className="admin-field-label" htmlFor="cfg-duration">
@@ -559,9 +908,13 @@ export default function ConfiguracionView({
                   )
                 : [];
               return (
-                <div key={weekday} className="admin-schedule-row">
-                  <label className="admin-toggle">
+                <div
+                  key={weekday}
+                  className={`admin-schedule-row${day.open ? "" : " is-closed"}`}
+                >
+                  <label className="admin-toggle admin-cfg-switch">
                     <input
+                      id={`cfg-day-${weekday}-open`}
                       type="checkbox"
                       checked={day.open}
                       onChange={(e) =>
@@ -575,6 +928,7 @@ export default function ConfiguracionView({
                   {day.open ? (
                     <>
                       <input
+                        id={`cfg-day-${weekday}-start`}
                         type="time"
                         aria-label={`Apertura ${WEEKDAYS[weekday]}`}
                         value={day.start}
@@ -591,14 +945,16 @@ export default function ConfiguracionView({
                           setDay(weekday, { end: e.target.value })
                         }
                       />
-                      <span className="admin-field-hint">
-                        {plural(preview.length, "turno", "turnos")}
+                      <span className="admin-field-hint admin-cfg-day-sum">
+                        <strong>{plural(preview.length, "turno", "turnos")}</strong>
                         {preview.length > 0 &&
                           ` · ${preview[0].start} a ${preview[preview.length - 1].end}`}
                       </span>
                     </>
                   ) : (
-                    <span className="admin-field-hint">Cerrado</span>
+                    <span className="admin-field-hint admin-cfg-day-sum">
+                      Cerrado: no se puede reservar
+                    </span>
                   )}
                   {err(`schedule.${weekday}`)}
                 </div>
@@ -612,10 +968,11 @@ export default function ConfiguracionView({
         </section>
 
         {/* COBROS */}
-        <section id="cfg-cobros" className="admin-settings-card">
-          <h3 className="admin-section-title">
-            <CreditCard {...ICON} /> Cobros
-          </h3>
+        <section
+          id="cfg-cobros"
+          className={`admin-settings-card admin-cfg-card${isSectionDirty("cobros") ? " is-dirty" : ""}`}
+        >
+          <SectionHead id="cobros" dirty={isSectionDirty("cobros")} />
 
           <div className="admin-field" style={{ maxWidth: 260 }}>
             <label className="admin-field-label" htmlFor="cfg-deposit">
@@ -631,9 +988,24 @@ export default function ConfiguracionView({
             />
             <p className="admin-field-hint">
               Un turno de {formatARS(valle.court)} pide{" "}
-              {formatARS(depositFor(form, valle.court))} de seña.
+              {formatARS(depositSample)} de seña.
             </p>
             {err("depositPct")}
+          </div>
+
+          {/* La seña dibujada sobre el precio del turno: se entiende de un vistazo. */}
+          <div className="admin-cfg-deposit" aria-hidden>
+            <div className="admin-cfg-deposit-bar">
+              <span style={{ width: `${depositPctShown}%` }} />
+            </div>
+            <div className="admin-cfg-deposit-legend">
+              <span className="is-deposit">
+                Seña <strong>{formatARS(depositSample)}</strong>
+              </span>
+              <span>
+                En el club <strong>{formatARS(Math.max(0, valle.court - depositSample))}</strong>
+              </span>
+            </div>
           </div>
 
           <div className="admin-field-row">
@@ -715,14 +1087,11 @@ export default function ConfiguracionView({
         </section>
 
         {/* CIERRES */}
-        <section id="cfg-cierres" className="admin-settings-card">
-          <h3 className="admin-section-title">
-            <CalendarX {...ICON} /> Días de cierre extraordinario
-          </h3>
-          <p className="admin-field-hint" style={{ marginTop: 0 }}>
-            Feriados, mantenimiento o eventos: ese día no se puede reservar ni
-            en la web ni en la agenda.
-          </p>
+        <section
+          id="cfg-cierres"
+          className={`admin-settings-card admin-cfg-card${isSectionDirty("cierres") ? " is-dirty" : ""}`}
+        >
+          <SectionHead id="cierres" dirty={isSectionDirty("cierres")} />
           <div className="admin-inline-form">
             <input
               type="date"
@@ -741,12 +1110,24 @@ export default function ConfiguracionView({
             </button>
           </div>
           {form.blockedDates.length === 0 ? (
-            <p className="admin-field-hint">No hay días bloqueados.</p>
+            <p className="admin-field-hint admin-cfg-empty">
+              No hay días bloqueados: se puede reservar todos los días que abre el club.
+            </p>
           ) : (
-            <ul className="admin-chip-list">
+            <ul className="admin-chip-list admin-cfg-closed">
               {form.blockedDates.map((d) => (
                 <li key={d} className="admin-chip">
-                  {formatDate(d, "long")}
+                  <span className="admin-cfg-closed-date" aria-hidden>
+                    <strong>{Number(d.slice(8))}</strong>
+                    <small>
+                      {monthShort
+                        .format(new Date(`${d}T12:00:00Z`))
+                        .replace(".", "")}
+                    </small>
+                  </span>
+                  <span className="admin-cfg-closed-label">
+                    {formatDate(d, "long")}
+                  </span>
                   <button
                     type="button"
                     onClick={() =>
@@ -765,10 +1146,11 @@ export default function ConfiguracionView({
         </section>
 
         {/* CLUB */}
-        <section id="cfg-club" className="admin-settings-card">
-          <h3 className="admin-section-title">
-            <Store {...ICON} /> Club
-          </h3>
+        <section
+          id="cfg-club"
+          className={`admin-settings-card admin-cfg-card${isSectionDirty("club") ? " is-dirty" : ""}`}
+        >
+          <SectionHead id="club" dirty={isSectionDirty("club")} />
           <div className="admin-field" style={{ maxWidth: 320 }}>
             <label className="admin-field-label" htmlFor="cfg-phone">
               WhatsApp del club
@@ -783,15 +1165,27 @@ export default function ConfiguracionView({
             <p className="admin-field-hint">
               Con código de país, sin espacios: 549…
             </p>
+            {phoneDigits.length >= 10 && (
+              <a
+                className="admin-cfg-try"
+                href={`https://wa.me/${phoneDigits}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink size={14} strokeWidth={2} aria-hidden /> Probar
+                el número en WhatsApp
+              </a>
+            )}
           </div>
         </section>
 
         {/* CÁMARAS (Beelup) */}
-        <section id="cfg-camaras" className="admin-settings-card">
-          <h3 className="admin-section-title">
-            <Video {...ICON} /> Cámaras
-          </h3>
-          <p className="admin-field-hint" style={{ marginTop: 0 }}>
+        <section
+          id="cfg-camaras"
+          className={`admin-settings-card admin-cfg-card${isSectionDirty("camaras") ? " is-dirty" : ""}`}
+        >
+          <SectionHead id="camaras" dirty={isSectionDirty("camaras")} />
+          <p className="admin-field-hint admin-cfg-lead">
             Se ven en el inicio, en la sección de cámaras debajo de las
             reservas. Al guardar, la página se actualiza sola. Cada cancha
             acepta la transmisión de YouTube que arma Beelup (recomendado: se
@@ -817,13 +1211,42 @@ export default function ConfiguracionView({
             {err("beelupUrl")}
           </div>
 
+          <div className="admin-cfg-cams">
           {form.courts.map((c, i) => {
             const info = beelupStreamInfo(c.streamUrl);
+            const isYoutube = Boolean(c.streamUrl && youtubeEmbedUrl(c.streamUrl));
+            // Estado de la cámara de un vistazo, con las mismas reglas que la ayuda de abajo.
+            const status = !c.streamUrl
+              ? { tone: "off", text: "Sin link · muestra el loop" }
+              : isYoutube
+                ? { tone: "ok", text: "YouTube" }
+                : info.expired
+                  ? { tone: "bad", text: "Link vencido" }
+                  : { tone: "ok", text: "Beelup" };
             return (
-              <div key={c.id} className="admin-field">
-                <label className="admin-field-label" htmlFor={`cfg-stream-${i}`}>
-                  Cámara en vivo · {c.name || `Cancha ${i + 1}`}
-                </label>
+              <div key={c.id} className={`admin-field admin-cfg-cam is-${status.tone}`}>
+                <div className="admin-cfg-cam-head">
+                  <span className="admin-cfg-court-mini" aria-hidden>
+                    {i + 1}
+                  </span>
+                  <label className="admin-field-label" htmlFor={`cfg-stream-${i}`}>
+                    Cámara en vivo · {c.name || `Cancha ${i + 1}`}
+                  </label>
+                  <span className="admin-cfg-cam-status">
+                    <span aria-hidden className="admin-cfg-cam-led" />
+                    {status.text}
+                  </span>
+                  {isHttp(c.streamUrl) && (
+                    <a
+                      className="admin-cfg-try"
+                      href={c.streamUrl.trim()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink size={14} strokeWidth={2} aria-hidden /> Abrir
+                    </a>
+                  )}
+                </div>
                 <input
                   id={`cfg-stream-${i}`}
                   type="url"
@@ -860,14 +1283,13 @@ export default function ConfiguracionView({
               </div>
             );
           })}
+          </div>
         </section>
 
         {/* EQUIPO */}
-        <section id="cfg-equipo" className="admin-settings-card">
-          <h3 className="admin-section-title">
-            <Users {...ICON} /> Equipo
-          </h3>
-          <p className="admin-field-hint" style={{ marginTop: 0 }}>
+        <section id="cfg-equipo" className="admin-settings-card admin-cfg-card">
+          <SectionHead id="equipo" />
+          <p className="admin-field-hint admin-cfg-lead">
             Cada integrante tiene su propio PIN (4 a 6 números): lo pide el
             panel al cancelar o eliminar un turno, anular una venta, etc., así
             queda registrado quién hizo el cambio.
@@ -878,32 +1300,24 @@ export default function ConfiguracionView({
           ) : (
             <>
               {staff.length > 0 && (
-                <ul
-                  className="admin-chip-list"
-                  style={{
-                    flexDirection: "column",
-                    alignItems: "stretch",
-                    gap: 8,
-                  }}
-                >
+                <ul className="admin-cfg-staff">
                   {staff.map((m) => (
                     <li
                       key={m.id}
-                      className="admin-field-row"
-                      style={{
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        opacity: m.active ? 1 : 0.55,
-                      }}
+                      className={`admin-cfg-staff-card${m.active ? "" : " is-off"}${staffForm.id === m.id ? " is-editing" : ""}`}
+                      data-role={m.role}
                     >
-                      <div>
-                        <strong>{m.name}</strong>{" "}
-                        <span className="admin-field-hint">
+                      <span className="admin-cfg-avatar" aria-hidden>
+                        {initials(m.name)}
+                      </span>
+                      <div className="admin-cfg-staff-who">
+                        <strong>{m.name}</strong>
+                        <span className="admin-cfg-role">
                           {m.role}
                           {!m.active && " · dado de baja"}
                         </span>
                       </div>
-                      <div style={{ display: "flex", gap: 6 }}>
+                      <div className="admin-cfg-staff-actions">
                         <button
                           type="button"
                           className="btn btn-secondary"
@@ -911,6 +1325,7 @@ export default function ConfiguracionView({
                           aria-label={`Editar a ${m.name}`}
                         >
                           <Pencil size={14} strokeWidth={1.75} aria-hidden />
+                          <span className="admin-cfg-btn-text">Editar</span>
                         </button>
                         <button
                           type="button"
@@ -932,12 +1347,22 @@ export default function ConfiguracionView({
 
               <form
                 onSubmit={onSubmitStaffForm}
-                className="admin-field-row"
-                style={{
-                  marginTop: staff.length > 0 ? 16 : 0,
-                  alignItems: "flex-end",
-                }}
+                className="admin-field-row admin-cfg-staff-form"
+                aria-label={staffForm.id ? `Editar a ${staffForm.name}` : "Sumar integrante"}
               >
+                <p className="admin-cfg-staff-form-title">
+                  {staffForm.id ? (
+                    <>
+                      <Pencil size={14} strokeWidth={2} aria-hidden /> Editando
+                      a un integrante
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={14} strokeWidth={2} aria-hidden />{" "}
+                      {staffNeedsSetup ? "Crear el primer Administrador" : "Sumar a alguien al equipo"}
+                    </>
+                  )}
+                </p>
                 <div className="admin-field">
                   <label className="admin-field-label" htmlFor="cfg-staff-name">
                     Nombre
@@ -1084,12 +1509,22 @@ export default function ConfiguracionView({
 
       {isDirty && (
         <div
-          className="admin-unsaved-bar"
+          className="admin-unsaved-bar admin-cfg-savebar"
           role="region"
           aria-label="Cambios sin guardar"
         >
-          <span>Cambios sin guardar</span>
-          <div style={{ display: "flex", gap: 8 }}>
+          <span className="admin-cfg-savebar-text">
+            <span className="admin-cfg-ball" aria-hidden />
+            <span>
+              <strong>Cambios sin guardar</strong>
+              <small>
+                {dirtyLabels.length
+                  ? `En ${dirtyLabels.join(", ")}. Hasta que no guardes, todo sigue como antes.`
+                  : "Hasta que no guardes, todo sigue como antes."}
+              </small>
+            </span>
+          </span>
+          <div className="admin-cfg-savebar-actions">
             <button
               type="button"
               className="btn btn-secondary"

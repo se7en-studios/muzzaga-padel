@@ -1,2 +1,1830 @@
 /* Rediseño del admin: caja-cantina. Se carga al final (después de padel.css), así que
    pisa lo anterior con la misma especificidad. Todo bajo .admin-root. */
+
+/* ==========================================================================
+   CAJA DEL DÍA Y CANTINA
+   Son pantallas de plata: los montos van en la tipografía de marcador
+   (Barlow Condensed) y con números de ancho fijo, para que $18.000 y
+   $81.000 se lean alineados. Colores de montos: verde = cobrado, naranja =
+   pendiente (solo si hay), negro = el resto.
+   Todo va colgado de .admin-caja / .admin-cantina para no pisar las
+   piezas comunes que rediseña otra parte del panel.
+   ========================================================================== */
+
+.admin-root :is(.admin-caja, .admin-cantina) {
+  --cc-green: #15803d;
+  --cc-green-soft: #e7f6ec;
+  --cc-orange: #c2410c;
+  --cc-orange-soft: #fff1e6;
+  --cc-ball: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  --cc-court-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='3' y='6' width='194' height='88' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.5'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.28'/%3E%3C/svg%3E");
+  --cc-money-font: var(--font-display);
+}
+
+/* Montos: siempre con números tabulares. */
+.admin-root :is(.admin-caja, .admin-cantina) :is(
+  .admin-caja-amount,
+  .admin-caja-num,
+  .admin-product-price,
+  .admin-pos-line-total,
+  .admin-pos-total strong,
+  .admin-sale-total,
+  .admin-order-total,
+  .admin-pos-stats dd,
+  .admin-diff-pill
+) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   CAJA DEL DÍA
+   ========================================================================== */
+
+/* ---------- La cuenta del cajón, sobre la cancha ---------- */
+.admin-root .admin-caja-drawer {
+  position: relative;
+  margin: 0 0 14px;
+  padding: 14px 16px 16px;
+  border: 1px solid #16349a;
+  border-radius: 16px;
+  background-color: #2350d6;
+  background-image:
+    var(--cc-court-lines),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.3), rgba(11, 26, 77, 0.62)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  box-shadow: 0 16px 30px -20px rgba(13, 31, 92, 0.75);
+}
+
+.admin-root .admin-caja-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px 2px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.admin-root .admin-caja-formula {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.2fr);
+  align-items: stretch;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root .admin-caja-formula > li:not(.admin-caja-op) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: 0 6px 16px -10px rgba(0, 0, 0, 0.5);
+}
+
+.admin-root .admin-caja-formula-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-caja-formula small {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-caja-amount {
+  font-family: var(--cc-money-font);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.admin-root .admin-caja-amount.is-cobrado {
+  color: var(--cc-green);
+}
+
+/* Los signos de la cuenta, en una pelotita de pádel. */
+.admin-root .admin-caja-op {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--cc-ball);
+  color: #1b1b19;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* El resultado: lo que tiene que haber en el cajón, en grande y oscuro. */
+.admin-root .admin-caja-formula > li.is-result {
+  background:
+    radial-gradient(160px 90px at 100% 0, rgba(232, 114, 42, 0.32), transparent 70%),
+    var(--night, #1b1b19);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 10px 22px -10px rgba(0, 0, 0, 0.7);
+}
+
+.admin-root .admin-caja-formula > li.is-result .admin-caja-formula-label,
+.admin-root .admin-caja-formula > li.is-result small {
+  color: #d9d3c5;
+}
+
+.admin-root .admin-caja-formula > li.is-result .admin-caja-amount {
+  font-size: 40px;
+  color: #ffffff;
+}
+
+/* ---------- Fuera del cajón ---------- */
+.admin-root .admin-caja-outside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.admin-root .admin-caja-outside-title {
+  align-self: center;
+  padding-right: 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-caja-method {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 10px 16px 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-root .admin-caja-method > svg {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 50%;
+  background: var(--cc-green-soft);
+  color: var(--cc-green);
+}
+
+.admin-root .admin-caja-method > div {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  column-gap: 12px;
+  min-width: 0;
+}
+
+.admin-root .admin-caja-method span {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-caja-method .admin-caja-amount {
+  font-size: 24px;
+}
+
+.admin-root .admin-caja-method small {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ---------- Tarjetas de egresos y arqueo ---------- */
+.admin-root .admin-caja .admin-cash-grid {
+  gap: 18px;
+}
+
+.admin-root .admin-caja .admin-cash-grid > .admin-settings-card {
+  border-radius: 14px;
+}
+
+/* El arqueo es el paso final del día: lleva el borde de marca arriba. */
+.admin-root .admin-caja .admin-cash-grid > .admin-settings-card:last-child {
+  border-top: 4px solid var(--brand, #e8722a);
+}
+
+.admin-root .admin-caja-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-root .admin-caja-card-total {
+  margin-left: auto;
+  font-family: var(--cc-money-font);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-caja .admin-expense-form .admin-segmented {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-root .admin-caja .admin-expense-form .admin-segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding-inline: 8px;
+  white-space: nowrap;
+}
+
+.admin-root .admin-caja-expense-submit {
+  min-height: 44px;
+  font-weight: 600;
+}
+
+/* Monto con el signo $ adentro del campo: no se confunde con otro número. */
+.admin-root .admin-caja-money {
+  position: relative;
+}
+
+.admin-root .admin-caja-money > span {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 700;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.admin-root .admin-dashboard-layout .admin-caja .admin-caja-money input[inputmode] {
+  width: 100%;
+  padding-left: 28px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-caja-money-lg > span {
+  left: 16px;
+  font-family: var(--cc-money-font);
+  font-size: 26px;
+}
+
+.admin-root .admin-dashboard-layout .admin-caja .admin-caja-money-lg input[inputmode] {
+  min-height: 60px !important;
+  padding-left: 36px;
+  font-family: var(--cc-money-font);
+  font-size: 30px !important;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.admin-root .admin-dashboard-layout .admin-caja .admin-caja-money-lg input[inputmode]::placeholder {
+  font-family: var(--font-inter, Inter), sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* ---------- Lista de egresos ---------- */
+.admin-root .admin-caja .admin-expense-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.admin-root .admin-caja .admin-expense-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-root .admin-caja .admin-expense-concept {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.admin-root .admin-caja .admin-expense-side {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Un egreso no es una alarma: va en negro con su signo menos. */
+.admin-root .admin-caja .admin-expense-side strong {
+  font-family: var(--cc-money-font);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-caja .admin-expense-side .admin-icon-btn-ghost {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.admin-root .admin-caja .admin-expense-side .admin-icon-btn-ghost:hover {
+  background: #fdecec;
+  color: #b91c1c;
+}
+
+.admin-root .admin-caja-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 3px 9px 3px 7px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-caja-cat[data-cat="hielo"] svg { color: #0284c7; }
+.admin-root .admin-caja-cat[data-cat="limpieza"] svg { color: #7c3aed; }
+.admin-root .admin-caja-cat[data-cat="mantenimiento"] svg { color: #b45309; }
+
+/* ---------- Contador de billetes ---------- */
+.admin-root .admin-caja .admin-bill-calc-wrap {
+  margin-top: 10px;
+}
+
+.admin-root .admin-caja .admin-bill-calc-wrap > .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+}
+
+.admin-root .admin-caja .admin-bill-calc {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+/* Cada fila es un billete: el valor en una franja de color, la cantidad
+   y lo que suma ese fajo. */
+.admin-root .admin-caja .admin-bill-field {
+  --bill: #6b7280;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 8px;
+  padding: 6px 8px 6px 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.admin-root .admin-caja .admin-bill-field[data-denom="20000"] { --bill: #b45309; }
+.admin-root .admin-caja .admin-bill-field[data-denom="10000"] { --bill: #1d4ed8; }
+.admin-root .admin-caja .admin-bill-field[data-denom="2000"] { --bill: #0f766e; }
+.admin-root .admin-caja .admin-bill-field[data-denom="1000"] { --bill: #c2410c; }
+.admin-root .admin-caja .admin-bill-field[data-denom="500"] { --bill: #15803d; }
+.admin-root .admin-caja .admin-bill-field[data-denom="200"] { --bill: #7c3aed; }
+.admin-root .admin-caja .admin-bill-field[data-denom="100"] { --bill: #be185d; }
+
+.admin-root .admin-caja .admin-bill-note {
+  grid-row: 1 / 3;
+  min-width: 64px;
+  padding: 8px 6px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 7px),
+    var(--bill);
+  color: #ffffff;
+  font-family: var(--cc-money-font);
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-dashboard-layout .admin-caja .admin-bill-field input[type="number"] {
+  width: 100%;
+  min-height: 36px;
+  padding: 4px 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-caja .admin-bill-sub {
+  padding-left: 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-caja .admin-bill-calc-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-root .admin-caja .admin-bill-calc-foot .admin-link-danger {
+  min-height: 36px;
+}
+
+/* ---------- Marcador del arqueo: esperado vs contado ---------- */
+.admin-root .admin-caja .admin-caja-score {
+  display: block;
+  margin: 14px 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.admin-root .admin-caja-score-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--tone-border);
+}
+
+.admin-root .admin-caja-score-row > div {
+  padding: 10px 14px;
+}
+
+.admin-root .admin-caja-score-row > div + div {
+  border-left: 1px solid var(--tone-border);
+}
+
+.admin-root .admin-caja-score-row dt {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-caja-score-row dd {
+  margin: 2px 0 0;
+  font-family: var(--cc-money-font);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-caja-score-result {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 12px 14px;
+  font-weight: 600;
+}
+
+.admin-root .admin-caja-score-result strong {
+  font-family: var(--cc-money-font);
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-caja-close-btn {
+  min-height: 52px;
+  font-size: 17px;
+}
+
+/* ---------- Avisos de caja cerrada / reabierta ---------- */
+.admin-root .admin-caja .admin-closed-banner {
+  position: relative;
+  overflow: hidden;
+  padding: 16px 18px;
+  border: 1px solid #9fd3b0;
+  border-left: 6px solid var(--cc-green);
+  background:
+    radial-gradient(220px 120px at 100% 0, rgba(21, 128, 61, 0.12), transparent 70%),
+    #effaf2;
+  color: #14532d;
+}
+
+.admin-root .admin-caja .admin-closed-banner > svg {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  border-radius: 50%;
+  background: var(--cc-green);
+  color: #ffffff;
+}
+
+.admin-root .admin-caja .admin-closed-banner strong {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-closed-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-root .admin-closed-banner-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.admin-root .admin-caja .admin-reopen-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 1px solid #f1d29d;
+  border-left: 6px solid var(--brand, #e8722a);
+  border-radius: var(--radius-card);
+  background: #fff7ea;
+  color: #7c2d12;
+  font-size: 14.5px;
+}
+
+.admin-root .admin-caja .admin-reopen-banner > svg {
+  flex-shrink: 0;
+  color: var(--brand, #e8722a);
+}
+
+/* ---------- Historial de cierres ---------- */
+.admin-root .admin-caja .admin-cash-history {
+  margin-top: 28px;
+}
+
+.admin-root .admin-caja th.admin-caja-num,
+.admin-root .admin-caja td.admin-caja-num {
+  text-align: right;
+}
+
+.admin-root .admin-caja td.admin-caja-num {
+  font-weight: 600;
+}
+
+.admin-root .admin-caja .admin-diff-pill {
+  padding: 3px 10px;
+  border: 1px solid var(--tone-border);
+}
+
+/* ---------- Caja en pantallas medianas y celu ---------- */
+@media (max-width: 1180px) {
+  .admin-root .admin-caja-amount {
+    font-size: 28px;
+  }
+
+  .admin-root .admin-caja-formula > li.is-result .admin-caja-amount {
+    font-size: 32px;
+  }
+}
+
+/* Angosto: la cuenta pasa a ser un ticket vertical, renglón por renglón,
+   con el signo a la izquierda. */
+@media (max-width: 900px) {
+  .admin-root .admin-caja-formula {
+    grid-template-columns: 1fr;
+    gap: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 6px 16px -10px rgba(0, 0, 0, 0.5);
+  }
+
+  .admin-root .admin-caja-formula > li:not(.admin-caja-op) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 0;
+    padding: 10px 14px 10px 50px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .admin-root .admin-caja-formula > li:not(.admin-caja-op) .admin-caja-amount {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    text-align: right;
+  }
+
+  .admin-root .admin-caja-formula > li:not(.admin-caja-op) small {
+    grid-column: 1;
+  }
+
+  .admin-root .admin-caja-formula > li.is-result {
+    box-shadow: none;
+  }
+
+  /* El signo queda montado sobre el renglón que sigue. */
+  .admin-root .admin-caja-op {
+    position: relative;
+    z-index: 1;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 -13px 13px;
+    align-self: start;
+    font-size: 19px;
+  }
+
+  .admin-root .admin-caja-formula > li.is-in + .admin-caja-op + li,
+  .admin-root .admin-caja-formula > li.is-out + .admin-caja-op + li {
+    border-top: 1px dashed var(--border-strong);
+  }
+}
+
+@media (max-width: 767px) {
+  .admin-root .admin-caja-drawer {
+    padding: 12px 10px 10px;
+    border-radius: 14px;
+  }
+
+  .admin-root .admin-caja-amount {
+    font-size: 25px;
+  }
+
+  .admin-root .admin-caja-formula > li.is-result .admin-caja-amount {
+    font-size: 30px;
+  }
+
+  .admin-root .admin-caja-formula small {
+    font-size: 12.5px;
+  }
+
+  .admin-root .admin-caja-outside {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .admin-root .admin-caja-method > div {
+    grid-template-columns: minmax(0, 1fr) auto;
+    flex: 1;
+  }
+
+  .admin-root .admin-caja-method .admin-caja-amount {
+    text-align: right;
+  }
+
+  .admin-root .admin-caja .admin-expense-form .admin-segmented {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-root .admin-caja .admin-expense-form .admin-segmented button,
+  .admin-root .admin-caja .admin-bill-calc-wrap > .btn {
+    min-height: 44px;
+  }
+
+  .admin-root .admin-caja .admin-expense-row {
+    align-items: flex-start;
+  }
+
+  .admin-root .admin-caja .admin-expense-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .admin-root .admin-caja .admin-expense-side .admin-icon-btn-ghost {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-root .admin-caja .admin-bill-calc {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-root .admin-dashboard-layout .admin-caja .admin-bill-field input[type="number"] {
+    min-height: 44px;
+  }
+
+  .admin-root .admin-caja .admin-closed-banner-actions {
+    width: 100%;
+  }
+
+  .admin-root .admin-caja .admin-closed-banner-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   CANTINA (punto de venta)
+   ========================================================================== */
+
+.admin-root .admin-cantina .admin-cantina-tabs button {
+  min-height: 40px;
+  padding-inline: 14px;
+  font-weight: 600;
+}
+
+/* ---------- Marcador del bar ---------- */
+.admin-root .admin-pos-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 104' fill='none' stroke='%23e8722a' stroke-width='3' stroke-opacity='.14'%3E%3Crect x='3' y='3' width='194' height='98' rx='4'/%3E%3Cpath d='M100 0v104' stroke-width='5' stroke-dasharray='2 4'/%3E%3Cpath d='M31 3v98M169 3v98M31 52h138'/%3E%3C/svg%3E") right -18px bottom -22px / 120px auto no-repeat,
+    var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-root .admin-pos-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 16px;
+}
+
+.admin-root .admin-pos-stats > div + div {
+  border-left: 1px solid var(--border);
+}
+
+.admin-root .admin-pos-stats dt {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-root .admin-pos-stats dd {
+  margin: 0;
+  font-family: var(--cc-money-font);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+.admin-root .admin-pos-stats dd.is-cobrado {
+  color: var(--cc-green);
+}
+
+.admin-root .admin-pos-stats dd.is-pendiente {
+  color: var(--cc-orange);
+}
+
+/* ---------- Pedidos de la carta ---------- */
+.admin-root .admin-cantina .admin-web-orders {
+  margin-bottom: 18px;
+}
+
+/* Sin pedidos abiertos queda como un renglón: no le roba lugar a la venta. */
+.admin-root .admin-cantina .admin-web-orders.is-quiet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 8px 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-cantina .admin-web-orders.is-quiet > .admin-section-title {
+  margin: 0;
+  font-size: 15px;
+}
+
+.admin-root .admin-cantina .admin-web-orders.is-quiet > .admin-field-hint {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.admin-root .admin-cantina .admin-web-orders.is-quiet > .admin-order-history {
+  flex-basis: 100%;
+  margin-top: 0;
+}
+
+.admin-root .admin-cantina .admin-order-count {
+  background: var(--brand, #e8722a);
+  border-color: var(--brand, #e8722a);
+  color: #ffffff;
+}
+
+/* Cada pedido como una comanda: arriba el código grande y el total. */
+.admin-root .admin-cantina .admin-order-list {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.admin-root .admin-cantina .admin-order {
+  position: relative;
+  gap: 6px;
+  padding: 14px 16px 12px;
+  border: 1px solid var(--border);
+  border-top: 5px solid var(--brand, #e8722a);
+  border-radius: 12px;
+  box-shadow: 0 8px 18px -14px rgba(0, 0, 0, 0.45);
+}
+
+.admin-root .admin-cantina .admin-order.is-preparando {
+  border-top-color: #0284c7;
+}
+
+.admin-root .admin-cantina .admin-order.is-charging {
+  outline: 3px solid var(--brand, #e8722a);
+  outline-offset: 2px;
+}
+
+.admin-root .admin-cantina .admin-order-head {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+.admin-root .admin-cantina .admin-order-code {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.admin-root .admin-cantina .admin-order-total {
+  font-family: var(--cc-money-font);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Sin pagar: el total va en naranja (pendiente); pagado, en verde. */
+.admin-root .admin-cantina .admin-order.is-nuevo .admin-order-total {
+  color: var(--cc-orange);
+}
+
+.admin-root .admin-cantina .admin-order.is-preparando .admin-order-total {
+  color: var(--cc-green);
+}
+
+.admin-root .admin-cantina .admin-order-items {
+  padding: 6px 0;
+  border-top: 1px dashed var(--border-strong);
+  border-bottom: 1px dashed var(--border-strong);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.admin-root .admin-cantina .admin-order-actions .btn {
+  min-height: 44px;
+  padding-inline: 18px;
+  font-weight: 700;
+}
+
+/* ---------- Catálogo ---------- */
+/* Solo desde tablet: en el celu la grilla es de una columna (views.css). */
+@media (min-width: 768px) {
+  .admin-root .admin-cantina .admin-pos {
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 22px;
+  }
+
+  .admin-root .admin-cantina .admin-pos-cart {
+    top: 12px;
+  }
+}
+
+.admin-root .admin-cantina .admin-pos-catalog > .admin-view-toolbar {
+  margin-bottom: 12px;
+}
+
+.admin-root .admin-cantina .admin-pos-search {
+  min-height: 48px;
+  border-width: 2px;
+  border-radius: 12px;
+}
+
+.admin-root .admin-cantina .admin-pos-search:focus-within {
+  border-color: var(--text);
+}
+
+/* Rápidos: los de siempre, a un toque, en una tira. */
+.admin-root .admin-pos-quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.admin-root .admin-pos-quick-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cc-orange);
+}
+
+.admin-root .admin-dashboard-layout .admin-cantina .admin-pos-quick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 4px 14px 4px 10px;
+  border: 1px solid #f3c9a8;
+  border-radius: 999px;
+  background: #fff7f0;
+  color: var(--text);
+  font-size: 14.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.admin-root .admin-dashboard-layout .admin-cantina .admin-pos-quick-btn:hover {
+  border-color: var(--brand, #e8722a);
+  background: #ffefe2;
+}
+
+.admin-root .admin-pos-quick-btn > span:first-child {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.admin-root .admin-pos-quick-btn strong {
+  font-family: var(--cc-money-font);
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Categorías con su ícono. */
+.admin-root .admin-cantina .admin-pos-cats button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  font-weight: 500;
+}
+
+.admin-root .admin-cantina .admin-pos-cats button > span:first-child {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.admin-root .admin-cantina .admin-pos-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-cantina .admin-pos-group-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ---------- Tarjeta de producto ---------- */
+.admin-root .admin-cantina .admin-product-grid {
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  gap: 10px;
+}
+
+.admin-root .admin-cantina .admin-product {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  justify-content: stretch;
+  gap: 4px;
+  min-height: 112px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--cat, #999) 9%, transparent), transparent 55%),
+    var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* El ícono ahora es un elemento propio (arriba a la izquierda): se apaga el
+   de fondo que ponía padel.css. */
+.admin-root .admin-cantina .admin-product::after {
+  content: none;
+}
+
+.admin-root .admin-cantina .admin-product::before {
+  width: 4px;
+}
+
+.admin-root .admin-product-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--cat, #999) 14%, #ffffff);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.admin-root .admin-cantina .admin-product-name {
+  align-self: start;
+  padding-right: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-root .admin-cantina .admin-product-price {
+  font-family: var(--cc-money-font);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.admin-root .admin-cantina .admin-product:hover {
+  border-color: var(--text-muted);
+  box-shadow: 0 8px 16px -10px rgba(0, 0, 0, 0.35);
+}
+
+.admin-root .admin-cantina .admin-product:focus-visible {
+  outline: 3px solid #2350d6;
+  outline-offset: 2px;
+}
+
+.admin-root .admin-cantina .admin-product.is-in-cart {
+  border-color: var(--brand, #e8722a);
+  box-shadow: 0 0 0 1px var(--brand, #e8722a), 0 8px 16px -12px rgba(194, 65, 12, 0.6);
+  background:
+    linear-gradient(160deg, rgba(232, 114, 42, 0.14), transparent 60%),
+    #fffaf6;
+}
+
+/* Cuántos hay en la venta: una pelotita de pádel con el número. */
+.admin-root .admin-cantina .admin-product-qty {
+  top: 8px;
+  right: 8px;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 7px;
+  border: 2px solid #ffffff;
+  background: var(--cc-ball);
+  color: #1b1b19;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- Venta actual: el ticket ---------- */
+.admin-root .admin-cantina .admin-pos-cart {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: 0 18px 36px -22px rgba(0, 0, 0, 0.45);
+}
+
+.admin-root .admin-cantina .admin-pos-cart-inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-root .admin-cantina .admin-pos-cart-head {
+  margin: 0;
+  padding: 14px 18px;
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 9px),
+    var(--night, #1b1b19);
+  color: #ffffff;
+}
+
+.admin-root .admin-cantina .admin-pos-cart-head .admin-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+}
+
+.admin-root .admin-cantina .admin-pos-cart-head .admin-section-title::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--cc-ball);
+  box-shadow: 0 0 8px rgba(215, 240, 58, 0.55);
+}
+
+.admin-root .admin-pos-cart-count {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  font-family: var(--font-inter, Inter), sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #f3f1e9;
+}
+
+.admin-root .admin-cantina .admin-pos-cart-head .admin-link-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  color: #f3f1e9;
+}
+
+.admin-root .admin-cantina .admin-pos-cart-head .admin-pos-sheet-close {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: transparent;
+}
+
+.admin-root .admin-cantina .admin-order-charging {
+  margin: 12px 18px 0;
+  border: 1px solid #f3c9a8;
+}
+
+.admin-root .admin-pos-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 18px 4px;
+  text-align: center;
+}
+
+.admin-root .admin-pos-empty img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.12));
+}
+
+.admin-root .admin-pos-empty p {
+  margin: 0;
+}
+
+.admin-root .admin-cantina .admin-pos-lines {
+  margin: 0;
+  padding: 4px 18px;
+}
+
+.admin-root .admin-cantina .admin-pos-lines li {
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border-strong);
+}
+
+.admin-root .admin-pos-line-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.admin-root .admin-cantina .admin-pos-line-name {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.admin-root .admin-cantina .admin-pos-line-name small {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-cantina .admin-pos-qty button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.admin-root .admin-cantina .admin-pos-qty strong {
+  min-width: 22px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-cantina .admin-pos-line-total {
+  font-family: var(--cc-money-font);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.admin-root .admin-cantina .admin-pos-remove:hover {
+  color: #b91c1c;
+}
+
+/* Total con corte de ticket arriba. */
+.admin-root .admin-cantina .admin-pos-total {
+  position: relative;
+  margin: 4px 0 0;
+  padding: 14px 18px 12px;
+  align-items: center;
+  background: var(--surface-muted);
+  border-top: 2px dashed var(--border-strong);
+}
+
+.admin-root .admin-cantina .admin-pos-total span {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-cantina .admin-pos-total strong {
+  font-family: var(--cc-money-font);
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+/* Medios de pago: cuatro botones grandes con ícono. */
+.admin-root .admin-cantina .admin-pos-methods {
+  gap: 8px;
+  margin: 0;
+  padding: 4px 18px 0;
+  border: none;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-dashboard-layout .admin-cantina .admin-pos-methods button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 14.5px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.admin-root .admin-dashboard-layout .admin-cantina .admin-pos-methods button:hover {
+  border-color: var(--text-muted);
+}
+
+.admin-root .admin-dashboard-layout .admin-cantina .admin-pos-methods button[aria-pressed="true"] {
+  border-color: var(--night, #1b1b19);
+  background: var(--night, #1b1b19);
+  color: #ffffff;
+  box-shadow: inset 0 -3px 0 #d7f03a;
+}
+
+/* "A cuenta" no es plata cobrada: elegido, se marca en naranja. */
+.admin-root .admin-dashboard-layout .admin-cantina .admin-pos-methods button[data-method="cuenta"][aria-pressed="true"] {
+  border-color: var(--cc-orange);
+  background: var(--cc-orange-soft);
+  color: var(--cc-orange);
+  box-shadow: inset 0 -3px 0 var(--cc-orange);
+}
+
+.admin-root .admin-cantina .admin-pos-cart-inner > .admin-field {
+  margin: 0 !important;
+  padding: 10px 18px 0;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-cantina .admin-pos-cart .admin-pos-charge {
+  margin: 0;
+  border-radius: 0 0 16px 16px;
+  min-height: 64px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* El botón de cobrar arranca después de la franja gris, como el pie del
+   ticket. */
+.admin-root .admin-cantina .admin-pos-cart-inner::after {
+  content: none;
+}
+
+.admin-root .admin-cantina .admin-pos-methods + .admin-pos-charge,
+.admin-root .admin-cantina .admin-pos-cart-inner > .admin-field + .admin-pos-charge {
+  border-top: 14px solid var(--surface-muted);
+  background-clip: padding-box;
+}
+
+.admin-root .admin-cantina .admin-pos-charge[data-method="cuenta"]:not(:disabled) {
+  background: var(--cc-orange);
+}
+
+.admin-root .admin-cantina .admin-pos-charge:disabled {
+  opacity: 1;
+  background-color: #e6e1d6;
+  color: #6b675e;
+  border-color: #e6e1d6;
+  border-top-color: var(--surface-muted);
+}
+
+/* ---------- Ventas del día ---------- */
+.admin-root .admin-cantina .admin-pos-sales {
+  margin-top: 28px;
+}
+
+.admin-root .admin-cantina .admin-pos-sales > .admin-section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-root .admin-cantina .admin-sales-list {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.admin-root .admin-cantina .admin-sales-list li {
+  position: relative;
+  padding: 10px 14px 10px 16px;
+}
+
+/* Franja a la izquierda: verde cobrada, naranja a cuenta. */
+.admin-root .admin-cantina .admin-sales-list li::before {
+  content: "";
+  position: absolute;
+  inset: 8px auto 8px 0;
+  width: 4px;
+  border-radius: 0 3px 3px 0;
+  background: var(--cc-green);
+}
+
+.admin-root .admin-cantina .admin-sales-list li[data-method="cuenta"]::before {
+  background: var(--brand, #e8722a);
+}
+
+.admin-root .admin-cantina .admin-sales-list li.is-voided::before {
+  background: var(--border-strong);
+}
+
+.admin-root .admin-cantina .admin-sale-time {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-cantina .admin-sale-total {
+  font-family: var(--cc-money-font);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cc-green);
+  text-align: right;
+}
+
+.admin-root .admin-cantina .admin-sales-list li[data-method="cuenta"] .admin-sale-total {
+  color: var(--cc-orange);
+}
+
+.admin-root .admin-cantina .admin-sales-list li.is-voided .admin-sale-total {
+  color: var(--text-muted);
+}
+
+.admin-root .admin-cantina .admin-sale-actions .admin-table-action-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+}
+
+.admin-root .admin-cantina .admin-sale-actions .admin-table-action-btn.delete {
+  color: #dc2626;
+}
+
+/* ---------- Animaciones cortas (solo si la persona no las desactivó) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-cantina .admin-product-qty {
+    animation: ccBallPop 0.22s ease-out;
+  }
+
+  .admin-root .admin-cantina .admin-product:active {
+    transform: scale(0.97);
+  }
+
+  .admin-root .admin-cantina .admin-pos-lines li {
+    animation: ccLineIn 0.16s ease-out;
+  }
+
+  @keyframes ccBallPop {
+    0% { transform: scale(0.6); }
+    70% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes ccLineIn {
+    from { opacity: 0; transform: translateY(-3px); }
+  }
+}
+
+/* ---------- Cantina en pantallas medianas ---------- */
+@media (max-width: 1180px) and (min-width: 768px) {
+  .admin-root .admin-cantina .admin-pos {
+    grid-template-columns: minmax(0, 1fr) 330px;
+  }
+
+  .admin-root .admin-cantina .admin-pos-total strong {
+    font-size: 38px;
+  }
+}
+
+/* Pantalla grande del mostrador: el ticket un poco más ancho. */
+@media (min-width: 1680px) {
+  .admin-root .admin-cantina .admin-pos {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+
+  .admin-root .admin-cantina .admin-product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+/* ---------- Cantina en el celu ---------- */
+@media (max-width: 767px) {
+  .admin-root .admin-pos-stats > div {
+    padding: 8px 10px;
+  }
+
+  .admin-root .admin-pos-stats dt {
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    white-space: normal;
+  }
+
+  .admin-root .admin-pos-stats dd {
+    font-size: 22px;
+  }
+
+  .admin-root .admin-cantina .admin-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .admin-root .admin-cantina .admin-product {
+    min-height: 106px;
+  }
+
+  .admin-root .admin-pos-quick {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -16px;
+    padding: 2px 16px 6px;
+    scrollbar-width: none;
+  }
+
+  .admin-root .admin-dashboard-layout .admin-cantina .admin-pos-quick-btn {
+    flex-shrink: 0;
+    min-height: 44px;
+  }
+
+  .admin-root .admin-cantina .admin-pos-cats {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -16px;
+    padding: 0 16px 4px;
+    scrollbar-width: none;
+  }
+
+  .admin-root .admin-cantina .admin-pos-cats button {
+    flex-shrink: 0;
+    min-height: 44px;
+  }
+
+  /* El ticket como hoja de abajo: sin bordes redondeados abajo. */
+  .admin-root .admin-cantina .admin-pos-cart {
+    border-radius: 18px 18px 0 0;
+    padding-bottom: 0;
+    background: var(--surface-muted);
+  }
+
+  .admin-root .admin-cantina .admin-pos-cart-inner {
+    background: var(--surface);
+  }
+
+  .admin-root .admin-cantina .admin-pos-lines {
+    max-height: none;
+  }
+
+  .admin-root .admin-cantina .admin-pos-qty button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-root .admin-cantina .admin-pos-remove {
+    width: 40px;
+    height: 44px;
+  }
+
+  .admin-root .admin-cantina .admin-pos-lines li {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    row-gap: 6px;
+  }
+
+  .admin-root .admin-cantina .admin-pos-lines li .admin-pos-qty {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .admin-root .admin-cantina .admin-pos-lines li .admin-pos-line-total {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+
+  .admin-root .admin-cantina .admin-pos-lines li .admin-pos-remove {
+    grid-column: 4;
+    grid-row: 1 / 3;
+  }
+
+  .admin-root .admin-cantina .admin-pos-cart .admin-pos-charge {
+    border-radius: 0;
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Barra de la venta en el celu: oscura, con la pelotita y el total. */
+  .admin-root .admin-cantina .admin-pos-cartbar {
+    right: 16px;
+    min-height: 56px;
+    padding: 0 18px 0 8px;
+    background: var(--night, #1b1b19);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .admin-root .admin-pos-cartbar-ball {
+    display: grid;
+    place-items: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--cc-ball);
+    color: #1b1b19;
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+  .admin-root .admin-cantina .admin-pos-cartbar strong {
+    font-family: var(--cc-money-font);
+    font-size: 24px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .admin-root .admin-cantina .admin-pos-cartbar.is-empty {
+    background: #3a3833;
+  }
+
+  .admin-root .admin-cantina .admin-pos-cartbar.is-empty .admin-pos-cartbar-ball {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+  }
+
+  .admin-root .admin-cantina .admin-order-list {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-root .admin-cantina .admin-sale-actions .admin-table-action-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-root .admin-cantina .admin-sale-actions .admin-tag-btn {
+    min-height: 44px;
+  }
+}
+
+/* ==========================================================================
+   CANTINA → CARTA Y PRECIOS
+   ========================================================================== */
+
+.admin-root .admin-cantina .admin-carta-chip-count {
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.07);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-cantina .admin-pos-cats button[aria-pressed="true"] .admin-carta-chip-count {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-root .admin-cantina .admin-carta-group-title > span:first-child {
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+/* Encabezado de columnas: mismo grid que la fila (views.css). */
+.admin-root .admin-carta-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px 190px 170px 40px 40px;
+  gap: 8px;
+  padding: 0 9px 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-carta-cols > span:first-child {
+  padding-left: 42px;
+}
+
+@container (max-width: 720px) {
+  .admin-root .admin-carta-cols {
+    display: none;
+  }
+}
+
+.admin-root .admin-cantina .admin-carta-row {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.admin-root .admin-carta-emoji {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* El precio pesa más que el resto de la fila: es plata. */
+.admin-root .admin-dashboard-layout .admin-cantina .admin-carta .admin-carta-price input[inputmode="numeric"] {
+  font-weight: 700;
+}
+
+/* Precio tocado: borde naranja hasta que se guarde. */
+.admin-root .admin-dashboard-layout .admin-cantina .admin-carta .admin-carta-price.is-changed input[inputmode="numeric"] {
+  border-color: var(--brand, #e8722a);
+  background: #fff7f0;
+}
+
+.admin-root .admin-cantina .admin-carta-note:not(.admin-field-error) {
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-carta-was {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--cc-orange-soft);
+  color: #7c2d12;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-carta-was s {
+  color: var(--text-muted);
+}
+
+.admin-root .admin-carta-was strong {
+  color: var(--cc-orange);
+}
+
+/* Barra de "cambios sin guardar": oscura, que no pase desapercibida. */
+.admin-root .admin-cantina .admin-unsaved-bar {
+  background: var(--night, #1b1b19);
+  border-top: 3px solid var(--brand, #e8722a);
+  color: #ffffff;
+  box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.admin-root .admin-cantina .admin-carta-unsaved {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-cantina .admin-carta-unsaved small {
+  font-family: var(--font-inter, Inter), sans-serif;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #d9d3c5;
+}
+
+.admin-root .admin-carta-unsaved-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.admin-root .admin-cantina .admin-carta-unsaved-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.admin-root .admin-cantina .admin-carta-unsaved-actions .btn-secondary {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+@media (max-width: 767px) {
+  .admin-root .admin-cantina .admin-unsaved-bar {
+    flex-wrap: wrap;
+    padding-inline: 16px;
+  }
+
+  .admin-root .admin-carta-unsaved-actions {
+    width: 100%;
+  }
+
+  .admin-root .admin-carta-unsaved-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

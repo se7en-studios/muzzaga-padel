@@ -82,6 +82,11 @@ export default function BracketTab({
       ? calc.resolve(final.winner === "a" ? final.b : final.a)
       : null;
   const firstRound = rounds[0];
+  const bracketMatches = rounds
+    .flatMap((r) => r.matches)
+    .filter((m) => !isByeMatch(m));
+  const total = bracketMatches.length;
+  const played = bracketMatches.filter((m) => m.winner).length;
   const waitingGroups = fixture.groups
     .filter((g) => !calc.groupDone[g.id])
     .map((g) => g.id);
@@ -90,21 +95,16 @@ export default function BracketTab({
     <div className="tn-stack">
       {champion && (
         <div className="tn-champion">
-          <Trophy size={40} color="#e8722a" aria-hidden />
+          <span className="tn-champion-cup" aria-hidden>
+            <Trophy size={34} />
+          </span>
           <div>
-            <span
-              style={{
-                fontSize: 13,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "#e8722a",
-              }}
-            >
+            <span className="tn-champion-kicker">
               Campeones {category.name}
             </span>
             <strong>{pairName(pairsById[champion])}</strong>
             {runnerUp && (
-              <span style={{ opacity: 0.8 }}>
+              <span className="tn-champion-sub">
                 Subcampeones: {pairName(pairsById[runnerUp])}
               </span>
             )}
@@ -112,40 +112,48 @@ export default function BracketTab({
         </div>
       )}
 
-      {waitingGroups.length > 0 && fixture.format === "zonas" && (
-        <p className="tn-muted" style={{ margin: 0 }}>
-          {roundName(firstRound.size)}: los nombres aparecen solos cuando
-          termina cada zona (faltan{" "}
-          {waitingGroups.map((g) => `Zona ${g}`).join(", ")}).
-        </p>
-      )}
-
-      <div className="tn-bracket-scroll">
-        <BracketTree
-          className="bk-screen"
-          rounds={rounds}
-          renderMatch={(m) => (
-            <BracketMatch
-              match={m}
-              fixture={fixture}
-              calc={calc}
-              pairsById={pairsById}
-              courts={courts}
-              courtName={courtName}
-              defaultDate={t.dateEnd || t.date}
-              onSave={(payload) => onSaveMatch(category.id, m.id, payload)}
-            />
-          )}
-          champion={
-            <div className={`bk-champ${champion ? " is-set" : ""}`}>
-              <Trophy size={22} aria-hidden />
-              <span>
-                {champion ? shortPairName(pairsById[champion]) : "A definir"}
-              </span>
-            </div>
-          }
-        />
-      </div>
+      <section className="tn-board" aria-label={`Cuadro de ${category.name}`}>
+        <header className="tn-board-head">
+          <span className="tn-board-ball" aria-hidden />
+          <strong className="tn-board-title">{category.name}</strong>
+          <span className="tn-board-meta">
+            {played} de {total} partidos jugados
+          </span>
+        </header>
+        {waitingGroups.length > 0 && fixture.format === "zonas" && (
+          <p className="tn-board-note">
+            {roundName(firstRound.size)}: los nombres aparecen solos cuando
+            termina cada zona (faltan{" "}
+            {waitingGroups.map((g) => `Zona ${g}`).join(", ")}).
+          </p>
+        )}
+        <div className="tn-bracket-scroll">
+          <BracketTree
+            className="bk-screen"
+            rounds={rounds}
+            renderMatch={(m) => (
+              <BracketMatch
+                match={m}
+                fixture={fixture}
+                calc={calc}
+                pairsById={pairsById}
+                courts={courts}
+                courtName={courtName}
+                defaultDate={t.dateEnd || t.date}
+                onSave={(payload) => onSaveMatch(category.id, m.id, payload)}
+              />
+            )}
+            champion={
+              <div className={`bk-champ${champion ? " is-set" : ""}`}>
+                <Trophy size={26} aria-hidden />
+                <span>
+                  {champion ? shortPairName(pairsById[champion]) : "A definir"}
+                </span>
+              </div>
+            }
+          />
+        </div>
+      </section>
     </div>
   );
 }
@@ -184,10 +192,15 @@ function BracketMatch({
       className={`bk-match${m.winner ? " is-played" : ""}${editing ? " is-editing" : ""}`}
     >
       <div className="bk-head">
-        <span>
-          {m.time
-            ? `${dayLabel(m.date)} · ${m.time} · ${courtName(m.court)}`
-            : "Sin horario"}
+        <span className="bk-when">
+          {m.time ? (
+            <>
+              <strong>{m.time}</strong> {dayLabel(m.date)} ·{" "}
+              {courtName(m.court)}
+            </>
+          ) : (
+            "Sin horario"
+          )}
         </span>
         <span className="bk-tools">
           <button

@@ -60,7 +60,13 @@ function weekRange(iso) {
   return { from, to: isoAddDays(from, 6) };
 }
 
-function Delta({ current, previous, goodWhenDown = false, points = false }) {
+function Delta({
+  current,
+  previous,
+  goodWhenDown = false,
+  points = false,
+  title = "vs. período anterior",
+}) {
   if (previous == null || current == null) return null;
   const value = points
     ? Math.round((current - previous) * 10) / 10
@@ -72,7 +78,7 @@ function Delta({ current, previous, goodWhenDown = false, points = false }) {
   return (
     <span
       className={`admin-kpi-trend ${good ? "up" : "down"}`}
-      title="vs. período anterior"
+      title={title}
     >
       <Icon size={12} strokeWidth={2} aria-hidden />
       {up ? "+" : "-"}
@@ -162,12 +168,6 @@ export default function ReportesView({ onExpiredSession }) {
     ]);
   }
 
-  const t = report?.totals;
-  const p = report?.previousTotals;
-  const heat = report?.heatmap;
-  const mixTotal = report?.paymentMix.reduce((s, m) => s + m.amount, 0) || 0;
-  const methodLabel = (m) =>
-    PAYMENT_METHODS.find((x) => x.value === m)?.label || m;
 
   return (
     <div className="admin-report">
@@ -330,29 +330,151 @@ export default function ReportesView({ onExpiredSession }) {
         </div>
       )}
 
-      {report && (
+      {report && <ReportContent report={report} loading={loading} />}
+    </div>
+  );
+}
+
+/** "Noviembre 2026" si el período es un mes entero; si no, "16/11 al 22/11". */
+function periodName(from, to) {
+  const [y, m] = from.split("-").map(Number);
+  const full = monthRange(y, m);
+  if (from === full.from && to === full.to) return `${MONTH_NAMES[m - 1]} ${y}`;
+  return `${formatDate(from)} al ${formatDate(to)}`;
+}
+
+/** Para armar la frase: "en octubre 2026" o "del 02/10 al 31/10". */
+function periodPhrase(from, to) {
+  const name = periodName(from, to);
+  return /^\d/.test(name) ? `del ${name}` : `en ${name.toLowerCase()}`;
+}
+
+/**
+ * Cuerpo del reporte. Arriba la respuesta a "¿cómo me fue?" en grande; abajo
+ * el detalle (días, horarios, medios de pago, rankings).
+ */
+export function ReportContent({ report, loading }) {
+  const t = report.totals;
+  const p = report.previousTotals;
+  const heat = report.heatmap;
+  const mixTotal = report.paymentMix.reduce((s, m) => s + m.amount, 0) || 0;
+  const methodLabel = (m) =>
+    PAYMENT_METHODS.find((x) => x.value === m)?.label || m;
+
+  // Si el período no terminó, comparar el total contra un período completo
+  // engaña (parece que se vendió menos). En ese caso se compara el promedio
+  // por día transcurrido, que sí es justo.
+  const today = todayInClub();
+  const totalDays = report.days.length;
+  const elapsed = report.days.filter((d) => d.date <= today).length;
+  const inProgress = elapsed > 0 && elapsed < totalDays;
+  const notStarted = elapsed === 0;
+  const prevName = periodPhrase(report.previous.from, report.previous.to);
+  const perDay = (total, n) => (n > 0 ? total / n : 0);
+  const cur = inProgress ? perDay(t.cobrado, elapsed) : t.cobrado;
+  const prev = inProgress ? perDay(p.cobrado, totalDays) : p.cobrado;
+  const change = trendPct(cur, prev);
+  const turnosShare = t.cobrado > 0 ? (t.cobradoTurnos / t.cobrado) * 100 : 0;
+
+  return (
         <div className={loading ? "admin-content-loading" : ""}>
-          <p
-            className="admin-field-hint admin-no-print"
-            style={{ margin: "0 0 12px" }}
-          >
-            Comparado con {formatDate(report.previous.from)} al{" "}
-            {formatDate(report.previous.to)}.
-          </p>
+          <section className="rp-hero" aria-label="Cómo fue el período">
+            <div className="rp-hero-main">
+              <span className="rp-hero-kicker">
+                {periodName(report.from, report.to)}
+                {inProgress && ` · van ${elapsed} de ${totalDays} días`}
+              </span>
+              <span className="rp-hero-label">Cobraste</span>
+              <strong className="rp-hero-amount">{formatARS(t.cobrado)}</strong>
+              {t.cobrado > 0 && (
+                <div
+                  className="rp-split"
+                  role="img"
+                  aria-label={`Turnos ${formatARS(t.cobradoTurnos)}, cantina ${formatARS(t.cantina)}`}
+                >
+                  <span className="is-turnos" style={{ width: `${turnosShare}%` }} />
+                  <span className="is-cantina" style={{ width: `${100 - turnosShare}%` }} />
+                </div>
+              )}
+              <div className="rp-split-legend">
+                <span className="is-turnos">
+                  Turnos <strong>{formatARS(t.cobradoTurnos)}</strong>
+                </span>
+                <span className="is-cantina">
+                  Cantina <strong>{formatARS(t.cantina)}</strong>
+                </span>
+              </div>
+            </div>
 
-          <div className="admin-kpis-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", marginBottom: 20 }}>
+            <div className="rp-hero-side">
+              {notStarted ? (
+                <p className="rp-verdict-text">
+                  Este período todavía no empezó.
+                </p>
+              ) : change == null ? (
+                <p className="rp-verdict-text">
+                  {p.cobrado > 0
+                    ? "Igual que el período anterior."
+                    : `Sin cobros ${prevName} para comparar.`}
+                </p>
+              ) : (
+                <>
+                  <span
+                    className={`rp-verdict ${change > 0 ? "is-up" : "is-down"}`}
+                  >
+                    {change > 0 ? (
+                      <ArrowUp size={18} strokeWidth={2.5} aria-hidden />
+                    ) : (
+                      <ArrowDown size={18} strokeWidth={2.5} aria-hidden />
+                    )}
+                    {Math.abs(change).toLocaleString("es-AR")}%{" "}
+                    {change > 0 ? "más" : "menos"}
+                  </span>
+                  <p className="rp-verdict-text">
+                    {inProgress ? (
+                      <>
+                        Por día: <strong>{formatARS(cur)}</strong> contra{" "}
+                        {formatARS(prev)} {prevName}.
+                      </>
+                    ) : (
+                      <>
+                        Contra <strong>{formatARS(prev)}</strong>{" "}
+                        {prevName}.
+                      </>
+                    )}
+                  </p>
+                </>
+              )}
+              {inProgress && (
+                <p className="rp-hero-note">
+                  El período no terminó: se compara el promedio por día, no el
+                  total.
+                </p>
+              )}
+            </div>
+          </section>
+
+          <div className="admin-kpis-3 rp-kpis">
             <div className="admin-kravio-kpi-card">
               <div className="admin-kravio-kpi-header">
-                <span className="admin-kravio-kpi-title">Total Cobrado</span>
-                <Delta current={t.cobrado} previous={p.cobrado} />
+                <span className="admin-kravio-kpi-title">Turnos jugados</span>
+                {inProgress ? (
+                  <Delta
+                    current={perDay(t.turnos, elapsed)}
+                    previous={perDay(p.turnos, totalDays)}
+                    title="Promedio por día vs. período anterior"
+                  />
+                ) : (
+                  <Delta current={t.turnos} previous={p.turnos} />
+                )}
               </div>
               <div className="admin-kravio-kpi-content">
                 <div className="admin-kravio-kpi-left">
-                  <div className="admin-kravio-kpi-number" style={{ color: "#15803d" }}>
-                    {formatARS(t.cobrado)}
-                  </div>
+                  <div className="admin-kravio-kpi-number">{t.turnos}</div>
                   <span className="admin-cell-sub">
-                    Turnos {formatARS(t.cobradoTurnos)} · Cantina {formatARS(t.cantina)}
+                    {elapsed > 0 &&
+                      `${(t.turnos / elapsed).toLocaleString("es-AR", { maximumFractionDigits: 1 })} por día · `}
+                    facturado {formatARS(t.facturadoTurnos)}
                   </span>
                 </div>
               </div>
@@ -360,41 +482,7 @@ export default function ReportesView({ onExpiredSession }) {
 
             <div className="admin-kravio-kpi-card">
               <div className="admin-kravio-kpi-header">
-                <span className="admin-kravio-kpi-title">Turnos Jugados</span>
-                <Delta current={t.turnos} previous={p.turnos} />
-              </div>
-              <div className="admin-kravio-kpi-content">
-                <div className="admin-kravio-kpi-left">
-                  <div className="admin-kravio-kpi-number">
-                    {t.turnos}
-                  </div>
-                  <span className="admin-cell-sub">
-                    Facturado {formatARS(t.facturadoTurnos)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="admin-kravio-kpi-card">
-              <div className="admin-kravio-kpi-header">
-                <span className="admin-kravio-kpi-title">Por Cobrar</span>
-                <Delta current={t.porCobrar} previous={p.porCobrar} goodWhenDown />
-              </div>
-              <div className="admin-kravio-kpi-content">
-                <div className="admin-kravio-kpi-left">
-                  <div className="admin-kravio-kpi-number" style={{ color: t.porCobrar > 0 ? "#ea580c" : "var(--color-ink)" }}>
-                    {formatARS(t.porCobrar)}
-                  </div>
-                  <span className="admin-cell-sub">
-                    {t.pagadosSinCobro > 0 ? plural(t.pagadosSinCobro, "turno sin cobro", "turnos sin cobro") : "Saldos pendientes"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="admin-kravio-kpi-card">
-              <div className="admin-kravio-kpi-header">
-                <span className="admin-kravio-kpi-title">Ocupación Canchas</span>
+                <span className="admin-kravio-kpi-title">Ocupación de canchas</span>
                 <Delta current={t.ocupacionPct} previous={p.ocupacionPct} points />
               </div>
               <div className="admin-kravio-kpi-content">
@@ -402,8 +490,37 @@ export default function ReportesView({ onExpiredSession }) {
                   <div className="admin-kravio-kpi-number">
                     {formatPct(t.ocupacionPct)}
                   </div>
+                  {t.ocupacionPct != null && (
+                    <span className="rp-meter" aria-hidden>
+                      <span style={{ width: `${Math.min(100, t.ocupacionPct)}%` }} />
+                    </span>
+                  )}
                   <span className="admin-cell-sub">
-                    Días abiertos hasta hoy
+                    De los cupos de los días abiertos hasta hoy
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="admin-kravio-kpi-card">
+              <div className="admin-kravio-kpi-header">
+                <span className="admin-kravio-kpi-title">Por cobrar</span>
+                <Delta current={t.porCobrar} previous={p.porCobrar} goodWhenDown />
+              </div>
+              <div className="admin-kravio-kpi-content">
+                <div className="admin-kravio-kpi-left">
+                  <div
+                    className="admin-kravio-kpi-number"
+                    style={{ color: t.porCobrar > 0 ? "#c2410c" : undefined }}
+                  >
+                    {formatARS(t.porCobrar)}
+                  </div>
+                  <span className="admin-cell-sub">
+                    {t.pagadosSinCobro > 0
+                      ? `Ojo: ${plural(t.pagadosSinCobro, "turno marcado pagado sin cobro cargado", "turnos marcados pagados sin cobro cargado")}`
+                      : t.porCobrar > 0
+                        ? "Saldos de turnos y cuentas de cantina"
+                        : "Todo cobrado"}
                   </span>
                 </div>
               </div>
@@ -411,9 +528,9 @@ export default function ReportesView({ onExpiredSession }) {
           </div>
 
           <section className="admin-report-section">
-            <h3 className="admin-section-title">Recaudación diaria</h3>
-            <div className="admin-kravio-table-card" style={{ padding: 20 }}>
-              <DailyChart days={report.days} />
+            <h3 className="admin-section-title">Plata que entró cada día</h3>
+            <div className="admin-kravio-table-card rp-chart-card">
+              <DailyChart days={report.days} today={today} />
             </div>
           </section>
 
@@ -423,6 +540,15 @@ export default function ReportesView({ onExpiredSession }) {
               Qué franjas se llenan y cuáles quedan vacías: la base para definir
               precios de horario pico.
             </p>
+            {heat.weekdays.length > 0 && (
+              <div className="rp-heat-legend" aria-hidden>
+                <span>Vacío</span>
+                {[0, 1, 2, 3, 4].map((l) => (
+                  <i key={l} data-heat={l} />
+                ))}
+                <span>Lleno</span>
+              </div>
+            )}
             {heat.weekdays.length === 0 ? (
               <div className="admin-settings-card">
                 <EmptyState
@@ -543,7 +669,12 @@ export default function ReportesView({ onExpiredSession }) {
                     ) : (
                       report.topProducts.map((row) => (
                         <tr key={row.name}>
-                          <td data-label="Producto"><strong>{row.name}</strong></td>
+                          <td data-label="Producto">
+                            <strong>{row.name}</strong>
+                            <span className="rp-rank-bar is-money" aria-hidden>
+                              <span style={{ width: `${(row.revenue / (report.topProducts[0]?.revenue || 1)) * 100}%` }} />
+                            </span>
+                          </td>
                           <td data-label="Unidades">{row.qty} un.</td>
                           <td data-label="Vendido" style={{ textAlign: "right", fontWeight: 700, color: "#15803d" }}>
                             {formatARS(row.revenue)}
@@ -577,7 +708,12 @@ export default function ReportesView({ onExpiredSession }) {
                     ) : (
                       report.topClients.map((row) => (
                         <tr key={row.key}>
-                          <td data-label="Cliente"><strong>{row.name}</strong></td>
+                          <td data-label="Cliente">
+                            <strong>{row.name}</strong>
+                            <span className="rp-rank-bar" aria-hidden>
+                              <span style={{ width: `${(row.turnos / (Math.max(...report.topClients.map((c) => c.turnos)) || 1)) * 100}%` }} />
+                            </span>
+                          </td>
                           <td data-label="Turnos">{row.turnos} turnos</td>
                           <td data-label="Facturado" style={{ textAlign: "right", fontWeight: 700, color: "var(--color-ink)" }}>
                             {formatARS(row.facturado)}
@@ -633,7 +769,5 @@ export default function ReportesView({ onExpiredSession }) {
             </div>
           </div>
         </div>
-      )}
-    </div>
   );
 }

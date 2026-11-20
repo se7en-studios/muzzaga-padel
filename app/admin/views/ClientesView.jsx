@@ -4,9 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
+  Crown,
   Download,
+  MoonStar,
+  Repeat,
   Search,
   Send,
+  Sprout,
   Users,
   X,
   Trash2,
@@ -27,7 +31,7 @@ import {
 } from "../../../lib/clientsExport";
 import { EmptyState, SkeletonRows } from "../ui/states";
 import { WhatsAppMiniIcon } from "../adminHelpers";
-import ClientDrawer, { initials } from "./clientes/ClientDrawer";
+import ClientDrawer, { avatarTone, initials } from "./clientes/ClientDrawer";
 import StaffPinModal from "../ui/StaffPinModal";
 import { adminDeleteClient } from "../actions";
 
@@ -51,6 +55,30 @@ const SEGMENTS = [
     test: (c, today) => isInactiveClient(c, today),
   },
 ];
+
+// Cómo se presenta cada segmento en el marcador de arriba (solo visual).
+const SEGMENT_META = {
+  all: { label: "Todos", hint: "en la base del club", icon: Users },
+  vip: { label: "VIP", hint: "4 o más turnos", icon: Crown },
+  frecuente: { label: "Frecuentes", hint: "2 a 3 turnos", icon: Repeat },
+  nuevo: { label: "Nuevos", hint: "primer turno", icon: Sprout },
+  inactivo: {
+    label: "Inactivos",
+    hint: `+${INACTIVE_AFTER_DAYS} días sin venir`,
+    icon: MoonStar,
+  },
+};
+
+// Hasta dos semanas desde el último turno cuenta como "viene seguido".
+const FRESH_DAYS = 14;
+
+function daysSince(isoDate, todayIso) {
+  if (!isoDate) return null;
+  return Math.round(
+    (Date.parse(`${todayIso}T00:00:00Z`) - Date.parse(`${isoDate}T00:00:00Z`)) /
+      86_400_000,
+  );
+}
 
 const COLUMNS = [
   { id: "name", label: "Cliente", value: (c) => normalizeSearch(c.name) },
@@ -143,69 +171,58 @@ export default function ClientesView({
     return <SkeletonRows count={8} height={52} />;
   }
 
+  const maxCount = Math.max(1, ...list.map((c) => c.count || 0));
+
   return (
-    <div>
-      {/* 3 KPI Cards Superiores Estilo Kravio */}
-      <div className="admin-kpis-3" style={{ marginBottom: 20 }}>
-        <div className="admin-kravio-kpi-card">
-          <div className="admin-kravio-kpi-header">
-            <span className="admin-kravio-kpi-title">Total Padelistas</span>
-            <Users size={17} style={{ color: "#ea580c" }} />
-          </div>
-          <div className="admin-kravio-kpi-content">
-            <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: "#141412" }}>
-                {list.length}
-              </div>
-              <span className="admin-cell-sub">Registrados en la base del club</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="admin-kravio-kpi-card">
-          <div className="admin-kravio-kpi-header">
-            <span className="admin-kravio-kpi-title">Frecuentes & VIP</span>
-            <Users size={17} style={{ color: "#15803d" }} />
-          </div>
-          <div className="admin-kravio-kpi-content">
-            <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number">
-                {counts.vip + counts.frecuente}
-              </div>
-              <span className="admin-cell-sub">{counts.vip} VIP · {counts.frecuente} habituales</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="admin-kravio-kpi-card">
-          <div className="admin-kravio-kpi-header">
-            <span className="admin-kravio-kpi-title">Inactivos a Recuperar</span>
-            <Users size={17} style={{ color: "#d97706" }} />
-          </div>
-          <div className="admin-kravio-kpi-content">
-            <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: counts.inactivo > 0 ? "#d97706" : undefined }}>
-                {counts.inactivo}
-              </div>
-              <span className="admin-cell-sub">+{INACTIVE_AFTER_DAYS} días sin reservar</span>
-            </div>
-          </div>
-        </div>
+    <div className="cc-clientes">
+      {/* Marcador: cada segmento es una tarjeta con su número y sirve de
+          filtro. Reemplaza a los 3 números + las pestañas, que repetían lo
+          mismo dos veces. */}
+      <div className="cc-board" role="group" aria-label="Segmento de clientes">
+        {SEGMENTS.map((s) => {
+          const meta = SEGMENT_META[s.id];
+          const Icon = meta.icon;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              className="cc-board-tile"
+              data-seg={s.id}
+              aria-pressed={segment === s.id}
+              onClick={() => setSegment(s.id)}
+            >
+              <span className="cc-board-top">
+                <span className="cc-board-icon" aria-hidden>
+                  <Icon size={16} strokeWidth={2} />
+                </span>
+                <span className="cc-board-label">{meta.label}</span>
+              </span>
+              <strong className="cc-board-num">{counts[s.id]}</strong>
+              <span className="cc-board-hint">{meta.hint}</span>
+            </button>
+          );
+        })}
       </div>
 
       {segment === "inactivo" && inactiveWithPhone.length > 0 && (
-        <div className="admin-callout" style={{ marginBottom: 16 }}>
-          <span>
-            {plural(
-              inactiveWithPhone.length,
-              "cliente no juega",
-              "clientes no juegan",
-            )}{" "}
-            hace más de {INACTIVE_AFTER_DAYS} días.
+        <div className="cc-invite">
+          <span className="cc-invite-icon" aria-hidden>
+            <MoonStar size={18} strokeWidth={2} />
+          </span>
+          <span className="cc-invite-text">
+            <strong>
+              {plural(
+                inactiveWithPhone.length,
+                "cliente no juega",
+                "clientes no juegan",
+              )}{" "}
+              hace más de {INACTIVE_AFTER_DAYS} días.
+            </strong>
+            <small>Mandales un mensaje y recuperalos para la semana.</small>
           </span>
           <button
             type="button"
-            className="btn btn-linear-primary"
+            className="cc-wa"
             onClick={() => setIsInviteOpen(true)}
           >
             <Send {...ICON} /> Invitar por WhatsApp
@@ -213,202 +230,227 @@ export default function ClientesView({
         </div>
       )}
 
-      {/* Kravio Table Card */}
-      <div className="admin-kravio-table-card">
-        <div className="admin-kravio-table-toolbar">
-          <div
-            className="admin-segmented"
-            role="group"
-            aria-label="Segmento de clientes"
-          >
-            {SEGMENTS.map((s) => (
+      <section className="cc-roster-card" aria-label="Listado de clientes">
+        <div className="cc-roster-toolbar">
+          <div className="cc-search">
+            <Search size={17} strokeWidth={2} aria-hidden />
+            <input
+              type="text"
+              placeholder="Buscar por nombre o teléfono…"
+              aria-label="Buscar cliente"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            {searchInput && (
               <button
-                key={s.id}
                 type="button"
-                aria-pressed={segment === s.id}
-                onClick={() => setSegment(s.id)}
+                className="cc-search-clear"
+                onClick={() => setSearchInput("")}
+                aria-label="Limpiar búsqueda"
               >
-                {s.label} ({counts[s.id]})
+                <X size={15} aria-hidden />
               </button>
-            ))}
+            )}
           </div>
-
-          <div className="admin-kravio-table-tools">
-            <div className="admin-kravio-search-field">
-              <Search size={14} style={{ color: "#5f5b52" }} aria-hidden />
-              <input
-                type="text"
-                className="admin-search-input"
-                placeholder="Nombre o teléfono…"
-                aria-label="Buscar cliente"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
-              {searchInput && (
-                <button
-                  type="button"
-                  style={{ border: "none", background: "transparent", cursor: "pointer", color: "#5f5b52" }}
-                  onClick={() => setSearchInput("")}
-                  aria-label="Limpiar búsqueda"
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="admin-kravio-filter-btn"
-              onClick={exportCsv}
-              disabled={visible.length === 0}
-              title="Exportar a CSV"
-            >
-              <Download size={13} /> CSV
-            </button>
-          </div>
+          <span className="cc-roster-count" aria-live="polite">
+            <strong>{visible.length}</strong> de {list.length}{" "}
+            {list.length === 1 ? "jugador" : "jugadores"}
+          </span>
+          <button
+            type="button"
+            className="cc-csv"
+            onClick={exportCsv}
+            disabled={visible.length === 0}
+            title="Exportar a CSV"
+          >
+            <Download size={15} aria-hidden /> Exportar CSV
+          </button>
         </div>
 
-        <div className="admin-table-wrapper">
-        <table className="admin-table admin-table-clickable">
-          <thead>
-            <tr>
-              {COLUMNS.map((col) => (
-                <th
-                  key={col.id}
-                  aria-sort={
-                    sort.by === col.id
-                      ? sort.dir === "asc"
-                        ? "ascending"
-                        : "descending"
-                      : "none"
-                  }
-                >
-                  <button
-                    type="button"
-                    className="admin-th-sort"
-                    onClick={() => toggleSort(col.id)}
+        <div className="cc-roster-scroll">
+          <table className="cc-roster">
+            <thead>
+              <tr>
+                {COLUMNS.map((col) => (
+                  <th
+                    key={col.id}
+                    data-col={col.id}
+                    aria-sort={
+                      sort.by === col.id
+                        ? sort.dir === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : "none"
+                    }
                   >
-                    {col.label}
-                    {sort.by === col.id &&
-                      (sort.dir === "asc" ? (
-                        <ArrowUp size={12} aria-hidden />
-                      ) : (
-                        <ArrowDown size={12} aria-hidden />
-                      ))}
-                  </button>
-                </th>
-              ))}
-              <th>Contacto</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.length > 0 ? (
-              visible.map((c) => {
-                const cat = categorizeClient(c.count);
-                return (
-                  <tr key={c.key} onClick={() => setOpenClient(c)}>
-                    <td data-label="Cliente">
-                      <button
-                        type="button"
-                        className="admin-client-cell"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenClient(c);
-                        }}
-                      >
-                        <span className="admin-avatar" aria-hidden>
-                          {initials(c.name)}
-                        </span>
-                        <span>
-                          <strong>{c.name}</strong>
-                          <span className="admin-cell-sub">
-                            {c.phone ? formatPhoneAR(c.phone) : "Sin teléfono"}
-                          </span>
-                        </span>
-                        {cat.category !== "Nuevo" && (
-                          <span className="admin-tag">{cat.category}</span>
-                        )}
-                      </button>
-                    </td>
-                    <td data-label="Turnos">
-                      {plural(c.count, "turno", "turnos")}
-                    </td>
-                    <td data-label="Total gastado">
-                      {formatARS(c.totalSpent || 0)}
-                    </td>
-                    <td data-label="Último turno">
-                      {formatRelativeDays(c.lastDate, today)}
-                      {isInactiveClient(c, today) && (
-                        <span className="admin-tag">Inactivo</span>
-                      )}
-                    </td>
-                    <td
-                      data-label="Contacto"
-                      onClick={(e) => e.stopPropagation()}
+                    <button
+                      type="button"
+                      className="cc-sort"
+                      aria-pressed={sort.by === col.id}
+                      onClick={() => toggleSort(col.id)}
                     >
-                      <div style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-                        {c.phone && (
-                          <a
-                            href={`https://wa.me/${toWhatsappNumber(c.phone)}`}
-                            target="_blank"
-                            rel="noopener"
-                            className="admin-table-action-btn"
-                            aria-label={`WhatsApp a ${c.name}`}
-                          >
-                            <WhatsAppMiniIcon />
-                          </a>
-                        )}
+                      {col.label}
+                      {sort.by === col.id &&
+                        (sort.dir === "asc" ? (
+                          <ArrowUp size={13} aria-hidden />
+                        ) : (
+                          <ArrowDown size={13} aria-hidden />
+                        ))}
+                    </button>
+                  </th>
+                ))}
+                <th data-col="contact">
+                  <span className="cc-th-label">Contacto</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.length > 0 ? (
+                visible.map((c) => {
+                  const cat = categorizeClient(c.count);
+                  const tier = cat.category.toLowerCase();
+                  const inactive = isInactiveClient(c, today);
+                  const ago = daysSince(c.lastDate, today);
+                  const fresh = inactive
+                    ? "cold"
+                    : ago != null && ago <= FRESH_DAYS
+                      ? "fresh"
+                      : "ok";
+                  return (
+                    <tr
+                      key={c.key}
+                      data-tier={tier}
+                      data-inactive={inactive || undefined}
+                      onClick={() => setOpenClient(c)}
+                    >
+                      <td className="cc-col-player">
                         <button
                           type="button"
-                          className="admin-table-action-btn delete"
-                          onClick={() => setDeletingClient(c)}
-                          aria-label={`Eliminar cliente ${c.name}`}
-                          title={`Eliminar cliente ${c.name}`}
+                          className="cc-player"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenClient(c);
+                          }}
                         >
-                          <Trash2 size={13} />
+                          <span
+                            className="cc-avatar"
+                            data-tone={avatarTone(c.name)}
+                            data-tier={tier}
+                            data-inactive={inactive || undefined}
+                            aria-hidden
+                          >
+                            {initials(c.name)}
+                          </span>
+                          <span className="cc-player-text">
+                            <span className="cc-player-name">
+                              <strong>{c.name}</strong>
+                              <span className="cc-chip" data-tier={tier}>
+                                {cat.category}
+                              </span>
+                            </span>
+                            <span className="cc-player-phone">
+                              {c.phone ? formatPhoneAR(c.phone) : "Sin teléfono"}
+                            </span>
+                          </span>
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="5">
-                  {search ? (
-                    <EmptyState
-                      icon={Users}
-                      title={`Nadie coincide con “${search}”`}
-                      text="Probá con otra parte del nombre o del teléfono."
-                      action={{
-                        label: "Limpiar búsqueda",
-                        onClick: () => setSearchInput(""),
-                      }}
-                    />
-                  ) : list.length === 0 ? (
-                    <EmptyState
-                      icon={Users}
-                      mascot="mochila-pulgar"
-                      title="Todavía no hay clientes"
-                      text="Se arman solos con cada reserva: nombre y teléfono del organizador."
-                    />
-                  ) : (
-                    <EmptyState
-                      icon={Users}
-                      title="No hay clientes en este segmento"
-                      action={{
-                        label: "Ver todos",
-                        onClick: () => setSegment("all"),
-                      }}
-                    />
-                  )}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                      </td>
+                      <td className="cc-col-count" data-label="Turnos">
+                        <span className="cc-count">
+                          <strong>{c.count}</strong>
+                          <span>{c.count === 1 ? "turno" : "turnos"}</span>
+                        </span>
+                        <span className="cc-count-bar" aria-hidden>
+                          <span
+                            style={{
+                              width: `${Math.max(6, (c.count / maxCount) * 100)}%`,
+                            }}
+                          />
+                        </span>
+                      </td>
+                      <td className="cc-col-money" data-label="Gastado">
+                        {formatARS(c.totalSpent || 0)}
+                      </td>
+                      <td className="cc-col-last" data-label="Último turno">
+                        <span className="cc-last" data-fresh={fresh}>
+                          <span className="cc-last-dot" aria-hidden />
+                          {formatRelativeDays(c.lastDate, today)}
+                        </span>
+                        {inactive && (
+                          <span className="cc-chip" data-tier="inactivo">
+                            Inactivo
+                          </span>
+                        )}
+                      </td>
+                      <td
+                        className="cc-col-contact"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="cc-contact">
+                          {c.phone ? (
+                            <a
+                              href={`https://wa.me/${toWhatsappNumber(c.phone)}`}
+                              target="_blank"
+                              rel="noopener"
+                              className="cc-wa cc-wa-sm"
+                              aria-label={`WhatsApp a ${c.name}`}
+                            >
+                              <WhatsAppMiniIcon size={16} />
+                              <span>WhatsApp</span>
+                            </a>
+                          ) : (
+                            <span className="cc-no-phone">Sin teléfono</span>
+                          )}
+                          <button
+                            type="button"
+                            className="cc-trash"
+                            onClick={() => setDeletingClient(c)}
+                            aria-label={`Eliminar cliente ${c.name}`}
+                            title={`Eliminar cliente ${c.name}`}
+                          >
+                            <Trash2 size={15} aria-hidden />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr className="cc-roster-empty">
+                  <td colSpan="5">
+                    {search ? (
+                      <EmptyState
+                        icon={Users}
+                        title={`Nadie coincide con “${search}”`}
+                        text="Probá con otra parte del nombre o del teléfono."
+                        action={{
+                          label: "Limpiar búsqueda",
+                          onClick: () => setSearchInput(""),
+                        }}
+                      />
+                    ) : list.length === 0 ? (
+                      <EmptyState
+                        icon={Users}
+                        mascot="mochila-pulgar"
+                        title="Todavía no hay clientes"
+                        text="Se arman solos con cada reserva: nombre y teléfono del organizador."
+                      />
+                    ) : (
+                      <EmptyState
+                        icon={Users}
+                        title="No hay clientes en este segmento"
+                        action={{
+                          label: "Ver todos",
+                          onClick: () => setSegment("all"),
+                        }}
+                      />
+                    )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {openClient && (
         <ClientDrawer
@@ -494,20 +536,28 @@ export default function ClientesView({
               contacto y se abre el chat con el mensaje listo. Se marcan a
               medida que los abrís.
             </p>
-            <ul className="admin-invite-list">
+            <ul className="admin-invite-list cc-invite-list">
               {inactiveWithPhone.map((c) => (
                 <li
                   key={c.key}
                   className={invited.has(c.key) ? "is-done" : undefined}
                 >
-                  <span>
+                  <span
+                    className="cc-avatar"
+                    data-tone={avatarTone(c.name)}
+                    data-inactive
+                    aria-hidden
+                  >
+                    {initials(c.name)}
+                  </span>
+                  <span className="cc-invite-who">
                     <strong>{c.name}</strong>
                     <span className="admin-cell-sub">
                       Último turno {formatRelativeDays(c.lastDate, today)}
                     </span>
                   </span>
                   <a
-                    className="btn btn-secondary"
+                    className="cc-wa cc-wa-sm"
                     href={inviteLink(c)}
                     target="_blank"
                     rel="noopener"

@@ -84,35 +84,43 @@ export default function MobileNav({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="admin-sheet-handle" />
-            {secondary.map(({ id, label, icon: Icon }) => (
+            <p className="admin-sheet-title">Más secciones</p>
+            {/* Grilla de fichas: con el pulgar se acierta más fácil que a una
+                lista larga, y entran todas sin hacer scroll. */}
+            <div className="admin-sheet-grid">
+              {secondary.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-current={view === id ? "page" : undefined}
+                  onClick={() => go(id)}
+                >
+                  <Icon {...ICON_PROPS} />
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="admin-sheet-foot">
+              <Link href="/admin/monitor" target="_blank">
+                <Tv {...ICON_PROPS} />
+                Pantalla de la TV
+              </Link>
+              <Link href="/" target="_blank">
+                <ExternalLink {...ICON_PROPS} />
+                Ver la web del club
+              </Link>
               <button
-                key={id}
                 type="button"
-                aria-current={view === id ? "page" : undefined}
-                onClick={() => go(id)}
+                className="admin-sheet-logout"
+                onClick={() => {
+                  setIsMoreOpen(false);
+                  onLogout();
+                }}
               >
-                <Icon {...ICON_PROPS} />
-                {label}
+                <LogOut {...ICON_PROPS} />
+                Cerrar sesión
               </button>
-            ))}
-            <Link href="/admin/monitor" target="_blank">
-              <Tv {...ICON_PROPS} />
-              Monitor TV Pistas
-            </Link>
-            <Link href="/" target="_blank">
-              <ExternalLink {...ICON_PROPS} />
-              Ver web
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setIsMoreOpen(false);
-                onLogout();
-              }}
-            >
-              <LogOut {...ICON_PROPS} />
-              Salir
-            </button>
+            </div>
           </div>
         </div>
       )}

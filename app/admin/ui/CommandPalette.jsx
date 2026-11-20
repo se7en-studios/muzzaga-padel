@@ -172,6 +172,21 @@ export default function CommandPalette({
             })}
           </ul>
         )}
+
+        {/* Ayuda de teclado: en el mostrador se usa sin mouse. En el celu
+            no aplica y se oculta por CSS. */}
+        <div className="admin-palette-foot" aria-hidden="true">
+          <span>
+            <kbd className="admin-kbd">↑</kbd>
+            <kbd className="admin-kbd">↓</kbd> moverse
+          </span>
+          <span>
+            <kbd className="admin-kbd">Enter</kbd> abrir
+          </span>
+          <span>
+            <kbd className="admin-kbd">Esc</kbd> cerrar
+          </span>
+        </div>
       </div>
     </div>
   );

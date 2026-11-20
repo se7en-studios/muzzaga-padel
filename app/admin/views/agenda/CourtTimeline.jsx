@@ -120,7 +120,8 @@ export default function CourtTimeline({
                       >
                         <span className="admin-slot-court">{court.name}</span>
                         <span className="admin-slot-free-label">
-                          <Plus {...ICON} /> Libre · Reservar
+                          <Plus {...ICON} /> Libre
+                          <span className="admin-slot-free-cta"> · Reservar</span>
                         </span>
                       </button>
                     </div>

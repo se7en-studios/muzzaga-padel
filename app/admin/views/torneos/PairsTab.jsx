@@ -240,7 +240,7 @@ export default function PairsTab({
       {/* ANOTAR PAREJA: lo primero que se ve */}
       <form className="tn-card tn-quickadd tn-stack" onSubmit={addOne}>
         <div className="tn-row-between">
-          <h3 className="tn-card-title" style={{ margin: 0 }}>
+          <h3 className="tn-card-title tn-quickadd-title" style={{ margin: 0 }}>
             Anotar pareja en {category.name}
           </h3>
           <button
@@ -404,12 +404,23 @@ export default function PairsTab({
                 )}
               </form>
             )}
-            <span className="tn-muted">
-              {paid} pagaron
-              {price > 0 && pairs.length - paid > 0
-                ? ` · faltan cobrar ${formatARS((pairs.length - paid) * price)}`
-                : ""}
-              {" · "}⭐ = cabeza de serie (va a una zona distinta en el sorteo)
+            <span className="tn-pairs-summary">
+              <span className="tn-pairs-pill is-paid">
+                <strong>{paid}</strong> pagaron
+              </span>
+              {pairs.length - paid > 0 && (
+                <span className="tn-pairs-pill is-owe">
+                  <strong>{pairs.length - paid}</strong> deben
+                  {price > 0 &&
+                    ` · ${formatARS((pairs.length - paid) * price)}`}
+                </span>
+              )}
+              <span className="tn-muted">
+                <span className="tn-seed" aria-hidden>
+                  1
+                </span>{" "}
+                = cabeza de serie (va a una zona distinta)
+              </span>
             </span>
           </div>
           {catEdit === null && (
@@ -502,7 +513,14 @@ export default function PairsTab({
                     <td className="tn-col-num tn-muted">{i + 1}</td>
                     <td className="tn-pair-name">
                       <strong>
-                        {p.seed ? `⭐${p.seed} ` : ""}
+                        {p.seed ? (
+                          <span
+                            className="tn-seed"
+                            title={`Cabeza de serie ${p.seed}`}
+                          >
+                            {p.seed}
+                          </span>
+                        ) : null}
                         {p.name}
                         {p.source === "web" && (
                           <span
@@ -540,7 +558,11 @@ export default function PairsTab({
                         onClick={() => togglePaid(p)}
                         title="Tocá para cambiar"
                       >
-                        {p.paid ? "✓ Pagó" : "Debe"}
+                        {p.paid
+                          ? "✓ Pagó"
+                          : price > 0
+                            ? `Debe ${formatARS(price)}`
+                            : "Debe"}
                       </button>
                     </td>
                     <td className="tn-col-actions">

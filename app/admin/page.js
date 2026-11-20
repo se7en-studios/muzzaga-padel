@@ -36,7 +36,12 @@ import {
 import { normalizeConfig } from "../../lib/clubConfig";
 import { getClubStatus } from "../../data/horarios";
 import { formatARS, formatDate, formatPct, formatTime } from "../../lib/format";
-import { IconAlert, IconPlus, isExpiredSessionError } from "./adminHelpers";
+import {
+  IconAlert,
+  IconClipboard,
+  IconPlus,
+  isExpiredSessionError,
+} from "./adminHelpers";
 import AgendaView from "./views/AgendaView";
 import ClientesView from "./views/ClientesView";
 import CalendarioView from "./views/CalendarioView";
@@ -553,9 +558,16 @@ export default function AdminPage() {
             casi no se lee sobre la foto de fondo. */}
         <div
           role="status"
-          className={sessionProblem ? "admin-login-card" : undefined}
+          className={
+            sessionProblem ? "admin-login-card" : "admin-session-check"
+          }
           style={{ textAlign: "center" }}
         >
+          {/* Pelotita que pica mientras se verifica: dice "estoy cargando"
+              sin texto gris perdido sobre la foto. */}
+          {!sessionProblem && (
+            <span className="admin-session-ball" aria-hidden="true" />
+          )}
           <p style={{ color: "var(--color-muted)", fontSize: 15.5 }}>
             {sessionProblem === "error"
               ? "No se pudo verificar la sesión."
@@ -665,6 +677,22 @@ export default function AdminPage() {
     );
   }
 
+  // Marcador del día: fecha, hora y si el club está abierto. En compu va en
+  // la barra de arriba (así el título y la agenda suben); en el celu, sobre
+  // el título. Uno solo se ve por vez (CSS).
+  const dayScoreboard = (
+    <>
+      <span className="admin-header-date">
+        {formatDate(todayInClub(), "long")}
+        <span aria-hidden="true"> · </span>
+        <span className="admin-header-clock">{nowLabel}</span>
+      </span>
+      <span className={`admin-live-pill ${CLUB_PILL_CLASS[clubStatus.state]}`}>
+        {clubStatus.statusText}
+      </span>
+    </>
+  );
+
   return (
     <div className="admin-dashboard-layout">
       <div className="admin-shell">
@@ -715,24 +743,9 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {!sidebarCollapsed && (
-            <button
-              type="button"
-              className="admin-sidebar-search-btn"
-              onClick={() => setIsPaletteOpen(true)}
-              aria-label="Buscar en el panel (Ctrl + K)"
-            >
-              <span
-                style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-              >
-                <Search size={14} />
-                <span>Buscar cliente o sección</span>
-              </span>
-
-            </button>
-          )}
-
-          <nav className="admin-sidebar-nav">
+          {/* El buscador vive en la barra de arriba (uno solo, siempre en
+              el mismo lugar): acá era un segundo botón que hacía lo mismo. */}
+          <nav className="admin-sidebar-nav" aria-label="Secciones del panel">
             {NAV_GROUPS.map((group) => (
               <div key={group.title} className="admin-sidebar-group">
                 {!sidebarCollapsed && (
@@ -760,7 +773,7 @@ export default function AdminPage() {
               href="/admin/monitor"
               target="_blank"
               className="admin-sidebar-link"
-              title={sidebarCollapsed ? "Monitor TV Pistas" : undefined}
+              title={sidebarCollapsed ? "Pantalla de la TV" : undefined}
             >
               <Tv {...ICON_PROPS} />
               {!sidebarCollapsed && <span>Pantalla de la TV</span>}
@@ -769,7 +782,7 @@ export default function AdminPage() {
               href="/"
               target="_blank"
               className="admin-sidebar-link"
-              title={sidebarCollapsed ? "Ver Web Pública" : undefined}
+              title={sidebarCollapsed ? "Ver la web del club" : undefined}
             >
               <ExternalLink {...ICON_PROPS} />
               {!sidebarCollapsed && <span>Ver la web del club</span>}
@@ -790,7 +803,8 @@ export default function AdminPage() {
         {/* CONTENIDO */}
         <main className="admin-main">
           <div className="admin-main-inner">
-            {/* Kravio Top Breadcrumbs Bar */}
+            {/* Barra de arriba: en compu, el buscador (Ctrl K) bien a la
+                vista y los avisos; en el celu, la marca y los avisos. */}
             <div className="admin-kravio-topbar">
               {/* En desktop la marca está en el sidebar; en mobile va acá. */}
               <div className="admin-topbar-brand">
@@ -804,6 +818,23 @@ export default function AdminPage() {
                   <strong>Muzzaga</strong>
                   <small>Panel del club</small>
                 </span>
+              </div>
+              {/* Parece un campo de texto a propósito: se entiende que ahí
+                  se escribe para buscar, sin saber el atajo. */}
+              <button
+                type="button"
+                className="admin-topbar-search"
+                onClick={() => setIsPaletteOpen(true)}
+                aria-label="Buscar cliente, sección o acción (Ctrl + K)"
+              >
+                <Search size={18} strokeWidth={1.75} aria-hidden="true" />
+                <span className="admin-topbar-search-text">
+                  Buscar cliente, sección o acción…
+                </span>
+                <kbd className="admin-kbd">Ctrl K</kbd>
+              </button>
+              <div className="admin-greeting-sub admin-topbar-scoreboard">
+                {dayScoreboard}
               </div>
               <div className="admin-kravio-top-tools">
                 <button
@@ -852,7 +883,10 @@ export default function AdminPage() {
             </div>
 
             <header className="admin-main-header">
-              <div>
+              <div className="admin-header-text">
+                <div className="admin-greeting-sub admin-header-scoreboard">
+                  {dayScoreboard}
+                </div>
                 {/* El saludo solo en Agenda; el resto muestra el título de la sección. */}
                 <h1 className="admin-page-title">
                   {view === "agenda" ? (
@@ -866,32 +900,21 @@ export default function AdminPage() {
                     findNavItem(view).label
                   )}
                 </h1>
-                <div className="admin-greeting-sub">
-                  <span>
-                    {formatDate(todayInClub(), "long")} · {nowLabel}
-                  </span>
-                  <span
-                    className={`admin-live-pill ${CLUB_PILL_CLASS[clubStatus.state]}`}
-                  >
-                    {clubStatus.statusText}
-                  </span>
-                  {!isOnline ? (
-                    <span className="admin-live-pill is-offline" role="status">
-                      <IconAlert size={12} /> Sin conexión — lo que cargues
-                      ahora no se va a guardar
-                    </span>
-                  ) : (
-                    dayData?.firebaseOk === false && (
-                      <span
-                        className="admin-live-pill is-offline"
-                        role="status"
-                      >
-                        <IconAlert size={12} /> No se pudo leer la base — los
-                        datos pueden no estar actualizados
-                      </span>
-                    )
-                  )}
-                </div>
+                {/* Problemas de conexión en su propio renglón, como cartel:
+                    mezclados con la fecha pasaban como un dato más. */}
+                {!isOnline ? (
+                  <p className="admin-header-alert" role="status">
+                    <IconAlert size={16} /> Sin conexión — lo que cargues ahora
+                    no se va a guardar
+                  </p>
+                ) : (
+                  dayData?.firebaseOk === false && (
+                    <p className="admin-header-alert" role="status">
+                      <IconAlert size={16} /> No se pudo leer la base — los
+                      datos pueden no estar actualizados
+                    </p>
+                  )
+                )}
               </div>
 
               <div className="admin-quick-actions">
@@ -920,7 +943,7 @@ export default function AdminPage() {
                     className="btn btn-secondary"
                     title="Copia la lista de turnos del día para pegarla en WhatsApp"
                   >
-                    Copiar turnos del día
+                    <IconClipboard size={18} /> Copiar turnos del día
                   </button>
                 )}
                 <button
@@ -929,7 +952,7 @@ export default function AdminPage() {
                   className="btn btn-linear-primary admin-cta-new"
                   title="Nueva reserva (N)"
                 >
-                  <IconPlus /> Nueva reserva
+                  <IconPlus size={18} /> Nueva reserva
                 </button>
               </div>
             </header>

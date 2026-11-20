@@ -36,6 +36,11 @@ export default function DayStrip({
           const stats = statsByDate.get(d.iso);
           const closed = stats ? stats.closed : d.closed;
           const pct = stats?.ocupacionPct ?? null;
+          const turnos = stats?.turnos ?? 0;
+          const isToday = d.iso === todayIso;
+          // El 1° del mes lleva el mes arriba: si no, "1" después de "30"
+          // parece un error.
+          const isMonthStart = d.dayNumber === 1;
           return (
             <button
               key={d.iso}
@@ -43,16 +48,26 @@ export default function DayStrip({
               role="tab"
               aria-selected={activeDate === d.iso}
               disabled={closed}
-              className="admin-daychip"
+              className={`admin-daychip${isToday ? " is-today" : ""}${d.isWeekend ? " is-weekend" : ""}${isMonthStart ? " is-month-start" : ""}`}
               title={
                 closed
                   ? `${d.fullLabel}: cerrado`
-                  : `${d.fullLabel}: ${formatPct(pct ?? 0)} ocupado`
+                  : `${d.fullLabel}: ${turnos} ${turnos === 1 ? "turno" : "turnos"} · ${formatPct(pct ?? 0)} ocupado`
               }
               onClick={() => onSelect(d.iso)}
             >
+              {isMonthStart && (
+                <span className="admin-daychip-month" aria-hidden>
+                  {d.monthName.slice(0, 3)}
+                </span>
+              )}
               <span className="admin-daychip-name">{d.dayName}</span>
               <strong>{d.dayNumber}</strong>
+              {!closed && turnos > 0 && (
+                <span className="admin-daychip-count" aria-hidden>
+                  {turnos}
+                </span>
+              )}
               <span
                 className="admin-daychip-bar"
                 data-tone={closed ? "closed" : occupancyTone(pct)}
@@ -66,6 +81,11 @@ export default function DayStrip({
       </div>
 
       <div className="admin-daystrip-actions">
+        {/* Recordatorio de los atajos: en el mostrador se usa más el teclado. */}
+        <span className="admin-daystrip-keys" aria-hidden>
+          <kbd>←</kbd>
+          <kbd>→</kbd> día · <kbd>T</kbd> hoy
+        </span>
         {isOutOfStrip && (
           <span className="admin-daystrip-viewing">Viendo {formatDate(activeDate)}</span>
         )}

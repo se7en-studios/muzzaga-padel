@@ -1,2 +1,1731 @@
 /* Rediseño del admin: torneos-reportes. Se carga al final (después de padel.css), así que
    pisa lo anterior con la misma especificidad. Todo bajo .admin-root. */
+
+/* ==========================================================================
+   BASE COMÚN: la cancha azul y la pelotita, como variables para no repetir
+   el SVG en cada bloque.
+   ========================================================================== */
+.admin-root {
+  --tr-court: #2350d6;
+  --tr-court-deep: #16349a;
+  --tr-navy: #0b1638;
+  --tr-ball: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  --tr-ball-solid: #d7f03a;
+  --tr-court-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='8' width='192' height='84' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.5'/%3E%3Cpath d='M31 8v84M169 8v84M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.25'/%3E%3C/svg%3E");
+  --tr-court-bg:
+    var(--tr-court-lines),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.3), rgba(11, 26, 77, 0.62)),
+    url("/img/fondo/textura-cesped.jpg");
+  --tr-court-size: 100% 100%, auto, 220px 220px;
+  /* Sin las líneas: para piezas chicas, donde las líneas estiradas ensucian. */
+  --tr-court-plain:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.2), rgba(11, 26, 77, 0.55)),
+    url("/img/fondo/textura-cesped.jpg");
+  --tr-money: #15803d;
+  --tr-owe: #c2410c;
+}
+
+/* ==========================================================================
+   TORNEOS · LISTA
+   Cada torneo es una "entrada": arriba la cancha con el nombre grande (se
+   reconoce de lejos desde el mostrador), abajo lo que importa para el día.
+   ========================================================================== */
+.admin-root .tn-list-item.tn-tcard {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(27, 27, 25, 0.05);
+}
+
+.admin-root .tn-list-item.tn-tcard:hover {
+  border-color: var(--tr-court);
+  box-shadow: 0 14px 28px -18px rgba(13, 31, 92, 0.55);
+}
+
+.admin-root .tn-tcard > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-root .tn-tcard-court {
+  gap: 10px;
+  min-height: 118px;
+  padding: 14px 18px 16px;
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-bg);
+  background-size: var(--tr-court-size);
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #ffffff;
+}
+
+/* Terminado: la cancha apagada, para que los activos salten a la vista. */
+.admin-root .tn-tcard[data-status="finalizado"] .tn-tcard-court {
+  filter: saturate(0.25) brightness(0.9);
+}
+
+.admin-root .tn-tcard-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-root .tn-tcard-date {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.admin-root .tn-tcard .tn-list-name {
+  margin-top: auto;
+  font-size: 28px;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.admin-root .tn-tcard-body {
+  gap: 10px;
+  padding: 14px 18px 16px;
+}
+
+.admin-root .tn-tcard-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-root .tn-tcard-cat {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(35, 80, 214, 0.08);
+  color: var(--tr-court-deep);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-root .tn-tcard-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.admin-root .tn-tcard-stats strong {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.admin-root .tn-tcard-stats .is-paid strong {
+  color: var(--tr-money);
+}
+
+.admin-root .tn-tcard-stats .is-owe strong {
+  color: var(--tr-owe);
+}
+
+.admin-root .tn-tcard-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Barra de partidos jugados con la pelotita en la punta. */
+.admin-root .tn-progress {
+  height: 8px;
+  overflow: visible;
+  background: #e8ecf8;
+}
+
+.admin-root .tn-progress > span {
+  position: relative;
+  min-width: 8px;
+  border-radius: 999px;
+  background: var(--tr-court);
+}
+
+.admin-root .tn-progress > span::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================================================
+   TORNEOS · ENCABEZADO DEL TORNEO
+   ========================================================================== */
+.admin-root .tn-card.tn-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 22px 24px;
+  border: 0;
+  background-color: var(--tr-court);
+  background-image:
+    linear-gradient(90deg, rgba(8, 18, 60, 0.7) 0%, rgba(8, 18, 60, 0.15) 70%),
+    var(--tr-court-bg);
+  background-size: auto, var(--tr-court-size);
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  color: #ffffff;
+  box-shadow: 0 16px 30px -22px rgba(13, 31, 92, 0.8);
+}
+
+.admin-root .tn-hero-row {
+  align-items: flex-start;
+}
+
+.admin-root .tn-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-root .tn-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.admin-root .tn-hero-kicker::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  box-shadow: 0 0 10px rgba(215, 240, 58, 0.55);
+}
+
+.admin-root .tn-card-title.tn-hero-title {
+  margin: 0;
+  font-size: 40px;
+  line-height: 0.95;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  overflow-wrap: anywhere;
+}
+
+.admin-root .tn-hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.admin-root .tn-hero-chip {
+  padding: 4px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(8, 18, 60, 0.35);
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.admin-root .tn-hero-tools .admin-mini-select {
+  background-color: #ffffff;
+  color: var(--text);
+  border-color: transparent;
+}
+
+.admin-root .tn-hero-tools .tn-icon-btn {
+  min-width: 40px;
+  height: 40px;
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(8, 18, 60, 0.35);
+  color: #ffffff;
+}
+
+.admin-root .tn-hero-tools .tn-icon-btn:hover {
+  border-color: #ffffff;
+  background: rgba(8, 18, 60, 0.6);
+}
+
+.admin-root .tn-hero-tools .tn-icon-btn.is-danger:hover {
+  border-color: #fca5a5;
+  color: #fecaca;
+}
+
+/* ==========================================================================
+   TORNEOS · PASOS, como un marcador: fondo oscuro, el paso actual en
+   cancha azul y la pelotita con el número.
+   ========================================================================== */
+.admin-root .tn-steps {
+  padding: 6px;
+  border: 0;
+  background: var(--night, #1b1b19);
+  box-shadow: 0 10px 22px -18px rgba(0, 0, 0, 0.7);
+}
+
+.admin-root .tn-step {
+  min-height: 56px;
+  color: var(--on-night-soft, #cfcabd);
+}
+
+.admin-root .tn-step:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-root .tn-step:focus-visible {
+  outline: 2px solid var(--tr-ball-solid);
+  outline-offset: 2px;
+}
+
+.admin-root .tn-step-num {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.admin-root .tn-step.is-done .tn-step-num {
+  background: #22c55e;
+  color: #052e14;
+}
+
+.admin-root .tn-step[aria-pressed="true"] {
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-plain);
+  background-size: auto, 220px 220px;
+  background-repeat: no-repeat, repeat;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.admin-root .tn-step[aria-pressed="true"] .tn-step-num {
+  background: var(--tr-ball);
+  color: #1b1b19;
+  text-shadow: none;
+  box-shadow: 0 0 10px rgba(215, 240, 58, 0.5);
+}
+
+.admin-root .tn-step-sub {
+  opacity: 0.85;
+}
+
+/* Categoría elegida en azul cancha: va de la mano con el cuadro. */
+.admin-root .tn-cat-chip[aria-pressed="true"] {
+  background: var(--tr-court);
+  border-color: var(--tr-court);
+}
+
+/* ==========================================================================
+   TORNEOS · PAREJAS
+   ========================================================================== */
+.admin-root .tn-quickadd {
+  border: 0;
+  box-shadow:
+    inset 0 4px 0 var(--tr-court),
+    0 0 0 1px var(--border);
+}
+
+.admin-root .tn-quickadd-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-root .tn-quickadd-title::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+}
+
+/* Cabeza de serie: el número adentro de una pelotita. */
+.admin-root .tn-seed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px;
+  height: 21px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  color: #1b1b19;
+  font-size: 11.5px;
+  font-weight: 800;
+  vertical-align: 1px;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.admin-root .tn-pairs-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 6px;
+}
+
+.admin-root .tn-pairs-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.admin-root .tn-pairs-pill.is-paid {
+  background: rgba(21, 128, 61, 0.1);
+  color: var(--tr-money);
+}
+
+.admin-root .tn-pairs-pill.is-owe {
+  background: rgba(232, 114, 42, 0.12);
+  color: var(--tr-owe);
+}
+
+.admin-root .tn-pairs tbody tr:hover td {
+  background: var(--surface-muted);
+}
+
+.admin-root .tn-pairs .tn-pair-name strong {
+  font-size: 15.5px;
+}
+
+/* Debe en naranja (pendiente), pagó en verde (plata cobrada). */
+.admin-root .tn-pay {
+  min-height: 34px;
+  padding: 5px 13px;
+  border: 1px solid rgba(232, 114, 42, 0.35);
+  background: rgba(232, 114, 42, 0.1);
+  color: var(--tr-owe);
+}
+
+.admin-root .tn-pay.is-paid {
+  border-color: rgba(21, 128, 61, 0.3);
+  background: rgba(21, 128, 61, 0.1);
+  color: var(--tr-money);
+}
+
+.admin-root .tn-pairs .admin-mini-select {
+  max-width: 150px;
+}
+
+/* ==========================================================================
+   TORNEOS · ZONAS
+   ========================================================================== */
+.admin-root .tn-zone {
+  box-shadow: 0 1px 2px rgba(27, 27, 25, 0.05);
+}
+
+.admin-root .tn-zone-head {
+  padding: 12px 14px;
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-bg);
+  background-size: var(--tr-court-size);
+  background-repeat: no-repeat, no-repeat, repeat;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.admin-root .tn-zone-head strong {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.admin-root .tn-zone-head span {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(8, 18, 60, 0.45);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.admin-root .tn-standings td {
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .tn-standings tr.is-qualified td {
+  background: rgba(232, 114, 42, 0.06);
+}
+
+.admin-root .tn-standings td:first-child {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.admin-root .tn-draft-pair {
+  min-height: 48px;
+}
+
+/* ==========================================================================
+   TORNEOS · PARTIDO (zonas y cronograma)
+   Cada lado en su renglón con los sets en casilleros, como el cuadro: el
+   ganador en negrita con la pelotita, el que perdió apagado.
+   ========================================================================== */
+.admin-root .tn-match {
+  border-radius: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-root .tn-match:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 6px 16px -12px rgba(27, 27, 25, 0.4);
+}
+
+.admin-root .tn-match.is-conflict {
+  border-color: var(--danger);
+  box-shadow: inset 4px 0 0 var(--danger);
+}
+
+.admin-root .tn-match-sides {
+  gap: 4px;
+}
+
+.admin-root .tn-match-tag {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+}
+
+.admin-root .tn-match-cat {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--tr-court);
+  color: #ffffff;
+  letter-spacing: 0.04em;
+}
+
+/* En la grilla del cronograma la cancha ya está en la columna; en el celu
+   (una sola columna) se muestra acá. */
+.admin-root .tn-match-court {
+  display: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(35, 80, 214, 0.1);
+  color: var(--tr-court-deep);
+}
+
+.admin-root .tn-match-chip {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .tn-match-side {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  white-space: normal;
+  overflow: visible;
+  min-height: 26px;
+  color: var(--text-secondary);
+}
+
+.admin-root .tn-match-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+.admin-root .tn-match-side.is-winner .tn-match-name::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  box-shadow: 0 0 0 1px rgba(169, 196, 28, 0.6);
+  vertical-align: 1px;
+}
+
+.admin-root .tn-match-side.is-loser {
+  color: var(--text-muted);
+}
+
+.admin-root .tn-sets {
+  display: inline-flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.admin-root .tn-sets > span {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: #f1ede4;
+  color: var(--text-muted);
+  font-family: var(--font-code, ui-monospace), monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-root .tn-sets > span.is-won {
+  background: var(--night, #1b1b19);
+  color: #ffffff;
+}
+
+.admin-root .tn-match-conflict {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+/* Partido listo para jugar y sin resultado: el botón llama la atención. */
+.admin-root .tn-icon-btn.tn-result-btn.is-due {
+  border-color: rgba(232, 114, 42, 0.5);
+  background: rgba(232, 114, 42, 0.08);
+  color: var(--tr-owe);
+  font-weight: 600;
+}
+
+.admin-root .tn-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Compacto (dentro de cada zona): todo apilado, así los nombres no se cortan
+   en la columna angosta. */
+.admin-root .tn-match.is-compact {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.admin-root .tn-match.is-compact .tn-match-actions {
+  justify-content: flex-start;
+}
+
+/* ==========================================================================
+   TORNEOS · CRONOGRAMA: grilla hora × cancha, como la cartelera del club.
+   ========================================================================== */
+.admin-root .tn-day + .tn-day {
+  margin-top: 10px;
+}
+
+.admin-root .tn-day-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 8px 0 10px;
+  padding-left: 12px;
+  border-left: 5px solid var(--tr-court);
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.admin-root .tn-day-title small {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: none;
+  color: var(--text-muted);
+}
+
+.admin-root .tn-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-root .tn-slots-head,
+.admin-root .tn-slot-row {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.admin-root .tn-slots-head {
+  grid-template-columns: 78px repeat(var(--courts, 2), minmax(0, 1fr));
+}
+
+.admin-root .tn-slots-court {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  border-radius: 8px;
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-plain);
+  background-size: auto, 220px 220px;
+  background-repeat: no-repeat, repeat;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.admin-root .tn-slot-time {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-top: 12px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.admin-root .tn-slot-cells {
+  display: grid;
+  grid-template-columns: repeat(var(--courts, 2), minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-root .tn-slot-cell {
+  grid-column: var(--court-col, auto);
+  min-width: 0;
+}
+
+.admin-root .tn-match.is-slot {
+  grid-template-columns: minmax(0, 1fr) auto;
+  height: 100%;
+  align-items: start;
+}
+
+.admin-root .tn-match.is-slot .tn-match-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Jugado: queda prolijo pero más quieto que lo que falta jugar. */
+.admin-root .tn-match.is-slot.is-played {
+  background: var(--surface-muted);
+}
+
+/* ==========================================================================
+   TORNEOS · CUADRO "DE TELEVISIÓN"
+   Tablero oscuro con la cancha de fondo, partidos como el marcador de la
+   transmisión: sets ganados en amarillo pelota. Solo en pantalla
+   (.bk-screen): el PDF usa .bk-print y va fuera de .admin-root.
+   ========================================================================== */
+.admin-root .tn-board {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 18px 6px;
+  border-radius: 18px;
+  background:
+    radial-gradient(90% 70% at 50% -10%, rgba(35, 80, 214, 0.6), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white' stroke-opacity='.06'%3E%3Crect x='3' y='4' width='194' height='92' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='2 4' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M31 4v92M169 4v92M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center / 100% 100% no-repeat,
+    linear-gradient(180deg, #0f1d4d 0%, #081029 100%);
+  color: #ffffff;
+  box-shadow: 0 22px 40px -28px rgba(8, 16, 41, 0.9);
+}
+
+.admin-root .tn-board-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 6px;
+}
+
+.admin-root .tn-board-ball {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  box-shadow: 0 0 14px rgba(215, 240, 58, 0.6);
+}
+
+.admin-root .tn-board-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.admin-root .tn-board-meta {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #c9d4f7;
+}
+
+.admin-root .tn-board-note {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #c9d4f7;
+}
+
+.admin-root .tn-board .tn-bracket-scroll {
+  padding: 4px 2px 14px;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.admin-root .bk-screen {
+  --bk-line: rgba(255, 255, 255, 0.3);
+  --bk-col: 230px;
+  --bk-gap: 40px;
+}
+
+.admin-root .bk-screen .bk-round {
+  margin-bottom: 8px;
+  padding: 8px 6px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.14);
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+}
+
+.admin-root .bk-screen .bk-col-champion .bk-round {
+  color: var(--tr-ball-solid);
+  border-bottom-color: rgba(215, 240, 58, 0.45);
+}
+
+.admin-root .bk-screen .bk-match {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #17275c 0%, #111d47 100%);
+  box-shadow: 0 10px 20px -14px rgba(0, 0, 0, 0.8);
+}
+
+.admin-root .bk-screen .bk-match.is-played {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.admin-root .bk-screen .bk-match.is-bye {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  opacity: 1;
+}
+
+.admin-root .bk-screen .bk-head {
+  padding: 6px 6px 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #aebbe6;
+  font-size: 12.5px;
+}
+
+.admin-root .bk-screen .bk-when strong {
+  color: #ffffff;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .bk-screen .bk-tools button {
+  width: 30px;
+  height: 30px;
+  color: #c9d4f7;
+}
+
+.admin-root .bk-screen .bk-tools button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.admin-root .bk-screen .bk-side {
+  min-height: 42px;
+  padding: 8px 10px 8px 12px;
+  color: #ffffff;
+  font-size: 14.5px;
+}
+
+.admin-root .bk-screen .bk-side + .bk-side {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* En pantalla el nombre baja a un segundo renglón en vez de cortarse. */
+.admin-root .bk-screen .bk-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+.admin-root .bk-screen .bk-side.is-winner {
+  background: linear-gradient(90deg, rgba(215, 240, 58, 0.18), rgba(215, 240, 58, 0) 85%);
+  box-shadow: inset 4px 0 0 var(--tr-ball-solid);
+  font-weight: 700;
+}
+
+.admin-root .bk-screen .bk-side.is-loser {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-root .bk-screen .bk-side.is-tbd {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.admin-root .bk-screen .bk-sets > span {
+  min-width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #dfe6ff;
+  font-size: 13px;
+}
+
+.admin-root .bk-screen .bk-sets > span.is-won {
+  background: var(--tr-ball-solid);
+  color: #1b1b19;
+}
+
+.admin-root .bk-screen .bk-result-btn {
+  min-height: 38px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: #ffb27a;
+}
+
+.admin-root .bk-screen .bk-result-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.admin-root .bk-screen .bk-result-btn:disabled {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.admin-root .bk-screen .bk-match.is-played .bk-result-btn {
+  color: #aebbe6;
+}
+
+.admin-root .bk-screen .bk-result-btn:focus-visible,
+.admin-root .bk-screen .bk-tools button:focus-visible {
+  outline: 2px solid var(--tr-ball-solid);
+  outline-offset: -2px;
+}
+
+/* El editor de resultado va en claro: los campos se leen mejor. */
+.admin-root .bk-screen .bk-edit {
+  background: var(--surface-muted);
+  color: var(--text);
+  border-top: 0;
+}
+
+.admin-root .bk-screen .bk-champ {
+  min-height: 120px;
+  justify-content: center;
+  border: 2px dashed rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.admin-root .bk-screen .bk-champ.is-set {
+  border: 2px solid var(--tr-ball-solid);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(215, 240, 58, 0.3), transparent 70%),
+    linear-gradient(160deg, #1f3a9e, #0d1a45);
+  color: #ffffff;
+  font-size: 22px;
+  box-shadow: 0 0 26px -4px rgba(215, 240, 58, 0.4);
+}
+
+.admin-root .bk-screen .bk-champ.is-set svg {
+  color: var(--tr-ball-solid);
+}
+
+/* Cartel de campeones arriba del cuadro. */
+.admin-root .tn-champion {
+  gap: 16px;
+  padding: 18px 22px;
+  border: 2px solid var(--tr-ball-solid);
+  background:
+    radial-gradient(60% 120% at 0% 50%, rgba(215, 240, 58, 0.22), transparent 70%),
+    linear-gradient(135deg, #0f1d4d 0%, #1f3a9e 100%);
+  box-shadow: 0 16px 30px -22px rgba(8, 16, 41, 0.9);
+}
+
+.admin-root .tn-champion-cup {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  color: #1b1b19;
+  box-shadow: 0 0 22px rgba(215, 240, 58, 0.5);
+}
+
+.admin-root .tn-champion-kicker {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tr-ball-solid);
+}
+
+.admin-root .tn-champion strong {
+  font-size: 32px;
+}
+
+.admin-root .tn-champion-sub {
+  font-size: 14.5px;
+  color: #c9d4f7;
+}
+
+/* ==========================================================================
+   TORNEOS · CELU
+   ========================================================================== */
+@media (max-width: 720px) {
+  .admin-root .tn-card.tn-hero {
+    padding: 18px 16px;
+  }
+
+  .admin-root .tn-card-title.tn-hero-title {
+    font-size: 32px;
+  }
+
+  .admin-root .tn-hero-tools {
+    width: 100%;
+  }
+
+  .admin-root .tn-hero-tools .admin-mini-select {
+    flex: 1;
+    min-height: 44px;
+  }
+
+  .admin-root .tn-hero-tools .tn-icon-btn {
+    min-width: 44px;
+    height: 44px;
+  }
+
+  .admin-root .tn-step {
+    min-height: 60px;
+  }
+
+  .admin-root .tn-icon-btn,
+  .admin-root .tn-pay {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .admin-root .tn-cat-chip {
+    min-height: 44px;
+  }
+
+  .admin-root .tn-pairs .admin-mini-select {
+    max-width: none;
+    flex: 1;
+    min-height: 44px;
+  }
+
+  .admin-root .tn-pairs td.tn-col-actions .tn-row {
+    justify-content: flex-start !important;
+  }
+
+  /* Cronograma: una columna, la hora a la izquierda y la cancha en el
+     partido. */
+  .admin-root .tn-slots-head {
+    display: none;
+  }
+
+  .admin-root .tn-slot-row {
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .admin-root .tn-slot-time {
+    font-size: 21px;
+    padding-top: 12px;
+  }
+
+  .admin-root .tn-slot-cells {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .admin-root .tn-slot-cell {
+    grid-column: auto;
+  }
+
+  .admin-root .tn-match-court {
+    display: inline;
+  }
+
+  .admin-root .tn-match.is-slot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-root .tn-match.is-slot .tn-match-actions {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .admin-root .tn-day-title {
+    font-size: 21px;
+  }
+
+  /* Cuadro: columnas más angostas y se desliza ronda por ronda. */
+  .admin-root .tn-board {
+    margin: 0 -4px;
+    padding: 14px 12px 4px;
+    border-radius: 14px;
+  }
+
+  .admin-root .tn-board-title {
+    font-size: 25px;
+  }
+
+  .admin-root .tn-board-meta {
+    margin-left: 0;
+  }
+
+  .admin-root .tn-board-head::after {
+    content: "Deslizá de costado para ver la final →";
+    flex-basis: 100%;
+    font-size: 13px;
+    color: #aebbe6;
+  }
+
+  .admin-root .tn-board .tn-bracket-scroll {
+    scroll-snap-type: x proximity;
+  }
+
+  .admin-root .bk-screen {
+    --bk-col: 216px;
+    --bk-champ-col: 150px;
+    --bk-gap: 28px;
+  }
+
+  .admin-root .bk-screen .bk-col {
+    scroll-snap-align: start;
+  }
+
+  .admin-root .bk-screen .bk-tools button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .admin-root .bk-screen .bk-result-btn {
+    min-height: 44px;
+  }
+
+  .admin-root .tn-champion {
+    padding: 16px;
+  }
+
+  .admin-root .tn-champion strong {
+    font-size: 24px;
+  }
+
+  .admin-root .tn-champion-cup {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Movimiento: solo si la persona no pidió reducirlo. */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .tn-list-item.tn-tcard {
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .admin-root .tn-list-item.tn-tcard:hover {
+    transform: translateY(-2px);
+  }
+
+  .admin-root .bk-screen .bk-champ.is-set svg {
+    animation: trCupShine 2.8s ease-in-out infinite;
+  }
+
+  @keyframes trCupShine {
+    50% {
+      transform: translateY(-2px) rotate(-6deg);
+    }
+  }
+}
+
+/* ==========================================================================
+   NÚMEROS DEL MES
+   Arriba la respuesta en grande ("cobraste tanto, mejor o peor que antes");
+   el detalle va después, para quien quiera mirarlo.
+   ========================================================================== */
+.admin-root .rp-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 18px 28px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 24px 28px;
+  border-radius: 18px;
+  background:
+    radial-gradient(70% 140% at 100% 0%, rgba(35, 80, 214, 0.55), transparent 65%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' fill='none' stroke='white' stroke-opacity='.07'%3E%3Crect x='3' y='3' width='194' height='94' rx='2' stroke-width='1.5'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3'/%3E%3Cpath d='M31 3v94M169 3v94M31 50h138' stroke-width='1'/%3E%3C/svg%3E") right -40px center / 420px auto no-repeat,
+    var(--night, #1b1b19);
+  color: #ffffff;
+  box-shadow: 0 18px 34px -24px rgba(0, 0, 0, 0.75);
+}
+
+.admin-root .rp-hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-root .rp-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--on-night-soft, #cfcabd);
+}
+
+.admin-root .rp-hero-kicker::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  box-shadow: 0 0 10px rgba(215, 240, 58, 0.5);
+}
+
+.admin-root .rp-hero-label {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+/* Verde = plata cobrada (más clarito para que se lea sobre el oscuro). */
+.admin-root .rp-hero-amount {
+  font-family: var(--font-display);
+  font-size: clamp(44px, 6vw, 72px);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: #4ade80;
+  overflow-wrap: anywhere;
+}
+
+.admin-root .rp-split {
+  display: flex;
+  height: 10px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-root .rp-split .is-turnos {
+  background: #22c55e;
+}
+
+.admin-root .rp-split .is-cantina {
+  background: #a7f3c0;
+}
+
+.admin-root .rp-split-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-top: 8px;
+  font-size: 14.5px;
+  color: var(--on-night-soft, #cfcabd);
+}
+
+.admin-root .rp-split-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 7px;
+  border-radius: 3px;
+  vertical-align: 0;
+}
+
+.admin-root .rp-split-legend .is-turnos::before {
+  background: #22c55e;
+}
+
+.admin-root .rp-split-legend .is-cantina::before {
+  background: #a7f3c0;
+}
+
+.admin-root .rp-split-legend strong {
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .rp-hero-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-root .rp-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px 6px 10px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.admin-root .rp-verdict.is-up {
+  background: rgba(74, 222, 128, 0.16);
+  color: #86efac;
+}
+
+.admin-root .rp-verdict.is-down {
+  background: rgba(248, 113, 113, 0.16);
+  color: #fca5a5;
+}
+
+.admin-root .rp-verdict-text {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #ffffff;
+}
+
+.admin-root .rp-verdict-text strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .rp-hero-note {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--on-night-soft, #cfcabd);
+}
+
+.admin-root .rp-kpis {
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  margin-bottom: 8px;
+}
+
+/* Ocupación: la barra llena en azul cancha (dato real, sin escala trucha). */
+.admin-root .rp-meter {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: 8px;
+  margin: 4px 0 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8ecf8;
+}
+
+.admin-root .rp-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tr-court);
+}
+
+/* ---------- Gráfico diario ---------- */
+.admin-root .rp-chart-card {
+  padding: 18px 20px 14px;
+}
+
+.admin-root .rp-chart {
+  margin: 0;
+}
+
+.admin-root .rp-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+}
+
+.admin-root .rp-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.admin-root .rp-chart-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 6px;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.admin-root .rp-chart-legend .is-turnos::before {
+  background: var(--tr-money);
+}
+
+.admin-root .rp-chart-legend .is-cantina::before {
+  background: #7fd69c;
+}
+
+.admin-root .rp-chart-legend .is-avg::before {
+  width: 16px;
+  height: 0;
+  border-top: 2px dashed var(--text);
+  border-radius: 0;
+  vertical-align: 3px;
+}
+
+.admin-root .rp-chart-best {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.admin-root .rp-chart-best strong {
+  color: var(--text);
+}
+
+.admin-root .rp-chart-plot {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  height: 240px;
+}
+
+.admin-root .rp-chart-y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-right: 8px;
+  margin: -8px 0;
+  font-size: 12.5px;
+  text-align: right;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .rp-chart-area {
+  position: relative;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.admin-root .rp-chart-grid,
+.admin-root .rp-chart-avg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--border);
+  pointer-events: none;
+}
+
+.admin-root .rp-chart-avg {
+  z-index: 2;
+  border-top: 2px dashed var(--text);
+  opacity: 0.7;
+}
+
+.admin-root .rp-chart-bars {
+  position: relative;
+  display: grid;
+  height: 100%;
+  gap: 3px;
+}
+
+.admin-root .rp-bar {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  height: 100%;
+  border-radius: 4px 4px 0 0;
+}
+
+.admin-root .rp-bar.is-weekend {
+  background: rgba(35, 80, 214, 0.06);
+}
+
+.admin-root .rp-bar.is-future {
+  background:
+    repeating-linear-gradient(135deg, transparent 0 5px, rgba(27, 27, 25, 0.04) 5px 7px);
+}
+
+.admin-root .rp-bar > span {
+  display: block;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.admin-root .rp-bar .is-turnos {
+  background: var(--tr-money);
+}
+
+.admin-root .rp-bar .is-cantina {
+  border-radius: 4px 4px 0 0;
+  background: #7fd69c;
+}
+
+.admin-root .rp-bar:hover > span {
+  filter: brightness(1.12);
+}
+
+.admin-root .rp-chart-x {
+  display: grid;
+  gap: 3px;
+  margin: 6px 0 0 52px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .rp-chart-x span {
+  min-width: 0;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.admin-root .rp-chart-x .is-weekend {
+  font-weight: 700;
+  color: var(--tr-court-deep);
+}
+
+/* Hoy: el número del día adentro de la pelotita. */
+.admin-root .rp-chart-x .is-today {
+  justify-self: center;
+  min-width: 22px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: var(--tr-ball);
+  color: #1b1b19;
+  font-weight: 800;
+}
+
+/* Rankings y tablas del reporte a todo el ancho de la tarjeta. */
+.admin-root .admin-report .admin-kravio-table {
+  width: 100%;
+}
+
+.admin-root .admin-report .admin-kravio-table th {
+  text-align: left;
+}
+
+/* En pantallas táctiles no hay "pasar el mouse": el aviso sobra. */
+@media (hover: none) {
+  .admin-root .rp-hover-hint {
+    display: none;
+  }
+}
+
+.admin-root .rp-chart-caption {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ---------- Ocupación por horario ---------- */
+.admin-root .rp-heat-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.admin-root .rp-heat-legend span:first-child {
+  margin-right: 4px;
+}
+
+.admin-root .rp-heat-legend span:last-child {
+  margin-left: 4px;
+}
+
+.admin-root .rp-heat-legend i {
+  width: 22px;
+  height: 12px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--heat-bg, #ffffff);
+}
+
+.admin-root .admin-heat-table th[scope="row"] {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* ---------- Rankings: barrita relativa al primero ---------- */
+.admin-root .rp-rank-bar {
+  display: block;
+  height: 4px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.admin-root .rp-rank-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tr-court);
+}
+
+.admin-root .rp-rank-bar.is-money > span {
+  background: var(--tr-money);
+}
+
+/* ---------- Números en el celu ---------- */
+@media (max-width: 767px) {
+  .admin-root .rp-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px 18px;
+    /* Sin la cancha dibujada: en angosto quedaba encima del número. */
+    background:
+      radial-gradient(90% 60% at 100% 0%, rgba(35, 80, 214, 0.5), transparent 70%),
+      var(--night, #1b1b19);
+  }
+
+  .admin-root .rp-hero-side {
+    padding: 14px 16px;
+  }
+
+  .admin-root .rp-verdict {
+    font-size: 22px;
+  }
+
+  .admin-root .rp-chart-card {
+    padding: 14px 12px 12px;
+  }
+
+  .admin-root .rp-chart-plot {
+    grid-template-columns: 42px minmax(0, 1fr);
+    height: 200px;
+  }
+
+  .admin-root .rp-chart-y {
+    font-size: 11.5px;
+    padding-right: 6px;
+  }
+
+  .admin-root .rp-chart-bars,
+  .admin-root .rp-chart-x {
+    gap: 2px;
+  }
+
+  .admin-root .rp-chart-x {
+    margin-left: 42px;
+    font-size: 11.5px;
+  }
+
+  /* En el celu no entran todas las fechas: quedan las marcadas. */
+  .admin-root .rp-chart-x span:not(.is-major),
+  .admin-root .rp-chart-x .is-today + .is-major,
+  .admin-root .rp-chart-x .is-major:has(+ .is-today) {
+    visibility: hidden;
+  }
+
+  .admin-root .rp-chart-head {
+    flex-direction: column;
+  }
+
+  /* La tabla de horarios se desliza; el día queda fijo a la izquierda. */
+  .admin-root .admin-heat-table th[scope="row"] {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--surface);
+  }
+}
+
+/* ---------- Números impresos: el cartel en claro para no gastar tinta ---------- */
+@media print {
+  .admin-root .rp-hero {
+    border: 2px solid #141412;
+    background: #ffffff !important;
+    color: #141412;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .admin-root .rp-hero-label,
+  .admin-root .rp-verdict-text,
+  .admin-root .rp-split-legend strong {
+    color: #141412;
+  }
+
+  .admin-root .rp-hero-kicker,
+  .admin-root .rp-hero-note,
+  .admin-root .rp-split-legend {
+    color: #4a473f;
+  }
+
+  .admin-root .rp-hero-amount {
+    color: #15803d;
+  }
+
+  .admin-root .rp-hero-side {
+    border-color: #d3ccbd;
+    background: #ffffff;
+  }
+
+  .admin-root .rp-verdict.is-up {
+    color: #15803d;
+  }
+
+  .admin-root .rp-verdict.is-down {
+    color: #b91c1c;
+  }
+
+  .admin-root .rp-split,
+  .admin-root .rp-split span,
+  .admin-root .rp-split-legend span::before,
+  .admin-root .rp-bar,
+  .admin-root .rp-bar > span,
+  .admin-root .rp-chart-legend span::before,
+  .admin-root .rp-meter,
+  .admin-root .rp-meter > span,
+  .admin-root .rp-rank-bar,
+  .admin-root .rp-rank-bar > span,
+  .admin-root .rp-heat-legend i {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .admin-root .rp-chart-card,
+  .admin-root .rp-kpis {
+    break-inside: avoid;
+  }
+
+  .admin-root .rp-chart-caption {
+    display: none;
+  }
+}
