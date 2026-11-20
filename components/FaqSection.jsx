@@ -63,7 +63,7 @@ export default function FaqSection() {
                   aria-expanded={isOpen}
                 >
                   <span className="faq-question-text">{faq.q}</span>
-                  <span className="faq-icon">{isOpen ? "−" : "+"}</span>
+                  <span className="faq-icon" aria-hidden="true">{isOpen ? "−" : "+"}</span>
                 </button>
                 <div className={`faq-answer-wrap${isOpen ? " open" : ""}`}>
                   <div className="faq-answer-content">
