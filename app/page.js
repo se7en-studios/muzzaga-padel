@@ -335,6 +335,8 @@ export default async function Home() {
                     <span className="location-detail-label">Horarios</span>
                     <strong className="location-detail-value">Lunes a sábado</strong>
                     <span className="location-detail-sub">14:00 a 00:30 hs</span>
+                    {/* Abierto ahora / cerrado, calculado del horario de Configuración. */}
+                    <LiveWeatherRadar schedule={config.schedule} blockedDates={config.blockedDates} />
                   </div>
                 </div>
               </div>

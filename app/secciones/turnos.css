@@ -14,8 +14,8 @@
   --turnos-costura: radial-gradient(circle at 118% 50%, transparent 0 52%, rgba(255, 255, 255, 0.95) 54% 60%, transparent 62%);
   /* Cancha vista de arriba, parada (para tarjetas angostas como los días). */
   --turnos-lineas-v: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 200' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='7' y='5' width='86' height='190' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.5'/%3E%3Cpath d='M0 100h100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M7 34h86M7 166h86' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.3'/%3E%3C/svg%3E");
-  /* Cancha acostada (para el resumen del cajón). */
-  --turnos-lineas-h: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='7' width='192' height='86' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.55'/%3E%3Cpath d='M31 7v86M169 7v86M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.28'/%3E%3C/svg%3E");
+  /* Solo perímetro y red: en el resumen las líneas de saque cruzaban el texto. */
+  --turnos-lineas-resumen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='3' y='5' width='194' height='90' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3C/svg%3E");
   /* Las mismas líneas en azul, para estados vacíos y de carga. */
   --turnos-lineas-azul: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='%232350d6'%3E%3Crect x='4' y='7' width='192' height='86' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M100 0v100' stroke-width='2.5' stroke-dasharray='1 3' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M31 7v86M169 7v86M31 50h138' stroke-width='1' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
 }
@@ -386,7 +386,7 @@
   border-radius: 16px;
   background-color: #2350d6;
   background-image:
-    var(--turnos-lineas-h),
+    var(--turnos-lineas-resumen),
     linear-gradient(180deg, rgba(11, 26, 77, 0.35), rgba(11, 26, 77, 0.7)),
     url("/img/fondo/textura-cesped.jpg");
   background-size: 100% 100%, auto, 200px 200px;
