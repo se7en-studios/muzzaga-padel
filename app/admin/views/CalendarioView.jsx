@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ChevronRight, Percent, Wallet } from "lucide-react";
 import { adminGetMonthStats } from "../actions";
 import { todayInClub } from "../../../lib/booking";
 import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
@@ -83,7 +83,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
           <div className="admin-kravio-kpi-card">
             <div className="admin-kravio-kpi-header">
               <span className="admin-kravio-kpi-title">Ocupación Mensual</span>
-              <span style={{ fontSize: 14.5, fontWeight: 700, color: "#ea580c" }}>%</span>
+              <Percent size={17} strokeWidth={1.75} className="admin-kravio-kpi-icon" aria-hidden />
             </div>
             <div className="admin-kravio-kpi-content">
               <div className="admin-kravio-kpi-left">
@@ -100,7 +100,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
           <div className="admin-kravio-kpi-card">
             <div className="admin-kravio-kpi-header">
               <span className="admin-kravio-kpi-title">Turnos en el Mes</span>
-              <span style={{ fontSize: 14.5, fontWeight: 700, color: "#15803d" }}>🎾</span>
+              <CalendarCheck size={17} strokeWidth={1.75} className="admin-kravio-kpi-icon" aria-hidden />
             </div>
             <div className="admin-kravio-kpi-content">
               <div className="admin-kravio-kpi-left">
@@ -117,7 +117,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
           <div className="admin-kravio-kpi-card">
             <div className="admin-kravio-kpi-header">
               <span className="admin-kravio-kpi-title">Recaudación Cobrada</span>
-              <span style={{ fontSize: 14.5, fontWeight: 700, color: "#0284c7" }}>$</span>
+              <Wallet size={17} strokeWidth={1.75} style={{ color: "#15803d" }} aria-hidden />
             </div>
             <div className="admin-kravio-kpi-content">
               <div className="admin-kravio-kpi-left">
