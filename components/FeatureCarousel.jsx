@@ -197,6 +197,26 @@ export default function FeatureCarousel({ photos }) {
         </div>
 
         <div className="fc-stage">
+          {/* Marcador tipo tablero de cancha: en qué foto vas de cuántas. */}
+          <div className="fc-marcador" aria-hidden="true">
+            <span className="fc-marcador-num">
+              {String(currentIndex + 1).padStart(2, "0")}
+            </span>
+            <span className="fc-marcador-total">
+              / {String(FEATURES.length).padStart(2, "0")}
+            </span>
+          </div>
+          {/* Barra del tiempo que falta para la próxima foto. Solo existe
+              mientras rota sola, y la key la reinicia en cada cambio, así
+              que va pareja con el temporizador de arriba. */}
+          {shouldAutoplay && (
+            <span
+              key={step}
+              className="fc-progreso"
+              style={{ "--fc-ms": `${AUTOPLAY_MS}ms` }}
+              aria-hidden="true"
+            />
+          )}
           <div className="fc-stage-card-wrap">
             {FEATURES.map((feature, index) => {
               const status = getCardStatus(index);

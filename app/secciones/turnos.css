@@ -154,14 +154,15 @@
   box-shadow: 0 10px 20px -10px rgba(13, 31, 92, 0.75);
 }
 
-/* Pelota en la esquina del día elegido. */
+/* Pelota apoyada sobre la red, al costado: arriba tapaba el "FINDE". */
 .booking-date-btn.active::after {
   content: "";
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 11px;
-  height: 11px;
+  top: 50%;
+  right: 5px;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
   border-radius: 50%;
   background: var(--turnos-costura), var(--turnos-pelota);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);

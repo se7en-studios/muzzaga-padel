@@ -39,18 +39,29 @@ function useNearViewport(ref) {
   return near;
 }
 
+/**
+ * Lo que va encima del video, como en una transmisión deportiva: la placa
+ * "EN VIVO" + cancha arriba a la izquierda y el sello del club a la derecha.
+ * Todo decorativo y sin clics (pointer-events en el CSS), para no tapar los
+ * controles de YouTube.
+ */
 function Chrome({ live, label }) {
   return (
     <>
-      <span className="camaras-corner camaras-corner--tl" aria-hidden="true" />
-      <span className="camaras-corner camaras-corner--tr" aria-hidden="true" />
       <span className="camaras-corner camaras-corner--bl" aria-hidden="true" />
       <span className="camaras-corner camaras-corner--br" aria-hidden="true" />
-      <div className="camaras-frame-chrome" aria-hidden="true">
-        <span
-          className={`pulse-dot camaras-rec-dot${live ? " is-live" : ""}`}
-        />
-        {live ? "EN VIVO" : "LOOP"} · {label}
+      <div className="camaras-bug" aria-hidden="true">
+        <span className={`camaras-bug-estado${live ? " is-live" : ""}`}>
+          <span
+            className={`pulse-dot camaras-rec-dot${live ? " is-live" : ""}`}
+          />
+          {live ? "En vivo" : "Loop"}
+        </span>
+        <span className="camaras-bug-cancha">{label}</span>
+      </div>
+      <div className="camaras-sello" aria-hidden="true">
+        <span className="camaras-sello-pelota" />
+        Muzzaga <b>Play</b>
       </div>
     </>
   );
@@ -321,32 +332,49 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
           </div>
         </div>
 
-        <div
-          className={`camaras-grid${streams.length > 1 ? " is-double" : ""}`}
-        >
-          {streams.length ? (
-            streams.map((c) =>
-              youtubeEmbedUrl(c.streamUrl) ? (
-                <YouTubeFrame
-                  key={c.id}
-                  name={c.name}
-                  embed={youtubeEmbedUrl(c.streamUrl)}
-                  autoplay={autoplay === true}
-                />
-              ) : (
-                <StreamFrame
-                  key={c.id}
-                  name={c.name}
-                  url={c.streamUrl}
-                  autoplay={autoplay === true}
-                  onFail={() => setFailed((f) => ({ ...f, [c.id]: true }))}
-                  debug={debug}
-                />
-              ),
-            )
-          ) : (
-            <LoopFrame label="CANCHAS MUZZAGA" autoplay={autoplay === true} />
-          )}
+        {/* La "tele": marco oscuro con el zócalo abajo, como una transmisión. */}
+        <div className="camaras-tv">
+          <div
+            className={`camaras-grid${streams.length > 1 ? " is-double" : ""}`}
+          >
+            {streams.length ? (
+              streams.map((c) =>
+                youtubeEmbedUrl(c.streamUrl) ? (
+                  <YouTubeFrame
+                    key={c.id}
+                    name={c.name}
+                    embed={youtubeEmbedUrl(c.streamUrl)}
+                    autoplay={autoplay === true}
+                  />
+                ) : (
+                  <StreamFrame
+                    key={c.id}
+                    name={c.name}
+                    url={c.streamUrl}
+                    autoplay={autoplay === true}
+                    onFail={() => setFailed((f) => ({ ...f, [c.id]: true }))}
+                    debug={debug}
+                  />
+                ),
+              )
+            ) : (
+              <LoopFrame label="CANCHAS MUZZAGA" autoplay={autoplay === true} />
+            )}
+          </div>
+          {/* Zócalo de TV: repite lo que dice el encabezado, por eso va oculto
+              para lectores de pantalla. */}
+          <div className="camaras-zocalo" aria-hidden="true">
+            <span className="camaras-zocalo-marca">
+              <span className="camaras-sello-pelota" />
+              Muzzaga Play
+            </span>
+            <span className="camaras-zocalo-texto">
+              {live
+                ? "Cámaras Beelup · en directo desde el club"
+                : "Canchas de cristal templado"}
+            </span>
+            <span className="camaras-zocalo-lugar">Catriel · Río Negro</span>
+          </div>
         </div>
 
         {beelupUrl && (
