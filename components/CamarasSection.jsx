@@ -84,12 +84,13 @@ function LoopFrame({ label, autoplay }) {
  * el resto se carga hls.js (versión liviana) recién acá. Si no arranca, se
  * cae o el link venció, queda el loop.
  */
-function StreamFrame({ name, url, autoplay, onFail }) {
+function StreamFrame({ name, url, autoplay, onFail, debug }) {
   const wrapRef = useRef(null);
   const videoRef = useRef(null);
   const near = useNearViewport(wrapRef);
   const [wanted, setWanted] = useState(false);
   const [state, setState] = useState("idle"); // idle | loading | live | error
+  const [reason, setReason] = useState("");
   const run = near && (autoplay || wanted);
 
   useEffect(() => {
@@ -97,14 +98,21 @@ function StreamFrame({ name, url, autoplay, onFail }) {
     if (!run || !video || state === "error") return undefined;
     let cancelled = false;
     let hls = null;
-    const fail = () => !cancelled && setState("error");
+    // El motivo se ve en pantalla con ?camaras=debug (para revisar desde el club).
+    const fail = (why) => {
+      if (cancelled) return;
+      setReason(typeof why === "string" ? why : "error del reproductor");
+      setState("error");
+    };
+    const onVideoError = () =>
+      fail(`Reproductor del navegador: error de video ${video.error?.code ?? "?"} ${video.error?.message || ""}`.trim());
     const onPlaying = () => !cancelled && setState("live");
     const stall = setTimeout(() => {
-      if (!cancelled && video.readyState < 3) fail();
+      if (!cancelled && video.readyState < 3) fail(`No arrancó en ${STALL_MS / 1000} s (readyState ${video.readyState})`);
     }, STALL_MS);
     setState((s) => (s === "live" ? s : "loading"));
     video.addEventListener("playing", onPlaying);
-    video.addEventListener("error", fail);
+    video.addEventListener("error", onVideoError);
 
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = url;
@@ -113,25 +121,32 @@ function StreamFrame({ name, url, autoplay, onFail }) {
       import("hls.js/light")
         .then(({ default: Hls }) => {
           if (cancelled) return;
-          if (!Hls.isSupported()) return fail();
+          if (!Hls.isSupported()) return fail("hls.js: el navegador no soporta MediaSource");
           hls = new Hls({
             capLevelToPlayerSize: true,
             startLevel: 0,
             maxBufferLength: 8,
           });
-          hls.on(Hls.Events.ERROR, (_, data) => data.fatal && fail());
+          hls.on(Hls.Events.ERROR, (_, data) => {
+            if (!data.fatal) return;
+            const code = data.response?.code;
+            fail(
+              `hls.js: ${data.type} / ${data.details}` +
+                (code !== undefined ? ` (HTTP ${code}${code === 0 ? ": bloqueado por el navegador, probablemente CORS" : ""})` : ""),
+            );
+          });
           hls.loadSource(url);
           hls.attachMedia(video);
           video.play().catch(() => {});
         })
-        .catch(fail);
+        .catch(() => fail("No se pudo cargar hls.js"));
     }
 
     return () => {
       cancelled = true;
       clearTimeout(stall);
       video.removeEventListener("playing", onPlaying);
-      video.removeEventListener("error", fail);
+      video.removeEventListener("error", onVideoError);
       if (hls) hls.destroy();
       else {
         video.removeAttribute("src");
@@ -146,7 +161,22 @@ function StreamFrame({ name, url, autoplay, onFail }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
-  if (state === "error") return <LoopFrame label={name} autoplay={autoplay} />;
+  if (state === "error") {
+    return (
+      <div>
+        <LoopFrame label={name} autoplay={autoplay} />
+        {debug && (
+          <p className="camaras-debug" role="status">
+            {name}: {reason} ·{" "}
+            {typeof document !== "undefined" &&
+            document.createElement("video").canPlayType("application/vnd.apple.mpegurl")
+              ? "reproductor del navegador"
+              : "hls.js"}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -223,6 +253,10 @@ function YouTubeFrame({ name, embed, autoplay }) {
  */
 export default function CamarasSection({ courts = [], beelupUrl = "" }) {
   const autoplay = useAutoplayAllowed();
+  const [debug, setDebug] = useState(false);
+  useEffect(() => {
+    setDebug(new URLSearchParams(window.location.search).get("camaras") === "debug");
+  }, []);
   const [now, setNow] = useState(null);
   const [failed, setFailed] = useState({});
   useEffect(() => setNow(Date.now()), []);
@@ -306,6 +340,7 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
                   url={c.streamUrl}
                   autoplay={autoplay === true}
                   onFail={() => setFailed((f) => ({ ...f, [c.id]: true }))}
+                  debug={debug}
                 />
               ),
             )
