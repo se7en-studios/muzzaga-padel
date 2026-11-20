@@ -760,3 +760,271 @@
     margin-top: 2px;
   }
 }
+
+/* ==========================================================================
+   BEELUP: tarjeta debajo de la tele
+   Con los colores de Beelup (amarillo-naranja y negro) y su buscador
+   dibujado: club → cancha → día, y el botón "Ver mi video".
+   ========================================================================== */
+.bl-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "head head"
+    "title title"
+    "sub sub"
+    "steps steps"
+    "btn btn";
+  gap: 6px 16px;
+  margin-top: 18px;
+  padding: 22px 22px 20px;
+  border-radius: 22px;
+  background:
+    radial-gradient(420px 220px at 100% 0, rgba(246, 162, 28, 0.28), transparent 70%),
+    linear-gradient(160deg, #1d1d1f 0%, #111113 100%);
+  color: #ffffff;
+  box-shadow: 0 24px 50px -28px rgba(0, 0, 0, 0.7);
+  isolation: isolate;
+}
+
+/* El panal de Beelup, muy suave, de fondo a la derecha. */
+.bl-card::before {
+  content: "";
+  position: absolute;
+  right: -30px;
+  top: -20px;
+  z-index: -1;
+  width: 260px;
+  height: 260px;
+  opacity: 0.08;
+  background: url("/img/marcas/beelup-icono.svg") center / contain no-repeat;
+  rotate: 12deg;
+}
+
+.bl-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bl-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-poppins, inherit);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.bl-logo img {
+  height: 34px;
+  width: auto;
+}
+
+.bl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(246, 162, 28, 0.5);
+  background: rgba(246, 162, 28, 0.12);
+  color: #ffc566;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.bl-rec {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff3b30;
+  box-shadow: 0 0 8px #ff3b30;
+}
+
+.bl-title {
+  grid-area: title;
+  margin: 10px 0 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.bl-sub {
+  grid-area: sub;
+  margin: 2px 0 0;
+  max-width: 520px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+/* El buscador de Beelup: tres casilleros blancos como los de su web. */
+.bl-steps {
+  grid-area: steps;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 4px;
+  padding: 0;
+  list-style: none;
+  counter-reset: bl;
+}
+
+.bl-steps li {
+  position: relative;
+  min-width: 0;
+  padding: 9px 30px 9px 12px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1b1b1b;
+  counter-increment: bl;
+}
+
+/* Triangulito de "desplegable", como en Beelup. */
+.bl-steps li::after {
+  content: "";
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  margin-top: -3px;
+  border: 6px solid transparent;
+  border-top-color: #1b1b1b;
+  border-bottom: 0;
+}
+
+.bl-steps small {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8a8a;
+}
+
+.bl-steps small::before {
+  content: counter(bl) " · ";
+  color: #e08e00;
+}
+
+.bl-steps b {
+  display: block;
+  overflow: hidden;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+
+.bl-btn {
+  grid-area: btn;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  margin-top: 8px;
+  padding: 0 26px;
+  border-radius: 10px;
+  background: #f6a21c;
+  color: #1a1204;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  text-transform: uppercase;
+  box-shadow: 0 12px 26px -12px rgba(246, 162, 28, 0.9);
+  transition: background 0.15s ease, translate 0.15s ease;
+}
+
+.bl-btn:hover {
+  background: #ffb238;
+  translate: 0 -1px;
+}
+
+.bl-btn:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bl-rec {
+    animation: blRec 1.4s ease-in-out infinite;
+  }
+
+  @keyframes blRec {
+    50% {
+      opacity: 0.3;
+    }
+  }
+}
+
+/* Compu: título y texto a la izquierda, buscador y botón a la derecha, en
+   una sola franja como la barra de búsqueda de Beelup. */
+@media (min-width: 900px) {
+  .bl-card {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+    grid-template-areas:
+      "head head"
+      "title steps"
+      "sub btn";
+    align-items: center;
+    column-gap: 36px;
+    padding: 26px 30px;
+  }
+
+  .bl-title {
+    font-size: 48px;
+  }
+
+  .bl-steps {
+    margin: 10px 0 0;
+  }
+
+  .bl-btn {
+    justify-self: stretch;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .bl-card {
+    padding: 18px 16px;
+  }
+
+  .bl-title {
+    font-size: 34px;
+  }
+
+  /* En el celu: club a lo ancho y cancha + cuándo lado a lado, más bajos. */
+  .bl-steps {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .bl-steps li {
+    padding: 6px 26px 6px 10px;
+  }
+
+  .bl-steps li:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .bl-steps b {
+    font-size: 13px;
+  }
+
+  .bl-btn {
+    justify-self: stretch;
+    justify-content: center;
+  }
+}

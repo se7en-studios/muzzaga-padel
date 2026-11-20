@@ -1167,9 +1167,15 @@ function Se7enCredit({ className = "" }) {
       rel="noopener"
       aria-label="Panel hecho por se7en (Instagram @se7enstudio.ar)"
     >
-      <span>Hecho por</span>
-      <img src="/img/se7en-logo.webp" alt="" width={64} height={18} />
-      <span className="admin-se7en-ig">@se7enstudio.ar</span>
+      <span className="s7-label">Hecho por</span>
+      <span className="s7-badge">
+        <img src="/img/se7en-logo.webp" alt="" width={64} height={18} />
+        <span className="s7-sep" aria-hidden="true" />
+        <span className="s7-ig">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>
+          se7enstudio.ar
+        </span>
+      </span>
     </a>
   );
 }

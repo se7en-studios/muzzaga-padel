@@ -1916,53 +1916,171 @@
   }
 }
 
-/* ---------- "Hecho por se7en" (login y menú lateral) ---------- */
+/* ---------- "Hecho por se7en" (login y menú lateral) ----------
+   Misma insignia que el pie de la web: logo, rayita e Instagram. */
 .admin-root .admin-se7en {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 6px 8px;
-  min-height: 40px;
   font-size: 12px;
   text-decoration: none;
   color: rgba(255, 255, 255, 0.6);
-  transition: color 0.15s ease;
+}
+
+.admin-root .admin-se7en .s7-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .admin-root .admin-se7en img {
-  height: 16px;
+  height: 14px;
   width: auto;
 }
 
-.admin-root .admin-se7en-ig {
-  color: #ff9a5a;
+.admin-root .admin-se7en .s7-sep {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-root .admin-se7en .s7-ig {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #ffb27f;
   font-weight: 600;
 }
 
-.admin-root .admin-se7en:hover {
-  color: #ffffff;
+.admin-root .admin-se7en:hover .s7-badge {
+  border-color: rgba(232, 114, 42, 0.7);
+  background: rgba(232, 114, 42, 0.14);
 }
 
 .admin-root .admin-se7en:focus-visible {
   outline: 2px solid var(--brand, #e8722a);
   outline-offset: 3px;
-  border-radius: 6px;
+  border-radius: 999px;
 }
 
+/* Menú lateral: etiqueta arriba e insignia abajo, ocupando el ancho. */
 .admin-root .admin-se7en-sidebar {
-  margin: 10px 12px 4px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 10px 12px 6px;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* En el login va en su propio renglón, debajo de "Volver a la web", sobre
-   una pastilla oscura para que se lea encima de la foto del césped. */
+/* Login: en su renglón, debajo de "Volver a la web", sobre una pastilla
+   oscura para que se lea encima de la foto del césped. */
 .admin-root .admin-se7en-login {
   display: flex;
   width: fit-content;
   margin: 14px 0 0 6px;
-  padding: 4px 14px;
+  padding: 4px 4px 4px 14px;
   border-radius: 999px;
-  background: rgba(8, 12, 28, 0.55);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(8, 12, 28, 0.6);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ==========================================================================
+   NÚMEROS ARRIBA DE CADA PANEL: MARCADOR OSCURO
+   Agenda, Caja, Cantina y Clientes ya tienen su marcador oscuro; Calendario
+   y Torneos seguían con tres tarjetas blancas sueltas. Acá las tres pasan a
+   ser una sola franja oscura dividida, como el tablero de un torneo, para
+   que todos los paneles arranquen igual. (Números del mes tiene su propio
+   cartel y no entra.)
+   ========================================================================== */
+.admin-root .admin-kpis-3:not(.rp-kpis) {
+  gap: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(500px 160px at 100% 0, rgba(35, 80, 214, 0.35), transparent 70%),
+    var(--night, #1b1b19);
+  box-shadow: 0 18px 36px -24px rgba(0, 0, 0, 0.55);
+}
+
+.admin-root .admin-kpis-3:not(.rp-kpis) > .admin-kravio-kpi-card {
+  min-height: 0;
+  padding: 18px 22px 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-root .admin-kpis-3:not(.rp-kpis) > .admin-kravio-kpi-card + .admin-kravio-kpi-card {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-root .admin-kpis-3:not(.rp-kpis) > .admin-kravio-kpi-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+/* La mini cancha de fondo, en blanco y apenas marcada sobre lo oscuro. */
+.admin-root .admin-kpis-3:not(.rp-kpis) > .admin-kravio-kpi-card::after {
+  filter: brightness(0) invert(1);
+  opacity: 0.07;
+}
+
+.admin-root .admin-kpis-3:not(.rp-kpis) .admin-kravio-kpi-title {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-kpis-3:not(.rp-kpis) .admin-kravio-kpi-header svg {
+  color: #d7f03a !important;
+}
+
+/* Números en blanco; la plata cobrada en un verde que se lea sobre oscuro
+   (el verde oscuro de los paneles claros acá no se veía). */
+.admin-root .admin-kpis-3:not(.rp-kpis) .admin-kravio-kpi-number {
+  color: #ffffff !important;
+  font-size: 40px;
+}
+
+.admin-root .admin-kpis-3:not(.rp-kpis) .admin-kravio-kpi-number[style*="15803d"] {
+  color: #4ade80 !important;
+}
+
+.admin-root .admin-kpis-3:not(.rp-kpis) .admin-kravio-kpi-number[style*="ea580c"],
+.admin-root .admin-kpis-3:not(.rp-kpis) .admin-kravio-kpi-number[style*="d97706"] {
+  color: #ff9a5a !important;
+}
+
+.admin-root .admin-kpis-3:not(.rp-kpis) .admin-cell-sub {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 767px) {
+  .admin-root .admin-kpis-3:not(.rp-kpis) {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-root .admin-kpis-3:not(.rp-kpis) > .admin-kravio-kpi-card + .admin-kravio-kpi-card {
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .admin-root .admin-kpis-3:not(.rp-kpis) > .admin-kravio-kpi-card {
+    padding: 14px 18px;
+  }
+
+  .admin-root .admin-kpis-3:not(.rp-kpis) .admin-kravio-kpi-number {
+    font-size: 32px;
+  }
 }

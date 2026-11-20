@@ -191,16 +191,51 @@
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
 
-/* El crédito ahora es un link a se7en: el usuario de Instagram al lado. */
-.footer-credit-ig {
-  color: #ff9a5a;
+/* Crédito de se7en: "Sitio hecho por" y una insignia con el logo, una
+   rayita y el Instagram. Toda la insignia es el link. */
+a.footer-credit {
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+
+.s7-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.s7-badge img {
+  height: 16px;
+  width: auto;
+}
+
+.s7-sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.s7-ig {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #ffb27f;
   font-weight: 600;
+  font-size: 12.5px;
 }
 
-a.footer-credit:hover {
+a.footer-credit:hover .s7-badge,
+a.admin-se7en:hover .s7-badge {
+  border-color: rgba(232, 114, 42, 0.7);
+  background: linear-gradient(135deg, rgba(232, 114, 42, 0.18), rgba(232, 114, 42, 0.05));
+}
+
+a.footer-credit:hover .s7-ig {
   color: #ffffff;
-}
-
-a.footer-credit:hover .footer-credit-ig {
-  text-decoration: underline;
 }
