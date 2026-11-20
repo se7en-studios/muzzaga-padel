@@ -45,10 +45,10 @@ const LATE_NIGHT_UNTIL = JORNADA_CUTOFF;
 const WARN_MIN = 5;
 const CANTINA_MAX = 5;
 // La maqueta 3D del club (la del recorrido) con la cámara fija sobre las
-// canchas. En modo monitor pinta el borde de cada cancha según su estado y
-// avisa dónde cae cada una en pantalla.
+// canchas. En modo monitor pinta el borde de cada cancha según su estado,
+// avisa dónde cae cada una en pantalla y queda quieta después de armarse.
 const SCENE_SRC =
-  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261119";
+  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261120";
 // Anillo de la cuenta regresiva (viewBox 0 0 120 120).
 const RING_R = 52;
 const RING_C = 2 * Math.PI * RING_R;
@@ -377,7 +377,12 @@ export default function MonitorPage() {
         <iframe
           ref={frameRef}
           className={`mon-scene-frame${sceneReady ? " is-ready" : ""}`}
-          src={SCENE_SRC}
+          src={
+            // ?animado=1: los jugadores se mueven (para una compu con buena placa de video)
+            new URLSearchParams(window.location.search).has("animado")
+              ? `${SCENE_SRC}&anim=1`
+              : SCENE_SRC
+          }
           title="Maqueta 3D del club"
           tabIndex={-1}
         />

@@ -280,7 +280,14 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true }); }
   catch (e) { showErr('Tu navegador no tiene WebGL activado, así que la maqueta 3D no puede arrancar.'); return; }
-  let pr = Math.min(window.devicePixelRatio || 1, innerWidth < 860 ? 1.5 : 1.75); const prMax = pr; renderer.setPixelRatio(pr);
+  // ?monitor=1 (la tele de recepción): cámara quieta y la maqueta de fondo, detrás de las tarjetas. Se dibuja liviana:
+  // a 1× como mucho (baja sola si no da), sin bloom, sombras cada tanto y a ~20 cuadros por segundo.
+  const MONITOR = /[?&]monitor=1/.test(location.search);
+  // Quieta (salvo ?anim=1): anima unos segundos al armarse y después se dibuja solo cuando algo cambia (estado de una
+  // cancha, tamaño de pantalla). En una tele sin placa de video la escena animada congelaba la página entera.
+  const MONITOR_STILL = MONITOR && !/[?&]anim=1/.test(location.search);
+  let monitorStillAt = Infinity, monitorRedraw = 0;
+  let pr = MONITOR ? Math.min(window.devicePixelRatio || 1, 1) : Math.min(window.devicePixelRatio || 1, innerWidth < 860 ? 1.5 : 1.75); const prMax = pr; renderer.setPixelRatio(pr);
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.66; renderer.shadowMap.autoUpdate = false;
@@ -902,7 +909,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
   let postfx = null; // posproceso (premium-post.js); null = render directo
   let stageRect = { width: 1, height: 1 }; // medida del escenario: se lee acá y no en cada cuadro (forzaba un recálculo de layout)
-  function resize() { const r = stageRect = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height);
+  function resize() { monitorRedraw = 3; const r = stageRect = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height);
     // en vertical (landing) se sube el motivo para que quede en la zona libre sobre la tarjeta
     if (document.documentElement.classList.contains('embed') && r.width / r.height < 0.8) camera.setViewOffset(r.width, r.height, 0, r.height * 0.14, r.width, r.height); else camera.clearViewOffset(); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(stage); resize();
@@ -1085,20 +1092,23 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   function perf(dt) {
     pAcc += dt; pN++; if (pN < 60) return;
     const avg = pAcc / pN; pAcc = 0; pN = 0;
+    // en el monitor el ritmo es fijo (20 cps): se mira lo que cuesta cada cuadro, no cada cuánto sale
+    if (MONITOR) { if (cost > 22 && pr > 0.6) { pr = Math.max(0.6, +(pr - 0.15).toFixed(2)); renderer.setPixelRatio(pr); resize(); } return; }
     if (avg > 0.034 && pr > 1) { pr = Math.max(1, pr - 0.25); pLocked = true; renderer.setPixelRatio(pr); resize(); }
     else if (!pLocked && avg < 0.0185 && pr < prMax) { pr = Math.min(prMax, pr + 0.25); renderer.setPixelRatio(pr); resize(); }
   }
 
   let lastDraw = 0, cost = 8;
   // en la tele de recepción (?monitor=1) ~30 cuadros por segundo alcanzan y la placa del televisor trabaja la mitad
-  const MIN_GAP = /[?&]monitor=1/.test(location.search) ? 33 : 12.5;
+  const MIN_GAP = MONITOR ? 50 : 12.5, COST_K = MONITOR ? 3 : 1.5; // en el monitor la maqueta usa como mucho un tercio del hilo
   function frame(now) {
     requestAnimationFrame(frame);
     // fuera de la vista no se anima ni se dibuja nada: en la landing comparte el hilo con la página y le trababa el scroll
     if (!inView) { last = now; return; }
+    if (MONITOR_STILL && now > monitorStillAt) { if (!monitorRedraw) { last = now; return; } monitorRedraw--; }
     // ritmo de dibujo: nunca más de ~72 cuadros por segundo, y si cada cuadro sale caro se dibuja menos seguido para
     // dejarle tiempo a la página (comparten el hilo). Con ~10 ms por cuadro: 60 en pantallas de 60/120 Hz y 48 en 144 Hz.
-    if (now - lastDraw < Math.max(MIN_GAP, cost * 1.5) - 1) return;
+    if (now - lastDraw < Math.max(MIN_GAP, cost * COST_K) - 1) return;
     lastDraw = now; const c0 = performance.now();
     const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
     if (introOn) { want.az = PRE['3d'].az + Math.sin(t * 0.25) * 20; want.d = 74; want.el = 36; }
@@ -1170,7 +1180,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     if (moved) SPOTS.forEach(sp => place(sp.pin, tmp.set(sp.x, 1.2, sp.z)));
     if (moved) COURT_CARDS.forEach(c => place(c.d, c.pos));
     for (const o of dyn) if (o.visible) o.updateMatrixWorld(true); // los muñecos ocultos (ya hay personaje) no se dibujan
-    if (((++fc) & 1) === 0 || wallsMoved) renderer.shadowMap.needsUpdate = true;
+    if ((MONITOR ? (++fc) % 60 === 0 : ((++fc) & 1) === 0) || wallsMoved) renderer.shadowMap.needsUpdate = true;
     wallsMoved = false; perf(dt);
     if (postfx) postfx.render(); else renderer.render(scene, camera);
     cost += (performance.now() - c0 - cost) * 0.1; // costo promedio de un cuadro (solo el hilo principal)
@@ -1179,7 +1189,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
   /* ---------- posproceso: HDR + bloom + tonemapping ACES ---------- */
   try {
-    postfx = window.MuzzagaPost && window.MuzzagaPost.create({ THREE, renderer, scene, camera, exposure: () => renderer.toneMappingExposure, samples: 2 /* 4 no se distinguía y le pedía bastante más a la placa */, ...(!/look=day/.test(location.search) ? { bloom: 0.42, threshold: 1.2 } : { bloom: 0.22, threshold: 1.8 }) });
+    postfx = !MONITOR && window.MuzzagaPost && window.MuzzagaPost.create({ THREE, renderer, scene, camera, exposure: () => renderer.toneMappingExposure, samples: 2 /* 4 no se distinguía y le pedía bastante más a la placa */, ...(!/look=day/.test(location.search) ? { bloom: 0.42, threshold: 1.2 } : { bloom: 0.22, threshold: 1.8 }) });
     if (postfx) resize();
   } catch (e) { console.error('post', e); postfx = null; renderer.toneMapping = THREE.ACESFilmicToneMapping; }
 
@@ -1321,21 +1331,24 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       const neon = COURT_CARDS.map((c) => {
         const g = new THREE.Group(); g.userData.anima = true; g.visible = false;
         const mat = new THREE.MeshBasicMaterial({ color: 0x22c55e, toneMapped: false });
+        // halo: una franja más ancha y aditiva hace de resplandor (en el monitor no hay bloom)
+        const halo = new THREE.MeshBasicMaterial({ color: 0x22c55e, toneMapped: false, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending });
         // 10 × 20 m, con el borde apenas por fuera de las líneas
         [[0, -10.15, 10.6, 0.3], [0, 10.15, 10.6, 0.3], [-5.15, 0, 0.3, 20.6], [5.15, 0, 0.3, 20.6]].forEach(([x, z, w, d]) => {
           const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.12, d), mat); m.position.set(x, 0.07, z); m.userData.noCast = true; m.castShadow = false; g.add(m);
+          const h = new THREE.Mesh(new THREE.BoxGeometry(w > d ? w + 0.8 : 1.1, 0.05, d > w ? d + 0.8 : 1.1), halo); h.position.set(x, 0.04, z); h.userData.noCast = true; h.castShadow = false; g.add(h);
         });
         g.position.set(c.pos.x, 0, COURT_Z); scene.add(g); g.updateMatrixWorld(true);
-        return { g, mat };
+        return { g, mat, halo };
       });
       addEventListener('message', (e) => {
         if (e.origin !== location.origin || !e.data || e.data.muzzaga !== 'courts' || !Array.isArray(e.data.s)) return;
         e.data.s.forEach((st, i) => {
           const n = neon[i]; if (!n) return;
           n.g.visible = !!(st && st.color);
-          if (n.g.visible) { n.mat.color.set(st.color); n.mat.color.multiplyScalar(1.7); } // pasado de 1: lo agarra el bloom
+          if (n.g.visible) { n.mat.color.set(st.color); n.halo.color.set(st.color); }
         });
-        renderer.shadowMap.needsUpdate = true;
+        renderer.shadowMap.needsUpdate = true; monitorRedraw = Math.max(monitorRedraw, 1);
       });
       const v = new THREE.Vector3(); let sent = '';
       frameHooks.push((dt, t, cam) => {
@@ -1436,7 +1449,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     if (EMBED) {
       apply(0); TGT.set(KF[0].x, TGT.y, KF[0].z); Object.assign(cam, want);
       // se espera a que techo y paredes terminen de bajar antes de mostrarse
-      setTimeout(() => { fadeStart = performance.now(); parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 1400);
+      setTimeout(() => { fadeStart = performance.now(); if (MONITOR_STILL) monitorStillAt = fadeStart + 7000; parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 1400);
     } else fadeStart = performance.now();
   }
 })();
