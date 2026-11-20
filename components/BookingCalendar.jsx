@@ -353,6 +353,9 @@ export default function BookingCalendar({
       bookingCode: result.bookingCode,
     });
     const whatsappUrl = buildWhatsappUrl(result.bookingCode, result.booking);
+    // El cajón se cierra: quedaba abierto detrás del pase, con el formulario de
+    // un turno que ya es tuyo.
+    setSelected(null);
     setConfirmed({
       bookingCode: result.bookingCode,
       booking: result.booking,
@@ -362,7 +365,7 @@ export default function BookingCalendar({
   }
 
   return (
-    <div className="booking-calendar">
+    <div className="booking-calendar" id="reservar">
       <ScrollRow
         className="booking-dates"
         role="group"
@@ -680,6 +683,7 @@ export default function BookingCalendar({
                       name="name"
                       autoComplete="name"
                       autoCapitalize="words"
+                      enterKeyHint="next"
                       required
                       placeholder="Ej. Lucas Rossi"
                       value={form.playerName}
@@ -701,6 +705,7 @@ export default function BookingCalendar({
                       name="tel"
                       autoComplete="tel"
                       inputMode="tel"
+                      enterKeyHint="send"
                       required
                       placeholder="Ej. 299 597 4176"
                       value={form.playerPhone}
@@ -725,7 +730,25 @@ export default function BookingCalendar({
                 </div>
               )}
 
-              {submitError && <p className="booking-error">{submitError}</p>}
+              {submitError && (
+                <div className="booking-error" role="alert">
+                  <p>{submitError}</p>
+                  {/* Si la reserva no se pudo guardar, que no se pierda el
+                      cliente: el mismo pedido, armado, para mandar por WhatsApp. */}
+                  {!submitError.includes("acaba de ocupar") && (
+                    <a
+                      className="booking-error-wa"
+                      href={`https://wa.me/${CLUB_WHATSAPP}?text=${encodeURIComponent(
+                        `Hola Muzzaga! Quiero reservar la ${courts.find((c) => c.id === selected.courtId)?.name || "cancha"} el ${activeDay?.dayName || ""} ${activeDay?.dayNumber || ""} ${activeDay?.monthName || ""} de ${selected.start} a ${selected.end} hs.${form.playerName.trim() ? ` Soy ${form.playerName.trim()}.` : ""}`,
+                      )}`}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      Pedirlo por WhatsApp →
+                    </a>
+                  )}
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -738,6 +761,14 @@ export default function BookingCalendar({
                 <span>{submitting ? "Confirmando reserva…" : "Confirmar turno por WhatsApp"}</span>
                 <span className="booking-btn-arrow" aria-hidden="true">→</span>
               </button>
+
+              {!isFormValid && !submitting && (
+                <p className="booking-missing" aria-live="polite">
+                  {form.playerName.trim().length < 2
+                    ? "Falta tu nombre para guardar el turno."
+                    : "Falta tu WhatsApp: con característica, sin 0 ni 15 (ej. 299 597 4176)."}
+                </p>
+              )}
 
               <div className="booking-guarantee-note">
                 <span><img src="/img/iconos/biblioteca/icono-candado.webp" alt="" width={18} height={18} className="icono-3d booking-note-3d" aria-hidden="true" /> Confirmás con una seña por WhatsApp · Pago rápido</span>
