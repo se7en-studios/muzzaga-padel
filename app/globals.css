@@ -8536,6 +8536,19 @@ textarea:focus-visible {
   background: var(--color-accent-orange);
 }
 
+/* Solo con ?camaras=debug: por qué no se pudo ver una cámara. */
+.camaras-debug {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: #fff4e5;
+  border: 1px solid #f0c48a;
+  color: #7a3e00;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  word-break: break-word;
+}
+
 .camaras-loading {
   position: absolute;
   inset: auto 0 14px;
