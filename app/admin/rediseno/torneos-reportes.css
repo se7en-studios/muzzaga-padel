@@ -1,0 +1,2 @@
+/* Rediseño del admin: torneos-reportes. Se carga al final (después de padel.css), así que
+   pisa lo anterior con la misma especificidad. Todo bajo .admin-root. */
