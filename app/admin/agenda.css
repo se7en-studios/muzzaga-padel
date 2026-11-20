@@ -181,7 +181,7 @@
 /* ---------- Timeline ---------- */
 .admin-root .admin-timeline {
   --slot-h: 68px;
-  --time-col: 64px;
+  --time-col: 84px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
@@ -796,4 +796,62 @@
   margin: 4px 0 0;
   font-size: 15.5px;
   color: var(--text-secondary);
+}
+
+/* El turno que se está jugando: fila con fondo cálido y etiqueta "En juego"
+   debajo del horario, para ubicarlo de un vistazo desde el mostrador. */
+.admin-root .admin-timeline-row.is-current {
+  background: color-mix(in srgb, var(--brand, #e8722a) 7%, transparent);
+  box-shadow: inset 3px 0 0 var(--brand, #e8722a);
+}
+
+.admin-root .admin-timeline-live {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--brand, #e8722a);
+  color: #fff;
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-root .admin-timeline-live::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-timeline-live::before {
+    animation: adminLiveDot 1.6s ease-in-out infinite;
+  }
+
+  @keyframes adminLiveDot {
+    50% { opacity: 0.25; }
+  }
+}
+
+/* En compu ya está la línea roja de "ahora" con la hora; la etiqueta se
+   pisaba con ella. Queda para el celu, donde esa línea no se muestra. */
+@media (min-width: 768px) {
+  .admin-root .admin-timeline-live {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .admin-root .admin-timeline-live {
+    align-self: center;
+    margin: 0 0 0 4px;
+  }
 }

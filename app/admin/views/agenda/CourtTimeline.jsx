@@ -83,21 +83,25 @@ export default function CourtTimeline({
       <div className="admin-timeline-body" role="grid" aria-label="Turnos del día por cancha">
         {nowTopPct != null && (
           <div className="admin-timeline-now" style={{ top: `${nowTopPct}%` }} aria-hidden>
-            <span>{now.hhmm}</span>
+            <span>Ahora · {now.hhmm}</span>
           </div>
         )}
 
         {rows.map((row) => {
           const isPast = hasSlotStarted(clubConfig, activeDate, row.end, now);
+          // El turno que se está jugando ahora: empezó y todavía no terminó.
+          const isCurrent =
+            !isPast && hasSlotStarted(clubConfig, activeDate, row.start, now);
           return (
             <div
               key={row.start}
               role="row"
-              className={`admin-timeline-row${isPast ? " is-past" : ""}`}
+              className={`admin-timeline-row${isPast ? " is-past" : ""}${isCurrent ? " is-current" : ""}`}
             >
               <div className="admin-timeline-time" role="rowheader">
                 <strong>{row.start}</strong>
                 <span>{row.end}</span>
+                {isCurrent && <em className="admin-timeline-live">En juego</em>}
               </div>
 
               {courts.map((court) => {
