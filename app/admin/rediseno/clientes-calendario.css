@@ -882,6 +882,22 @@
   color: var(--cc-court);
 }
 
+/* "Debe" en la fila de la lista: mismo rojo que el aviso de la ficha. */
+.admin-root .cc-chip.cc-owe {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .cc-chip.cc-owe::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #dc2626;
+}
+
 /* Si debe, que se vea antes que nada. */
 .admin-root .cc-debt {
   display: flex;

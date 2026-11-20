@@ -8,9 +8,9 @@ import Mascota from "../../../components/Mascota";
 import { pageMetadata } from "../../../lib/pageMeta";
 
 export const metadata = pageMetadata({
-  title: "Pizarra táctica de pádel interactiva · Muzzaga Pádel",
+  title: "Pizarra táctica de pádel interactiva · Muzzaga Pádel Catriel",
   description:
-    "Simulador interactivo de jugadas y táctica de pádel en cancha de cristal: víbora a la reja, smash por 3, bandeja y chiquita animadas paso a paso.",
+    "Jugadas de pádel animadas paso a paso en cancha de cristal: víbora a la reja, smash por 3, bandeja y chiquita. Pizarra gratis de Muzzaga Pádel, Catriel.",
   path: "/herramientas/pizarra",
 });
 

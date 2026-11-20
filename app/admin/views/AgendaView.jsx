@@ -18,7 +18,8 @@ import {
 import { adminGetRangeStats } from "../actions";
 import CourtTimeline from "./agenda/CourtTimeline";
 import DayStrip from "./agenda/DayStrip";
-import { SkeletonCards, SkeletonRows } from "../ui/states";
+import WeekChart from "./agenda/WeekChart";
+import { Skeleton, SkeletonCards, SkeletonRows } from "../ui/states";
 
 const BOARD_ICON = { size: 15, strokeWidth: 1.9, "aria-hidden": true };
 
@@ -37,6 +38,7 @@ export default function AgendaView({
   onRefresh,
   onOpenCreate,
   onOpenDetail,
+  weekStats,
 }) {
   const [rangeStats, setRangeStats] = useState(null);
   // Jornada: a la 01:00 la agenda sigue mostrando los turnos de esa noche.
@@ -289,7 +291,58 @@ export default function AgendaView({
             />
           )}
         </section>
+
+        <WeekSection weekStats={weekStats} />
       </div>
     </div>
+  );
+}
+
+/**
+ * Últimos 7 días (hasta hoy, sin importar el día que se esté mirando). Los
+ * datos llegan aparte de los del día (adminGetWeekStats, que el panel ya
+ * pedía después de la agenda): mientras tanto, la grilla ya se puede usar.
+ * `weekStats`: null = cargando, false = falló, [] / días = listo.
+ */
+function WeekSection({ weekStats }) {
+  const days = Array.isArray(weekStats) ? weekStats : null;
+  const totalTurnos = days ? days.reduce((s, d) => s + (d.turnos || 0), 0) : 0;
+  const totalCobrado = days ? days.reduce((s, d) => s + (d.cobrado || 0), 0) : 0;
+  const isEmpty = days && totalTurnos === 0 && totalCobrado === 0;
+
+  return (
+    <section className="admin-week" aria-labelledby="admin-week-title">
+      <div className="admin-week-head">
+        <h2 id="admin-week-title" className="admin-section-title admin-m0">
+          Últimos 7 días
+        </h2>
+        {days && !isEmpty && (
+          <p className="admin-week-totals">
+            <span>
+              <strong>{totalTurnos}</strong>{" "}
+              {totalTurnos === 1 ? "turno" : "turnos"}
+            </span>
+            <span>
+              <strong>{formatARS(totalCobrado)}</strong> cobrado
+            </span>
+          </p>
+        )}
+      </div>
+      {weekStats === false ? (
+        <div className="admin-week-empty">
+          No se pudo cargar la semana. Probá actualizar en un rato.
+        </div>
+      ) : !days ? (
+        <div className="admin-week-loading" aria-busy="true" aria-label="Cargando la semana">
+          <Skeleton height={210} radius={16} />
+        </div>
+      ) : isEmpty ? (
+        <div className="admin-week-empty">
+          Todavía no hay turnos ni cobros en los últimos 7 días.
+        </div>
+      ) : (
+        <WeekChart days={days} />
+      )}
+    </section>
   );
 }

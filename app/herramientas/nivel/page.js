@@ -9,9 +9,9 @@ import Mascota from "../../../components/Mascota";
 import { pageMetadata } from "../../../lib/pageMeta";
 
 export const metadata = pageMetadata({
-  title: "Test de nivel de pádel: ¿qué categoría sos? · Muzzaga Pádel",
+  title: "Test de nivel de pádel y categoría · Muzzaga Pádel Catriel",
   description:
-    "Descubrí tu nivel de pádel en la escala internacional (1.0 a 7.0) y su equivalencia con las categorías argentinas (8va a 1ra). Sumate a partidos parejos.",
+    "Descubrí tu nivel de pádel (escala 1.0 a 7.0) y su categoría argentina (8va a 1ra). Encontrá partidos parejos en Muzzaga Pádel, Catriel, Río Negro.",
   path: "/herramientas/nivel",
 });
 

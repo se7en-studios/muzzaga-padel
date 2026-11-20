@@ -6,7 +6,10 @@ import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import InstallPrompt from "../components/InstallPrompt";
 import { Analytics } from "@vercel/analytics/react";
 import { SITE_URL } from "../lib/site";
+import { OG_BASE, clubJsonLd } from "../lib/pageMeta";
 import { getSiteContent } from "../lib/siteContentServer";
+import { getClubConfig } from "../lib/clubConfigServer";
+import { getOpenTournaments } from "../lib/tournamentServer";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -35,27 +38,26 @@ const barlowCondensed = Barlow_Condensed({
   display: "swap",
 });
 
+// Home: título de hasta ~60 caracteres para que Google no lo corte, con lo
+// que busca la gente ("pádel en Catriel", "canchas", "turnos").
+const HOME_TITLE = "Canchas de pádel en Catriel · Turnos online | Muzzaga Pádel";
+const HOME_DESCRIPTION =
+  "Reservá tu turno de pádel en Catriel, Río Negro: 2 canchas de cristal templado con iluminación LED, turnos de 90 min, torneos todo el año y cantina propia.";
+
 export const metadata = {
   metadataBase: new URL(SITE_URL),
-  title:
-    "Canchas de pádel en Catriel · Muzzaga Pádel · Reservá tu cancha online",
-  description:
-    "Club de pádel en Catriel, Río Negro. 2 canchas de cristal templado, iluminación LED, turnos de 90 min y cantina.",
-  // Íconos: app/favicon.ico, app/icon.png y app/apple-icon.png (convención de archivos).
-  openGraph: {
-    type: "website",
-    siteName: "Muzzaga Pádel",
-    title: "Canchas de pádel en Catriel · Muzzaga Pádel",
-    description:
-      "2 canchas de cristal templado, iluminación LED, torneos y cantina propia para el mejor tercer tiempo en Catriel.",
-    locale: "es_AR",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Canchas de pádel en Catriel · Muzzaga Pádel",
-    description:
-      "2 canchas de cristal templado, iluminación LED, torneos y cantina propia para el mejor tercer tiempo en Catriel.",
-  },
+  applicationName: "Muzzaga Pádel",
+  title: HOME_TITLE,
+  description: HOME_DESCRIPTION,
+  category: "sports",
+  // Deja a Google mostrar la foto grande en resultados y Discover. Sin
+  // index/follow: chocaría con el noindex que Next le pone al 404.
+  robots: { googleBot: { "max-image-preview": "large", "max-snippet": -1 } },
+  // Íconos: app/favicon.ico, app/icon.png y app/apple-icon.png (convención de
+  // archivos). La imagen para compartir es app/opengraph-image.js, que Next
+  // también usa para Twitter/X.
+  openGraph: { ...OG_BASE, title: HOME_TITLE, description: HOME_DESCRIPTION, url: "/" },
+  twitter: { card: "summary_large_image", title: HOME_TITLE, description: HOME_DESCRIPTION },
 };
 
 export const viewport = {
@@ -63,56 +65,14 @@ export const viewport = {
   themeColor: "#1b1b19",
 };
 
-// La dirección y el punto del mapa salen de Configuración → Sitio web.
-const buildJsonLd = (location) => ({
-  "@context": "https://schema.org",
-  "@type": "SportsActivityLocation",
-  name: "Muzzaga Pádel",
-  description:
-    "Club de pádel en Catriel, Río Negro. 2 canchas de cristal templado, iluminación LED, torneos todo el año y cantina propia.",
-  url: SITE_URL,
-  telephone: "+5492995974176",
-  priceRange: "$$",
-  hasMap: location.hasMap,
-  image: [
-    `${SITE_URL}/img/court_glass_night_match.jpg`,
-    `${SITE_URL}/img/panoramic_courts.jpg`,
-    `${SITE_URL}/img/logo_full.png`,
-  ],
-  geo: {
-    "@type": "GeoCoordinates",
-    latitude: location.lat,
-    longitude: location.lng,
-  },
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ],
-      opens: "14:00",
-      closes: "00:30",
-    },
-  ],
-  sameAs: ["https://instagram.com/muzzagapadel"],
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: location.street,
-    addressLocality: location.city,
-    addressRegion: location.region || undefined,
-    // El código postal es el de Catriel: si se mudan de ciudad, se omite.
-    postalCode: location.city === "Catriel" ? "R8307" : undefined,
-    addressCountry: "AR",
-  },
-});
-
 export default async function RootLayout({ children }) {
-  const { location } = await getSiteContent();
+  // Horarios, precio y canchas salen de Configuración; la dirección, de
+  // Sitio web; los torneos abiertos, de Torneos. Todo ya cacheado por render.
+  const [{ location }, config, tournaments] = await Promise.all([
+    getSiteContent(),
+    getClubConfig(),
+    getOpenTournaments(),
+  ]);
   return (
     <html lang="es-AR" className={`${poppins.variable} ${jetbrainsMono.variable} ${barlowCondensed.variable}`}>
       <head>
@@ -120,7 +80,7 @@ export default async function RootLayout({ children }) {
           type="application/ld+json"
           // La dirección la escribe el club: un "</script>" no puede cerrar el tag.
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(buildJsonLd(location)).replace(/</g, "\\u003c"),
+            __html: JSON.stringify(clubJsonLd({ location, config, tournaments })).replace(/</g, "\\u003c"),
           }}
         />
       </head>

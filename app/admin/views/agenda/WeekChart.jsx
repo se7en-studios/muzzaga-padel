@@ -16,7 +16,7 @@ const shortK = (n) => (n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${n}`);
 
 /**
  * Cobrado de los últimos 7 días, apilado turnos / cantina, con eje Y y el
- * día de hoy en naranja.
+ * día de hoy en naranja. Abajo de cada día, cuántos turnos se jugaron.
  */
 export default function WeekChart({ days }) {
   const max = niceMax(Math.max(...days.map((d) => d.cobrado)));
@@ -42,7 +42,7 @@ export default function WeekChart({ days }) {
           {days.map((d) => {
             const turnosH = (d.cobradoTurnos / max) * 100;
             const cantinaH = (d.cantina / max) * 100;
-            const label = `${d.dayLabel} ${formatDate(d.date)}: ${formatARS(d.cobrado)} (turnos ${formatARS(d.cobradoTurnos)}, cantina ${formatARS(d.cantina)})`;
+            const label = `${d.dayLabel} ${formatDate(d.date)}: ${d.turnos} ${d.turnos === 1 ? "turno" : "turnos"}, cobrado ${formatARS(d.cobrado)} (turnos ${formatARS(d.cobradoTurnos)}, cantina ${formatARS(d.cantina)})`;
             return (
               <div
                 key={d.date}
@@ -72,8 +72,17 @@ export default function WeekChart({ days }) {
           </span>
         ))}
       </div>
+      {/* Cantidad de turnos por día: es lo primero que pregunta el dueño. */}
+      <div className="admin-weekchart-labels admin-weekchart-turnos" aria-hidden>
+        <span>Turnos</span>
+        {days.map((d) => (
+          <strong key={d.date} className={d.isToday ? "is-today" : undefined}>
+            {d.turnos}
+          </strong>
+        ))}
+      </div>
       <figcaption className="admin-weekchart-legend">
-        <span className="is-turnos">Turnos</span>
+        <span className="is-turnos">Cobrado en turnos</span>
         <span className="is-cantina">Cantina</span>
       </figcaption>
     </figure>

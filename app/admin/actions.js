@@ -36,6 +36,7 @@ import {
 } from "../../lib/sitePhotoStorage";
 import {
   bookingTotal,
+  clientDebt,
   buildDailySummaries,
   computeDailyCash,
   dayOccupancy,
@@ -884,6 +885,9 @@ export async function adminGetClients() {
       ),
     );
     const byKey = new Map();
+    // Turnos de cada cliente, para calcular la deuda con la misma lectura
+    // (nada de una consulta extra por cliente).
+    const bookingsByKey = new Map();
 
     snapToList(snap).forEach((b) => {
       if (!isCountableBooking(b)) return;
@@ -892,6 +896,8 @@ export async function adminGetClients() {
       const key = clientKey(phone, name);
       if (deletedAt.has(key) && (b.createdAt || 0) <= deletedAt.get(key))
         return;
+      if (!bookingsByKey.has(key)) bookingsByKey.set(key, []);
+      bookingsByKey.get(key).push(b);
 
       const date = b.date || "";
       const existing = byKey.get(key);
@@ -917,9 +923,9 @@ export async function adminGetClients() {
       }
     });
 
-    const clients = Array.from(byKey.values()).sort(
-      (a, b) => b.count - a.count || a.name.localeCompare(b.name),
-    );
+    const clients = Array.from(byKey.values())
+      .map((c) => ({ ...c, ...clientDebt(bookingsByKey.get(c.key)) }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
     return { ok: true, clients };
   } catch (error) {
     return { ok: false, error: "No se pudo cargar el listado de clientes." };

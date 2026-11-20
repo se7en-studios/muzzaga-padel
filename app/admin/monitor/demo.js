@@ -2,6 +2,8 @@
 // El monitor real necesita la sesión del admin contra la base de producción;
 // con esto se puede ver y ajustar el diseño en local sin entrar.
 // ?demo=8 deja 8 minutos al partido de la primera cancha (por defecto 37).
+// ?demo&proximo hace que la segunda arranque en 12 min, para ver el estado
+// "Próximo" (por defecto está libre hasta dentro de 40).
 import { COURTS, nowInClubTimezone, todayInClub } from "../../../lib/booking";
 import { toMinutes } from "./schedule";
 
@@ -34,6 +36,7 @@ export function monitorDemoData() {
     status: "confirmado",
   });
   const start1 = now + left - 90;
+  const start4 = now + (params.has("proximo") ? 12 : 40);
   return {
     ok: true,
     courts: [
@@ -44,8 +47,8 @@ export function monitorDemoData() {
       turno("d1", c1.id, start1, "Aldana Martínez"),
       turno("d2", c1.id, start1 + 90, "Anabella Zeballos"),
       turno("d3", c1.id, start1 + 270, "Equipo Los Pibes", 4),
-      turno("d4", c2.id, now + 40, "Pablo Funes", 2),
-      turno("d5", c2.id, now + 130, "Martín Riquero"),
+      turno("d4", c2.id, start4, "Pablo Funes", 2),
+      turno("d5", c2.id, start4 + 90, "Martín Riquero"),
     ],
   };
 }
