@@ -47,6 +47,21 @@ const POIS = [
 const SHOTS = [0, 0, 1, 1, 2, 3, 3, 4];
 
 const WHATSAPP_HREF = buildWhatsAppLink("Hola! Quiero reservar una cancha");
+
+/**
+ * Celulares humildes (un Samsung J7 tiene 2-3 GB y GPU de gama baja): la
+ * maqueta va en modo liviano, sin los personajes 3D (8 MB), sin sombras ni
+ * bloom y dibujando solo cuando la cámara se mueve. ?lite3d=1 lo fuerza.
+ */
+function wantsLite3d() {
+  const nav = window.navigator;
+  if (/[?&]lite3d=1/.test(window.location.search)) return true;
+  return (
+    nav.connection?.saveData === true ||
+    (nav.deviceMemory > 0 && nav.deviceMemory <= 4) ||
+    (nav.hardwareConcurrency > 0 && nav.hardwareConcurrency <= 4)
+  );
+}
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const nearestPoi = (p) =>
   POIS.reduce(
@@ -84,7 +99,7 @@ export default function ClubRecorrido() {
     let timerId = null;
     const start = () => {
       io.disconnect();
-      const run = () => setLoad(true);
+      const run = () => setLoad(wantsLite3d() ? "lite" : "full");
       if ("requestIdleCallback" in window) {
         idleId = window.requestIdleCallback(run, { timeout: 1500 });
       } else {
@@ -232,7 +247,7 @@ export default function ClubRecorrido() {
             <iframe
               ref={frameRef}
               className={`club-tour-frame${ready ? " is-ready" : ""}`}
-              src="/recorrido/index.html?embed=1&v=20261106"
+              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : ""}&v=20261120`}
               title="Maqueta 3D del club Muzzaga"
               tabIndex={-1}
               aria-hidden="true"

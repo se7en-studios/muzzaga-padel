@@ -287,9 +287,13 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   // cancha, tamaño de pantalla). En una tele sin placa de video la escena animada congelaba la página entera.
   const MONITOR_STILL = MONITOR && !/[?&]anim=1/.test(location.search);
   let monitorStillAt = Infinity, monitorRedraw = 0;
-  let pr = MONITOR ? Math.min(window.devicePixelRatio || 1, 1) : Math.min(window.devicePixelRatio || 1, innerWidth < 860 ? 1.5 : 1.75); const prMax = pr; renderer.setPixelRatio(pr);
+  // ?lite=1 (celulares con poca memoria o pocos núcleos, ver ClubRecorrido): sin los personajes 3D (8 MB), sin sombras
+  // ni bloom, a 1× como mucho, sin animaciones de fondo y dibujando solo cuando la cámara se mueve.
+  const LITE = /[?&]lite=1/.test(location.search), calm = reduceMotion || LITE;
+  let litePose = null, liteRedraw = 2;
+  let pr = MONITOR || LITE ? Math.min(window.devicePixelRatio || 1, 1) : Math.min(window.devicePixelRatio || 1, innerWidth < 860 ? 1.5 : 1.75); const prMax = pr; renderer.setPixelRatio(pr);
   renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = !LITE; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.66; renderer.shadowMap.autoUpdate = false;
 
   /* hora y fecha del club */
@@ -585,7 +589,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
     g.fillStyle = 'rgba(255,255,255,.6)'; for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) if ((i - 2) * (i - 2) + (j - 2) * (j - 2) <= 5) { g.beginPath(); g.arc(14 + i * 9, 14 + j * 9, 2, 0, 6.3); g.fill(); }
   });
   function person(shirt, skin, shorts, hair, cap, o) {
-    if (window.MuzzagaPeople && !/look=basic/.test(location.search)) return window.MuzzagaPeople.build({ THREE, std, DS, racket: racketTex }, shirt, skin, shorts, hair, cap, o);
+    if (window.MuzzagaPeople && !LITE && !/look=basic/.test(location.search)) return window.MuzzagaPeople.build({ THREE, std, DS, racket: racketTex }, shirt, skin, shorts, hair, cap, o);
     o = o || {};
     skin = skin || 0xe4b48c; shorts = shorts || 0x232733; hair = hair === undefined ? 0x2a1d14 : hair;
     const g = new THREE.Group(), sk = std(skin, { roughness: 0.6 }), sh = std(shirt, { roughness: 0.75 });
@@ -879,7 +883,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   await tick();
   /* ---------- calidad premium: materiales PBR, luces, cantina y mobiliario ---------- */
   try {
-    if (window.MuzzagaScene && !/look=basic/.test(location.search)) { const pctx = { THREE, scene, renderer, std, box, plane, sign, ctex, itex, textTex, W, IMG, DS, solid, wood, darkMat, person, movers, reduceMotion, onFrame: f => frameHooks.push(f) }; window.MuzzagaScene.enhance(pctx); if (window.MuzzagaSigns) window.MuzzagaSigns.install(pctx); if (window.MuzzagaEnv) window.MuzzagaEnv.install(pctx); if (window.MuzzagaEntrance) window.MuzzagaEntrance.install(pctx); if (window.MuzzagaClub) window.MuzzagaClub.install(pctx); if (window.MuzzagaGente) window.MuzzagaGente.install(pctx); }
+    if (window.MuzzagaScene && !/look=basic/.test(location.search)) { const pctx = { THREE, scene, renderer, std, box, plane, sign, ctex, itex, textTex, W, IMG, DS, solid, wood, darkMat, person, movers, reduceMotion, onFrame: f => frameHooks.push(f) }; window.MuzzagaScene.enhance(pctx); if (window.MuzzagaSigns) window.MuzzagaSigns.install(pctx); if (window.MuzzagaEnv) window.MuzzagaEnv.install(pctx); if (window.MuzzagaEntrance) window.MuzzagaEntrance.install(pctx); if (window.MuzzagaClub) window.MuzzagaClub.install(pctx); if (window.MuzzagaGente && !LITE) window.MuzzagaGente.install(pctx); }
   } catch (e) { console.error('premium', e); }
   scene.traverse(o => {
     if (!o.isMesh) return;
@@ -909,7 +913,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
   let postfx = null; // posproceso (premium-post.js); null = render directo
   let stageRect = { width: 1, height: 1 }; // medida del escenario: se lee acá y no en cada cuadro (forzaba un recálculo de layout)
-  function resize() { monitorRedraw = 3; const r = stageRect = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height);
+  function resize() { monitorRedraw = 3; liteRedraw = 2; const r = stageRect = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height);
     // en vertical (landing) se sube el motivo para que quede en la zona libre sobre la tarjeta
     if (document.documentElement.classList.contains('embed') && r.width / r.height < 0.8) camera.setViewOffset(r.width, r.height, 0, r.height * 0.14, r.width, r.height); else camera.clearViewOffset(); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(stage); resize();
@@ -1100,7 +1104,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
   let lastDraw = 0, cost = 8;
   // en la tele de recepción (?monitor=1) ~30 cuadros por segundo alcanzan y la placa del televisor trabaja la mitad
-  const MIN_GAP = MONITOR ? 50 : 12.5, COST_K = MONITOR ? 3 : 1.5; // en el monitor la maqueta usa como mucho un tercio del hilo
+  const MIN_GAP = MONITOR ? 50 : LITE ? 33 : 12.5, COST_K = MONITOR ? 3 : 1.5; // en el monitor la maqueta usa como mucho un tercio del hilo
   function frame(now) {
     requestAnimationFrame(frame);
     // fuera de la vista no se anima ni se dibuja nada: en la landing comparte el hilo con la página y le trababa el scroll
@@ -1147,7 +1151,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       if (!hitAt(nx, a.z)) a.x = nx; if (!hitAt(a.x, nz)) a.z = nz;
       const target = Math.atan2(mx, mz); avatar.rotation.y += wrap((target - avatar.rotation.y) / rad) * rad * Math.min(1, dt * 14); moving = true;
     }
-    a.y = moving && !reduceMotion ? Math.abs(Math.sin(t * 12)) * 0.12 : 0;
+    a.y = moving && !calm ? Math.abs(Math.sin(t * 12)) * 0.12 : 0;
     if (marker) { marker.t += dt; if (!path.length) marker = null; }
 
     // lugares y pelotas
@@ -1159,12 +1163,12 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     if (near && !near.found) discover(near);
     showInfo(near);
     balls.forEach(b => {
-      if (b.got) return; b.g.position.y = 0.5 + (reduceMotion ? 0 : Math.sin(t * 2.4 + b.x) * 0.08); b.g.rotation.y = t;
+      if (b.got) return; b.g.position.y = 0.5 + (calm ? 0 : Math.sin(t * 2.4 + b.x) * 0.08); b.g.rotation.y = t;
       if (Math.hypot(a.x - b.x, a.z - b.z) < 0.8) { b.got = true; scene.remove(b.g); nBalls++; refresh(); bump('sBalls'); say(nBalls === balls.length ? 'Juntaste las 12 pelotas' : 'Pelota ' + nBalls + ' de ' + balls.length); }
     });
 
     // vida en el club
-    if (!reduceMotion) {
+    if (!calm) {
       stepRallies(dt, t);
       movers.forEach(o => { o.position.z += o.userData.v * dt; if (o.position.z > 52) o.position.z = -38; else if (o.position.z < -38) o.position.z = 52; if (o.userData.legL) { const s = Math.sin(t * 6 + o.position.x) * 0.5; o.userData.legL.rotation.x = s; o.userData.legR.rotation.x = -s; } });
       bartender.position.x = 0.4 + Math.sin(t * 0.7) * 2.0;
@@ -1181,6 +1185,12 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     if (moved) COURT_CARDS.forEach(c => place(c.d, c.pos));
     for (const o of dyn) if (o.visible) o.updateMatrixWorld(true); // los muñecos ocultos (ya hay personaje) no se dibujan
     if ((MONITOR ? (++fc) % 60 === 0 : ((++fc) & 1) === 0) || wallsMoved) renderer.shadowMap.needsUpdate = true;
+    if (LITE) { // quieta no se dibuja: solo si la cámara se movió, se movieron paredes/techo o se están prendiendo las luces
+      const cp = camera.position, cq = camera.quaternion, pose = [cp.x, cp.y, cp.z, cq.x, cq.y, cq.z, cq.w];
+      const still = litePose && pose.every((v, i) => Math.abs(v - litePose[i]) < (i < 3 ? 5e-3 : 1e-4)); // 5 mm / giro imperceptible
+      if (still && !wallsMoved && !fadeStart && !liteRedraw) return;
+      litePose = pose; if (liteRedraw) liteRedraw--;
+    }
     wallsMoved = false; perf(dt);
     if (postfx) postfx.render(); else renderer.render(scene, camera);
     cost += (performance.now() - c0 - cost) * 0.1; // costo promedio de un cuadro (solo el hilo principal)
@@ -1189,7 +1199,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
   /* ---------- posproceso: HDR + bloom + tonemapping ACES ---------- */
   try {
-    postfx = !MONITOR && window.MuzzagaPost && window.MuzzagaPost.create({ THREE, renderer, scene, camera, exposure: () => renderer.toneMappingExposure, samples: 2 /* 4 no se distinguía y le pedía bastante más a la placa */, ...(!/look=day/.test(location.search) ? { bloom: 0.42, threshold: 1.2 } : { bloom: 0.22, threshold: 1.8 }) });
+    postfx = !MONITOR && !LITE && window.MuzzagaPost && window.MuzzagaPost.create({ THREE, renderer, scene, camera, exposure: () => renderer.toneMappingExposure, samples: 2 /* 4 no se distinguía y le pedía bastante más a la placa */, ...(!/look=day/.test(location.search) ? { bloom: 0.42, threshold: 1.2 } : { bloom: 0.22, threshold: 1.8 }) });
     if (postfx) resize();
   } catch (e) { console.error('post', e); postfx = null; renderer.toneMapping = THREE.ACESFilmicToneMapping; }
 
