@@ -2929,3 +2929,57 @@ html:has(#turnos) body {
   font-size: 1.05em;
   margin-top: 2px;
 }
+
+/* Las pastillas de cancha son inline-flex: el espacio al principio de
+   " las canchas" / " (Cristal)" se perdía y quedaba "Todaslas canchas". */
+.booking-court-tab .booking-court-wide {
+  margin-left: 0.3em;
+}
+
+/* ==========================================================================
+   CELU EN HORIZONTAL (poco alto): la barra de arriba y la de abajo juntas
+   tapaban casi la mitad de los 390 px. Las dos van más finas, la de abajo
+   sin nombres (los íconos se entienden solos) y la pastilla de "turnos
+   libres hoy" no aparece, porque quedaba escondida detrás de la barra.
+   ========================================================================== */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root {
+    --bottom-pill-h: 48px;
+    --bottom-pill-gap: 6px;
+  }
+
+  .app-top-nav {
+    padding-top: 6px;
+  }
+
+  .nav-inner {
+    height: 50px;
+  }
+
+  .mobile-bottom-bar {
+    max-width: 340px;
+  }
+
+  .mobile-bottom-bar .bottom-bar-label {
+    display: none;
+  }
+
+  .mobile-bottom-bar .bottom-bar-icon,
+  .mobile-bottom-bar.is-compact:not(:has(:focus-visible)) .bottom-bar-icon {
+    transform: none;
+  }
+
+  .mobile-bottom-bar .bottom-bar-item::before {
+    inset: 4px 6px;
+  }
+
+  .floating-live-pill {
+    display: none;
+  }
+
+  /* El video de las cámaras entra entero en la pantalla. */
+  .camaras-grid:not(.is-double) {
+    max-width: calc((100svh - 130px) * 16 / 9);
+    margin-inline: auto;
+  }
+}
