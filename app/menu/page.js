@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Link from "next/link";
+import PageCrumbs from "../../components/PageCrumbs";
 import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
 import BottomNav from "../../components/BottomNav";
@@ -24,15 +24,7 @@ export default async function MenuPage() {
     <>
       <SiteHeader />
       <main className="page-main">
-        <div className="container" style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px 8px", fontSize: 13, color: "var(--text-muted)" }}>
-            <Link className="back-link" href="/" style={{ color: "var(--color-accent-orange-text)", textDecoration: "none", fontWeight: 600 }}>
-              ← Volver al inicio
-            </Link>
-            <span>/</span>
-            <span style={{ color: "var(--text-primary)" }}>Menú de la cantina</span>
-          </div>
-        </div>
+        <PageCrumbs items={[{ label: "Menú de la cantina" }]} />
 
         <Suspense fallback={<div className="container" style={{ padding: 40, textAlign: "center" }}>Cargando carta de cantina…</div>}>
           <MenuClient items={items} />

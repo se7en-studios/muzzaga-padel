@@ -9023,3 +9023,83 @@ textarea:focus-visible {
     padding-top: 14px;
   }
 }
+
+/* ==========================================================================
+   MIGA DE PAN DE LAS PÁGINAS INTERNAS
+   "← Inicio" como botón fácil de tocar y el resto del camino al lado. En
+   el celu el paso del medio ("Herramientas") se oculta: entra en un renglón.
+   ========================================================================== */
+.page-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  font-size: 13.5px;
+  color: var(--color-muted);
+}
+
+.page-crumbs-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-accent-orange-border, rgba(232, 114, 42, 0.4));
+  background: var(--color-accent-orange-subtle, #fff3ea);
+  color: var(--color-accent-orange-text);
+  font-weight: 700;
+  text-decoration: none;
+  transition: background var(--t-hover) var(--ease), color var(--t-hover) var(--ease);
+}
+
+.page-crumbs-back:hover {
+  background: var(--color-accent-orange);
+  color: #ffffff;
+}
+
+.page-crumbs ol {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-crumbs li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.page-crumbs li + li::before {
+  content: "/";
+  color: var(--color-hairline-strong);
+}
+
+.page-crumbs ol a {
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.page-crumbs ol a:hover {
+  color: var(--color-ink);
+}
+
+.page-crumbs [aria-current="page"] {
+  color: var(--color-ink);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .page-crumbs li.is-middle {
+    display: none;
+  }
+}

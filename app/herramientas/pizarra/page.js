@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PageCrumbs from "../../../components/PageCrumbs";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
 import BottomNav from "../../../components/BottomNav";
@@ -18,17 +19,7 @@ export default function PizarraPage() {
     <>
       <SiteHeader />
       <main className="page-main">
-        <div className="container" style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px 8px", fontSize: 13, color: "var(--text-muted)" }}>
-            <Link className="back-link" href="/" style={{ color: "var(--color-accent-orange-text)", textDecoration: "none", fontWeight: 600 }}>
-              ← Volver al inicio
-            </Link>
-            <span>/</span>
-            <span>Herramientas</span>
-            <span>/</span>
-            <span style={{ color: "var(--text-primary)" }}>Pizarra táctica</span>
-          </div>
-        </div>
+        <PageCrumbs items={[{ label: "Herramientas", href: "/#herramientas" }, { label: "Pizarra táctica" }]} />
 
         <TacticalCourtSimulator />
 
