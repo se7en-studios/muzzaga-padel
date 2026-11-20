@@ -1,0 +1,296 @@
+/* ==========================================================================
+   MOVIMIENTO DE LA LANDING (pensado primero para el celu)
+   Casi todo va atado al scroll con `animation-timeline`: el navegador lo
+   calcula fuera del hilo principal, así que no traba ni en un celu humilde.
+   Donde no hay soporte (Safari viejo, Firefox), las cosas quedan quietas y
+   se ven igual que antes. Nada se mueve si el celu pidió reducir movimiento.
+   Solo se animan transform (con las propiedades sueltas translate/rotate/
+   scale, para no pisar los transform que ya tienen los elementos), opacity
+   y clip-path.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* ---- Inicio: al bajar, el título sube y se apaga y la foto se acerca
+       (como una cámara que se mete en la cancha). ---- */
+    .hero-night-title,
+    .hero-night-lede {
+      animation: fxHeroSalida linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 520px;
+    }
+
+    .hero-night-lede {
+      animation-range: 0 420px;
+    }
+
+    .hero-night-photo {
+      animation: fxHeroZoom linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 800px;
+    }
+
+    /* ---- Títulos de sección: se "pintan" de izquierda a derecha, como la
+       línea de cal de la cancha, mientras entran a la pantalla. ---- */
+    .section-header-row .section-title {
+      animation: fxTituloTiza linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 75%;
+    }
+
+    /* ---- Grilla de turnos: cada fila "da vuelta" como las fichas de un
+       marcador al aparecer. ---- */
+    .booking-matrix-row {
+      transform-origin: 50% 0;
+      animation: fxFichaMarcador linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+
+    /* ---- Carruseles del celu (días, turnos libres, herramientas): las
+       tarjetas que van entrando por el costado al deslizar crecen y se
+       enderezan, como si giraran hacia vos. En compu no hay scroll de
+       costado y quedan quietas. ---- */
+    .booking-dates,
+    .flash-chips,
+    .tools-grid {
+      perspective: 900px;
+    }
+
+    .booking-dates > *,
+    .flash-chips > *,
+    .tools-grid > * {
+      animation: fxCarrusel linear both;
+      animation-timeline: view(inline);
+      animation-range: entry 0% entry 100%;
+    }
+
+    /* ---- Tarjetas grandes: entran inclinadas hacia atrás y se paran,
+       como un cartel que se levanta. ---- */
+    #torneos .tc-cartel,
+    #cantina .tc-pizarra,
+    #camaras .camaras-tv,
+    #ubicacion .location-unified-card {
+      transform-origin: 50% 100%;
+      animation: fxCartel linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+
+    #torneos .container,
+    #cantina .container,
+    #camaras .container,
+    #ubicacion .container {
+      perspective: 1400px;
+    }
+
+    /* ---- Mascotas de las secciones: un saludo con rebote al entrar. ---- */
+    .mascot-section-img {
+      animation: fxMascotaSaludo linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+
+    /* ---- La cinta naranja: se inclina un poco más mientras pasa. ---- */
+    .ticker {
+      animation: fxCinta linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+
+  /* ---- Turno elegido: cae una pelota sobre la cancha y pica (no depende
+     del scroll, funciona en todos los navegadores). ---- */
+  .booking-matrix-row .booking-slot.selected::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 18%;
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #f6ff9e 0, #d7f03a 45%, #a6c219 100%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+    animation: fxPelotaCae 0.7s cubic-bezier(0.3, 0, 0.3, 1) both;
+  }
+
+  /* ---- Al tocar: el "pelotazo" (lo crea MotionFx en el punto del dedo). */
+  .fx-impacto {
+    position: fixed;
+    z-index: 9999;
+    width: 56px;
+    height: 56px;
+    margin: -28px 0 0 -28px;
+    border-radius: 50%;
+    border: 3px solid rgba(215, 240, 58, 0.95);
+    pointer-events: none;
+    animation: fxImpacto 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  }
+
+  .fx-impacto::after {
+    content: "";
+    position: absolute;
+    inset: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #f6ff9e 0, #d7f03a 45%, #a6c219 100%);
+    animation: fxImpactoPelota 0.5s ease-out forwards;
+  }
+}
+
+/* Pelotita que viaja por la barra de progreso de arriba, girando. */
+.scroll-progress-ball {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f6ff9e 0, #d7f03a 45%, #a6c219 100%);
+  box-shadow: 0 0 8px rgba(215, 240, 58, 0.7);
+  will-change: transform;
+}
+
+@keyframes fxHeroSalida {
+  to {
+    translate: 0 -70px;
+    opacity: 0.15;
+  }
+}
+
+@keyframes fxHeroZoom {
+  to {
+    scale: 1.14;
+  }
+}
+
+@keyframes fxTituloTiza {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 -2% 0 0);
+  }
+}
+
+@keyframes fxFichaMarcador {
+  from {
+    opacity: 0;
+    rotate: x 75deg;
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    rotate: x 0deg;
+  }
+}
+
+@keyframes fxCarrusel {
+  from {
+    scale: 0.82;
+    rotate: y -24deg;
+  }
+  to {
+    scale: 1;
+    rotate: y 0deg;
+  }
+}
+
+@keyframes fxCartel {
+  from {
+    opacity: 0.4;
+    rotate: x 22deg;
+    scale: 0.94;
+  }
+  to {
+    opacity: 1;
+    rotate: x 0deg;
+    scale: 1;
+  }
+}
+
+@keyframes fxMascotaSaludo {
+  0% {
+    rotate: -16deg;
+    scale: 0.7;
+    translate: 0 30px;
+  }
+  55% {
+    rotate: 6deg;
+    scale: 1.06;
+    translate: 0 -6px;
+  }
+  75% {
+    rotate: -3deg;
+    scale: 0.98;
+  }
+  100% {
+    rotate: 0deg;
+    scale: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes fxCinta {
+  from {
+    rotate: 1deg;
+  }
+  to {
+    rotate: -4deg;
+  }
+}
+
+@keyframes fxPelotaCae {
+  0% {
+    translate: 0 -60px;
+    scale: 0.6;
+    opacity: 0;
+  }
+  45% {
+    translate: 0 0;
+    scale: 1.1 0.8;
+    opacity: 1;
+  }
+  65% {
+    translate: 0 -14px;
+    scale: 1;
+  }
+  85% {
+    translate: 0 0;
+    scale: 1.05 0.92;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+@keyframes fxImpacto {
+  from {
+    scale: 0.3;
+    opacity: 1;
+  }
+  to {
+    scale: 1.6;
+    opacity: 0;
+  }
+}
+
+@keyframes fxImpactoPelota {
+  0% {
+    scale: 1.4 0.6;
+    opacity: 1;
+  }
+  60% {
+    scale: 1;
+    opacity: 1;
+  }
+  100% {
+    scale: 0.6;
+    opacity: 0;
+  }
+}
