@@ -151,9 +151,15 @@ export default function Footer({ location = DEFAULT }) {
             rel="noopener"
             aria-label="Sitio hecho por se7en (Instagram @se7enstudio.ar)"
           >
-            Sitio hecho por
-            <Image src="/img/se7en-logo.webp" alt="" width={72} height={20} />
-            <span className="footer-credit-ig">@se7enstudio.ar</span>
+            <span className="s7-label">Sitio hecho por</span>
+            <span className="s7-badge">
+              <Image src="/img/se7en-logo.webp" alt="" width={72} height={20} />
+              <span className="s7-sep" aria-hidden="true" />
+              <span className="s7-ig">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>
+                se7enstudio.ar
+              </span>
+            </span>
           </a>
         </div>
       </div>

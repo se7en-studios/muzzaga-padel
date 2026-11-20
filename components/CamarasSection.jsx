@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import Mascota from "./Mascota";
 import { beelupStreamInfo, youtubeEmbedUrl } from "../lib/beelup";
 
@@ -263,38 +263,60 @@ const BEELUP_ICON = "/img/marcas/beelup-icono.svg";
 // usa el de Beelup (ahí se elige Muzzaga Pádel, la cancha y el horario).
 export const BEELUP_DEFAULT_URL = "https://beelup.com/";
 
+// Las canchas como se llaman en Beelup (así figuran en su buscador).
+const BEELUP_CANCHAS = ["El Tano", "La Vasca"];
+
 /**
- * Cartel sobre el loop de las canchas: el video de cada partido ya se puede
- * ver en Beelup. Todo el cartel es un link.
+ * Tarjeta de Beelup debajo de la tele: el buscador de Beelup dibujado con
+ * los pasos ya completos (club, cancha, día) para que se entienda cómo
+ * encontrar el video del partido, y el botón para ir. Antes era un cartel
+ * encima del video que en el celu lo tapaba entero.
  */
 function BeelupCartel({ href }) {
   return (
-    <a
-      className="camaras-proximamente is-link"
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Reviví tu partido en Beelup (se abre en otra pestaña)"
-    >
-      <span className="camaras-proximamente-chip">Ya disponible</span>
-      <span className="camaras-proximamente-titulo">
-        Reviví tu partido en
-        <span className="camaras-beelup-marca">
-          <img
-            src={BEELUP_ICON}
-            alt=""
-            className="camaras-beelup-logo"
-            width={30}
-            height={32}
-          />
-          <span className="camaras-beelup-nombre">beelup</span>
+    <div className="bl-card">
+      <div className="bl-head">
+        <span className="bl-logo">
+          <img src={BEELUP_ICON} alt="" width={34} height={36} />
+          <span>beelup</span>
         </span>
-      </span>
-      <span className="camaras-proximamente-sub">
-        Elegí Muzzaga Pádel, tu cancha y el horario, y bajate tus mejores puntos.
-      </span>
-      <span className="camaras-proximamente-btn">Ver mi partido →</span>
-    </a>
+        <span className="bl-chip">
+          <span className="bl-rec" aria-hidden="true" />
+          Ya disponible en Muzzaga
+        </span>
+      </div>
+      <p className="bl-title">Reviví tu partido</p>
+      <p className="bl-sub">
+        Cada partido queda grabado. Encontrá tus mejores jugadas y compartilas
+        con tus amigos.
+      </p>
+      <ol className="bl-steps" aria-label="Cómo encontrar tu video en Beelup">
+        <li>
+          <small>Club</small>
+          <b>Muzzaga Pádel</b>
+        </li>
+        <li>
+          <small>Cancha</small>
+          <b>{BEELUP_CANCHAS.join(" · ")}</b>
+        </li>
+        <li>
+          <small>Cuándo</small>
+          <b>Día y horario</b>
+        </li>
+      </ol>
+      <a
+        className="bl-btn"
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Ver mi video
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M10 8.5v7l6-3.5z" fill="currentColor" />
+        </svg>
+      </a>
+    </div>
   );
 }
 
@@ -404,7 +426,6 @@ export default function CamarasSection({ courts = [], beelupUrl: beelupUrlConfig
               <LoopFrame label="CANCHAS MUZZAGA" autoplay={autoplay === true} />
             )}
           </div>
-          {!streams.length && <BeelupCartel href={beelupUrl} />}
           {/* Zócalo de TV: repite lo que dice el encabezado, por eso va oculto
               para lectores de pantalla. */}
           <div className="camaras-zocalo" aria-hidden="true">
@@ -421,19 +442,7 @@ export default function CamarasSection({ courts = [], beelupUrl: beelupUrlConfig
           </div>
         </div>
 
-        {beelupUrl && (
-          <div className="camaras-cta">
-            <a
-              href={beelupUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary"
-            >
-              <Camera size={18} className="icono-marca" aria-hidden="true" />
-              Ver tus jugadas en Beelup
-            </a>
-          </div>
-        )}
+        <BeelupCartel href={beelupUrl} />
       </div>
     </section>
   );
