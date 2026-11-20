@@ -5,6 +5,9 @@ import Image from "next/image";
 import Portal from "./Portal";
 import useDialogFocus from "../lib/useDialogFocus";
 import Mascota from "./Mascota";
+import { depositFor, DEFAULT_CONFIG } from "../lib/clubConfig";
+
+const DEFAULT_DEPOSIT_PCT = DEFAULT_CONFIG.depositPct;
 
 // Antes esta pantalla mostraba un CBU y un alias inventados (placeholder de
 // ejemplo) como si fueran los datos reales del club, con botón "Copiar" y
@@ -50,6 +53,16 @@ export default function BookingPassModal({
   const REAL_ALIAS = payment?.alias || ENV_ALIAS;
   const REAL_CBU = payment?.cbu || ENV_CBU;
   const TITULAR = payment?.titular || ENV_TITULAR;
+  // Seña = el % de Ajustes (el mismo que cobra Mercado Pago). Por defecto 25%:
+  // con 4 jugadores es justo lo que paga uno.
+  const depositPct = Number.isFinite(payment?.depositPct)
+    ? payment.depositPct
+    : DEFAULT_DEPOSIT_PCT;
+  const total = Number(booking?.total) || 0;
+  const deposit = depositFor({ depositPct }, total);
+  const players = Number(booking?.players) || 4;
+  const perPlayer = Math.round(total / players);
+  const depositIsOnePlayer = deposit > 0 && Math.abs(deposit - perPlayer) < 100;
   const [copiedField, setCopiedField] = useState(null);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [payingMp, setPayingMp] = useState(false);
@@ -288,15 +301,21 @@ export default function BookingPassModal({
                     marginTop: 2,
                   }}
                 >
-                  ${Math.round(booking.total / 4).toLocaleString("es-AR")} por
-                  jugador si son cuatro
+                  ${perPlayer.toLocaleString("es-AR")} por jugador
+                  {players === 4 ? " si son cuatro" : ` (${players} jugadores)`}
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <span className="pass-label">Seña para confirmar</span>
                 <div className="pass-sena-val">
-                  ${Math.round(booking.total / 2).toLocaleString("es-AR")}
+                  ${deposit.toLocaleString("es-AR")}
                 </div>
+                {depositIsOnePlayer && (
+                  <span className="pass-sena-hint">
+                    <span className="pass-sena-ball" aria-hidden="true" />
+                    Lo que paga 1 jugador
+                  </span>
+                )}
               </div>
             </div>
 
@@ -417,10 +436,7 @@ export default function BookingPassModal({
                           <path d="M19 4H5c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H5V8h14v10z" />
                         </svg>
                         Pagar seña con Mercado Pago ($
-                        {Math.round(
-                          (booking.total || 60000) / 2,
-                        ).toLocaleString("es-AR")}
-                        )
+                        {deposit.toLocaleString("es-AR")})
                       </>
                     )}
                   </button>
