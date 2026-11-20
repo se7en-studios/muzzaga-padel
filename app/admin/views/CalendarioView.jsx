@@ -87,18 +87,12 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
             </div>
             <div className="admin-kravio-kpi-content">
               <div className="admin-kravio-kpi-left">
-                <div className="admin-kravio-kpi-number" style={{ color: "#ea580c" }}>
+                <div className="admin-kravio-kpi-number">
                   {formatPct(monthStats.ocupacionPct)}
                 </div>
                 <span className="admin-cell-sub">
                   Promedio en {MONTH_NAMES[month - 1]} {year}
                 </span>
-              </div>
-              <div className="admin-kravio-sparkline">
-                <svg viewBox="0 0 100 36">
-                  <path d="M 0,28 Q 25,24 45,14 T 75,10 T 100,5" fill="none" stroke="#ea580c" strokeWidth="2.5" />
-                  <path d="M 0,28 Q 25,24 45,14 T 75,10 T 100,5 L 100,36 L 0,36 Z" fill="rgba(234, 88, 12, 0.08)" />
-                </svg>
               </div>
             </div>
           </div>
@@ -110,18 +104,12 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
             </div>
             <div className="admin-kravio-kpi-content">
               <div className="admin-kravio-kpi-left">
-                <div className="admin-kravio-kpi-number" style={{ color: "#15803d" }}>
+                <div className="admin-kravio-kpi-number">
                   {monthStats.totals.turnos} {monthStats.totals.turnos === 1 ? "Turno" : "Turnos"}
                 </div>
                 <span className="admin-cell-sub">
                   Jugados y reservados
                 </span>
-              </div>
-              <div className="admin-kravio-sparkline">
-                <svg viewBox="0 0 100 36">
-                  <path d="M 0,30 Q 30,26 55,16 T 85,8 T 100,6" fill="none" stroke="#15803d" strokeWidth="2.5" />
-                  <path d="M 0,30 Q 30,26 55,16 T 85,8 T 100,6 L 100,36 L 0,36 Z" fill="rgba(21, 128, 61, 0.08)" />
-                </svg>
               </div>
             </div>
           </div>
@@ -133,18 +121,12 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
             </div>
             <div className="admin-kravio-kpi-content">
               <div className="admin-kravio-kpi-left">
-                <div className="admin-kravio-kpi-number" style={{ color: "#0284c7" }}>
+                <div className="admin-kravio-kpi-number" style={{ color: "#15803d" }}>
                   {formatARS(monthStats.totals.cobrado)}
                 </div>
                 <span className="admin-cell-sub">
                   Ingresos de turnos y cantina
                 </span>
-              </div>
-              <div className="admin-kravio-sparkline">
-                <svg viewBox="0 0 100 36">
-                  <path d="M 0,26 Q 25,22 50,14 T 80,10 T 100,4" fill="none" stroke="#0284c7" strokeWidth="2.5" />
-                  <path d="M 0,26 Q 25,22 50,14 T 80,10 T 100,4 L 100,36 L 0,36 Z" fill="rgba(2, 132, 199, 0.08)" />
-                </svg>
               </div>
             </div>
           </div>

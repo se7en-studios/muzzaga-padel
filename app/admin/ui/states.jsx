@@ -39,12 +39,24 @@ export function SkeletonRows({ count = 5, height = 44 }) {
 
 /**
  * Estado vacío con ícono, texto útil y una acción opcional.
- * @param {{ icon: import("react").ComponentType<any>, title: string, text?: string, action?: { label: string, onClick: () => void } }} props
+ * `mascot`: nombre de la pose de Muzzaguito (public/img/mascotas/muzzaguito-<pose>.webp).
+ * @param {{ icon: import("react").ComponentType<any>, mascot?: string, title: string, text?: string, action?: { label: string, onClick: () => void } }} props
  */
-export function EmptyState({ icon: Icon, title, text, action }) {
+export function EmptyState({ icon: Icon, mascot, title, text, action }) {
   return (
-    <div className="admin-empty">
-      {Icon && (
+    <div className={`admin-empty${mascot ? " has-mascot" : ""}`}>
+      {mascot ? (
+        // Muzzaguito en vez del ícono suelto: el panel también es del club.
+        <img
+          className="admin-empty-mascot"
+          src={`/img/mascotas/muzzaguito-${mascot}.webp`}
+          alt=""
+          width={112}
+          height={112}
+          loading="lazy"
+          decoding="async"
+        />
+      ) : Icon && (
         <span className="admin-empty-icon">
           <Icon size={20} strokeWidth={1.75} aria-hidden />
         </span>

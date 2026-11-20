@@ -441,6 +441,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
           {summary.expensesList.length === 0 ? (
             <EmptyState
               icon={Receipt}
+              mascot="descanso-mate"
               title="Sin egresos este día"
               text={
                 isClosed

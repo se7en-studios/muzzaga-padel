@@ -355,12 +355,6 @@ export default function ReportesView({ onExpiredSession }) {
                     Turnos {formatARS(t.cobradoTurnos)} · Cantina {formatARS(t.cantina)}
                   </span>
                 </div>
-                <div className="admin-kravio-sparkline">
-                  <svg viewBox="0 0 100 36">
-                    <path d="M 0,28 Q 25,24 50,14 T 80,10 T 100,4" fill="none" stroke="#15803d" strokeWidth="2.5" />
-                    <path d="M 0,28 Q 25,24 50,14 T 80,10 T 100,4 L 100,36 L 0,36 Z" fill="rgba(21, 128, 61, 0.08)" />
-                  </svg>
-                </div>
               </div>
             </div>
 
@@ -371,18 +365,12 @@ export default function ReportesView({ onExpiredSession }) {
               </div>
               <div className="admin-kravio-kpi-content">
                 <div className="admin-kravio-kpi-left">
-                  <div className="admin-kravio-kpi-number" style={{ color: "#ea580c" }}>
+                  <div className="admin-kravio-kpi-number">
                     {t.turnos}
                   </div>
                   <span className="admin-cell-sub">
                     Facturado {formatARS(t.facturadoTurnos)}
                   </span>
-                </div>
-                <div className="admin-kravio-sparkline">
-                  <svg viewBox="0 0 100 36">
-                    <path d="M 0,30 Q 30,26 55,16 T 85,8 T 100,6" fill="none" stroke="#ea580c" strokeWidth="2.5" />
-                    <path d="M 0,30 Q 30,26 55,16 T 85,8 T 100,6 L 100,36 L 0,36 Z" fill="rgba(234, 88, 12, 0.08)" />
-                  </svg>
                 </div>
               </div>
             </div>
@@ -401,12 +389,6 @@ export default function ReportesView({ onExpiredSession }) {
                     {t.pagadosSinCobro > 0 ? plural(t.pagadosSinCobro, "turno sin cobro", "turnos sin cobro") : "Saldos pendientes"}
                   </span>
                 </div>
-                <div className="admin-kravio-sparkline">
-                  <svg viewBox="0 0 100 36">
-                    <path d="M 0,22 Q 25,26 50,18 T 80,12 T 100,8" fill="none" stroke="#f59e0b" strokeWidth="2.5" />
-                    <path d="M 0,22 Q 25,26 50,18 T 80,12 T 100,8 L 100,36 L 0,36 Z" fill="rgba(245, 158, 11, 0.08)" />
-                  </svg>
-                </div>
               </div>
             </div>
 
@@ -417,18 +399,12 @@ export default function ReportesView({ onExpiredSession }) {
               </div>
               <div className="admin-kravio-kpi-content">
                 <div className="admin-kravio-kpi-left">
-                  <div className="admin-kravio-kpi-number" style={{ color: "#0284c7" }}>
+                  <div className="admin-kravio-kpi-number">
                     {formatPct(t.ocupacionPct)}
                   </div>
                   <span className="admin-cell-sub">
                     Días abiertos hasta hoy
                   </span>
-                </div>
-                <div className="admin-kravio-sparkline">
-                  <svg viewBox="0 0 100 36">
-                    <path d="M 0,26 Q 30,22 60,14 T 90,8 T 100,6" fill="none" stroke="#0284c7" strokeWidth="2.5" />
-                    <path d="M 0,26 Q 30,22 60,14 T 90,8 T 100,6 L 100,36 L 0,36 Z" fill="rgba(2, 132, 199, 0.08)" />
-                  </svg>
                 </div>
               </div>
             </div>
@@ -451,6 +427,7 @@ export default function ReportesView({ onExpiredSession }) {
               <div className="admin-settings-card">
                 <EmptyState
                   icon={BarChart3}
+                  mascot="pelota-padel-life"
                   title="Todavía no hay días transcurridos en el período"
                 />
               </div>

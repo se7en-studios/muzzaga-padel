@@ -246,7 +246,8 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
         />
         <Kpi
           icon={DollarSign}
-          color="#0284c7"
+          color="#15803d"
+          numberColor="#15803d"
           title="Inscripciones cobradas"
           value={formatARS(metrics.collected)}
           sub={
@@ -424,6 +425,7 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
         <div className="tn-card">
           <EmptyState
             icon={Trophy}
+            mascot="trofeo-paleta"
             title={
               tournaments.length
                 ? "No hay torneos acá"
@@ -491,7 +493,7 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
   );
 }
 
-function Kpi({ icon: Icon, color, title, value, sub }) {
+function Kpi({ icon: Icon, color, numberColor, title, value, sub }) {
   return (
     <div className="admin-kravio-kpi-card">
       <div className="admin-kravio-kpi-header">
@@ -500,7 +502,7 @@ function Kpi({ icon: Icon, color, title, value, sub }) {
       </div>
       <div className="admin-kravio-kpi-content">
         <div className="admin-kravio-kpi-left">
-          <div className="admin-kravio-kpi-number" style={{ color }}>
+          <div className="admin-kravio-kpi-number" style={{ color: numberColor }}>
             {value}
           </div>
           <span className="admin-cell-sub">{sub}</span>

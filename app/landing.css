@@ -2983,3 +2983,44 @@ html:has(#turnos) body {
     margin-inline: auto;
   }
 }
+
+/* ==========================================================================
+   PIE EN EL CELU: los 6 links de "Navegación" iban uno debajo del otro con
+   ~58 px cada uno (más de una pantalla de lista). En dos columnas, como
+   botones, se tocan fácil y la lista ocupa la mitad.
+   ========================================================================== */
+@media (max-width: 640px) {
+  .footer-links-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .footer-links-list li {
+    display: flex;
+  }
+
+  .footer-links-list a {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 14px;
+  }
+
+  .footer-links-list a:hover {
+    transform: none;
+    border-color: rgba(232, 114, 42, 0.5);
+  }
+
+  /* La grilla de turnos es lo último de su sección: sin el margen de abajo
+     el aire hasta "Cámaras" queda igual que entre las demás secciones. */
+  .booking-grid-area > .booking-matrix-container:last-child {
+    margin-bottom: 0;
+  }
+}
