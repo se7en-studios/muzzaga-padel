@@ -1728,7 +1728,10 @@ const MAX_TOURNAMENT_CATEGORIES = 8;
  */
 function revalidateTournamentPages() {
   revalidatePath("/torneos");
-  revalidatePath("/");
+  // Los torneos abiertos van como Event en el JSON-LD del layout, que sale
+  // en todas las páginas: si no se regenera todo, en las herramientas (que
+  // son estáticas) un torneo cerrado seguía figurando.
+  revalidatePath("/", "layout");
 }
 
 const cleanPrice = (price) =>
