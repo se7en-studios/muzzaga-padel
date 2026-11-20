@@ -440,7 +440,9 @@ export default function MonitorPage() {
           return (
             <div
               key={v.court.id}
-              className={`mon-callout is-${v.state}`}
+              // Si la cancha cae cerca de las tarjetas, el globo se abre hacia
+              // la derecha: centrado quedaba medio tapado por la columna.
+              className={`mon-callout is-${v.state}${pt[0] < 0.5 ? " is-der" : ""}`}
               style={{
                 left: `${pt[0] * 100}%`,
                 top: `${pt[1] * 100}%`,
@@ -605,7 +607,7 @@ export default function MonitorPage() {
                     <strong className="mon-card-who">
                       {v.nextUp ? `Hasta las ${v.nextUp.booking.startTime} hs` : "Todo el día"}
                     </strong>
-                    <span className="mon-card-meta">Reservá en recepción o en muzzagapadel.com</span>
+                    <span className="mon-card-meta">Reservá en recepción o en la web</span>
                   </div>
                   <img
                     src="/img/iconos/pelota.webp"

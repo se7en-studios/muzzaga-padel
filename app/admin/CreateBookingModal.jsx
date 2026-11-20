@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { priceFor, slotTimesFor } from "../../lib/clubConfig";
 import { formatARS, formatDate } from "../../lib/format";
 import { IconClose } from "./adminHelpers";
+import PlayerNamesFields from "./ui/PlayerNamesFields";
 
 /**
  * Nueva reserva o bloqueo de cancha. Solo dos tipos a propósito: los pagos
@@ -31,6 +33,11 @@ export default function CreateBookingModal({
     : (modalForm.playersCount || 4) * modalRate.perPlayer;
   const isBlock = modalForm.status === "bloqueado";
   const set = (patch) => setModalForm({ ...modalForm, ...patch });
+  const playerNames = modalForm.playerNames || [];
+  // Plegado de entrada: casi nunca se anotan, y así el formulario sigue corto.
+  const [showPlayers, setShowPlayers] = useState(() =>
+    playerNames.some((n) => n.trim()),
+  );
 
   return (
     <div className="admin-modal-backdrop" onClick={onClose}>
@@ -195,6 +202,28 @@ export default function CreateBookingModal({
                   Pagan la cancha entera ({formatARS(modalRate.total)})
                 </span>
               </label>
+
+              {/* Opcional: quiénes juegan, además del que reserva. */}
+              {showPlayers ? (
+                <fieldset className="admin-players">
+                  <legend className="admin-field-label">
+                    Quiénes juegan (opcional)
+                  </legend>
+                  <PlayerNamesFields
+                    idPrefix="admin-create-player"
+                    value={playerNames}
+                    onChange={(next) => set({ playerNames: next })}
+                  />
+                </fieldset>
+              ) : (
+                <button
+                  type="button"
+                  className="admin-detail-link admin-players-toggle"
+                  onClick={() => setShowPlayers(true)}
+                >
+                  + Anotar los nombres de los jugadores (opcional)
+                </button>
+              )}
 
               {!modalForm.fullCourt && (
                 <label>

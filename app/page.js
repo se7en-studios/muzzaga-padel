@@ -3,13 +3,17 @@ import SiteHeader from "../components/SiteHeader";
 import LiveWeatherRadar from "../components/LiveWeatherRadar";
 import TodayFlashSlots from "../components/TodayFlashSlots";
 import BookingCalendar from "../components/BookingCalendar";
-import AmenitiesSection from "../components/AmenitiesSection";
-import HomeTorneosTeaser from "../components/HomeTorneosTeaser";
 import HomeCantinaTeaser from "../components/HomeCantinaTeaser";
-import ClubRecorrido from "../components/ClubRecorrido";
-import CamarasSection from "../components/CamarasSection";
-import ClubToolsSection from "../components/ClubToolsSection";
-import FaqSection from "../components/FaqSection";
+// Secciones lejos de la primera pantalla: mismo HTML, pero su JS (y motion,
+// que usa el carrusel de Instalaciones) se baja recién al acercarse.
+import {
+  CamarasSection,
+  ClubRecorrido,
+  AmenitiesSection,
+  HomeTorneosTeaser,
+  ClubToolsSection,
+  FaqSection,
+} from "../components/SeccionesDiferidas";
 import FloatingLiveBar from "../components/FloatingLiveBar";
 import MascotFloatHelper from "../components/MascotFloatHelper";
 import BottomNav from "../components/BottomNav";

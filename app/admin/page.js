@@ -1082,6 +1082,7 @@ export default function AdminPage() {
           sales={dayData?.sales || []}
           onSalesChanged={refreshMoney}
           onToast={showToast}
+          onBookingChanged={() => loadDayData(activeDate)}
           onDeletedBooking={() => {
             loadDayData(activeDate);
             loadClients();

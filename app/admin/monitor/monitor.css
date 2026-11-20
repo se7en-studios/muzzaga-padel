@@ -1,29 +1,43 @@
-/* Monitor TV de recepción. De fondo, la maqueta 3D del club (la misma del
-   recorrido de la home) con la cámara fija sobre las dos canchas en paralelo;
-   encima, el estado de cada cancha a la izquierda, globos sobre cada cancha,
-   la cantina y los avisos abajo. Pensado para una tele de 1920×1080 sin
-   scroll: todo escala con el alto de la pantalla. */
+/* Monitor TV de recepción. De fondo, la maqueta 3D del club con la cámara
+   fija sobre las dos canchas; encima, una tarjeta por cancha a la izquierda
+   (cabecera de césped azul + marcador oscuro), globos sobre cada cancha, la
+   cantina y Beelup abajo, y la tira de avisos. Pensado para una tele de
+   1920×1080 vista de lejos y sin scroll: casi todo se mide en vh, así a
+   1280×720 queda igual pero más chico.
+   Rendimiento: la compu de la tele es humilde. Nada de blur ni sombras
+   animadas; solo fondos fijos y animaciones cortas de opacity/transform. */
 
 .mon-root {
   --mon-naranja: #e8722a;
   --mon-naranja-claro: #ffb27f;
   --mon-negro: #0e0e0d;
-  --mon-panel: rgba(14, 14, 13, 0.84);
+  --mon-tablero: #141412;
+  --mon-panel: rgba(17, 17, 15, 0.92);
   --mon-linea: rgba(255, 255, 255, 0.12);
-  --mon-suave: #c7c2bd;
+  --mon-crema: #f3f1e9;
+  --mon-suave: #cfcabd;
+  --mon-cancha: #2350d6;
+  --mon-cancha-honda: #16349a;
+  --mon-pelota: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
   --mon-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
-  --tone: #a8a29e;
+  --mon-texto: var(--font-inter), var(--font-poppins), system-ui, sans-serif;
+  --mon-lateral: clamp(400px, 32vw, 640px);
+  /* Líneas de la cancha (perímetro, red, saque y central) que se estiran
+     con la caja sin engordar el trazo. */
+  --mon-lineas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='3' y='6' width='194' height='88' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.5'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.6'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.35'/%3E%3C/svg%3E");
+  --state: var(--mon-crema);
+  --state-ink: #1c42b8;
 
   position: relative;
   height: 100vh;
   display: grid;
-  grid-template-columns: clamp(340px, 25vw, 500px) minmax(0, 1fr);
+  grid-template-columns: var(--mon-lateral) minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto auto;
-  gap: clamp(10px, 1.6vh, 20px) clamp(16px, 2vw, 36px);
-  padding: clamp(12px, 2vh, 26px) clamp(16px, 1.8vw, 36px);
+  gap: 1.7vh clamp(16px, 1.8vw, 36px);
+  padding: 2vh clamp(16px, 1.8vw, 36px);
   background: var(--mon-negro);
   color: #fff;
-  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-family: var(--mon-texto);
   overflow: hidden;
 }
 
@@ -36,6 +50,14 @@ body:has(.mon-root) {
 .mon-root > :not(.mon-scene, .mon-shade, .mon-callout, .mon-overlay) {
   position: relative;
   z-index: 2;
+}
+
+.mon-root h1,
+.mon-root h2,
+.mon-root p,
+.mon-root ol,
+.mon-root ul {
+  margin: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -62,15 +84,17 @@ body:has(.mon-root) {
   opacity: 1;
 }
 
-/* Oscurece los bordes para que lo de encima se lea sobre cualquier parte. */
+/* Oscurece la columna de las tarjetas y las franjas de arriba y abajo, para
+   que todo se lea sobre cualquier parte de la maqueta. Es un degradé fijo:
+   no cuesta nada por cuadro. */
 .mon-shade {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(10, 10, 9, 0.78) 0%, rgba(10, 10, 9, 0.35) 30%, transparent 48%),
-    linear-gradient(180deg, rgba(10, 10, 9, 0.7) 0%, transparent 16%, transparent 72%, rgba(10, 10, 9, 0.82) 100%);
+    linear-gradient(90deg, rgba(10, 10, 9, 0.88) 0%, rgba(10, 10, 9, 0.55) 30%, transparent 46%),
+    linear-gradient(180deg, rgba(10, 10, 9, 0.75) 0%, transparent 14%, transparent 70%, rgba(10, 10, 9, 0.9) 100%);
 }
 
 /* --------------------------------------------------------------------------
@@ -87,7 +111,7 @@ body:has(.mon-root) {
   color: #fff;
   padding: 20px;
   text-align: center;
-  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-family: var(--font-inter), var(--font-poppins), system-ui, sans-serif;
 }
 
 .mon-center-logo {
@@ -156,7 +180,7 @@ body:has(.mon-root) {
 }
 
 /* --------------------------------------------------------------------------
-   Header
+   Header: marca a la izquierda, reloj tipo marcador a la derecha.
    -------------------------------------------------------------------------- */
 .mon-header {
   grid-column: 1 / -1;
@@ -169,43 +193,72 @@ body:has(.mon-root) {
 .mon-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 1.4vh;
 }
 
 .mon-brand img {
-  width: clamp(44px, 5.6vh, 64px);
-  height: clamp(44px, 5.6vh, 64px);
+  width: 6.4vh;
+  height: 6.4vh;
   object-fit: contain;
 }
 
-.mon-brand span {
+.mon-brand h1 {
   font-family: var(--mon-display);
-  font-size: clamp(20px, 2.8vh, 32px);
+  font-size: 4.4vh;
   font-weight: 800;
-  line-height: 0.95;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.mon-brand p {
+  display: flex;
+  align-items: center;
+  gap: 0.8vh;
+  margin-top: 0.5vh;
+  color: var(--mon-suave);
+  font-size: 1.8vh;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* La pelotita del panel, al lado de "Canchas en vivo". */
+.mon-brand p::before {
+  content: "";
+  width: 1.2vh;
+  height: 1.2vh;
+  border-radius: 50%;
+  background: var(--mon-pelota);
 }
 
 .mon-tools {
   display: flex;
   align-items: center;
-  gap: 14px 22px;
+  gap: 14px 1.6vw;
 }
 
+/* El reloj va en un tablero oscuro con la raya naranja, como el día elegido
+   en la agenda del panel. */
 .mon-clock {
   display: grid;
   justify-items: end;
+  padding: 0.8vh 1.8vh 0.9vh;
+  border-radius: 1.4vh;
+  border: 1px solid var(--mon-linea);
+  background: var(--mon-tablero);
+  box-shadow: inset 0 -0.45vh 0 var(--mon-naranja);
 }
 
 .mon-clock-time {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 0.6vh;
   font-family: var(--mon-display);
-  font-size: clamp(40px, 6vh, 72px);
+  font-size: 6vh;
   font-weight: 800;
-  line-height: 0.9;
+  line-height: 0.88;
   font-variant-numeric: tabular-nums;
 }
 
@@ -216,9 +269,9 @@ body:has(.mon-root) {
 }
 
 .mon-clock-date {
-  margin-top: 4px;
+  margin-top: 0.4vh;
   color: var(--mon-suave);
-  font-size: clamp(13px, 1.6vh, 17px);
+  font-size: 1.7vh;
   font-weight: 500;
 }
 
@@ -235,7 +288,7 @@ body:has(.mon-root) {
   height: 42px;
   border-radius: 12px;
   border: 1px solid var(--mon-linea);
-  background: rgba(14, 14, 13, 0.6);
+  background: rgba(14, 14, 13, 0.7);
   color: var(--mon-suave);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
@@ -244,6 +297,11 @@ body:has(.mon-root) {
 .mon-btn:hover {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
+}
+
+.mon-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 .mon-btn.is-on {
@@ -257,12 +315,12 @@ body:has(.mon-root) {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 0.6vh 1.4vh;
   border-radius: 999px;
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  background: rgba(10, 30, 18, 0.7);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(10, 30, 18, 0.85);
   color: #86efac;
-  font-size: 13px;
+  font-size: max(13px, 1.6vh);
   font-weight: 600;
 }
 
@@ -275,188 +333,185 @@ body:has(.mon-root) {
 
 .mon-status.is-stale {
   color: #fbbf24;
-  background: rgba(40, 28, 6, 0.75);
-  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(40, 28, 6, 0.85);
+  border-color: rgba(245, 158, 11, 0.45);
 }
 
 .mon-status.is-error {
   color: #fca5a5;
-  background: rgba(40, 10, 10, 0.75);
-  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(40, 10, 10, 0.85);
+  border-color: rgba(239, 68, 68, 0.5);
 }
 
 /* --------------------------------------------------------------------------
-   Columna izquierda: título y una tarjeta por cancha
+   Columna izquierda: una tarjeta por cancha, las dos del mismo alto.
    -------------------------------------------------------------------------- */
 .mon-side {
   grid-column: 1;
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.4vh, 18px);
+  gap: 1.7vh;
   min-height: 0;
 }
 
-.mon-title h1 {
-  margin: 0;
-  font-size: clamp(26px, 3.6vh, 44px);
-  font-weight: 700;
-  line-height: 1.05;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6);
-}
-
-.mon-title p {
-  margin: 2px 0 0;
-  color: var(--mon-suave);
-  font-size: clamp(13px, 1.7vh, 18px);
-}
-
 .mon-card {
-  --tone: #a8a29e;
+  flex: 1 1 0;
+  min-height: 0;
   display: grid;
-  gap: clamp(6px, 1vh, 12px);
-  padding: clamp(10px, 1.4vh, 18px) clamp(14px, 1.2vw, 22px);
-  border-radius: 22px;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border-radius: 2vh;
+  border: 0.4vh solid var(--state);
   background: var(--mon-panel);
-  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.8);
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  box-shadow: 0 2.4vh 4vh -2vh rgba(0, 0, 0, 0.85);
+  transition: border-color 0.4s ease;
 }
 
-.mon-card.is-live {
-  border-color: var(--tone);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--tone) 30%, transparent),
-    0 0 28px color-mix(in srgb, var(--tone) 35%, transparent),
-    0 20px 40px -20px rgba(0, 0, 0, 0.8);
-}
-
+/* Cabecera: césped azul con textura y líneas blancas, como los turnos de la
+   agenda. A la derecha, el estado en un bloque de color sólido: lo primero
+   que se ve desde lejos. */
 .mon-card-head {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: clamp(10px, 1vw, 16px);
+  justify-content: space-between;
+  gap: 1.6vh;
+  padding: 1vh 1.2vh 1vh 2.2vh;
+  background-color: var(--mon-cancha);
+  background-image:
+    var(--mon-lineas),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.25), rgba(11, 26, 77, 0.6)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  border-bottom: 0.3vh solid rgba(255, 255, 255, 0.85);
 }
 
-.mon-card-icon {
-  width: clamp(44px, 5.6vh, 68px);
-  height: clamp(44px, 5.6vh, 68px);
-  object-fit: contain;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+.mon-card-name {
+  min-width: 0;
+  text-shadow: 0 2px 6px rgba(7, 16, 52, 0.7);
 }
 
 .mon-card-name span {
   display: block;
-  color: var(--mon-suave);
-  font-size: clamp(12px, 1.5vh, 16px);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.7vh;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .mon-card-name h2 {
-  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--mon-display);
-  font-size: clamp(26px, 3.6vh, 42px);
+  font-size: 5.2vh;
   font-weight: 800;
-  line-height: 0.95;
+  line-height: 0.92;
   text-transform: uppercase;
 }
 
-.mon-pill {
+.mon-state {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--mon-linea);
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--mon-suave);
+  gap: 1vh;
+  padding: 0.8vh 1.8vh;
+  border-radius: 1.2vh;
+  background: var(--state);
+  color: var(--state-ink);
   font-family: var(--mon-display);
-  font-size: clamp(15px, 2vh, 22px);
+  font-size: 3.8vh;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  line-height: 1;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
+  box-shadow: 0 0.8vh 1.6vh -0.6vh rgba(0, 0, 0, 0.6);
 }
 
-.mon-pill.is-live {
-  border-color: var(--tone);
-  background: color-mix(in srgb, var(--tone) 16%, transparent);
-  color: var(--tone);
-}
-
-.mon-pill.is-live::before {
+/* Punto delante del estado: lleno si se está jugando, aro si no. */
+.mon-state::before {
   content: "";
-  width: 0.45em;
-  height: 0.45em;
+  width: 0.42em;
+  height: 0.42em;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 0 0 currentColor;
 }
 
+.mon-card.is-libre .mon-state::before,
+.mon-card.is-proximo .mon-state::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 0.09em currentColor;
+}
+
+/* Cuerpo: el marcador. Quién juega a la izquierda, los minutos a la derecha. */
 .mon-card-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: clamp(10px, 1vw, 18px);
+  gap: 2vh;
+  min-height: 0;
+  overflow: hidden;
+  padding: 1.1vh 2vh 1.1vh 2.2vh;
 }
 
 .mon-card-info {
   display: grid;
-  gap: clamp(6px, 1vh, 12px);
+  gap: 0.6vh;
   min-width: 0;
 }
 
-.mon-card-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  font-size: clamp(14px, 1.9vh, 20px);
-}
-
-.mon-card-row svg {
-  flex-shrink: 0;
+.mon-card-kicker {
   color: var(--mon-naranja-claro);
+  font-size: 1.8vh;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.mon-card-row div {
-  display: grid;
-  min-width: 0;
-}
-
-.mon-card-row strong {
+.mon-card-who {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 600;
+  font-family: var(--mon-display);
+  font-size: 4.6vh;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
-.mon-card-row span {
+.mon-card-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--mon-suave);
-  font-size: 0.9em;
+  font-size: 2.1vh;
+  font-weight: 500;
 }
 
-.mon-card-row.is-free {
-  padding: clamp(4px, 0.8vh, 10px) 0;
+/* Libre: una pelota grande donde iría la cuenta regresiva. */
+.mon-card-ball {
+  width: 11vh;
+  height: 11vh;
+  object-fit: contain;
+  filter: drop-shadow(0 1vh 1.2vh rgba(0, 0, 0, 0.5));
 }
 
-/* Próximo turno: el pie de cada tarjeta, en una línea. */
+/* Pie: el turno que sigue, en una línea. */
 .mon-card-next {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: 1.4vh;
   min-width: 0;
-  padding-top: clamp(6px, 1vh, 12px);
+  padding: 1vh 2vh 1.1vh 2.2vh;
   border-top: 1px solid var(--mon-linea);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .mon-card-next-label {
   color: var(--mon-naranja);
-  font-size: clamp(11px, 1.4vh, 14px);
+  font-size: 1.7vh;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -467,16 +522,17 @@ body:has(.mon-root) {
   flex: 1;
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 1.2vh;
   min-width: 0;
-  font-size: clamp(14px, 1.9vh, 20px);
+  font-size: 2.3vh;
   font-weight: 600;
 }
 
 .mon-card-next-value strong {
   font-family: var(--mon-display);
-  font-size: 1.35em;
+  font-size: 1.5em;
   font-weight: 800;
+  line-height: 0.9;
   color: var(--mon-naranja);
   font-variant-numeric: tabular-nums;
 }
@@ -491,7 +547,7 @@ body:has(.mon-root) {
   margin-left: auto;
   flex-shrink: 0;
   color: var(--mon-suave);
-  font-size: 0.85em;
+  font-size: 0.9em;
   font-style: normal;
   font-weight: 500;
 }
@@ -504,9 +560,9 @@ body:has(.mon-root) {
 /* Cuenta regresiva: el anillo se vacía a medida que pasa el turno. */
 .mon-ring {
   position: relative;
-  width: clamp(88px, 11.5vh, 140px);
+  width: 13.4vh;
   aspect-ratio: 1;
-  color: var(--tone);
+  color: var(--tone, var(--state));
 }
 
 .mon-ring svg {
@@ -517,14 +573,14 @@ body:has(.mon-root) {
 
 .mon-ring-track {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.1);
-  stroke-width: 9;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 10;
 }
 
 .mon-ring-fill {
   fill: none;
   stroke: currentColor;
-  stroke-width: 9;
+  stroke-width: 10;
   stroke-linecap: round;
   transition: stroke-dashoffset 1s ease;
 }
@@ -540,17 +596,17 @@ body:has(.mon-root) {
 
 .mon-ring-num strong {
   font-family: var(--mon-display);
-  font-size: clamp(32px, 5vh, 60px);
+  font-size: 6.8vh;
   font-weight: 800;
-  line-height: 0.85;
+  line-height: 0.82;
   font-variant-numeric: tabular-nums;
 }
 
 .mon-ring-num span {
-  margin-top: 2px;
-  font-size: clamp(12px, 1.6vh, 18px);
+  margin-top: 0.2vh;
+  font-size: 1.6vh;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -558,7 +614,6 @@ body:has(.mon-root) {
    Globos sobre las canchas: la punta cae justo en la cancha.
    -------------------------------------------------------------------------- */
 .mon-callout {
-  --tone: #e7e5e4;
   position: absolute;
   z-index: 2;
   display: flex;
@@ -568,148 +623,130 @@ body:has(.mon-root) {
   pointer-events: none;
 }
 
-.mon-callout-bubble {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  padding: clamp(8px, 1.1vh, 12px) clamp(18px, 1.6vw, 28px);
-  border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.85);
-  background: rgba(10, 10, 9, 0.86);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
-  white-space: nowrap;
+.mon-callout.is-der {
+  align-items: flex-start;
+  translate: -3.8vh -100%;
 }
 
-.mon-callout.is-live .mon-callout-bubble {
-  border-color: var(--tone);
-  box-shadow:
-    0 0 22px color-mix(in srgb, var(--tone) 45%, transparent),
-    0 12px 30px -10px rgba(0, 0, 0, 0.8);
+.mon-callout.is-der .mon-callout-dot {
+  margin-left: 3vh;
+}
+
+.mon-callout.is-der .mon-callout-stem {
+  margin-left: calc(3vh + 0.625vh);
+}
+
+.mon-callout-bubble {
+  display: flex;
+  align-items: center;
+  gap: 1.2vh;
+  padding: 0.7vh 0.7vh 0.7vh 2vh;
+  border-radius: 999px;
+  border: 0.35vh solid var(--state);
+  background: rgba(14, 14, 13, 0.92);
+  box-shadow: 0 1.2vh 3vh -1vh rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
 }
 
 .mon-callout-bubble strong {
   font-family: var(--mon-display);
-  font-size: clamp(18px, 2.6vh, 30px);
+  font-size: 2.8vh;
   font-weight: 700;
   line-height: 1;
-}
-
-.mon-callout-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--mon-suave);
-  font-family: var(--mon-display);
-  font-size: clamp(14px, 2vh, 22px);
-  font-weight: 800;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.mon-callout.is-live .mon-callout-state {
-  color: var(--tone);
-}
-
-.mon-callout.is-live .mon-callout-state::before {
-  content: "";
-  width: 0.5em;
-  height: 0.5em;
-  border-radius: 50%;
-  background: currentColor;
+.mon-callout-state {
+  padding: 0.6vh 1.6vh;
+  border-radius: 999px;
+  background: var(--state);
+  color: var(--state-ink);
+  font-family: var(--mon-display);
+  font-size: 2.6vh;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .mon-callout-stem {
-  width: 2px;
-  height: clamp(40px, 8vh, 96px);
-  background: rgba(255, 255, 255, 0.85);
-}
-
-.mon-callout.is-live .mon-callout-stem {
-  background: var(--tone);
+  width: 0.35vh;
+  height: 8vh;
+  background: var(--state);
 }
 
 .mon-callout-dot {
-  width: 14px;
-  height: 14px;
-  margin-bottom: -7px;
+  width: 1.6vh;
+  height: 1.6vh;
+  margin-bottom: -0.8vh;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
-}
-
-/* Últimos minutos: la pastilla y el número laten. */
-@media (prefers-reduced-motion: no-preference) {
-  .mon-card.is-ending .mon-pill::before {
-    animation: monLate 1.2s ease-out infinite;
-  }
-
-  .mon-card.is-ending .mon-ring-num strong,
-  .mon-callout.is-ending .mon-callout-state {
-    animation: monParpadeo 1.2s ease-in-out infinite;
-  }
-}
-
-@keyframes monLate {
-  to {
-    box-shadow: 0 0 0 10px transparent;
-  }
-}
-
-@keyframes monParpadeo {
-  50% {
-    opacity: 0.55;
-  }
+  border: 0.3vh solid #fff;
+  background: var(--state);
 }
 
 /* --------------------------------------------------------------------------
-   Cantina: los destacados de la carta con su precio (los que se cambian en
-   el panel, Cantina → Carta y precios).
+   Franja de abajo: cantina a la izquierda, Beelup a la derecha.
    -------------------------------------------------------------------------- */
-.mon-cantina {
+.mon-bottom {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: clamp(340px, 25vw, 500px) minmax(0, 1fr);
-  gap: clamp(12px, 1vw, 18px);
+  grid-template-columns: minmax(0, 1fr) clamp(460px, 40vw, 780px);
+  gap: 1.6vh clamp(12px, 1vw, 18px);
   align-items: stretch;
+}
+
+.mon-bottom > :only-child {
+  grid-column: 1 / -1;
+}
+
+/* Cantina: los destacados de la carta con su precio (los que se cambian en
+   el panel, Cantina → Carta y precios). */
+.mon-cantina {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(10px, 0.8vw, 14px);
+  min-width: 0;
 }
 
 .mon-cantina-head {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: clamp(8px, 1.2vh, 14px) clamp(14px, 1.2vw, 22px);
-  border-radius: 20px;
-  border: 1.5px solid rgba(232, 114, 42, 0.6);
-  background: linear-gradient(110deg, rgba(232, 114, 42, 0.28), var(--mon-panel) 60%);
+  gap: 1.2vh;
+  padding: 1vh 2vh 1vh 1.2vh;
+  border-radius: 1.8vh;
+  border: 0.25vh solid rgba(232, 114, 42, 0.7);
+  background: linear-gradient(110deg, rgba(232, 114, 42, 0.32), var(--mon-panel) 70%);
 }
 
 .mon-cantina-mascota {
   flex-shrink: 0;
-  width: clamp(60px, 9vh, 104px);
+  width: 8.4vh;
   height: auto;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 0.8vh 1.2vh rgba(0, 0, 0, 0.5));
 }
 
 .mon-cantina-head h2 {
-  margin: 0;
   color: var(--mon-naranja);
   font-family: var(--mon-display);
-  font-size: clamp(26px, 3.6vh, 42px);
+  font-size: 3.4vh;
   font-weight: 800;
-  line-height: 0.95;
+  line-height: 0.92;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .mon-cantina-head p {
-  margin: 4px 0 0;
-  font-size: clamp(13px, 1.7vh, 18px);
+  margin-top: 0.4vh;
+  color: var(--mon-crema);
+  font-size: 1.8vh;
+  white-space: nowrap;
 }
 
 .mon-cantina-items {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: clamp(8px, 0.8vw, 14px);
-  margin: 0;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: clamp(8px, 0.7vw, 14px);
   padding: 0;
   list-style: none;
 }
@@ -717,9 +754,10 @@ body:has(.mon-root) {
 .mon-cantina-items li {
   display: grid;
   align-content: center;
-  gap: 4px;
-  padding: clamp(8px, 1.2vh, 14px) clamp(14px, 1vw, 20px);
-  border-radius: 16px;
+  gap: 0.6vh;
+  min-width: 0;
+  padding: 1vh 1.6vh;
+  border-radius: 1.6vh;
   border: 1px solid var(--mon-linea);
   background: var(--mon-panel);
 }
@@ -728,17 +766,179 @@ body:has(.mon-root) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: clamp(14px, 1.8vh, 19px);
+  font-size: 2vh;
   font-weight: 600;
 }
 
 .mon-cantina-price {
   font-family: var(--mon-display);
-  font-size: clamp(24px, 3.4vh, 38px);
+  font-size: 3.8vh;
   font-weight: 800;
-  line-height: 1;
+  line-height: 0.95;
   color: var(--mon-naranja);
   font-variant-numeric: tabular-nums;
+}
+
+/* Con la tele de 1280 entran tres sin cortar los nombres. */
+@media (max-width: 1500px) {
+  .mon-cantina-items li:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+/* Beelup: negro con su naranja y su hexágono. Los pasos son los mismos que
+   hay que tocar en la app para encontrar el video. */
+.mon-beelup {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2.2vh;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1.2vh 2.2vh 1.2vh 1.8vh;
+  border-radius: 1.8vh;
+  border: 0.25vh solid #f6a21c;
+  background: #0a0a0a;
+  box-shadow: 0 1.6vh 3vh -1.6vh rgba(246, 162, 28, 0.55);
+}
+
+/* Panal de fondo, apenas marcado: dibujo fijo, no se anima. */
+.mon-beelup::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97' fill='none' stroke='%23f6a21c' stroke-opacity='.13' stroke-width='2'%3E%3Cpath d='M28 1 55 16.5v31L28 63 1 47.5v-31Z'/%3E%3Cpath d='M28 63v34'/%3E%3C/svg%3E") right -10px top -20px / 4.4vh auto;
+  mask-image: linear-gradient(90deg, transparent 35%, #000 100%);
+  pointer-events: none;
+}
+
+.mon-beelup > * {
+  position: relative;
+}
+
+.mon-beelup-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3vh;
+}
+
+.mon-beelup-brand img {
+  width: 7.2vh;
+  height: auto;
+}
+
+.mon-beelup-brand span {
+  color: #fff;
+  font-family: var(--font-poppins), var(--mon-texto);
+  font-size: 2.6vh;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.mon-beelup-body {
+  display: grid;
+  gap: 1vh;
+  min-width: 0;
+}
+
+.mon-beelup-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.6vh;
+  min-width: 0;
+}
+
+.mon-beelup-top h2 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mon-display);
+  font-size: 3.4vh;
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.mon-beelup-top h2 span {
+  color: #f6a21c;
+}
+
+.mon-beelup-url {
+  flex-shrink: 0;
+  padding: 0.3vh 1.2vh;
+  border-radius: 0.8vh;
+  background: #f6a21c;
+  color: #0a0a0a;
+  font-family: var(--mon-display);
+  font-size: 2.4vh;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+}
+
+.mon-beelup-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.8vh;
+  min-width: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: paso;
+}
+
+.mon-beelup-steps li {
+  counter-increment: paso;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7vh;
+  min-width: 0;
+  padding: 0.5vh 1.1vh 0.5vh 0.5vh;
+  border-radius: 999px;
+  border: 1px solid rgba(246, 162, 28, 0.55);
+  background: rgba(246, 162, 28, 0.12);
+  font-family: var(--mon-display);
+  font-size: 2.3vh;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mon-beelup-steps li::before {
+  content: counter(paso);
+  display: inline-grid;
+  place-items: center;
+  width: 2.4vh;
+  height: 2.4vh;
+  border-radius: 50%;
+  background: #f6a21c;
+  color: #0a0a0a;
+  font-size: 0.8em;
+  font-weight: 800;
+}
+
+/* Flecha entre paso y paso. */
+.mon-beelup-steps li + li {
+  position: relative;
+  margin-left: 2vh;
+}
+
+.mon-beelup-steps li + li::after {
+  content: "";
+  position: absolute;
+  left: -2.25vh;
+  top: 50%;
+  width: 1.1vh;
+  height: 1.1vh;
+  border-top: 0.35vh solid #f6a21c;
+  border-right: 0.35vh solid #f6a21c;
+  transform: translateY(-50%) rotate(45deg);
 }
 
 /* --------------------------------------------------------------------------
@@ -752,7 +952,6 @@ body:has(.mon-root) {
   border-radius: 999px;
   background: var(--mon-naranja);
   color: #1b1b19;
-  box-shadow: 0 14px 30px -16px rgba(232, 114, 42, 0.8);
 }
 
 .mon-ticker-tag {
@@ -761,15 +960,19 @@ body:has(.mon-root) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 22px;
+  padding: 0 2.4vh;
   border-radius: 999px;
-  background: #c4561a;
+  background: #1b1b19;
   color: #fff;
   font-family: var(--mon-display);
-  font-size: clamp(16px, 2.2vh, 24px);
+  font-size: 2.6vh;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.mon-ticker-tag svg {
+  color: var(--mon-naranja);
 }
 
 .mon-ticker-window {
@@ -778,10 +981,11 @@ body:has(.mon-root) {
   mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
 }
 
+/* Solo transform: el compositor la mueve sin repintar la página. */
 .mon-ticker-track {
   display: flex;
   width: max-content;
-  animation: monMarquee 60s linear infinite;
+  animation: monMarquee 70s linear infinite;
 }
 
 .mon-ticker-group {
@@ -791,10 +995,10 @@ body:has(.mon-root) {
 .mon-ticker-item {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  padding: clamp(8px, 1.2vh, 12px) 28px clamp(8px, 1.2vh, 12px) 0;
+  gap: 1.4vh;
+  padding: 1.2vh 3vh 1.2vh 0;
   font-family: var(--mon-display);
-  font-size: clamp(18px, 2.4vh, 26px);
+  font-size: 2.8vh;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -805,12 +1009,43 @@ body:has(.mon-root) {
   width: 1.1em;
   height: 1.1em;
   background: url("/img/iconos/pelota.webp") center / contain no-repeat;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
 }
 
 @keyframes monMarquee {
   to {
     transform: translateX(-50%);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Movimiento: corto y barato. Al cambiar de estado, el cartel "salta" una
+   vez; en los últimos minutos, solo el cartel titila (opacity, sin sombras
+   animadas como antes, que repintaban en cada cuadro).
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .mon-state,
+  .mon-callout-state {
+    animation: monPop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+  }
+
+  .mon-card.is-termina .mon-state,
+  .mon-callout.is-termina .mon-callout-state {
+    animation:
+      monPop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both,
+      monParpadeo 1.4s ease-in-out 0.45s infinite;
+  }
+}
+
+@keyframes monPop {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes monParpadeo {
+  50% {
+    opacity: 0.45;
   }
 }
 
@@ -826,13 +1061,17 @@ body:has(.mon-root) {
   }
 }
 
-/* En una pantalla angosta (notebook chica, tablet) se apila y scrollea. */
+/* En una pantalla angosta (notebook chica, tablet) se apila y scrollea. Ahí
+   las medidas en vh quedarían chicas: se pasan a px. */
 @media (max-width: 900px), (max-height: 600px) {
   .mon-root {
+    --mon-lateral: 1fr;
     height: auto;
     min-height: 100vh;
     grid-template-columns: 1fr;
     grid-template-rows: auto 60vh auto auto auto;
+    gap: 14px;
+    padding: 14px 16px;
     overflow: visible;
   }
 
@@ -849,11 +1088,116 @@ body:has(.mon-root) {
     display: none;
   }
 
-  .mon-side {
-    grid-row: 3;
+  .mon-header {
+    flex-wrap: wrap;
   }
 
+  .mon-brand img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .mon-brand h1 {
+    font-size: 26px;
+  }
+
+  .mon-brand p,
+  .mon-clock-date,
+  .mon-card-kicker,
+  .mon-card-next-label,
+  .mon-card-name span {
+    font-size: 13px;
+  }
+
+  .mon-clock-time {
+    font-size: 40px;
+  }
+
+  .mon-side {
+    grid-row: 3;
+    gap: 14px;
+  }
+
+  .mon-card {
+    flex: none;
+    border-width: 3px;
+  }
+
+  .mon-card-name h2 {
+    font-size: 32px;
+  }
+
+  .mon-state {
+    font-size: 22px;
+    padding: 8px 14px;
+  }
+
+  .mon-card-who {
+    font-size: 28px;
+  }
+
+  .mon-card-meta,
+  .mon-card-next-value,
+  .mon-cantina-name {
+    font-size: 15px;
+  }
+
+  .mon-ring {
+    width: 104px;
+  }
+
+  .mon-ring-num strong {
+    font-size: 44px;
+  }
+
+  .mon-ring-num span {
+    font-size: 13px;
+  }
+
+  .mon-card-ball {
+    width: 80px;
+    height: 80px;
+  }
+
+  .mon-bottom,
   .mon-cantina {
     grid-template-columns: 1fr;
+  }
+
+  .mon-cantina-items {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .mon-cantina-items li:nth-child(n + 4) {
+    display: grid;
+  }
+
+  .mon-cantina-price {
+    font-size: 28px;
+  }
+
+  .mon-cantina-head h2,
+  .mon-beelup-top h2 {
+    font-size: 26px;
+  }
+
+  .mon-beelup-top {
+    flex-wrap: wrap;
+  }
+
+  .mon-beelup-top h2 {
+    white-space: normal;
+  }
+
+  .mon-beelup-steps {
+    flex-wrap: wrap;
+  }
+
+  .mon-beelup-steps li,
+  .mon-beelup-url,
+  .mon-ticker-item,
+  .mon-ticker-tag {
+    font-size: 17px;
   }
 }

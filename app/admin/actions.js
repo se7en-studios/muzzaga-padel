@@ -50,6 +50,7 @@ import {
   summarizeRecords,
 } from "../../lib/metrics";
 import { clientKey } from "../../lib/clientsExport";
+import { normalizePlayerNames } from "../../lib/playerNames";
 import {
   datesBetween,
   occupancyHeatmap,
@@ -414,6 +415,7 @@ async function createBookingAt(db, config, date, input) {
     status,
     notes,
     recurringId,
+    playerNames,
   } = input;
   const court = findCourtIn(config, courtId);
   if (!court) return { ok: false, error: "Cancha inválida." };
@@ -435,6 +437,11 @@ async function createBookingAt(db, config, date, input) {
   }
 
   const players = Math.min(8, Math.max(1, Number(playersCount) || 4));
+  const finalStatus = CREATABLE_STATUSES.includes(status) ? status : "confirmado";
+  // Un bloqueo no tiene jugadores. Si no anotaron ninguno, ni se guarda el
+  // campo: el turno queda igual que los de siempre.
+  const names =
+    finalStatus === "bloqueado" ? [] : normalizePlayerNames(playerNames);
   const slotPricing = bookingPriceFor(config, {
     date,
     startTime,
@@ -454,9 +461,10 @@ async function createBookingAt(db, config, date, input) {
     fullCourt: fullCourt !== false,
     total: slotPricing.total,
     priceBand: slotPricing.band,
-    status: CREATABLE_STATUSES.includes(status) ? status : "confirmado",
+    status: finalStatus,
     notes: clip(notes, 300),
     createdFromAdmin: true,
+    ...(names.length ? { playerNames: names } : {}),
     ...(recurringId ? { recurringId } : {}),
     createdAt: Date.now(),
     });
@@ -591,6 +599,37 @@ export async function adminUpdateStatus(bookingId, newStatus) {
     return { ok: true };
   } catch (error) {
     return { ok: false, error: "No se pudo actualizar el estado." };
+  }
+}
+
+/**
+ * Anota (o corrige) los nombres de los jugadores de un turno desde el
+ * detalle. Sin PIN, igual que las notas de clientes: no toca plata. Lista
+ * vacía = se borra el campo.
+ */
+export async function adminSetBookingPlayers(bookingId, playerNames) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  if (!isId(bookingId)) return { ok: false, error: "ID de reserva inválido." };
+  if (!Array.isArray(playerNames)) {
+    return { ok: false, error: "Lista de jugadores inválida." };
+  }
+  const names = normalizePlayerNames(playerNames);
+  try {
+    const db = getDb();
+    const booking = await readRecord(db, `bookings/${bookingId}`);
+    if (!booking) return { ok: false, error: "El turno no existe." };
+    if (booking.status === "bloqueado") {
+      return { ok: false, error: "Un bloqueo de cancha no lleva jugadores." };
+    }
+    await db.ref(`bookings/${bookingId}`).update({
+      playerNames: names.length ? names : null,
+      updatedAt: Date.now(),
+    });
+    return { ok: true, playerNames: names };
+  } catch (error) {
+    return { ok: false, error: "No se pudieron guardar los jugadores." };
   }
 }
 

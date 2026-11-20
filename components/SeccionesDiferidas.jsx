@@ -22,6 +22,16 @@ const EN_SERVIDOR = typeof window === "undefined";
 // en /torneos, dejaría la carga colgada), así que se carga ya.
 let paginaHidratada = false;
 
+// En el servidor el módulo se pide apenas se carga este archivo y se le
+// entrega a React sin esperar (un "then" que responde en el acto). Si React
+// tuviera que esperarlo, mandaría la sección al final del HTML, oculta hasta
+// que corre un script, y un enlace a /#faq desde otra página no la encontraría.
+function alInstante(cargar) {
+  let listo = null;
+  const pedido = cargar().then((m) => (listo = m));
+  return () => (listo ? { then: (ok) => ok(listo) } : pedido);
+}
+
 function diferida(id, cargar) {
   let soltar;
   let soltada = false;
@@ -31,7 +41,7 @@ function diferida(id, cargar) {
   let porNavegacion = 0;
   const permiso = EN_SERVIDOR ? null : new Promise((r) => (soltar = r));
 
-  const Seccion = lazy(() => (EN_SERVIDOR ? cargar() : permiso.then(cargar)));
+  const Seccion = lazy(EN_SERVIDOR ? alInstante(cargar) : () => permiso.then(cargar));
 
   function liberar(navegacion) {
     if (soltada) return;
@@ -82,6 +92,8 @@ function diferida(id, cargar) {
     vigilar();
     useEffect(() => {
       paginaHidratada = true;
+      // Lo observado no es esta sección (era de la página anterior): cargar ya.
+      if (document.getElementById(id) !== observada) liberar(true);
     }, []);
     return (
       <Suspense fallback={null}>

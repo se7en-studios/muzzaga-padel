@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { createBooking } from "../app/actions";
-import BookingPassModal from "./BookingPassModal";
 import { MaybePortal } from "./Portal";
 import ScrollRow from "./ScrollRow";
 import { scrollBehavior } from "../lib/motion";
@@ -18,6 +17,12 @@ import { PICK_SLOT_EVENT } from "../lib/pickSlot";
 import { toWhatsappNumber } from "../lib/phone";
 import { trackEvent } from "../lib/analytics";
 import { X } from "lucide-react";
+
+// El pase digital solo aparece después de reservar: su JS no se baja al abrir
+// la landing, se pide al elegir un turno (llega antes de que se confirme).
+const loadPassModal = () => import("./BookingPassModal");
+// Un reintento por si el primer pedido falló (señal floja).
+const BookingPassModal = lazy(() => loadPassModal().catch(loadPassModal));
 
 const DAY_COUNT = 14;
 const CLUB_WHATSAPP = "5492995974176";
@@ -288,6 +293,7 @@ export default function BookingCalendar({
     form.playerName.trim().length >= 2 && normalizedPhone.length >= 10;
 
   function pickSlot(slot) {
+    loadPassModal().catch(() => {});
     setSelected(slot);
     setSubmitError(null);
     setConfirmed(null);
@@ -863,6 +869,7 @@ export default function BookingCalendar({
             </div>
           </div>
 
+          <Suspense fallback={null}>
           <BookingPassModal
             bookingCode={confirmed.bookingCode}
             booking={confirmed.booking}
@@ -875,6 +882,7 @@ export default function BookingCalendar({
             mpEnabled={mpEnabled}
             payment={payment}
           />
+          </Suspense>
         </>
       )}
     </div>
