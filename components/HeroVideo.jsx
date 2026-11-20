@@ -24,9 +24,13 @@ export default function HeroVideo() {
     const connection = navigator.connection;
     const saveData = connection?.saveData === true;
     if (reduceMotion || saveData) return;
-    const chosen = SLOW_CONNECTIONS.includes(connection?.effectiveType)
-      ? SRC_LIGHT
-      : SRC_HD;
+    // En el celu va el de 720p: la pantalla no muestra más que eso y son
+    // 3 MB menos (el de 1080p queda para la compu).
+    const smallScreen = window.matchMedia("(max-width: 900px)").matches;
+    const chosen =
+      smallScreen || SLOW_CONNECTIONS.includes(connection?.effectiveType)
+        ? SRC_LIGHT
+        : SRC_HD;
     // El video se pide recién cuando la página terminó de cargar y el
     // navegador está libre: si se bajaba antes, sus megas competían con la
     // foto y el texto del hero y la pantalla tardaba más en verse.
