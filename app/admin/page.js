@@ -672,6 +672,7 @@ export default function AdminPage() {
           <Link href="/" className="admin-login-back">
             ← Volver a la web del club
           </Link>
+          <Se7enCredit className="admin-se7en-login" />
         </div>
       </div>
     );
@@ -797,6 +798,7 @@ export default function AdminPage() {
               <LogOut {...ICON_PROPS} />
               {!sidebarCollapsed && <span>Cerrar sesión</span>}
             </button>
+            {!sidebarCollapsed && <Se7enCredit className="admin-se7en-sidebar" />}
           </div>
         </aside>
 
@@ -1152,5 +1154,22 @@ export default function AdminPage() {
         />
       )}
     </div>
+  );
+}
+
+/** "Hecho por se7en" con el link a su Instagram (login y menú lateral). */
+function Se7enCredit({ className = "" }) {
+  return (
+    <a
+      className={`admin-se7en ${className}`}
+      href="https://www.instagram.com/se7enstudio.ar/"
+      target="_blank"
+      rel="noopener"
+      aria-label="Panel hecho por se7en (Instagram @se7enstudio.ar)"
+    >
+      <span>Hecho por</span>
+      <img src="/img/se7en-logo.webp" alt="" width={64} height={18} />
+      <span className="admin-se7en-ig">@se7enstudio.ar</span>
+    </a>
   );
 }

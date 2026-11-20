@@ -366,7 +366,10 @@
   gap: 12px;
 }
 
-.admin-root .cc-invite-list .cc-avatar {
+/* insights.css pone todos los span de la fila en columna: el avatar vuelve
+   a grid para que las iniciales queden centradas. */
+.admin-root .cc-invite-list li > span.cc-avatar {
+  display: grid;
   width: 36px;
   height: 36px;
   font-size: 13.5px;

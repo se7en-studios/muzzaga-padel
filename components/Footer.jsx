@@ -144,10 +144,17 @@ export default function Footer({ location = DEFAULT }) {
           <div className="footer-specs">
             2 canchas de cristal · Cantina propia · Iluminación LED
           </div>
-          <span className="footer-credit">
+          <a
+            className="footer-credit"
+            href="https://www.instagram.com/se7enstudio.ar/"
+            target="_blank"
+            rel="noopener"
+            aria-label="Sitio hecho por se7en (Instagram @se7enstudio.ar)"
+          >
             Sitio hecho por
-            <Image src="/img/se7en-logo.webp" alt="se7en" width={72} height={20} />
-          </span>
+            <Image src="/img/se7en-logo.webp" alt="" width={72} height={20} />
+            <span className="footer-credit-ig">@se7enstudio.ar</span>
+          </a>
         </div>
       </div>
 

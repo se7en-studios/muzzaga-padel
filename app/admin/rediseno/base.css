@@ -1915,3 +1915,54 @@
     display: none !important;
   }
 }
+
+/* ---------- "Hecho por se7en" (login y menú lateral) ---------- */
+.admin-root .admin-se7en {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  min-height: 40px;
+  font-size: 12px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.15s ease;
+}
+
+.admin-root .admin-se7en img {
+  height: 16px;
+  width: auto;
+}
+
+.admin-root .admin-se7en-ig {
+  color: #ff9a5a;
+  font-weight: 600;
+}
+
+.admin-root .admin-se7en:hover {
+  color: #ffffff;
+}
+
+.admin-root .admin-se7en:focus-visible {
+  outline: 2px solid var(--brand, #e8722a);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.admin-root .admin-se7en-sidebar {
+  margin: 10px 12px 4px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* En el login va en su propio renglón, debajo de "Volver a la web", sobre
+   una pastilla oscura para que se lea encima de la foto del césped. */
+.admin-root .admin-se7en-login {
+  display: flex;
+  width: fit-content;
+  margin: 14px 0 0 6px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(8, 12, 28, 0.55);
+  color: rgba(255, 255, 255, 0.8);
+}
