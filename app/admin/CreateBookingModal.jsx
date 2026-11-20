@@ -86,20 +86,48 @@ export default function CreateBookingModal({
           </div>
 
           <div className="admin-create-row">
-            <label>
-              <span className="admin-field-label">Cancha</span>
-              <select
-                className="admin-modal-select"
-                value={modalForm.courtId}
-                onChange={(e) => set({ courtId: e.target.value })}
-              >
-                {clubConfig.courts.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {/* Las canchas como mini canchas para tocar, igual que en la
+                agenda; con muchas canchas vuelve la lista desplegable. */}
+            {clubConfig.courts.length <= 3 ? (
+              <div className="admin-create-field">
+                <span className="admin-field-label" id="admin-create-court">
+                  Cancha
+                </span>
+                <div
+                  className="admin-create-courts"
+                  role="radiogroup"
+                  aria-labelledby="admin-create-court"
+                >
+                  {clubConfig.courts.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={modalForm.courtId === c.id}
+                      className="admin-create-court"
+                      onClick={() => set({ courtId: c.id })}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <label>
+                <span className="admin-field-label">Cancha</span>
+                <select
+                  className="admin-modal-select"
+                  value={modalForm.courtId}
+                  onChange={(e) => set({ courtId: e.target.value })}
+                >
+                  {clubConfig.courts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <label>
               <span className="admin-field-label">Horario</span>
@@ -233,13 +261,15 @@ export default function CreateBookingModal({
           </label>
 
           <div className="admin-create-summary">
-            {selectedSlot?.start} a {selectedSlot?.end} hs
-            {!isBlock && (
-              <>
-                {" "}
-                · <strong>{formatARS(modalPrice)}</strong>
-              </>
-            )}
+            <span className="admin-create-summary-when">
+              <small>
+                {clubConfig.courts.find((c) => c.id === modalForm.courtId)?.name ||
+                  "Cancha"}
+                {isBlock ? " · bloqueada" : ""}
+              </small>
+              {selectedSlot?.start} a {selectedSlot?.end} hs
+            </span>
+            {!isBlock && <strong>{formatARS(modalPrice)}</strong>}
           </div>
 
           <button

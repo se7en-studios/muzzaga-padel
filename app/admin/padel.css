@@ -319,3 +319,112 @@
 .admin-root .admin-product-name {
   padding-right: 0;
 }
+
+/* ==========================================================================
+   NUEVA RESERVA: ELEGIR LA CANCHA TOCÁNDOLA
+   ========================================================================== */
+.admin-root .admin-create-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-root .admin-create-courts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  grid-auto-flow: column;
+  gap: 8px;
+}
+
+.admin-root .admin-create-court {
+  position: relative;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid #16349a;
+  border-radius: var(--radius-control);
+  background-color: #2350d6;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='8' width='192' height='84' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.55'/%3E%3Cpath d='M31 8v84M169 8v84M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.3'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.3), rgba(11, 26, 77, 0.62)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 180px 180px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  opacity: 0.55;
+  filter: saturate(0.6);
+  transition: opacity 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-root .admin-create-court:hover {
+  opacity: 0.85;
+  filter: none;
+}
+
+.admin-root .admin-create-court[aria-checked="true"] {
+  opacity: 1;
+  filter: none;
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 4px var(--accent-orange, #e8722a),
+    0 8px 16px -8px rgba(13, 31, 92, 0.7);
+}
+
+/* Pelotita en la elegida. */
+.admin-root .admin-create-court[aria-checked="true"]::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+}
+
+/* Resumen como el ticket que ve el cliente en la web: oscuro, el horario a
+   la izquierda y el total en naranja. */
+.admin-root .admin-create-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-card);
+  background:
+    radial-gradient(120px 80px at 100% 0, rgba(232, 114, 42, 0.35), transparent 70%),
+    #1b1b19;
+  color: #ffffff;
+  text-align: left;
+  box-shadow: 0 10px 22px -14px rgba(0, 0, 0, 0.6);
+}
+
+.admin-root .admin-create-summary-when {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-jetbrains-mono, ui-monospace), monospace;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.admin-root .admin-create-summary-when small {
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.admin-root .admin-create-summary strong {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1;
+  color: #ff9a5a;
+}
