@@ -390,6 +390,12 @@ export default function BookingCalendar({
             </span>
             <span className="booking-date-num">{day.dayNumber}</span>
             <span className="booking-date-month">{day.monthName}</span>
+            {/* Cartel visible de "cerrado" (el lector ya escucha ", cerrado"). */}
+            {day.closed && (
+              <span className="booking-date-closed-tag" aria-hidden="true">
+                Cerrado
+              </span>
+            )}
             {day.closed && <span className="sr-only">, cerrado</span>}
           </button>
         ))}
@@ -426,7 +432,7 @@ export default function BookingCalendar({
         )}
 
         {activeDay?.closed && (
-          <p className="booking-empty">
+          <p className="booking-empty booking-empty-closed">
             El club está cerrado ese día. Elegí otro día.
           </p>
         )}
@@ -626,20 +632,13 @@ export default function BookingCalendar({
               {isDrawer && <div className="booking-drawer-handle" aria-hidden="true" />}
 
               <div className="booking-form-header">
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 10,
-                  }}
-                >
+                <div className="booking-form-top">
                   <div>
                     <span className="booking-badge-court">
                       <img src="/img/iconos/pelota.webp" alt="" width={18} height={18} className="icono-3d booking-badge-3d" aria-hidden="true" />{" "}
                       {courts.find((c) => c.id === selected.courtId)?.name || "Cancha de cristal"}
                     </span>
-                    <h3 style={{ margin: "4px 0 0", fontSize: 19, fontWeight: 700 }}>Confirmar tu turno</h3>
+                    <h3 className="booking-form-title">Confirmar tu turno</h3>
                   </div>
                   <button
                     type="button"

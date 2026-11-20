@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BentoPhotoCard } from "./PhotoCard";
 import { CLUB_INFO } from "../data/club";
 import Mascota from "./Mascota";
+import { productIcon } from "../lib/productIcon";
 
 /** `featured`: los destacados de la carta, ya recortados para el inicio. */
 export default function HomeCantinaTeaser({ photos, featured }) {
@@ -60,16 +61,23 @@ export default function HomeCantinaTeaser({ photos, featured }) {
           </BentoPhotoCard>
         </div>
 
-        {/* PRODUCTOS DESTACADOS CON PRECIO — pizarra de menú */}
+        {/* PRODUCTOS DESTACADOS CON PRECIO — pizarra de bar con marco de
+            madera, tiza y el ícono de cada producto (el mismo que en /menu). */}
         {featured.length > 0 && (
-          <div className="menu-board">
+          <div className="menu-board tc-pizarra">
             <div className="menu-board-head">
-              <span className="menu-board-title">Lo más pedido</span>
+              <span className="menu-board-title">
+                <span className="tc-pizarra-pelota" aria-hidden="true" />
+                Lo más pedido
+              </span>
               <span className="menu-board-note">Precios actualizados</span>
             </div>
             <ul className="menu-board-list">
               {featured.map((item) => (
                 <li key={item.id} className="menu-board-item">
+                  <span className="tc-pizarra-icono" aria-hidden="true">
+                    {productIcon(item.name, item.category)}
+                  </span>
                   <span className="menu-board-name">
                     {item.name}
                     {item.tag && <span className="menu-board-tag">{item.tag}</span>}

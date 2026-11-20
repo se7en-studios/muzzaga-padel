@@ -136,7 +136,11 @@ export default async function Home() {
             <h1 className="hero-night-title">
               <span className="hero-line">Canchas de pádel</span>{" "}
               <span className="hero-line">en Catriel.</span>{" "}
-              <span className="hero-line hero-line-accent">Pádel de verdad.</span>
+              {/* El punto final es una pelota (CSS): el "." sigue en el texto
+                  para lectores de pantalla y buscadores. */}
+              <span className="hero-line hero-line-accent">
+                Pádel de verdad<span className="hero-ball-dot">.</span>
+              </span>
             </h1>
 
             <p className="hero-night-lede">

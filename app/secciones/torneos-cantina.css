@@ -1,2 +1,544 @@
 /* Estilos de la sección: torneos-cantina (landing). Se cargan después de landing.css y
    fondo-cancha.css, así que pisan lo anterior con la misma especificidad. */
+
+/* ==========================================================================
+   PRÓXIMO TORNEO: cartel sobre la cancha azul
+   Mismo azul, césped y líneas blancas que los turnos libres del inicio, así
+   se lee "esto se juega acá". Las reglas van con .tc-cartel para ganarle a la
+   foto aérea que le pone fondo-cancha.css (también en celu).
+   ========================================================================== */
+.next-event.tc-cartel {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 24px;
+  border: 1px solid #16349a;
+  background-color: #2350d6;
+  /* Cancha apaisada: red al medio y líneas de saque. */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='3' y='6' width='194' height='88' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.28'/%3E%3C/svg%3E"),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, 200px 200px;
+  background-repeat: no-repeat, repeat;
+  background-position: 0 0, 0 0;
+  box-shadow: 0 18px 34px -20px rgba(13, 31, 92, 0.85);
+}
+
+/* Oscurece el lado del texto para que se lea; deja respirar la llave. */
+.next-event.tc-cartel::before {
+  background:
+    linear-gradient(90deg, rgba(11, 26, 77, 0.82) 0%, rgba(11, 26, 77, 0.55) 55%, rgba(11, 26, 77, 0.35) 100%),
+    radial-gradient(ellipse 35% 120% at 100% 50%, rgba(232, 114, 42, 0.28), transparent 70%);
+}
+
+/* Marcador: la fecha como tablero electrónico de la cancha. */
+.next-event-date.tc-marcador {
+  width: 92px;
+  height: auto;
+  min-height: 96px;
+  padding: 8px 6px 10px;
+  gap: 2px;
+  border-radius: 14px;
+  background: #0b1a4d;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  box-shadow:
+    inset 0 0 0 3px rgba(0, 0, 0, 0.35),
+    0 12px 24px -12px rgba(0, 0, 0, 0.6);
+}
+
+.tc-marcador .tc-marcador-label {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tc-marcador .tc-marcador-num {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #d7f03a;
+  /* Brillo de LED, sin animar: no cuesta nada pintar. */
+  text-shadow: 0 0 10px rgba(215, 240, 58, 0.45);
+}
+
+.tc-marcador .tc-marcador-mes {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-align: center;
+}
+
+.tc-cartel .next-event-tag {
+  color: #d7f03a;
+}
+
+.tc-cartel .next-event-tag::before {
+  box-shadow: 0 0 0 4px rgba(215, 240, 58, 0.22);
+}
+
+.tc-cartel .next-event-title {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.tc-cartel .next-event-desc {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Categorías como fichas, para ver de un vistazo si hay la tuya. */
+.tc-cats {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.tc-cats li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+/* CTA naranja, como "Reservar" en todo el sitio. */
+.tc-cartel .next-event-cta {
+  min-height: 48px;
+  background: var(--color-accent-orange);
+  color: #ffffff;
+  box-shadow: 0 10px 22px -10px rgba(232, 114, 42, 0.9);
+}
+
+.tc-cartel .next-event-cta:hover {
+  background: #f07f37;
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Llave: cuartos → semis → final → copa. Medidas fijas (244 × 100) para que
+   las líneas del SVG caigan justo entre las cajitas; space-around centra
+   cada cajita en su tramo (12.5/37.5/…, 25/75, 50).
+   -------------------------------------------------------------------------- */
+.tc-llave {
+  display: grid;
+  grid-template-columns: 52px 52px 74px 24px;
+  column-gap: 14px;
+  width: 244px;
+  height: 100px;
+  flex: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 244 100' fill='none' stroke='white' stroke-opacity='.6' stroke-width='1.5'%3E%3Cpath d='M52 12.5h7v25h-7M59 25h7M52 62.5h7v25h-7M59 75h7M118 25h7v50h-7M125 50h7M206 50h14'/%3E%3C/svg%3E") 0 0 / 244px 100px no-repeat;
+}
+
+.tc-llave-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.tc-llave-col i {
+  display: block;
+  height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tc-llave-col .tc-llave-vos {
+  position: relative;
+  height: 24px;
+  border-color: #d7f03a;
+  background: rgba(215, 240, 58, 0.16);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 21px;
+  text-align: center;
+  white-space: nowrap;
+  color: #d7f03a;
+}
+
+.tc-llave-copa {
+  align-self: center;
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(245, 197, 66, 0.6));
+}
+
+/* ==========================================================================
+   CUADRO DE HONOR: título chico y medallas sobre las fotos de ganadores
+   ========================================================================== */
+.tc-honor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 12px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+/* La línea de la derecha imita la red: trama de cuadraditos. */
+.tc-honor::after {
+  content: "";
+  flex: 1;
+  height: 8px;
+  opacity: 0.35;
+  background:
+    repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 6px),
+    linear-gradient(currentColor, currentColor) 0 0 / 100% 1px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat;
+}
+
+.tc-honor-copa {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.tc-medalla {
+  position: absolute;
+  top: 16px;
+  left: 10px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  color: #3a2a00;
+  box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+/* La cinta de la medalla, en los colores del club (azul cancha y naranja). */
+.tc-medalla::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  z-index: -1;
+  width: 22px;
+  height: 16px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #2350d6 50%, var(--color-accent-orange) 50%);
+  clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+}
+
+.tc-medalla.is-oro {
+  background: radial-gradient(circle at 30% 30%, #fff6c4 0, #f5c542 45%, #b8860b 100%);
+}
+
+.tc-medalla.is-plata {
+  background: radial-gradient(circle at 30% 30%, #ffffff 0, #cfd6de 45%, #8a96a3 100%);
+}
+
+.tc-medalla.is-bronce {
+  color: #2e1606;
+  background: radial-gradient(circle at 30% 30%, #ffd9b8 0, #d08a4b 45%, #8a4e1f 100%);
+}
+
+.torneo-bento .torneo-thumb:first-child .tc-medalla {
+  top: 20px;
+  left: 14px;
+  width: 56px;
+  height: 56px;
+  font-size: 22px;
+  border-width: 3px;
+}
+
+/* Fotos de campeones: un aro dorado finito para que resalten en la grilla. */
+.torneo-bento .torneo-thumb:has(.tc-medalla.is-oro) {
+  border-color: rgba(245, 197, 66, 0.85);
+  box-shadow: 0 0 0 1px rgba(245, 197, 66, 0.45);
+}
+
+/* ==========================================================================
+   CANTINA: "Lo más pedido" como pizarra de bar
+   Pizarrón verde con marco de madera (dos fondos: uno al padding y otro al
+   borde, así conserva las esquinas redondeadas). Igual en claro y oscuro.
+   ========================================================================== */
+.menu-board.tc-pizarra {
+  position: relative;
+  padding: 22px 26px 18px;
+  border: 12px solid transparent;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse 60% 45% at 18% 8%, rgba(255, 255, 255, 0.07), transparent 70%) padding-box,
+    radial-gradient(ellipse 50% 40% at 85% 92%, rgba(255, 255, 255, 0.05), transparent 70%) padding-box,
+    linear-gradient(#24332b, #1d2a23) padding-box,
+    repeating-linear-gradient(100deg, rgba(0, 0, 0, 0.12) 0 3px, transparent 3px 11px) border-box,
+    linear-gradient(135deg, #a06a3c, #7a4a24 50%, #94603a) border-box;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 0 40px rgba(0, 0, 0, 0.35),
+    0 18px 36px -22px rgba(0, 0, 0, 0.7);
+}
+
+.tc-pizarra .menu-board-head {
+  align-items: center;
+  border-bottom: 2px dashed rgba(244, 241, 230, 0.45);
+}
+
+.tc-pizarra .menu-board-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #f4f1e6;
+  letter-spacing: 0.03em;
+  /* Tiza: borde apenas difuso. */
+  text-shadow: 0 0 1px rgba(244, 241, 230, 0.7);
+}
+
+.tc-pizarra-pelota {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+/* La costura blanca de la pelota. */
+.tc-pizarra-pelota::after {
+  content: "";
+  position: absolute;
+  inset: 2px -6px 2px 9px;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-right: 0;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+}
+
+.tc-pizarra .menu-board-note {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  color: rgba(244, 241, 230, 0.6);
+}
+
+.tc-pizarra .menu-board-item {
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(244, 241, 230, 0.14);
+}
+
+/* Ícono en un círculo de tiza: se reconoce el producto antes de leerlo. */
+.tc-pizarra-icono {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid rgba(244, 241, 230, 0.3);
+  background: rgba(244, 241, 230, 0.06);
+  font-size: 19px;
+  line-height: 1;
+}
+
+.tc-pizarra .menu-board-name {
+  min-width: 0;
+  font-size: 15px;
+  color: #f4f1e6;
+}
+
+.tc-pizarra .menu-board-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(215, 240, 58, 0.55);
+  color: #d7f03a;
+  vertical-align: 2px;
+}
+
+.tc-pizarra .menu-board-dots {
+  border-bottom: 2px dotted rgba(244, 241, 230, 0.28);
+  transform: none;
+}
+
+/* Precio en amarillo pelota: es lo que más resalta sobre el pizarrón. */
+.tc-pizarra .menu-board-price {
+  font-size: 21px;
+  color: #d7f03a;
+  text-shadow: 0 0 1px rgba(215, 240, 58, 0.6);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+/* Tablet/PC angosta: la llave baja a su propia fila para no apretar el texto. */
+@media (max-width: 1100px) {
+  .next-event.tc-cartel {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .tc-cartel .tc-llave {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .next-event.tc-cartel {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .tc-cartel .tc-llave {
+    display: grid;
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Celu: la cancha va parada (red horizontal) porque la tarjeta es alta. */
+  .next-event.tc-cartel {
+    gap: 16px 14px;
+    padding: 18px 16px;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 200' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='6' y='3' width='88' height='194' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M0 100h100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M6 31h88M6 169h88M50 31v138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.28'/%3E%3C/svg%3E"),
+      url("/img/fondo/textura-cesped.jpg");
+  }
+
+  .next-event.tc-cartel::before {
+    background:
+      linear-gradient(180deg, rgba(11, 26, 77, 0.78) 0%, rgba(11, 26, 77, 0.5) 60%, rgba(11, 26, 77, 0.7) 100%),
+      radial-gradient(ellipse 80% 35% at 50% 100%, rgba(232, 114, 42, 0.25), transparent 70%);
+  }
+
+  .next-event-date.tc-marcador {
+    width: 76px;
+    min-height: 84px;
+    align-self: start;
+  }
+
+  .tc-marcador .tc-marcador-num {
+    font-size: 30px;
+  }
+
+  .tc-marcador .tc-marcador-mes {
+    font-size: 13px;
+  }
+
+  .tc-cartel .next-event-title {
+    font-size: 24px;
+  }
+
+  .tc-cartel .tc-llave {
+    margin: 2px 0;
+  }
+
+  .tc-honor {
+    font-size: 16px;
+  }
+
+  .tc-medalla {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+    top: 13px;
+    left: 8px;
+  }
+
+  .tc-medalla::before {
+    top: -10px;
+    width: 18px;
+    height: 13px;
+  }
+
+  .torneo-bento .torneo-thumb:first-child .tc-medalla {
+    width: 48px;
+    height: 48px;
+    font-size: 19px;
+  }
+
+  .menu-board.tc-pizarra {
+    padding: 16px 14px 10px;
+    border-width: 10px;
+  }
+
+  .tc-pizarra .menu-board-title {
+    font-size: 22px;
+  }
+
+  .tc-pizarra-icono {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+}
+
+/* Modo oscuro: la madera un poco más apagada para que no encandile. */
+@media (prefers-color-scheme: dark) {
+  .menu-board.tc-pizarra {
+    background:
+      radial-gradient(ellipse 60% 45% at 18% 8%, rgba(255, 255, 255, 0.06), transparent 70%) padding-box,
+      radial-gradient(ellipse 50% 40% at 85% 92%, rgba(255, 255, 255, 0.04), transparent 70%) padding-box,
+      linear-gradient(#24332b, #1d2a23) padding-box,
+      repeating-linear-gradient(100deg, rgba(0, 0, 0, 0.16) 0 3px, transparent 3px 11px) border-box,
+      linear-gradient(135deg, #85582f, #5e3a1c 50%, #7a4f2e) border-box;
+  }
+}
+
+/* ==========================================================================
+   MOVIMIENTO: solo transform/opacity y en piezas chicas (anda en un J7).
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  /* "¿Tu pareja?" late suave: invita a anotarse. */
+  .tc-llave-vos::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 7px;
+    border: 1.5px solid #d7f03a;
+    opacity: 0;
+    animation: tc-late 2.4s ease-out infinite;
+  }
+
+  .tc-llave-copa {
+    animation: tc-copa 3s ease-in-out infinite;
+  }
+
+  /* La pelota del pizarrón pica de vez en cuando. */
+  .tc-pizarra-pelota {
+    animation: tc-pique 3.2s ease-in-out infinite;
+  }
+
+  @keyframes tc-late {
+    0% { opacity: 0.9; transform: scale(0.96); }
+    70%, 100% { opacity: 0; transform: scale(1.12); }
+  }
+
+  @keyframes tc-copa {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-3px) rotate(-6deg); }
+  }
+
+  @keyframes tc-pique {
+    0%, 60%, 100% { transform: translateY(0); }
+    70% { transform: translateY(-7px); }
+    80% { transform: translateY(0); }
+    88% { transform: translateY(-3px); }
+  }
+}

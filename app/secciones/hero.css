@@ -1,2 +1,334 @@
 /* Estilos de la sección: hero (landing). Se cargan después de landing.css y
    fondo-cancha.css, así que pisan lo anterior con la misma especificidad. */
+
+/* ==========================================================================
+   1. EL PUNTO DE "PÁDEL DE VERDAD." ES UNA PELOTA
+   El "." queda en el HTML (lo leen el lector de pantalla y Google) pero se
+   dibuja como pelota con su costura. Entra picando una sola vez.
+   ========================================================================== */
+.hero-ball-dot {
+  position: relative;
+  display: inline-block;
+  width: 0.26em;
+  height: 0.26em;
+  margin-left: 0.06em;
+  border-radius: 50%;
+  overflow: hidden;
+  /* El padre pinta el texto con degradado transparente: acá lo apagamos del
+     todo para que no asome el punto. */
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 0.04em 0.12em rgba(0, 0, 0, 0.45);
+  vertical-align: 0.02em;
+}
+
+/* La costura: un arco blanco que entra por un costado. */
+.hero-ball-dot::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  bottom: 8%;
+  left: -62%;
+  width: 100%;
+  border: 0.022em solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-ball-dot {
+    /* Arranca después de que sube la línea naranja (0,24 s + 0,5 s). */
+    animation: pelotaDelTitulo 0.9s cubic-bezier(0.3, 0, 0.6, 1) 0.6s both;
+  }
+}
+
+/* Cae, pica dos veces cada vez más bajito y se queda. Solo transform. */
+@keyframes pelotaDelTitulo {
+  0% {
+    opacity: 0;
+    transform: translateY(-1.4em);
+  }
+  15% {
+    opacity: 1;
+  }
+  45% {
+    transform: translateY(0) scale(1.12, 0.86);
+  }
+  65% {
+    transform: translateY(-0.38em) scale(1);
+  }
+  82% {
+    transform: translateY(0) scale(1.06, 0.94);
+  }
+  92% {
+    transform: translateY(-0.1em);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   2. LAS CIFRAS DEL HERO VAN SOBRE UNA CANCHA VISTA DE ARRIBA
+   El mismo azul con césped de las tarjetas de turnos. Cada cifra cae en un
+   cuadro de la cancha: en celu son los cuatro cuadros de saque (red al
+   medio, de costado a costado); en PC la cancha se acuesta y la red queda
+   vertical entre la 2.ª y la 3.ª cifra. El hero es siempre de noche, así que
+   esto no cambia con el modo oscuro.
+   ========================================================================== */
+.hero-night .hero-stats {
+  --linea-cancha: rgba(255, 255, 255, 0.62);
+  margin-top: 36px;
+  padding: 7px;
+  border: 1px solid #16349a;
+  border-top: 1px solid #16349a;
+  border-radius: 12px;
+  background-color: #2350d6;
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.28), rgba(11, 26, 77, 0.58)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 200px 200px;
+  box-shadow:
+    0 18px 36px -18px rgba(5, 14, 46, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* El velo oscuro de antes ya no hace falta (el azul da el contraste): el
+   mismo pseudo pasa a ser el perímetro blanco de la cancha. */
+.hero-night .hero-stats::before {
+  inset: 7px;
+  z-index: 0;
+  border: 2px solid var(--linea-cancha);
+  border-radius: 2px;
+  background: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.hero-night .hero-stat,
+.hero-night .hero-stat:first-child {
+  position: relative;
+  z-index: 1;
+  padding: 16px 20px 14px;
+  border: 0;
+}
+
+.hero-night .hero-stat dt {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.hero-night .hero-stat dd {
+  color: #fff;
+  font-size: clamp(32px, 3.4vw, 46px);
+  text-shadow: 0 2px 6px rgba(5, 14, 46, 0.55);
+}
+
+/* El naranja sobre azul no llega a 3:1: el acento pasa al verde pelota. */
+.hero-night .hero-stat:nth-child(odd) dd {
+  color: #d7f03a;
+}
+
+.hero-night .hero-stat dd.hero-stat-word {
+  font-size: clamp(22px, 2.1vw, 28px);
+}
+
+/* PC: fondo | saque ‖ red ‖ saque | fondo */
+@media (min-width: 901px) {
+  /* El precio flotante se mete sobre el borde de la cancha: la mascota y
+     sus tarjetas van arriba (antes la cancha transparente no tapaba nada). */
+  .hero-night .hero-night-visual {
+    z-index: 2;
+  }
+
+  .hero-night .hero-stat:nth-child(2),
+  .hero-night .hero-stat:nth-child(4) {
+    border-left: 2px solid var(--linea-cancha);
+  }
+
+  /* La red: punteada y más gruesa, como la de las tarjetas de turnos. */
+  .hero-night .hero-stat:nth-child(3) {
+    background: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.85) 0 3px,
+        transparent 3px 7px
+      )
+      left top / 3px 100% no-repeat;
+  }
+
+  /* Postes de la red, arriba y abajo, apoyados en el perímetro. */
+  .hero-night .hero-stat:nth-child(3)::before,
+  .hero-night .hero-stat:nth-child(3)::after {
+    content: "";
+    position: absolute;
+    left: -3px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .hero-night .hero-stat:nth-child(3)::before {
+    top: -4px;
+  }
+
+  .hero-night .hero-stat:nth-child(3)::after {
+    bottom: -4px;
+  }
+}
+
+/* Celu y tablet: dos cuadros arriba, red, dos abajo. */
+@media (max-width: 900px) {
+  .hero-night .hero-stats {
+    gap: 0;
+    margin-top: 26px;
+  }
+
+  .hero-night .hero-stat,
+  .hero-night .hero-stat:first-child {
+    padding: 14px 14px 12px;
+  }
+
+  /* Línea central de saque */
+  .hero-night .hero-stat:nth-child(even) {
+    border-left: 2px solid var(--linea-cancha);
+  }
+
+  /* La red, de lado a lado entre la fila de arriba y la de abajo. */
+  .hero-night .hero-stat:nth-child(n + 3) {
+    padding-top: 14px;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.85) 0 3px,
+        transparent 3px 7px
+      )
+      left top / 100% 3px no-repeat;
+  }
+
+  .hero-night .hero-stat:nth-child(3)::before,
+  .hero-night .hero-stat:nth-child(4)::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .hero-night .hero-stat:nth-child(3)::before {
+    left: -4px;
+  }
+
+  .hero-night .hero-stat:nth-child(4)::after {
+    right: -4px;
+  }
+
+  .hero-night .hero-stat dd {
+    font-size: clamp(30px, 8.6vw, 40px);
+  }
+
+  .hero-night .hero-stat dd.hero-stat-word {
+    font-size: clamp(20px, 5.6vw, 26px);
+  }
+}
+
+/* Una pelota quieta en el último cuadro: detalle, no información. */
+.hero-night .hero-stat:nth-child(4) {
+  padding-right: 34px;
+}
+
+.hero-night .hero-stat:nth-child(4) > dd::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow:
+    0 3px 4px rgba(5, 14, 46, 0.55),
+    inset -1px -2px 2px rgba(0, 0, 0, 0.18);
+}
+
+/* ==========================================================================
+   3. TARJETA "TURNOS LIBRES · HOY Y MAÑANA"
+   ========================================================================== */
+
+/* El punto del cartel "Disponible ya" es una pelota. Si el día está
+   completo (.is-week) sigue el punto rojo de fondo-cancha.css. */
+.flash-live::before {
+  width: 9px;
+  height: 9px;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.35);
+}
+
+/* Cada turno es una cancha con la red punteada al medio: la pelota se
+   apoya arriba de la red. En el primero (el más cercano) ya está puesta;
+   en los demás aparece y pasa de un lado al otro al tocarlo. */
+.flash-chip:not(.is-skeleton) {
+  position: relative;
+}
+
+.flash-chip:not(.is-skeleton)::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: calc(50% - 6px);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 2px 3px rgba(5, 14, 46, 0.6);
+  opacity: 0;
+  transform: translateX(-16px);
+  pointer-events: none;
+}
+
+.flash-chips > .flash-chip:not(.is-skeleton):first-child::after,
+.flash-chip:not(.is-skeleton):hover::after,
+.flash-chip:not(.is-skeleton):focus-visible::after {
+  opacity: 1;
+  transform: translateX(16px);
+}
+
+/* El más cercano: borde verde pelota para que se lea primero. */
+.flash-chips > .flash-chip:not(.is-skeleton):first-child {
+  border-color: #d7f03a;
+  box-shadow:
+    0 0 0 1px #d7f03a,
+    0 10px 22px -10px rgba(13, 31, 92, 0.8);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Al pasar el mouse cruza la red en arco (transform y opacidad nada más). */
+  .flash-chip:not(.is-skeleton):hover::after,
+  .flash-chip:not(.is-skeleton):focus-visible::after {
+    animation: pelotaCruzaRed 0.5s var(--ease) both;
+  }
+
+  /* El primero la recibe una sola vez cuando cargan los turnos. */
+  .flash-chips > .flash-chip:not(.is-skeleton):first-child::after {
+    animation: pelotaCruzaRed 0.6s var(--ease) 0.4s both;
+  }
+}
+
+@keyframes pelotaCruzaRed {
+  0% {
+    opacity: 0;
+    transform: translate(-16px, 4px);
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(0, -7px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(16px);
+  }
+}
