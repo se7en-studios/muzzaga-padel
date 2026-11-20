@@ -16,6 +16,7 @@ import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
 import ScrollReveal from "../components/ScrollReveal";
 import ScrollProgress from "../components/ScrollProgress";
+import MotionFx from "../components/MotionFx";
 import StatCounter from "../components/StatCounter";
 import HeroMascot from "../components/HeroMascot";
 import HeroLiveSlots from "../components/HeroLiveSlots";
@@ -28,6 +29,7 @@ import "./secciones/camaras-instalaciones.css";
 import "./secciones/torneos-cantina.css";
 import "./secciones/herramientas-faq.css";
 import "./secciones/ubicacion-pie.css";
+import "./secciones/movimiento.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";
@@ -400,6 +402,7 @@ export default async function Home() {
       <SiteFooter />
       <BottomNav />
       <ScrollReveal />
+      <MotionFx />
     </>
   );
 }
