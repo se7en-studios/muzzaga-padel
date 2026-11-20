@@ -438,3 +438,52 @@
     color: #4ade80;
   }
 }
+
+/* ==========================================================================
+   SACAR TURNO EN EL CELU: menos dudas en el último paso
+   ========================================================================== */
+
+/* Los botones "Reservar" llevan directo a los días y horarios (antes caían
+   en el título y había que seguir bajando para ver un turno). */
+#reservar {
+  scroll-margin-top: 84px;
+}
+
+/* Qué falta para poder confirmar: antes el botón quedaba apagado sin decir
+   por qué. */
+.booking-missing {
+  margin: 8px 2px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b45309;
+  text-align: center;
+}
+
+/* Si la reserva no se pudo guardar: el pedido armado para mandar por
+   WhatsApp, así no se pierde el turno. */
+.booking-form .booking-error {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.booking-error-wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: #25d366;
+  color: #052e14;
+  font-weight: 800;
+  font-size: 14.5px;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .booking-missing {
+    color: #fbbf24;
+  }
+}

@@ -153,7 +153,7 @@ export default function Header({ mapsHref = DEFAULT_LOCATION.mapsUrl }) {
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <a
-              href="/#turnos"
+              href="/#reservar"
               className="btn btn-orange-primary header-reserve-btn"
               style={{ height: 36, padding: "6px 16px", fontWeight: 700 }}
             >
@@ -202,7 +202,7 @@ export default function Header({ mapsHref = DEFAULT_LOCATION.mapsUrl }) {
       >
         <ScrollRow axis="y" className="mobile-nav-scroll">
         <a
-          href="/#turnos"
+          href="/#reservar"
           className="btn btn-orange-primary"
           onClick={() => setOpen(false)}
           style={{ width: "100%", height: 42, justifyContent: "center", marginBottom: 12 }}

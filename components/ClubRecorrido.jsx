@@ -291,7 +291,7 @@ export default function ClubRecorrido() {
             <p className="club-tour-text">{stop.text}</p>
           </div>
           <div className="club-tour-actions">
-            <a className="btn btn-orange-primary club-tour-btn" href="#turnos">
+            <a className="btn btn-orange-primary club-tour-btn" href="#reservar">
               Reservar turno
             </a>
             <a

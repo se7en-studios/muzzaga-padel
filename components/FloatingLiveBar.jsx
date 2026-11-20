@@ -49,7 +49,7 @@ export default function FloatingLiveBar({ schedule, blockedDates }) {
           <span className="floating-status-txt">{clubStatusLine(status)}</span>
         </div>
 
-        <a href="#turnos" className="floating-live-action">
+        <a href="#reservar" className="floating-live-action">
           Reservar turno →
         </a>
       </div>
