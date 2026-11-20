@@ -272,6 +272,13 @@
   white-space: nowrap;
 }
 
+.admin-root .admin-caja .admin-expense-form .admin-segmented button svg,
+.admin-root .admin-caja-cat svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+}
+
 .admin-root .admin-caja-expense-submit {
   min-height: 44px;
   font-weight: 600;
@@ -408,7 +415,7 @@
 
 .admin-root .admin-caja .admin-bill-calc {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 8px;
   margin-top: 10px;
   padding: 12px;
@@ -575,10 +582,20 @@
   text-transform: uppercase;
 }
 
-.admin-root .admin-closed-banner-actions {
+/* views.css estira todos los div hijos del aviso: las acciones no. */
+.admin-root .admin-caja .admin-closed-banner > .admin-closed-banner-actions {
   display: flex;
+  flex: 0 0 auto;
+  flex-direction: row;
   flex-wrap: wrap;
+  min-width: 0;
   gap: 8px;
+}
+
+/* Caja cerrada: el contado queda de solo lectura y se nota. */
+.admin-root .admin-dashboard-layout .admin-caja .admin-caja-money-lg input[inputmode][readonly] {
+  border-style: dashed;
+  background: var(--surface-muted);
 }
 
 .admin-root .admin-closed-banner-actions .btn {
@@ -947,6 +964,12 @@
   .admin-root .admin-cantina .admin-pos-cart {
     top: 12px;
   }
+
+  /* La lista de la venta usa el alto que deja el ticket: en 1440×900 entran
+     cinco productos sin scroll interno. */
+  .admin-root .admin-cantina .admin-pos-lines {
+    max-height: max(220px, calc(100vh - 380px));
+  }
 }
 
 .admin-root .admin-cantina .admin-pos-catalog > .admin-view-toolbar {
@@ -1239,11 +1262,35 @@
   padding: 4px 18px;
 }
 
+/* Dos renglones por producto: el nombre entero arriba y los botones de
+   cantidad abajo; el subtotal a la derecha, alineado con los demás. */
 .admin-root .admin-cantina .admin-pos-lines li {
-  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
-  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  column-gap: 10px;
+  row-gap: 6px;
   padding: 10px 0;
   border-bottom: 1px dashed var(--border-strong);
+}
+
+.admin-root .admin-cantina .admin-pos-lines li .admin-pos-line-icon {
+  grid-row: 1 / 3;
+  align-self: start;
+  padding-top: 2px;
+}
+
+.admin-root .admin-cantina .admin-pos-lines li .admin-pos-qty {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.admin-root .admin-cantina .admin-pos-lines li .admin-pos-line-total {
+  grid-column: 3;
+  grid-row: 1 / 3;
+}
+
+.admin-root .admin-cantina .admin-pos-lines li .admin-pos-remove {
+  grid-column: 4;
+  grid-row: 1 / 3;
 }
 
 .admin-root .admin-pos-line-icon {
@@ -1588,26 +1635,6 @@
   .admin-root .admin-cantina .admin-pos-remove {
     width: 40px;
     height: 44px;
-  }
-
-  .admin-root .admin-cantina .admin-pos-lines li {
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
-    row-gap: 6px;
-  }
-
-  .admin-root .admin-cantina .admin-pos-lines li .admin-pos-qty {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  .admin-root .admin-cantina .admin-pos-lines li .admin-pos-line-total {
-    grid-column: 3;
-    grid-row: 1 / 3;
-  }
-
-  .admin-root .admin-cantina .admin-pos-lines li .admin-pos-remove {
-    grid-column: 4;
-    grid-row: 1 / 3;
   }
 
   .admin-root .admin-cantina .admin-pos-cart .admin-pos-charge {

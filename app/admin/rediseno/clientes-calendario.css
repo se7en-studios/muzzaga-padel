@@ -300,6 +300,10 @@
   color: rgba(255, 255, 255, 0.86);
 }
 
+.admin-root .cc-board-tile[aria-pressed="true"] .cc-board-top {
+  padding-right: 16px; /* lugar para la pelotita de la esquina */
+}
+
 .admin-root .cc-board-tile[aria-pressed="true"] .cc-board-icon {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
 }
@@ -553,13 +557,16 @@
   border-bottom: none;
 }
 
-.admin-root .cc-roster tbody tr:not(.cc-roster-empty):hover {
-  background: rgba(35, 80, 214, 0.045);
-}
+/* Al pasar el mouse, la franja azul cancha a la izquierda marca la fila.
+   Solo con mouse: en el celu el toque dejaba la ficha pintada. */
+@media (hover: hover) {
+  .admin-root .cc-roster tbody tr:not(.cc-roster-empty):hover {
+    background: rgba(35, 80, 214, 0.045);
+  }
 
-/* Al pasar el mouse, la franja azul cancha a la izquierda marca la fila. */
-.admin-root .cc-roster tbody tr:not(.cc-roster-empty):hover td:first-child {
-  box-shadow: inset 3px 0 0 var(--cc-court);
+  .admin-root .cc-roster tbody tr:not(.cc-roster-empty):hover td:first-child {
+    box-shadow: inset 3px 0 0 var(--cc-court);
+  }
 }
 
 .admin-root .cc-roster-empty,
@@ -1386,6 +1393,13 @@
   --heat-bg: #3f63d8;
 }
 
+/* Las líneas de la cancha (padel.css) más suaves: la red pasaba justo por
+   arriba del porcentaje. */
+.admin-root .cc-heat-cell[data-heat="3"]::before,
+.admin-root .cc-heat-cell[data-heat="4"]::before {
+  opacity: 0.55;
+}
+
 .admin-root .cc-heat-cell {
   justify-content: flex-start;
   gap: 2px;
@@ -1673,9 +1687,13 @@
     font-size: 16px; /* 16px: iOS no hace zoom al tocar el campo */
   }
 
+  .admin-root .cc-search {
+    padding-right: 2px;
+  }
+
   .admin-root .cc-search-clear {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
 
   .admin-root .cc-csv {
@@ -1716,7 +1734,7 @@
   }
 
   .admin-root .cc-sort {
-    height: 36px;
+    height: 44px;
     padding: 0 12px;
     border: 1px solid var(--border);
     border-radius: 999px;
@@ -1756,10 +1774,6 @@
   .admin-root .cc-roster tbody tr[data-tier="vip"] {
     border-color: #dcec7a;
     background: linear-gradient(180deg, #fbfee8, var(--surface) 70%);
-  }
-
-  .admin-root .cc-roster tbody tr:not(.cc-roster-empty):hover td:first-child {
-    box-shadow: none;
   }
 
   .admin-root .cc-roster tbody td {
@@ -1919,9 +1933,11 @@
     border-radius: 16px;
   }
 
+  /* Grilla de una columna con minmax(0, 1fr): así la tira de datos que se
+     desliza no estira la tarjeta más allá de la pantalla. */
   .admin-root .cc-cal-head {
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     margin-bottom: 12px;
     padding-bottom: 12px;
   }
@@ -1948,8 +1964,24 @@
     height: 44px;
   }
 
+  /* Los datos del mes en una tira que se desliza, para no ocupar tres
+     renglones antes de llegar a los días. */
+  .admin-root .cc-cal-facts {
+    flex-wrap: nowrap;
+    margin-inline: -12px;
+    padding: 0 12px 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .admin-root .cc-cal-facts::-webkit-scrollbar {
+    display: none;
+  }
+
   .admin-root .cc-cal-facts li {
+    flex-shrink: 0;
     font-size: 13px;
+    white-space: nowrap;
   }
 
   .admin-root .cc-cal-facts li.cc-cal-hint {
@@ -1965,6 +1997,16 @@
     padding: 10px 10px 8px;
     border-radius: 12px;
     background: var(--surface-muted);
+  }
+
+  .admin-root .cc-week-rhythm::before {
+    content: "Ocupación promedio por día";
+    grid-column: 1 / -1;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
   }
 
   .admin-root .cc-week-col {
@@ -2056,9 +2098,15 @@
 
   .admin-root .cc-day[data-heat="4"] .cc-day-tile,
   .admin-root .cc-day[data-heat="3"] .cc-day-tile {
-    background-image: var(--cc-court-lines);
-    background-size: 100% 100%;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  /* El más lleno lleva el césped, como la cancha de la agenda. */
+  .admin-root .cc-day[data-heat="4"] .cc-day-tile {
+    background-image:
+      linear-gradient(180deg, rgba(11, 26, 77, 0.15), rgba(11, 26, 77, 0.45)),
+      url("/img/fondo/textura-cesped.jpg");
+    background-size: auto, 160px 160px;
   }
 
   .admin-root .cc-day-tile small {

@@ -62,6 +62,7 @@
   --border-strong: #d3ccbd;
   --text: #1b1b19;
   --text-secondary: #3d3b35;
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
   font-family: var(--font-inter), system-ui, sans-serif;
 }
 
@@ -80,21 +81,15 @@
    aciertan sin apuntar). Primario naranja oscuro: con blanco pasa el
    contraste; el naranja de marca queda para detalles.
    ========================================================================== */
+/* Sin display ni padding a propósito: varias vistas ocultan o achican sus
+   botones con reglas de igual peso, y esta hoja carga después. */
 .admin-root .admin-dashboard-layout .btn,
-.admin-root .admin-login-wrapper .btn,
 .admin-root.admin-pin-backdrop .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: 8px;
   min-height: 44px;
-  padding: 0 16px;
   border-radius: var(--radius-control);
   font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0;
-  white-space: nowrap;
-  cursor: pointer;
   transition: none;
 }
 
@@ -323,6 +318,12 @@
   font-size: 14px;
   line-height: 1.35;
   color: var(--text-secondary);
+}
+
+/* En tarjetas angostas la comparación baja de renglón en vez de cortarse. */
+.admin-root .admin-kravio-kpi-delta {
+  flex-wrap: wrap;
+  white-space: normal;
 }
 
 .admin-root .admin-kravio-kpi-delta.is-positive {
@@ -664,7 +665,7 @@
     border-right: 1px solid var(--border);
   }
 
-  .admin-root .admin-header-scoreboard {
+  .admin-root .admin-greeting-sub.admin-header-scoreboard {
     display: none;
   }
 
@@ -806,6 +807,10 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.admin-root .admin-quick-actions .btn {
+  padding: 0 16px;
 }
 
 .admin-root .admin-quick-actions .admin-cta-new {
@@ -1542,7 +1547,8 @@
     margin-bottom: 20px;
   }
 
-  .admin-root .admin-topbar-scoreboard {
+  .admin-root .admin-greeting-sub.admin-topbar-scoreboard,
+  .admin-root .admin-dashboard-layout .admin-quick-actions .admin-cta-new {
     display: none;
   }
 

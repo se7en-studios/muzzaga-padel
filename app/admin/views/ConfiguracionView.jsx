@@ -419,22 +419,31 @@ export default function ConfiguracionView({
     );
   }, [form, saved]);
 
-  // El índice sigue al scroll: queda marcada la sección que se está viendo.
+  // El índice sigue al scroll: queda marcada la última sección cuyo
+  // título ya pasó el primer tercio de la pantalla. Escucha en captura para
+  // enterarse sea cual sea el contenedor que scrollea.
   const ready = Boolean(form);
   useEffect(() => {
-    if (!ready || typeof IntersectionObserver === "undefined") return;
-    const els = SECTIONS.map(({ id }) => document.getElementById(`cfg-${id}`)).filter(Boolean);
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const top = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (top) setActiveSection(top.target.id.slice(4));
-      },
-      { rootMargin: "-12% 0px -72% 0px" },
-    );
-    els.forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
+    if (!ready) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const line = window.innerHeight * 0.3;
+      let current = SECTIONS[0].id;
+      for (const { id } of SECTIONS) {
+        const el = document.getElementById(`cfg-${id}`);
+        if (el && el.getBoundingClientRect().top <= line) current = id;
+      }
+      setActiveSection(current);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll, { capture: true });
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [ready]);
 
   // En el celu el índice es una tira horizontal: la sección activa se corre
