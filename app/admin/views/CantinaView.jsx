@@ -937,6 +937,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
           ) : salesList.length === 0 ? (
             <EmptyState
               icon={ShoppingCart}
+              mascot="pizza-cerveza"
               title="Todavía no hay ventas este día"
               text="Tocá productos para armar la venta y cobrala con el método de pago."
             />

@@ -1,0 +1,89 @@
+/* ==========================================================================
+   PANEL CON ONDA DE PÁDEL
+   Detalles chicos para que el panel se sienta del club y no un sistema
+   genérico: una mini cancha vista desde arriba en las tarjetas de números,
+   Muzzaguito cuando una lista está vacía y una pelotita en la sección activa.
+   ========================================================================== */
+
+/* Mini cancha (20 × 10 m a escala): perímetro, red al medio, líneas de saque
+   a 6,95 m de la red y la línea central entre ellas. Va de fondo, abajo a la
+   derecha, donde antes había una curva de adorno que no salía de los datos. */
+.admin-root .admin-kravio-kpi-card::after {
+  content: "";
+  position: absolute;
+  right: -14px;
+  bottom: -12px;
+  width: 128px;
+  height: 66px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 104' fill='none' stroke='%23e8722a' stroke-width='3'%3E%3Crect x='3' y='3' width='194' height='98' rx='4'/%3E%3Cpath d='M100 0v104' stroke-width='5' stroke-dasharray='2 4'/%3E%3Cpath d='M31 3v98M169 3v98M31 52h138'/%3E%3C/svg%3E") center / contain no-repeat;
+  opacity: 0.16;
+  transform: rotate(-8deg);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.admin-root .admin-kravio-kpi-card:hover::after {
+  opacity: 0.28;
+  transform: rotate(-4deg) translateY(-2px);
+}
+
+/* El número y el texto quedan por encima de la cancha. */
+.admin-root .admin-kravio-kpi-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* La tarjeta oscura (ej. "Esperado en cajón") lleva la cancha en blanco. */
+.admin-root .admin-kpi-tone-dark.admin-kravio-kpi-card::after,
+.admin-root .admin-kravio-kpi-card.is-dark::after {
+  filter: brightness(0) invert(1);
+  opacity: 0.12;
+}
+
+/* ---------- Estados vacíos con Muzzaguito ---------- */
+.admin-root .admin-empty.has-mascot {
+  padding-top: 20px;
+}
+
+.admin-root .admin-empty-mascot {
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.14));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-empty-mascot {
+    animation: adminMascotBob 3.2s ease-in-out infinite;
+  }
+
+  @keyframes adminMascotBob {
+    50% { transform: translateY(-5px) rotate(-2deg); }
+  }
+}
+
+/* ---------- Pelotita en la sección activa del menú ---------- */
+.admin-root .admin-sidebar-link.active::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 0 0 2px rgba(215, 240, 58, 0.18), 0 0 10px rgba(215, 240, 58, 0.45);
+}
+
+/* Con el menú achicado solo queda el ícono: la pelotita va arriba a la
+   derecha, como un globito. */
+.admin-root .admin-sidebar.collapsed .admin-sidebar-link.active::after {
+  right: 6px;
+  top: 8px;
+  margin-top: 0;
+  width: 8px;
+  height: 8px;
+}

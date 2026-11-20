@@ -169,7 +169,7 @@ export default function ClientesView({
           </div>
           <div className="admin-kravio-kpi-content">
             <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: "#15803d" }}>
+              <div className="admin-kravio-kpi-number">
                 {counts.vip + counts.frecuente}
               </div>
               <span className="admin-cell-sub">{counts.vip} VIP · {counts.frecuente} habituales</span>
@@ -184,7 +184,7 @@ export default function ClientesView({
           </div>
           <div className="admin-kravio-kpi-content">
             <div className="admin-kravio-kpi-left">
-              <div className="admin-kravio-kpi-number" style={{ color: "#d97706" }}>
+              <div className="admin-kravio-kpi-number" style={{ color: counts.inactivo > 0 ? "#d97706" : undefined }}>
                 {counts.inactivo}
               </div>
               <span className="admin-cell-sub">+{INACTIVE_AFTER_DAYS} días sin reservar</span>
@@ -388,6 +388,7 @@ export default function ClientesView({
                   ) : list.length === 0 ? (
                     <EmptyState
                       icon={Users}
+                      mascot="mochila-pulgar"
                       title="Todavía no hay clientes"
                       text="Se arman solos con cada reserva: nombre y teléfono del organizador."
                     />

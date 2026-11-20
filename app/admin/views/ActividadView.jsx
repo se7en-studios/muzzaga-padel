@@ -239,6 +239,7 @@ export default function ActividadView({ onExpiredSession }) {
         <div className="admin-settings-card">
           <EmptyState
             icon={History}
+            mascot="descanso-mate"
             title={
               logs.length ? "Nada con ese filtro" : "Todavía no hay movimientos"
             }
