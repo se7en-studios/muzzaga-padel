@@ -62,6 +62,18 @@ function wantsLite3d() {
     (nav.hardwareConcurrency > 0 && nav.hardwareConcurrency <= 4)
   );
 }
+/**
+ * El resto de los celulares (y tablets): la maqueta completa pero más barata
+ * de dibujar (sin antialias ni bloom, sombras simples, sin los personajes de
+ * 8 MB, ~40 cuadros por segundo). Con la calidad de compu se trababa al
+ * scrollear el recorrido en celus comunes.
+ */
+function wantsMobile3d() {
+  return (
+    window.matchMedia("(pointer: coarse)").matches ||
+    window.matchMedia("(max-width: 900px)").matches
+  );
+}
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const nearestPoi = (p) =>
   POIS.reduce(
@@ -99,7 +111,8 @@ export default function ClubRecorrido() {
     let timerId = null;
     const start = () => {
       io.disconnect();
-      const run = () => setLoad(wantsLite3d() ? "lite" : "full");
+      const run = () =>
+        setLoad(wantsLite3d() ? "lite" : wantsMobile3d() ? "movil" : "full");
       if ("requestIdleCallback" in window) {
         idleId = window.requestIdleCallback(run, { timeout: 1500 });
       } else {
@@ -247,7 +260,7 @@ export default function ClubRecorrido() {
             <iframe
               ref={frameRef}
               className={`club-tour-frame${ready ? " is-ready" : ""}`}
-              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : ""}&v=20261120`}
+              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261121`}
               title="Maqueta 3D del club Muzzaga"
               tabIndex={-1}
               aria-hidden="true"
