@@ -42,6 +42,8 @@ export default function FooterWordmark() {
           style={{ "--d": `${i * 80}ms` }}
         >
           {letra}
+          {/* La pelota que pica sobre la última A (estilos en la home). */}
+          {i === LETRAS.length - 1 && <span className="footer-wordmark-ball" />}
         </span>
       ))}
     </div>

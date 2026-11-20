@@ -51,6 +51,7 @@ export default function AmenitiesSection({ photos }) {
   const [selectedSpec, setSelectedSpec] = useState(SPECS[0].id);
 
   const active = SPECS.find((s) => s.id === selectedSpec) || SPECS[0];
+  const activeNum = SPECS.indexOf(active) + 1;
 
   return (
     <section id="instalaciones" className="section-bento">
@@ -108,15 +109,20 @@ export default function AmenitiesSection({ photos }) {
           </div>
 
           {/* key: re-monta el detalle para que la animación de entrada corra en cada cambio */}
+          {/* El ícono va parado sobre una cancha chiquita (spec-icon) y el
+              número de ítem en mono, como una ficha de las de torneo. */}
           <div className="spec-detail" key={active.id} role="tabpanel">
             <div className="spec-icon" aria-hidden="true"><Image src={active.icon} alt="" width={72} height={72} className="icono-3d" /></div>
-            <div>
+            <div className="spec-head">
+              <span className="spec-num" aria-hidden="true">
+                {String(activeNum).padStart(2, "0")} / {String(SPECS.length).padStart(2, "0")} · {active.subtitle}
+              </span>
               <div className="spec-title-row">
                 <strong>{active.title}</strong>
                 <span className="spec-tag">✓ {active.tag}</span>
               </div>
-              <p className="spec-desc">{active.desc}</p>
             </div>
+            <p className="spec-desc">{active.desc}</p>
           </div>
         </div>
       </div>

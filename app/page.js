@@ -22,6 +22,12 @@ import HeroLiveSlots from "../components/HeroLiveSlots";
 import { WhatsAppLogo, GoogleMapsLogo, WazeLogo } from "../components/BrandLogos";
 import "./landing.css";
 import "./fondo-cancha.css";
+import "./secciones/hero.css";
+import "./secciones/turnos.css";
+import "./secciones/camaras-instalaciones.css";
+import "./secciones/torneos-cantina.css";
+import "./secciones/herramientas-faq.css";
+import "./secciones/ubicacion-pie.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";
@@ -130,7 +136,11 @@ export default async function Home() {
             <h1 className="hero-night-title">
               <span className="hero-line">Canchas de pádel</span>{" "}
               <span className="hero-line">en Catriel.</span>{" "}
-              <span className="hero-line hero-line-accent">Pádel de verdad.</span>
+              {/* El punto final es una pelota (CSS): el "." sigue en el texto
+                  para lectores de pantalla y buscadores. */}
+              <span className="hero-line hero-line-accent">
+                Pádel de verdad<span className="hero-ball-dot">.</span>
+              </span>
             </h1>
 
             <p className="hero-night-lede">
@@ -325,6 +335,8 @@ export default async function Home() {
                     <span className="location-detail-label">Horarios</span>
                     <strong className="location-detail-value">Lunes a sábado</strong>
                     <span className="location-detail-sub">14:00 a 00:30 hs</span>
+                    {/* Abierto ahora / cerrado, calculado del horario de Configuración. */}
+                    <LiveWeatherRadar schedule={config.schedule} blockedDates={config.blockedDates} />
                   </div>
                 </div>
               </div>
