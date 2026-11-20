@@ -482,3 +482,79 @@
   border-radius: inherit;
   background: linear-gradient(90deg, #f59e0b, #22c55e);
 }
+
+/* ==========================================================================
+   CALENDARIO DEL MES Y REPORTES: OCUPACIÓN EN AZUL CANCHA
+   Cuanto más lleno el día, más cancha: de un celeste apenas marcado a la
+   cancha azul con sus líneas cuando está casi lleno.
+   ========================================================================== */
+.admin-root [data-heat="1"] {
+  --heat-bg: #e6ecfc;
+  --heat-fg: #1e2a52;
+}
+
+.admin-root [data-heat="2"] {
+  --heat-bg: #bccbf6;
+  --heat-fg: #14204a;
+}
+
+.admin-root [data-heat="3"] {
+  --heat-bg: #6d8ce8;
+  --heat-fg: #ffffff;
+}
+
+.admin-root [data-heat="4"] {
+  --heat-bg: #2350d6;
+  --heat-fg: #ffffff;
+}
+
+.admin-root .admin-heat-cell {
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-root .admin-heat-cell[data-heat="3"],
+.admin-root .admin-heat-cell[data-heat="4"] {
+  border-color: #1c42b8;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Las líneas de la cancha en los días más llenos. */
+.admin-root .admin-heat-cell[data-heat="3"]::before,
+.admin-root .admin-heat-cell[data-heat="4"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='8' width='192' height='84' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.35'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M31 8v84M169 8v84M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.25'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.admin-root .admin-heat-cell[data-heat="4"] {
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.2), rgba(11, 26, 77, 0.5)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 200px 200px;
+  box-shadow: 0 6px 14px -8px rgba(13, 31, 92, 0.6);
+}
+
+.admin-root .admin-heat-cell > * {
+  position: relative;
+}
+
+.admin-root .admin-heat-cell:hover:not(:disabled) {
+  border-color: #2350d6;
+  box-shadow: 0 0 0 1px #2350d6;
+}
+
+/* Hoy: la pelotita en la esquina, además del borde. */
+.admin-root .admin-heat-cell.is-today::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 0 8px rgba(215, 240, 58, 0.6);
+}
