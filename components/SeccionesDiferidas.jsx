@@ -16,6 +16,11 @@ import { Suspense, lazy, useEffect } from "react";
 // pantalla (el recorrido 3D arranca su propia carga al 40 % de pantalla).
 const MARGEN = "1200px 0px";
 const EN_SERVIDOR = typeof window === "undefined";
+// Hasta que la página termina de hidratarse, el HTML de cada sección ya está
+// en el DOM. Después, una sección nueva viene de una navegación del cliente:
+// no hay HTML que esperar (y un id igual de la página anterior, como #torneos
+// en /torneos, dejaría la carga colgada), así que se carga ya.
+let paginaHidratada = false;
 
 function diferida(id, cargar) {
   let soltar;
@@ -35,11 +40,14 @@ function diferida(id, cargar) {
     soltar();
   }
 
-  // Se mira en el render (no en un efecto): mientras la sección espera su
-  // código no corre ningún efecto adentro, y en una navegación del cliente no
-  // hay HTML previo que mostrar, así que se carga ya.
+  // Se mira en el render (no en un efecto): en la hidratación hay que decidir
+  // antes de que React intente mostrar la sección.
   function vigilar() {
     if (EN_SERVIDOR || soltada) return;
+    if (paginaHidratada) {
+      liberar(true);
+      return;
+    }
     const el = document.getElementById(id);
     if (!el || typeof IntersectionObserver === "undefined") {
       liberar(!el);
@@ -72,6 +80,9 @@ function diferida(id, cargar) {
 
   function Diferida(props) {
     vigilar();
+    useEffect(() => {
+      paginaHidratada = true;
+    }, []);
     return (
       <Suspense fallback={null}>
         <Seccion {...props} />
