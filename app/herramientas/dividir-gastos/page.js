@@ -22,7 +22,7 @@ export default async function DividirGastosPage() {
   return (
     <>
       <SiteHeader />
-      <main style={{ paddingTop: 90, minHeight: "80vh" }}>
+      <main className="page-main">
         <div className="container" style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px 8px", fontSize: 13, color: "var(--text-muted)" }}>
             <Link className="back-link" href="/" style={{ color: "var(--color-accent-orange-text)", textDecoration: "none", fontWeight: 600 }}>

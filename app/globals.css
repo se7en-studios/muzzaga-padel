@@ -8991,3 +8991,35 @@ textarea:focus-visible {
     column-gap: 12px;
   }
 }
+
+/* Americano: el input tiene un ancho mínimo propio (size=20) y en celu se
+   salía de la tarjeta por la derecha. */
+.americano-names-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.americano-input {
+  min-width: 0;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .americano-names-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Páginas internas (carta, torneos, herramientas): la barra de arriba ya
+   ocupa su lugar (es sticky), así que el contenido arranca con poco aire.
+   Antes tenían 90 px fijos de más y la miga de pan quedaba a mitad de la
+   primera pantalla del celu. */
+.page-main {
+  min-height: 80vh;
+  padding-top: 28px;
+}
+
+@media (max-width: 640px) {
+  .page-main {
+    padding-top: 14px;
+  }
+}
