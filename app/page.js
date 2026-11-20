@@ -22,6 +22,12 @@ import HeroLiveSlots from "../components/HeroLiveSlots";
 import { WhatsAppLogo, GoogleMapsLogo, WazeLogo } from "../components/BrandLogos";
 import "./landing.css";
 import "./fondo-cancha.css";
+import "./secciones/hero.css";
+import "./secciones/turnos.css";
+import "./secciones/camaras-instalaciones.css";
+import "./secciones/torneos-cantina.css";
+import "./secciones/herramientas-faq.css";
+import "./secciones/ubicacion-pie.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";
