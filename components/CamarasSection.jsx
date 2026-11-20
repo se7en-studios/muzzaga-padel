@@ -370,7 +370,7 @@ export default function CamarasSection({ courts = [], beelupUrl = "" }) {
             </span>
             <span className="camaras-zocalo-texto">
               {live
-                ? "Cámaras Beelup · en directo desde el club"
+                ? "Cámaras Beelup · en directo"
                 : "Canchas de cristal templado"}
             </span>
             <span className="camaras-zocalo-lugar">Catriel · Río Negro</span>
