@@ -290,7 +290,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   // ?lite=1 (celulares con poca memoria o pocos núcleos, ver ClubRecorrido): sin los personajes 3D (8 MB), sin sombras
   // ni bloom, a 1× como mucho, sin animaciones de fondo y dibujando solo cuando la cámara se mueve.
   const LITE = /[?&]lite=1/.test(location.search), calm = reduceMotion || LITE;
-  let litePose = null, liteRedraw = 2;
+  let litePose = null, liteRedraw = 2, liteFadeUntil = Infinity; // hasta cuándo se están prendiendo las luces
   let pr = MONITOR || LITE ? Math.min(window.devicePixelRatio || 1, 1) : Math.min(window.devicePixelRatio || 1, innerWidth < 860 ? 1.5 : 1.75); const prMax = pr; renderer.setPixelRatio(pr);
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.shadowMap.enabled = !LITE; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1188,7 +1188,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     if (LITE) { // quieta no se dibuja: solo si la cámara se movió, se movieron paredes/techo o se están prendiendo las luces
       const cp = camera.position, cq = camera.quaternion, pose = [cp.x, cp.y, cp.z, cq.x, cq.y, cq.z, cq.w];
       const still = litePose && pose.every((v, i) => Math.abs(v - litePose[i]) < (i < 3 ? 5e-3 : 1e-4)); // 5 mm / giro imperceptible
-      if (still && !wallsMoved && !fadeStart && !liteRedraw) return;
+      if (still && !wallsMoved && now > liteFadeUntil && !liteRedraw) return;
       litePose = pose; if (liteRedraw) liteRedraw--;
     }
     wallsMoved = false; perf(dt);
@@ -1459,8 +1459,8 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     if (EMBED) {
       apply(0); TGT.set(KF[0].x, TGT.y, KF[0].z); Object.assign(cam, want);
       // se espera a que techo y paredes terminen de bajar antes de mostrarse
-      setTimeout(() => { fadeStart = performance.now(); if (MONITOR_STILL) monitorStillAt = fadeStart + 7000; parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 1400);
-    } else fadeStart = performance.now();
+      setTimeout(() => { fadeStart = performance.now(); liteFadeUntil = fadeStart + 3000; if (MONITOR_STILL) monitorStillAt = fadeStart + 7000; parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 1400);
+    } else { fadeStart = performance.now(); liteFadeUntil = fadeStart + 3000; }
   }
 })();
 </script>
