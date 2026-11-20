@@ -8924,3 +8924,70 @@ textarea:focus-visible {
     display: none;
   }
 }
+
+/* ==========================================================================
+   PIE EN EL CELU (todas las páginas): los 6 links de "Navegación" iban uno
+   debajo del otro con ~58 px cada uno. En dos columnas, como botones, se
+   tocan fácil y la lista ocupa la mitad.
+   ========================================================================== */
+@media (max-width: 640px) {
+  .footer-links-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .footer-links-list li {
+    display: flex;
+  }
+
+  .footer-links-list a {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 14px;
+  }
+
+  .footer-links-list a:hover {
+    transform: none;
+    border-color: rgba(232, 114, 42, 0.5);
+  }
+}
+
+/* ==========================================================================
+   CARTA: cada producto con su ícono a la izquierda (el mismo que ve la
+   cantina en el admin), para recorrer la lista sin leer cada nombre.
+   ========================================================================== */
+.carta-item {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "icon info price control";
+}
+
+.carta-item-icon {
+  grid-area: icon;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--color-canvas-soft, #f5f2ea);
+  border: 1px solid var(--color-hairline);
+  font-size: 22px;
+  line-height: 1;
+}
+
+@media (max-width: 480px) {
+  .carta-item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "icon info control"
+      "icon price control";
+    column-gap: 12px;
+  }
+}
