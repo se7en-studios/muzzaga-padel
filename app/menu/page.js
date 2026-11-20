@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import "./carta.css";
 import PageCrumbs from "../../components/PageCrumbs";
 import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
