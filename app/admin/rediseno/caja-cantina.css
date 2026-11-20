@@ -1689,6 +1689,20 @@
     height: 44px;
   }
 
+  /* El medio de pago como etiqueta corta y las acciones bajan de renglón
+     si no entran (la venta a cuenta trae además el "Cobrar…"). */
+  .admin-root .admin-cantina .admin-sales-list li > .admin-tag {
+    justify-self: start;
+  }
+
+  .admin-root .admin-cantina .admin-sales-list .admin-sale-actions {
+    flex-wrap: wrap;
+  }
+
+  .admin-root .admin-dashboard-layout .admin-cantina .admin-sale-actions select {
+    min-height: 44px !important;
+  }
+
   .admin-root .admin-cantina .admin-sale-actions .admin-tag-btn {
     min-height: 44px;
   }

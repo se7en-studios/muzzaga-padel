@@ -1239,6 +1239,11 @@
   overflow-wrap: anywhere;
 }
 
+/* Sin cobros no hay "plata" que pintar de verde. */
+.admin-root .rp-hero-amount.is-zero {
+  color: #ffffff;
+}
+
 .admin-root .rp-split {
   display: flex;
   height: 10px;
@@ -1700,6 +1705,10 @@
 
   .admin-root .rp-hero-amount {
     color: #15803d;
+  }
+
+  .admin-root .rp-hero-amount.is-zero {
+    color: #141412;
   }
 
   .admin-root .rp-hero-side {

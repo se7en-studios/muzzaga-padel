@@ -385,7 +385,11 @@ export function ReportContent({ report, loading }) {
                 {inProgress && ` · van ${elapsed} de ${totalDays} días`}
               </span>
               <span className="rp-hero-label">Cobraste</span>
-              <strong className="rp-hero-amount">{formatARS(t.cobrado)}</strong>
+              <strong
+                className={`rp-hero-amount${t.cobrado > 0 ? "" : " is-zero"}`}
+              >
+                {formatARS(t.cobrado)}
+              </strong>
               {t.cobrado > 0 && (
                 <div
                   className="rp-split"
@@ -445,7 +449,7 @@ export function ReportContent({ report, loading }) {
                   </p>
                 </>
               )}
-              {inProgress && (
+              {inProgress && change != null && (
                 <p className="rp-hero-note">
                   El período no terminó: se compara el promedio por día, no el
                   total.
