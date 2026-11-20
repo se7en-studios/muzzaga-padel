@@ -26,3 +26,10 @@ test("alias vacío o config faltante no rompe", () => {
   assert.equal(publicPayment(undefined).alias, null);
   assert.equal(publicPayment(null).titular, "Muzzaga Pádel");
 });
+
+test("publicPayment pasa el % de seña de Ajustes (el pase lo usa para el monto)", () => {
+  assert.equal(publicPayment({ ...DEFAULT_CONFIG }).depositPct, 25);
+  assert.equal(publicPayment({ depositPct: 50 }).depositPct, 50);
+  assert.equal(publicPayment({ depositPct: 250 }).depositPct, 100);
+  assert.equal(publicPayment(undefined).depositPct, DEFAULT_CONFIG.depositPct);
+});
