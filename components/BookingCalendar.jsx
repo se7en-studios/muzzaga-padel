@@ -313,6 +313,21 @@ export default function BookingCalendar({
   async function handleConfirm(e) {
     e.preventDefault();
     if (!selected) return;
+    // iPhone/iPad: Safari solo deja abrir otra pestaña en el mismo toque, no
+    // después de esperar al servidor, así que WhatsApp no se abría y el
+    // cliente tenía que encontrar el botón del pase. Se abre la pestaña ya
+    // (en blanco) y cuando la reserva queda guardada se la manda a WhatsApp.
+    const isIOS =
+      /iP(hone|ad|od)/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    let waTab = null;
+    if (isIOS) {
+      try {
+        waTab = window.open("about:blank", "_blank");
+      } catch {
+        waTab = null;
+      }
+    }
     setSubmitting(true);
     setSubmitError(null);
     const result = await createBooking({
@@ -327,6 +342,11 @@ export default function BookingCalendar({
     });
     setSubmitting(false);
     if (!result.ok) {
+      try {
+        waTab?.close();
+      } catch {
+        // ya cerrada
+      }
       setSubmitError(result.error);
       if (result.error.includes("acaba de ocupar")) {
         markSlotTaken(selected.courtId, selected.start);
@@ -361,7 +381,11 @@ export default function BookingCalendar({
       booking: result.booking,
       whatsappUrl,
     });
-    window.open(whatsappUrl, "_blank", "noopener");
+    if (waTab && !waTab.closed) {
+      waTab.location.href = whatsappUrl;
+    } else {
+      window.open(whatsappUrl, "_blank", "noopener");
+    }
   }
 
   return (
