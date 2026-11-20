@@ -604,3 +604,20 @@ body:has(.admin-login-wrapper) {
     color: var(--brand);
   }
 }
+
+/* ---------- PC: Avisos y TV al lado del título ----------
+   En compu la barra de arriba solo tenía esos dos botones y ocupaba una fila
+   entera (~90 px) antes del título de cada panel. Flotando a la derecha, el
+   encabezado (flex = contexto propio) se acomoda al costado y todo sube. */
+@media (min-width: 768px) {
+  .admin-root .admin-kravio-topbar {
+    float: right;
+    margin: 2px 0 8px 16px;
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .admin-root .admin-main-header + * {
+    clear: both;
+  }
+}
