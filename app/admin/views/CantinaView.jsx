@@ -63,6 +63,29 @@ const plainLabel = (label) => String(label || "").replace(/^[^\p{L}\p{N}]+/u, ""
 const categoryLabel = (id) =>
   plainLabel(MENU_CATEGORIES.find((c) => c.id === id)?.label);
 
+// Ícono de cada producto según el nombre (si no coincide, el de su
+// categoría, que pone el CSS). Así se reconoce la tarjeta sin leerla.
+const PRODUCT_ICONS = [
+  [/empanad/i, "🥟"],
+  [/pizza|muzza|napo|fugazz/i, "🍕"],
+  [/tostad|s[aá]ndwich|sandwich|mila|lomito|hamburgu/i, "🥪"],
+  [/papas?\b|pringles|saladix|cintitas|chizitos/i, "🍟"],
+  [/gomitas|caramelo|chupet/i, "🍬"],
+  [/yerba/i, "🧉"],
+  [/brownie|alfajor|chocolat|porci[oó]n dulce|torta|budin/i, "🍫"],
+  [/caf[eé]|cortado/i, "☕"],
+  [/agua/i, "💧"],
+  [/gatorade|powerade|suerox|monster|red bull|speed|energ/i, "⚡"],
+  [/fernet|gancia|vino|campari|aperol|trago/i, "🥃"],
+  [/cerveza|birra|stella|corona|heineken|quilmes|patagonia|brahma|imperial|budweiser|andes/i, "🍺"],
+  [/pelota|tubo/i, "🎾"],
+];
+
+function productIcon(name) {
+  const hit = PRODUCT_ICONS.find(([re]) => re.test(name || ""));
+  return hit ? hit[1] : null;
+}
+
 function isTypingTarget(el) {
   return Boolean(
     el &&
@@ -420,6 +443,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
         type="button"
         className={`admin-product${qty ? " is-in-cart" : ""}`}
         data-category={item.category}
+        style={productIcon(item.name) ? { "--cat-icon": `"${productIcon(item.name)}"` } : undefined}
         onClick={() => addToCart(item)}
         aria-label={`${item.name}, ${formatARS(item.price)}${qty ? `, ${qty} en la venta` : ""}. Agregar uno`}
       >
