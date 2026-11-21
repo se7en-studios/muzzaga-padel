@@ -99,6 +99,36 @@ function inLabel(minutes) {
 }
 
 /** El único pedazo de la pantalla que cambia cada segundo. */
+/**
+ * Avisos de a uno, cambiando cada 8 s con un fundido corto. Antes era una
+ * cinta que se desplazaba sin parar: eso obligaba a la tele a redibujar la
+ * pantalla entera (maqueta incluida) 60 veces por segundo y la trababa. Así
+ * la pantalla queda quieta casi todo el tiempo.
+ */
+function TickerRotativo({ items }) {
+  const list = items.length ? items : [""];
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (list.length < 2) return undefined;
+    const id = setInterval(() => setI((n) => (n + 1) % list.length), 8000);
+    return () => clearInterval(id);
+  }, [list.length]);
+  const item = list[i % list.length];
+  return (
+    <div className="mon-ticker-window" aria-live="off">
+      <span key={item} className="mon-ticker-item mon-ticker-rot">
+        <span className="mon-ticker-ball" aria-hidden="true" />
+        {item}
+      </span>
+      {list.length > 1 && (
+        <span className="mon-ticker-count" aria-hidden="true">
+          {(i % list.length) + 1}/{list.length}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function MonitorClock() {
   const [time, setTime] = useState("");
   useEffect(() => {
@@ -694,20 +724,7 @@ export default function MonitorPage() {
           <Info size={20} aria-hidden="true" />
           Avisos
         </div>
-        <div className="mon-ticker-window">
-          <div className="mon-ticker-track">
-            {[0, 1].map((copy) => (
-              <div key={copy} className="mon-ticker-group" aria-hidden={copy === 1}>
-                {tickerItems.map((item) => (
-                  <span key={item} className="mon-ticker-item">
-                    <span className="mon-ticker-ball" aria-hidden="true" />
-                    {item}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
+        <TickerRotativo items={tickerItems} />
       </div>
     </div>
   );
