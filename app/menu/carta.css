@@ -113,7 +113,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 4px;
+  /* Aire para el tilde de "MENÚ", que si no toca la línea de arriba. */
+  margin: 0 0 10px;
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -125,14 +126,13 @@
 .carta-titulo {
   margin: 0;
   font-family: var(--font-display), "Barlow Condensed", sans-serif;
-  font-size: clamp(38px, 11vw, 60px);
+  font-size: clamp(32px, 8.6vw, 60px);
   font-weight: 800;
   line-height: 0.92;
   letter-spacing: 0.01em;
   text-transform: uppercase;
   color: var(--carta-tiza);
   text-shadow: 0 0 1px rgba(244, 241, 230, 0.7), 0 2px 0 rgba(0, 0, 0, 0.25);
-  text-wrap: balance;
 }
 
 .carta-pizarra-desc {
@@ -177,13 +177,78 @@
   color: #d7f03a;
 }
 
-/* Muzzaguito con la pizza y la birra, asomado sobre el marco. */
+/* Muzzaguito con la pizza y la birra, asomado sobre el marco. En celu va
+   en la esquina, así el título no se parte en tres renglones. */
 .carta-pizarra-mascota.mascota {
   grid-area: mascota;
-  align-self: end;
-  width: 112px;
-  margin: 0 -10px -18px 0;
+  align-self: start;
+  width: 104px;
+  margin: -6px -10px 0 0;
   filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
+}
+
+/* En celu el párrafo y los pasos van abajo de la mascota, a todo el
+   ancho: el texto de la pizarra se "abre" en la grilla (display: contents). */
+@media (max-width: 639px) {
+  .carta-pizarra {
+    grid-template-areas:
+      "kicker mascota"
+      "titulo mascota"
+      "desc desc"
+      "pasos pasos"
+      "ubic ubic"
+      "acciones acciones";
+    grid-template-rows: auto 1fr;
+  }
+
+  .carta-pizarra-texto {
+    display: contents;
+  }
+
+  .carta-pizarra-kicker {
+    grid-area: kicker;
+  }
+
+  .carta-titulo {
+    grid-area: titulo;
+    align-self: center;
+  }
+
+  .carta-pizarra-desc {
+    grid-area: desc;
+  }
+
+  .carta-pasos {
+    grid-area: pasos;
+  }
+}
+
+/* Celu: "Quitar ubicación" baja abajo del lugar, así "Mesa 1 (Cantina)"
+   no se parte letra por letra. */
+@media (max-width: 639px) {
+  .carta-ubicacion {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 0;
+    padding-bottom: 0;
+  }
+
+  .carta-ubicacion-quitar {
+    grid-column: 2;
+    justify-self: start;
+    padding: 0;
+  }
+}
+
+/* Celu chico: el párrafo es ambientación (lo de pagar primero ya lo dice el
+   pedido). Sin él los productos aparecen antes, que es a lo que se viene. */
+@media (max-width: 480px) {
+  .carta-pizarra-desc {
+    display: none;
+  }
+
+  .carta-pasos {
+    margin-top: 14px;
+  }
 }
 
 /* Papelito del QR: amarillo pelota, pinchado con cinta y un poco torcido. */
@@ -235,8 +300,9 @@
   font-family: var(--font-display), "Barlow Condensed", sans-serif;
   font-size: 22px;
   font-weight: 800;
+  line-height: 1;
   text-transform: uppercase;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .carta-ubicacion-quitar {
@@ -268,8 +334,9 @@
   min-height: 46px;
   justify-content: center;
   gap: 8px;
-  padding: 0 12px;
+  padding: 0 8px;
   font-size: 14.5px;
+  white-space: nowrap;
 }
 
 /* "Ver mi pedido" en tiza sobre el pizarrón (el negro se perdía). */
@@ -606,13 +673,12 @@
   }
 
   .carta .carta-item {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas:
-      "icon icon"
-      "info info"
-      "price control";
+      "icon info info"
+      "price price control";
     align-content: start;
-    row-gap: 10px;
+    row-gap: 12px;
     min-height: 0;
     padding: 14px;
   }
@@ -622,14 +688,13 @@
   }
 
   .carta .carta-item-icon {
-    width: 56px;
-    height: 56px;
-    font-size: 28px;
+    width: 48px;
+    height: 48px;
+    font-size: 25px;
   }
 
   .carta .carta-item-info {
-    align-self: start;
-    min-height: 40px;
+    align-self: center;
   }
 
   .carta .carta-item-price {
@@ -689,17 +754,19 @@
    ========================================================================== */
 .menu-cart-bar {
   min-height: 66px;
-  gap: 12px;
+  gap: 10px;
   padding: 0 10px 0 10px;
   border: 2px solid rgba(255, 255, 255, 0.85);
   border-radius: 20px;
+  /* Sin la red del medio: cruzaba el texto. Queda la línea de fondo. */
   background:
-    var(--carta-lineas) center / 100% 100% no-repeat,
     linear-gradient(rgba(26, 63, 174, 0.9), rgba(35, 80, 214, 0.86)),
     var(--carta-cesped) center / 220px;
   color: #ffffff;
   text-align: left;
   box-shadow:
+    inset 0 0 0 4px rgba(26, 63, 174, 0.9),
+    inset 0 0 0 5.5px rgba(255, 255, 255, 0.35),
     0 14px 30px -8px rgba(11, 26, 77, 0.6),
     0 0 0 1px rgba(11, 26, 77, 0.35);
 }
@@ -724,10 +791,12 @@
 
 .menu-cart-bar-label {
   display: flex;
+  flex: 1;
   flex-direction: column;
   min-width: 0;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .menu-cart-bar-sub {
@@ -742,7 +811,8 @@
 .menu-cart-bar-total {
   flex: none;
   font-family: var(--font-display), "Barlow Condensed", sans-serif;
-  font-size: 26px;
+  margin-left: 0;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: 0.01em;
 }
@@ -887,6 +957,10 @@
 
   .carta-pizarra-desc {
     font-size: 15px;
+  }
+
+  .carta-pasos {
+    font-size: 18px;
   }
 
   .carta-pizarra-mascota.mascota {

@@ -24,36 +24,19 @@ export default function PizarraPage() {
 
         <TacticalCourtSimulator />
 
-        <div className="container" style={{ margin: "40px auto 60px", textAlign: "center" }}>
-          <div
-            style={{
-              background: "var(--color-surface-card)",
-              border: "1px solid var(--color-hairline-strong)",
-              borderRadius: "var(--radius-xl)",
-              padding: "32px 24px",
-              maxWidth: 600,
-              margin: "0 auto",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <Mascota
-              pose="enredado-paleta"
-              alt="Muzzaguito enredado con la paleta"
-              className="mascot-cta"
-            />
-            <h3 style={{ fontSize: 20, color: "var(--color-ink)", marginBottom: 8 }}>
-              Llevá la táctica a la pista
-            </h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 20, maxWidth: 440 }}>
-              Reservá turno en nuestras canchas de cristal y poné a prueba estas jugadas en tu próximo partido.
+        <aside className="hx-cierre" aria-label="Reservar turno">
+          <span className="hx-cierre-pelota" aria-hidden="true" />
+          <Mascota pose="enredado-paleta" size="s" alt="" className="hx-cierre-masc" />
+          <div className="hx-cierre-texto">
+            <h2 className="hx-cierre-titulo">Llevá la táctica a la cancha</h2>
+            <p className="hx-cierre-desc">
+              Reservá turno en nuestras canchas de cristal y probá estas jugadas en tu próximo partido.
             </p>
-            <Link href="/#turnos" className="btn btn-linear-primary" style={{ padding: "10px 24px" }}>
-              Reservar turno →
-            </Link>
           </div>
-        </div>
+          <Link href="/#turnos" className="hx-cierre-btn">
+            Reservar turno →
+          </Link>
+        </aside>
       </main>
       <SiteFooter />
       <BottomNav />

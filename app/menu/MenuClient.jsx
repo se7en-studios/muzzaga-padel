@@ -159,16 +159,24 @@ export default function MenuClient({ items }) {
   // carta ya scrolleada, la lista vuelve a arrancar justo debajo de ellas.
   const filtrosRef = useRef(null);
   const listaRef = useRef(null);
+  const catJump = useRef(false);
   const pickCat = (id) => {
+    catJump.current = true;
     setSelectedCat(id);
-    requestAnimationFrame(() => {
-      const bar = filtrosRef.current?.getBoundingClientRect();
-      const list = listaRef.current?.getBoundingClientRect();
-      if (bar && list && list.top < bar.bottom) {
-        window.scrollBy({ top: list.top - bar.bottom - 8 });
-      }
-    });
   };
+  // Después de dibujar la lista nueva (antes no se puede medir).
+  useEffect(() => {
+    if (!catJump.current) return;
+    catJump.current = false;
+    const bar = filtrosRef.current;
+    const list = listaRef.current;
+    if (!bar || !list) return;
+    // Se mide contra donde queda la barra pegada, no donde está ahora: con
+    // una categoría corta la barra puede haber quedado fuera de pantalla.
+    const below = (parseFloat(getComputedStyle(bar).top) || 0) + bar.offsetHeight + 8;
+    const top = list.getBoundingClientRect().top;
+    if (top < below) window.scrollBy({ top: top - below });
+  }, [selectedCat]);
 
   const renderItem = (item) => {
     const qty = cart[item.id] || 0;
@@ -245,7 +253,7 @@ export default function MenuClient({ items }) {
           <ol className="carta-pasos" aria-label="Cómo pedir">
             <li><b>1</b> Elegí</li>
             <li><b>2</b> Agregá</li>
-            <li><b>3</b> Mandá el pedido</li>
+            <li><b>3</b> Mandá</li>
           </ol>
         </div>
         <Mascota pose="pizza-cerveza" className="carta-pizarra-mascota" priority />
@@ -286,7 +294,9 @@ export default function MenuClient({ items }) {
             className="btn btn-secondary-whatsapp carta-consulta"
           >
             <MessageCircle size={18} aria-hidden="true" />
-            Consultas<span className="carta-consulta-extra">&nbsp;por WhatsApp</span>
+            <span>
+              Consultas<span className="carta-consulta-extra"> por WhatsApp</span>
+            </span>
           </button>
         </div>
       </header>

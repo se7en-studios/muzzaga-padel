@@ -364,8 +364,8 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
           <div className="menu-cart-body menu-cart-empty">
             <ShoppingBasket size={32} className="icono-marca" aria-hidden="true" />
             <p>
-              Todavía no sumaste nada. Tocá el carrito de cada producto para
-              agregarlo al pedido.
+              Todavía no sumaste nada. Tocá «Agregar» en cada producto para
+              sumarlo al pedido.
             </p>
             <PayNotice />
             {variant === "sheet" && (

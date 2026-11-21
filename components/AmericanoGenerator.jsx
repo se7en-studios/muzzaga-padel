@@ -6,8 +6,9 @@ import {
   buildAmericanoShareMessage,
   buildAmericanoWhatsAppUrl,
 } from "../lib/americano";
-import Mascota from "./Mascota";
-import { Share2, Check, Copy } from "lucide-react";
+import Image from "next/image";
+import { WhatsAppLogo } from "./BrandLogos";
+import { Check, Copy } from "lucide-react";
 
 const DEFAULT_NAMES = ["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4"];
 
@@ -67,214 +68,233 @@ export default function AmericanoGenerator() {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  // Tabla en vivo: solo lectura de lo que ya anotaron (no cambia el fixture
+  // ni el texto de WhatsApp). Cada jugador suma los games de su pareja.
+  const ranking = useMemo(() => {
+    const totals = new Map(names.map((n) => [n, 0]));
+    let anyScore = false;
+    fixtures.forEach((fix) => {
+      const s = scores[fix.round];
+      if (!s || (s.t1 === "" && s.t2 === "")) return;
+      anyScore = true;
+      const a = Number(s.t1) || 0;
+      const b = Number(s.t2) || 0;
+      [fix.p1, fix.p2].forEach((p) => totals.set(p, (totals.get(p) || 0) + a));
+      [fix.p3, fix.p4].forEach((p) => totals.set(p, (totals.get(p) || 0) + b));
+    });
+    if (!anyScore) return [];
+    return [...totals.entries()].sort((x, y) => y[1] - x[1]);
+  }, [names, fixtures, scores]);
+
+  const matchesPerPlayer = Math.round((fixtures.length * 4) / playerCount);
+
   return (
-    <section id="generador-americano" className="section-turnos">
+    <section id="generador-americano" className="hx-tool hx-tool--americano">
       <div className="container">
-        <div className="section-header-row">
-          <div>
-            <span className="badge-linear badge-amber" style={{ marginBottom: 8 }}>
-              Herramienta para grupos
-            </span>
-            <h2 className="section-title">Generador de torneo americano</h2>
-            <p className="section-desc">
-              Armá las rotaciones de parejas al instante para que todos jueguen con y contra todos en partidos de 4 o 6 games. Anotá los resultados en vivo y compartilo por WhatsApp.
-            </p>
+        <header className="hx-hero">
+          <span className="hx-hero-pelota" aria-hidden="true" />
+          <Image
+            src="/img/iconos/icono-americano.webp"
+            alt=""
+            width={124}
+            height={124}
+            priority
+            className="hx-hero-icono icono-3d"
+          />
+          <div className="hx-hero-cabeza">
+            <p className="hx-hero-kicker">Herramienta 04 · Torneo express</p>
+            <h1 className="hx-hero-titulo">Torneo americano</h1>
           </div>
-          <div className="mascot-section-badge">
-            <Mascota
-              pose="trofeo-paleta"
-              alt="Muzzaguito festejando con la copa del americano"
-              className="mascot-section-img"
-            />
-          </div>
-        </div>
+          <p className="hx-hero-desc">
+            Armá las rotaciones al instante para que todos jueguen con y contra
+            todos. Anotá los games en vivo y mandá el fixture al grupo.
+          </p>
+          <ul className="hx-hero-chips" aria-label="Características">
+            <li>4 a 8 jugadores</li>
+            <li>Todos con todos</li>
+            <li>Tabla en vivo</li>
+          </ul>
+        </header>
 
-        <div className="americano-layout-grid">
-          {/* CONFIGURACIÓN DE JUGADORES */}
-          <div className="americano-config-card">
-            <h3 style={{ fontSize: 16, color: "var(--text-primary)", marginBottom: 14 }}>
-              1. Cantidad de jugadores:
-            </h3>
-
-            <div className="americano-count-tabs">
-              {[4, 5, 6, 7, 8].map((count) => (
-                <button
-                  key={count}
-                  type="button"
-                  className={`americano-count-btn${playerCount === count ? " active" : ""}`}
-                  onClick={() => handleCountChange(count)}
-                >
-                  {count}
-                  <span className="sr-only"> jugadores</span>
-                </button>
-              ))}
-            </div>
-
-            <h3 style={{ fontSize: 16, color: "var(--text-primary)", margin: "20px 0 12px" }}>
-              2. Nombres de los participantes:
-            </h3>
-
-            <div className="americano-names-grid">
-              {names.map((name, idx) => (
-                <div key={idx} className="americano-name-input-row">
-                  <span className="name-idx-badge">{idx + 1}</span>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => handleNameChange(idx, e.target.value)}
-                    placeholder={`Jugador ${idx + 1}`}
-                    className="americano-input"
-                  />
+        <div className="hx-am-grid">
+          {/* CONFIGURACIÓN */}
+          <div className="hx-am-config">
+            <div className="hx-card">
+              <div className="hx-paso">
+                <span className="hx-paso-num" aria-hidden="true">1</span>
+                <div>
+                  <h2 className="hx-paso-titulo">¿Cuántos juegan?</h2>
+                  <p className="hx-paso-desc">Una cancha, parejas que rotan</p>
                 </div>
-              ))}
+              </div>
+
+              <div className="hx-numeros" role="group" aria-label="Cantidad de jugadores">
+                {[4, 5, 6, 7, 8].map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    className={`hx-num${playerCount === count ? " is-on" : ""}`}
+                    aria-pressed={playerCount === count}
+                    onClick={() => handleCountChange(count)}
+                  >
+                    <span className="hx-num-valor">{count}</span>
+                    <span className="hx-num-cap">jug.</span>
+                    <span className="sr-only"> jugadores</span>
+                  </button>
+                ))}
+              </div>
+
+              <ul className="hx-am-meta">
+                <li>{fixtures.length} rondas</li>
+                <li>{matchesPerPlayer} partidos c/u</li>
+              </ul>
+            </div>
+
+            <div className="hx-card">
+              <div className="hx-paso">
+                <span className="hx-paso-num" aria-hidden="true">2</span>
+                <div>
+                  <h2 className="hx-paso-titulo">Los jugadores</h2>
+                  <p className="hx-paso-desc">Tocá cada nombre para cambiarlo</p>
+                </div>
+              </div>
+
+              <div className="hx-am-nombres">
+                {names.map((name, idx) => (
+                  <div key={idx} className="hx-am-nombre">
+                    <span className="hx-paso-num" aria-hidden="true">{idx + 1}</span>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => handleNameChange(idx, e.target.value)}
+                      placeholder={`Jugador ${idx + 1}`}
+                      aria-label={`Nombre del jugador ${idx + 1}`}
+                      className="hx-campo"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* FIXTURE GENERADO */}
-          <div className="americano-fixture-card">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 10,
-                marginBottom: 18,
-              }}
-            >
+          {/* FIXTURE */}
+          <div className="hx-am-fixture">
+            <div className="hx-paso" style={{ marginBottom: 0 }}>
+              <span className="hx-paso-num" aria-hidden="true">3</span>
               <div>
-                <span className="badge-linear badge-emerald">Fixture automático</span>
-                <h3 style={{ fontSize: 17, color: "var(--text-primary)", margin: "4px 0 0" }}>
-                  Rondas y cruces de parejas
-                </h3>
-              </div>
-
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-whatsapp"
-                  style={{
-                    height: 36,
-                    padding: "6px 12px",
-                    fontSize: 12.5,
-                    gap: 6,
-                    textDecoration: "none",
-                  }}
-                  title="Abrir en WhatsApp y enviar fixture al grupo"
-                >
-                  <Share2 size={20} aria-hidden="true" />
-                  <span>WhatsApp</span>
-                </a>
-
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  style={{ height: 36, padding: "6px 12px", fontSize: 12.5 }}
-                  onClick={copyFixture}
-                  title="Copiar fixture completo al portapapeles"
-                >
-                  {copied ? <><Check size={20} className="icono-marca" aria-hidden="true" /> Copiado</> : <><Copy size={20} className="icono-marca" aria-hidden="true" /> Copiar</>}
-                </button>
+                <h2 className="hx-paso-titulo">Fixture y games</h2>
+                <p className="hx-paso-desc">Anotá los games de cada pareja al terminar</p>
               </div>
             </div>
 
-            <div className="fixture-rounds-list">
+            <ol className="hx-am-rondas">
               {fixtures.map((fix) => {
                 const roundScore = scores[fix.round] || { t1: "", t2: "" };
+                const hasScore = roundScore.t1 !== "" || roundScore.t2 !== "";
+                const a = Number(roundScore.t1) || 0;
+                const b = Number(roundScore.t2) || 0;
                 return (
-                  <div key={fix.round} className="fixture-round-item">
-                    <div className="fixture-round-badge">Ronda {fix.round}</div>
-                    <div className="fixture-matchup">
-                      <div className="fixture-team">
-                        <strong>{fix.p1}</strong> &amp; <strong>{fix.p2}</strong>
-                      </div>
-
-                      {/* Score Input */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                          margin: "0 6px",
-                        }}
-                      >
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={roundScore.t1}
-                          onChange={(e) =>
-                            handleScoreChange(fix.round, "t1", e.target.value)
-                          }
-                          placeholder="0"
-                          style={{
-                            width: 44,
-                            height: 44,
-                            textAlign: "center",
-                            fontSize: 16,
-                            fontWeight: 700,
-                            borderRadius: 8,
-                            border: "1px solid var(--color-hairline-strong)",
-                            background: "var(--color-surface-card)",
-                            color: "var(--text-primary)",
-                            padding: 0,
-                          }}
-                          title={`Games para ${fix.p1} & ${fix.p2}`}
-                        />
-                        <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700 }}>
-                          -
+                  <li key={fix.round} className="hx-marcador hx-am-ronda">
+                    <div className="hx-am-ronda-cabeza">
+                      <span className="hx-am-ronda-num">Ronda {fix.round}</span>
+                      {fix.bye && (
+                        <span className="hx-am-descansa">
+                          Descansa: <b>{fix.bye}</b>
                         </span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={roundScore.t2}
-                          onChange={(e) =>
-                            handleScoreChange(fix.round, "t2", e.target.value)
-                          }
-                          placeholder="0"
-                          style={{
-                            width: 44,
-                            height: 44,
-                            textAlign: "center",
-                            fontSize: 16,
-                            fontWeight: 700,
-                            borderRadius: 8,
-                            border: "1px solid var(--color-hairline-strong)",
-                            background: "var(--color-surface-card)",
-                            color: "var(--text-primary)",
-                            padding: 0,
-                          }}
-                          title={`Games para ${fix.p3} & ${fix.p4}`}
-                        />
-                      </div>
-
-                      <div className="fixture-team">
-                        <strong>{fix.p3}</strong> &amp; <strong>{fix.p4}</strong>
-                      </div>
+                      )}
                     </div>
 
-                    {fix.bye && (
-                      <div className="fixture-bye">
-                        Descansa: <span>{fix.bye}</span>
-                      </div>
-                    )}
-                  </div>
+                    <div className={`hx-am-fila${hasScore && a > b ? " is-gana" : ""}`}>
+                      <span className="hx-am-saque" aria-hidden="true" />
+                      <span className="hx-am-pareja">
+                        {fix.p1} <i>&amp;</i> {fix.p2}
+                      </span>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min="0"
+                        max="20"
+                        className="hx-am-games"
+                        value={roundScore.t1}
+                        onChange={(e) => handleScoreChange(fix.round, "t1", e.target.value)}
+                        placeholder="0"
+                        aria-label={`Games de ${fix.p1} y ${fix.p2}, ronda ${fix.round}`}
+                      />
+                    </div>
+
+                    <div className={`hx-am-fila${hasScore && b > a ? " is-gana" : ""}`}>
+                      <span className="hx-am-saque" aria-hidden="true" />
+                      <span className="hx-am-pareja">
+                        {fix.p3} <i>&amp;</i> {fix.p4}
+                      </span>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min="0"
+                        max="20"
+                        className="hx-am-games"
+                        value={roundScore.t2}
+                        onChange={(e) => handleScoreChange(fix.round, "t2", e.target.value)}
+                        placeholder="0"
+                        aria-label={`Games de ${fix.p3} y ${fix.p4}, ronda ${fix.round}`}
+                      />
+                    </div>
+                  </li>
                 );
               })}
+            </ol>
+
+            {ranking.length > 0 && (
+              <div className="hx-card">
+                <div className="hx-paso" style={{ marginBottom: 8 }}>
+                  <span className="hx-paso-num" aria-hidden="true">🏆</span>
+                  <div>
+                    <h2 className="hx-paso-titulo">Tabla en vivo</h2>
+                    <p className="hx-paso-desc">Games ganados por cada jugador</p>
+                  </div>
+                </div>
+                <ol className="hx-am-tabla">
+                  {ranking.map(([name, games], i) => (
+                    <li key={`${name}-${i}`}>
+                      <span className="hx-am-pos">{i + 1}</span>
+                      <span className="hx-am-tabla-nombre">{name || `Jugador ${i + 1}`}</span>
+                      <span className="hx-am-tabla-pts">
+                        <b>{games}</b> games
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            <div className="hx-acciones">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hx-wa"
+                title="Abrir en WhatsApp y enviar fixture al grupo"
+              >
+                <WhatsAppLogo size={22} color="#ffffff" />
+                <span>Mandar fixture al grupo</span>
+              </a>
+              <button
+                type="button"
+                className={`hx-btn2${copied ? " is-ok" : ""}`}
+                onClick={copyFixture}
+                title="Copiar fixture completo al portapapeles"
+              >
+                {copied ? (
+                  <><Check size={18} aria-hidden="true" /> Fixture copiado</>
+                ) : (
+                  <><Copy size={18} className="icono-marca" aria-hidden="true" /> Copiar fixture</>
+                )}
+              </button>
             </div>
 
-            <p
-              style={{
-                fontSize: 12,
-                color: "var(--text-muted)",
-                marginTop: 14,
-                textAlign: "center",
-              }}
-            >
-              Formato recomendado: Partidos a 4 o 6 games corridos con punto de oro en el 40-40. Los resultados ingresados se incluyen al compartir por WhatsApp.
+            <p className="hx-nota">
+              Formato recomendado: partidos a 4 o 6 games corridos con punto de
+              oro en el 40-40. Los games anotados se incluyen al compartir.
             </p>
           </div>
         </div>

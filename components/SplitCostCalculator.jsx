@@ -1,19 +1,26 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { PRECIO_TURNO, PRECIO_POR_JUGADOR } from "../data/pricing";
 import {
   buildSplitCostMessage,
   buildSplitCostWhatsAppUrl,
 } from "../lib/splitCost";
 import Mascota from "./Mascota";
-import ScrollRow from "./ScrollRow";
-import { CreditCard, Share2, Check, Copy } from "lucide-react";
+import { WhatsAppLogo } from "./BrandLogos";
+import { CreditCard, Check, Copy, Minus, Plus, ChevronDown, ArrowDown } from "lucide-react";
 
 const CANCHA_PRICE = PRECIO_TURNO;
 
 // Arranca con un ejemplo armado, si esos productos siguen destacados en la carta.
 const EXAMPLE_EXTRAS = { heineken_litro: 2, pizza_muzza: 1 };
+
+// Cuántos productos se ven de entrada: con los 16 a la vista el paso 3 era
+// más largo que todo el resto. Los que ya sumaste se ven siempre.
+const VISIBLE_EXTRAS = 6;
+
+const money = (n) => `$${n.toLocaleString("es-AR")}`;
 
 /** `extras`: los productos destacados de la carta. */
 export default function SplitCostCalculator({ extras }) {
@@ -25,6 +32,7 @@ export default function SplitCostCalculator({ extras }) {
   );
   const [alias, setAlias] = useState("");
   const [copied, setCopied] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const canchaPrice = CANCHA_PRICE;
 
@@ -80,290 +88,266 @@ export default function SplitCostCalculator({ extras }) {
     });
   }, [canchaPrice, players, selectedExtras, extras, alias]);
 
+  const visibleExtras = showAll
+    ? extras
+    : extras.filter((e, i) => i < VISIBLE_EXTRAS || selectedExtras[e.id]);
+  const hiddenCount = extras.length - visibleExtras.length;
+
   return (
-    <section id="split-cost" className="section-turnos">
+    <section id="split-cost" className="hx-tool hx-tool--dividir">
       <div className="container">
-        <div className="section-header-row">
-          <div>
-            <span
-              className="badge-linear badge-emerald"
-              style={{ marginBottom: 8 }}
-            >
-              Herramienta para grupos
-            </span>
-            <h2 className="section-title">
-              Calculadora de partido y tercer tiempo
-            </h2>
-            <p className="section-desc">
-              Dividí en segundos la cancha y lo que van a comer o tomar en la
-              cantina. Copiá el desglose y pasalo al grupo.
-            </p>
+        <header className="hx-hero">
+          <span className="hx-hero-pelota" aria-hidden="true" />
+          <Image
+            src="/img/iconos/icono-dividir.webp"
+            alt=""
+            width={124}
+            height={124}
+            priority
+            className="hx-hero-icono icono-3d"
+          />
+          <div className="hx-hero-cabeza">
+            <p className="hx-hero-kicker">Herramienta 01 · Para grupos</p>
+            <h1 className="hx-hero-titulo">Dividir cancha y cantina</h1>
           </div>
-          <div className="mascot-section-badge">
-            <Mascota
-              pose="pizza-padel-mood"
-              alt="Muzzaguito disfrutando una pizza en el tercer tiempo"
-              className="mascot-section-img"
-            />
-          </div>
-        </div>
+          <p className="hx-hero-desc">
+            Dividí en segundos la cancha y lo que van a comer o tomar en la
+            cantina. Mandá el desglose al grupo y listo.
+          </p>
+          <ul className="hx-hero-chips" aria-label="Características">
+            <li>Precios de la cantina al día</li>
+            <li>Directo a WhatsApp</li>
+          </ul>
+        </header>
 
-        <div className="split-calculator-grid">
-          {/* COLUMNA IZQUIERDA: CONFIGURACIÓN */}
-          <div className="split-config-card">
-            <div className="split-section-header">
-              <span className="split-step-badge">1</span>
-              <div>
-                <h3 className="split-step-title">Turno de cancha (90 min)</h3>
-                <p className="split-step-desc">
-                  Tarifa fija para todos los días y horarios
-                </p>
-              </div>
-            </div>
-
-            <div
-              style={{
-                marginBottom: 20,
-                padding: "12px 16px",
-                background: "var(--color-canvas-soft)",
-                border: "1px solid var(--color-hairline-strong)",
-                borderRadius: "var(--radius-md)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontWeight: 600,
-                    color: "var(--color-ink)",
-                    fontSize: 14,
-                  }}
-                >
-                  Cancha de cristal
-                </div>
-                <div style={{ fontSize: 12, color: "var(--color-muted)" }}>
-                  Turno de 90 minutos
+        <div className="hx-dv-grid">
+          <div className="hx-dv-config">
+            {/* PASO 1: el turno */}
+            <div className="hx-card">
+              <div className="hx-paso">
+                <span className="hx-paso-num" aria-hidden="true">1</span>
+                <div>
+                  <h2 className="hx-paso-titulo">El turno</h2>
+                  <p className="hx-paso-desc">Tarifa fija para todos los días y horarios</p>
                 </div>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <div
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 16,
-                    color: "var(--color-ink)",
-                  }}
-                >
-                  ${canchaPrice.toLocaleString("es-AR")}
+              <div className="hx-dv-turno">
+                <div>
+                  <span className="hx-dv-turno-nombre">Cancha de cristal</span>
+                  <span className="hx-dv-turno-dur">Turno de 90 minutos</span>
                 </div>
-                <div
-                  style={{
-                    fontSize: 11.5,
-                    color: "var(--color-text-link)",
-                    fontWeight: 600,
-                  }}
-                >
-                  ${PRECIO_POR_JUGADOR.toLocaleString("es-AR")} c/u (cuarteto)
+                <div className="hx-dv-turno-precio">
+                  <strong>{money(canchaPrice)}</strong>
+                  <span>{money(PRECIO_POR_JUGADOR)} c/u si son 4</span>
                 </div>
               </div>
             </div>
 
-            <div className="split-section-header">
-              <span className="split-step-badge">2</span>
-              <div>
-                <h3 className="split-step-title">Jugadores a dividir</h3>
-                <p className="split-step-desc">
-                  ¿Entre cuántos dividen los gastos?
-                </p>
+            {/* PASO 2: entre cuántos */}
+            <div className="hx-card">
+              <div className="hx-paso">
+                <span className="hx-paso-num" aria-hidden="true">2</span>
+                <div>
+                  <h2 className="hx-paso-titulo">¿Entre cuántos?</h2>
+                  <p className="hx-paso-desc">Los que ponen plata, jueguen o no</p>
+                </div>
+              </div>
+              <div className="hx-numeros" role="group" aria-label="Jugadores a dividir">
+                {[2, 3, 4, 5, 6].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    className={`hx-num${players === num ? " is-on" : ""}`}
+                    aria-pressed={players === num}
+                    aria-label={`${num} jugadores${num === 4 ? " (estándar)" : ""}`}
+                    onClick={() => setPlayers(num)}
+                  >
+                    <span className="hx-num-valor">{num}</span>
+                    <span className="hx-num-cap">{num === 4 ? "estándar" : "jug."}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="players-selector-row">
-              {[2, 3, 4, 5, 6].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  className={`player-count-btn${players === num ? " active" : ""}`}
-                  onClick={() => setPlayers(num)}
-                >
-                  {num === 4 ? "4 (Estándar)" : `${num} jugadores`}
-                </button>
-              ))}
-            </div>
-
-            <div className="split-section-header" style={{ marginTop: 24 }}>
-              <span className="split-step-badge">3</span>
-              <div>
-                <h3 className="split-step-title">Sumar cantina y extras</h3>
-                <p className="split-step-desc">
-                  Pizzas, birras, bebidas y minutas para el partido.
-                </p>
+            {/* PASO 3: cantina */}
+            <div className="hx-card">
+              <div className="hx-paso">
+                <span className="hx-paso-num" aria-hidden="true">3</span>
+                <div>
+                  <h2 className="hx-paso-titulo">Tercer tiempo</h2>
+                  <p className="hx-paso-desc">Pizzas, birras y bebidas de la cantina</p>
+                </div>
               </div>
-            </div>
 
-            <p className="mobile-swipe-hint">← Deslizá para ver más extras →</p>
-            <ScrollRow className="extras-selector-list">
-              {extras.map((extra) => {
-                const qty = selectedExtras[extra.id] || 0;
-                return (
-                  <div key={extra.id} className="extra-item-row">
-                    <div className="extra-info">
+              <ul className="hx-dv-extras">
+                {visibleExtras.map((extra) => {
+                  const qty = selectedExtras[extra.id] || 0;
+                  return (
+                    <li key={extra.id} className={`hx-dv-extra${qty > 0 ? " is-on" : ""}`}>
                       <div>
-                        <strong className="extra-name">{extra.name}</strong>
-                        <span className="extra-price">
-                          ${extra.price.toLocaleString("es-AR")}
-                        </span>
+                        <strong className="hx-dv-extra-nombre">{extra.name}</strong>
+                        <span className="hx-dv-extra-precio">{money(extra.price)}</span>
                       </div>
-                    </div>
-                    <div className="extra-counter-controls">
-                      {qty > 0 && (
+                      {qty > 0 ? (
+                        <div className="hx-dv-contador">
+                          <button
+                            type="button"
+                            onClick={() => removeExtra(extra.id)}
+                            aria-label={`Restar un ${extra.name}`}
+                          >
+                            <Minus size={18} aria-hidden="true" />
+                          </button>
+                          <span className="hx-dv-qty" key={qty} aria-live="polite">
+                            {qty}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => addExtra(extra.id)}
+                            aria-label={`Sumar otro ${extra.name}`}
+                          >
+                            <Plus size={18} aria-hidden="true" />
+                          </button>
+                        </div>
+                      ) : (
                         <button
                           type="button"
-                          className="counter-btn minus"
-                          onClick={() => removeExtra(extra.id)}
-                          aria-label="Restar uno"
+                          className="hx-dv-sumar"
+                          onClick={() => addExtra(extra.id)}
+                          aria-label={`Sumar ${extra.name}`}
                         >
-                          −
+                          <Plus size={16} aria-hidden="true" /> Sumar
                         </button>
                       )}
-                      {qty > 0 && <span className="counter-qty">{qty}</span>}
-                      <button
-                        type="button"
-                        className="counter-btn plus"
-                        onClick={() => addExtra(extra.id)}
-                        aria-label="Agregar uno"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </ScrollRow>
-          </div>
+                    </li>
+                  );
+                })}
+              </ul>
 
-          {/* COLUMNA DERECHA: TICKET FINTECH & COPIAR */}
-          <div className="split-summary-card">
-            <div className="split-ticket-top">
-              <span className="split-ticket-badge">Resumen del partido</span>
-              <div className="split-amount-big">
-                ${perPerson.toLocaleString("es-AR")}
-                <span className="split-amount-sub">
-                  por jugador ({players} pers.)
-                </span>
-              </div>
+              {(hiddenCount > 0 || showAll) && extras.length > VISIBLE_EXTRAS && (
+                <button
+                  type="button"
+                  className="hx-btn2 hx-dv-mas"
+                  onClick={() => setShowAll((v) => !v)}
+                  aria-expanded={showAll}
+                >
+                  <ChevronDown
+                    size={18}
+                    aria-hidden="true"
+                    style={showAll ? { transform: "rotate(180deg)" } : undefined}
+                  />
+                  {showAll ? "Ver menos productos" : `Ver ${hiddenCount} productos más`}
+                </button>
+              )}
             </div>
 
-            <div className="split-ticket-breakdown">
-              <div className="ticket-row">
-                <div>
-                  <span>Cancha (90 min)</span>
-                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                    ${(canchaPrice / 4).toLocaleString("es-AR")} por jugador si
-                    son cuatro
-                  </div>
-                </div>
-                <strong>${canchaPrice.toLocaleString("es-AR")}</strong>
+            {/* Mini marcador del celu: acompaña mientras elegís. */}
+            <a href="#resumen-partido" className="hx-dv-mini">
+              <span className="hx-dv-mini-monto" key={perPerson}>
+                {money(perPerson)}
+                <small>c/u · {players} jug.</small>
+              </span>
+              <span className="hx-dv-mini-ir">
+                Resumen <ArrowDown size={16} aria-hidden="true" />
+              </span>
+            </a>
+          </div>
+
+          {/* RESUMEN: marcador + ticket + compartir */}
+          <aside id="resumen-partido" className="hx-dv-resumen" aria-label="Resumen del partido">
+            <div className="hx-marcador hx-dv-marcador">
+              <p className="hx-marcador-label">Cada uno paga</p>
+              <strong className="hx-marcador-valor" key={perPerson}>
+                {money(perPerson)}
+              </strong>
+              <p className="hx-marcador-sub">
+                {players} jugadores · total {money(grandTotal)}
+              </p>
+              <ul className="hx-dv-pelotas" aria-hidden="true" key={players}>
+                {Array.from({ length: players }, (_, i) => (
+                  <li key={i} />
+                ))}
+              </ul>
+              <Mascota
+                pose="pizza-padel-mood"
+                size="s"
+                alt=""
+                className="hx-dv-masc"
+              />
+            </div>
+
+            <div className="hx-ticket">
+              <div className="hx-ticket-fila">
+                <span>
+                  Cancha (90 min)
+                  <span className="hx-ticket-nota">
+                    {money(canchaPrice / 4)} por jugador si son cuatro
+                  </span>
+                </span>
+                <strong>{money(canchaPrice)}</strong>
               </div>
 
               {Object.entries(selectedExtras).map(([id, qty]) => {
                 const item = extras.find((e) => e.id === id);
                 if (!item) return null;
                 return (
-                  <div key={id} className="ticket-row extra">
+                  <div key={id} className="hx-ticket-fila">
                     <span>
                       {qty}x {item.name}
                     </span>
-                    <strong>
-                      ${(item.price * qty).toLocaleString("es-AR")}
-                    </strong>
+                    <strong>{money(item.price * qty)}</strong>
                   </div>
                 );
               })}
 
-              <div className="ticket-divider" />
-
-              <div className="ticket-row total">
+              <div className="hx-ticket-fila hx-ticket-total">
                 <span>Total</span>
-                <strong>${grandTotal.toLocaleString("es-AR")}</strong>
+                <strong>{money(grandTotal)}</strong>
               </div>
             </div>
 
-            <div style={{ margin: "14px 0 16px" }}>
-              <label
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "var(--text-secondary)",
-                  display: "block",
-                  marginBottom: 4,
-                }}
-              >
-                <CreditCard size={20} className="icono-marca" aria-hidden="true" /> Tu alias o CBU para cobrar (opcional):
+            <div>
+              <label className="hx-etiqueta" htmlFor="split-alias">
+                <CreditCard size={18} className="icono-marca" aria-hidden="true" />
+                Tu alias o CBU para cobrar (opcional)
               </label>
               <input
+                id="split-alias"
                 type="text"
+                className="hx-campo"
                 value={alias}
                 onChange={(e) => setAlias(e.target.value)}
-                placeholder="Ej. lucas.padel.mp o 00000031..."
-                style={{
-                  width: "100%",
-                  height: 38,
-                  fontSize: 13,
-                  padding: "6px 12px",
-                  borderRadius: "var(--radius-sm, 6px)",
-                  border: "1px solid var(--border)",
-                  background: "var(--surface)",
-                  color: "var(--text-primary)",
-                  boxSizing: "border-box",
-                }}
+                placeholder="Ej. lucas.padel.mp"
+                autoComplete="off"
               />
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="hx-acciones">
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-whatsapp"
-                style={{
-                  width: "100%",
-                  justifyContent: "center",
-                  minHeight: 46,
-                  fontSize: 14.5,
-                  textDecoration: "none",
-                }}
+                className="hx-wa"
               >
-                <Share2 size={20} aria-hidden="true" /> Enviar al grupo de WhatsApp
+                <WhatsAppLogo size={22} color="#ffffff" /> Mandar al grupo de WhatsApp
               </a>
 
               <button
                 type="button"
-                className="btn btn-secondary"
-                style={{
-                  width: "100%",
-                  justifyContent: "center",
-                  minHeight: 44,
-                  fontSize: 13,
-                }}
+                className={`hx-btn2${copied ? " is-ok" : ""}`}
                 onClick={handleCopySummary}
               >
                 {copied ? (
-                  <><Check size={20} className="icono-marca" aria-hidden="true" /> Desglose copiado</>
+                  <><Check size={18} aria-hidden="true" /> Desglose copiado</>
                 ) : (
-                  <><Copy size={20} className="icono-marca" aria-hidden="true" /> Copiar texto del desglose</>
+                  <><Copy size={18} className="icono-marca" aria-hidden="true" /> Copiar texto del desglose</>
                 )}
               </button>
             </div>
 
-            <div className="split-alias-notice">
-              <span>Coordinación de pago:</span>{" "}
-              <span style={{ fontSize: 12.5, fontWeight: 500 }}>
-                Avisá por WhatsApp al <strong>299 597-4176</strong> para señar tu turno
-              </span>
-            </div>
-          </div>
+            <p className="hx-aviso">
+              Para señar el turno avisá por WhatsApp al <strong>299 597-4176</strong>.
+            </p>
+          </aside>
         </div>
       </div>
     </section>

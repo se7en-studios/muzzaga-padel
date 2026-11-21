@@ -413,6 +413,7 @@
 
 .tsu-step.is-ok::before {
   content: "✓";
+  font-size: 17px;
   border-color: #a9c41c;
   background: var(--tt-pelota-bg);
   color: var(--tt-navy);
@@ -524,6 +525,7 @@
   border-radius: 50%;
   background: var(--color-accent-orange);
   color: #ffffff;
+  font-size: 17px;
   font-weight: 800;
   line-height: 1;
 }
@@ -1136,6 +1138,17 @@
   .tsu-facts {
     grid-column: 1 / -1;
     margin-top: 0;
+  }
+
+  /* Sin torneo, el texto es largo: que use todo el ancho del afiche. */
+  .tt-pronto .tsu-info > .tsu-when {
+    grid-column: 1 / -1;
+  }
+
+  /* Con inscripción abierta la protagonista es la planilla: la llave se
+     guarda en el celu para que el formulario quede más arriba. */
+  .tsu-card:not(.tt-pronto) .tt-llave {
+    display: none;
   }
 
   .tsu-form,

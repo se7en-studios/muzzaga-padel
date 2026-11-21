@@ -5,8 +5,9 @@ import {
   buildTacticWhatsAppUrl,
   buildRopeWhatsAppUrl,
 } from "../lib/tacticalShare";
-import { Share2, Handshake } from "lucide-react";
-import ScrollRow from "./ScrollRow";
+import Image from "next/image";
+import { WhatsAppLogo } from "./BrandLogos";
+import { RotateCcw } from "lucide-react";
 
 const PRESET_TACTICS = [
   {
@@ -353,104 +354,165 @@ export default function TacticalCourtSimulator() {
           }
         : freePlayers;
 
-  return (
-    <section
-      id="pizarra-tactica"
-      className="section-turnos"
-    >
-      <div className="container">
-        {/* HEADER */}
-        <div className="section-header-row">
-          <div>
-            <span
-              className="badge-linear badge-indigo"
-              style={{ marginBottom: 8 }}
-            >
-              Simulador táctico · Muzzaga Pádel
-            </span>
-            <h2 className="section-title">Pizarra táctica interactiva</h2>
-            <p className="section-desc">
-              Analizá jugadas maestras, entendé la sincronización de pareja y
-              posicioná a tus jugadores sobre el césped y cristal de Muzzaga.
-            </p>
-          </div>
+  const FREE_PLAYER_BUTTONS = [
+    { id: "p1", name: "J1", sub: "Vos", color: "#E8722A" },
+    { id: "p2", name: "J2", sub: "Tu pareja", color: "#E8722A" },
+    { id: "r1", name: "R1", sub: "Rival de drive", color: "#38bdf8" },
+    { id: "r2", name: "R2", sub: "Rival de revés", color: "#38bdf8" },
+  ];
 
-          {/* SELECTOR DE MODOS */}
-          <div className="rating-mode-switch rating-mode-switch--triple">
-            <button
-              type="button"
-              className={`rating-tab-btn${boardMode === "presets" ? " active" : ""}`}
-              onClick={() => {
-                setBoardMode("presets");
-                replayAnimation();
-              }}
-            >
-              Jugadas pro
-            </button>
-            <button
-              type="button"
-              className={`rating-tab-btn${boardMode === "rope" ? " active" : ""}`}
-              onClick={() => setBoardMode("rope")}
-            >
-              Basculación
-            </button>
-            <button
-              type="button"
-              className={`rating-tab-btn${boardMode === "free" ? " active" : ""}`}
-              onClick={() => setBoardMode("free")}
-            >
-              Pizarra libre
-            </button>
+  return (
+    <section id="pizarra-tactica" className="hx-tool hx-tool--pizarra">
+      <div className="container">
+        <header className="hx-hero">
+          <span className="hx-hero-pelota" aria-hidden="true" />
+          <Image
+            src="/img/iconos/icono-pizarra.webp"
+            alt=""
+            width={124}
+            height={124}
+            priority
+            className="hx-hero-icono icono-3d"
+          />
+          <div className="hx-hero-cabeza">
+            <p className="hx-hero-kicker">Herramienta 03 · Estrategia</p>
+            <h1 className="hx-hero-titulo">Pizarra táctica</h1>
           </div>
+          <p className="hx-hero-desc">
+            Jugadas animadas paso a paso, cómo se mueve una pareja y una
+            pizarra libre para ubicar a los cuatro jugadores sobre el césped y
+            el cristal de Muzzaga.
+          </p>
+          <ul className="hx-hero-chips" aria-label="Características">
+            <li>{PRESET_TACTICS.length} jugadas pro</li>
+            <li>Teoría de la cuerda</li>
+            <li>Pizarra libre</li>
+          </ul>
+        </header>
+
+        {/* SELECTOR DE MODOS */}
+        <div className="hx-segmento" role="group" aria-label="Modo de la pizarra">
+          <button
+            type="button"
+            className={boardMode === "presets" ? "is-on" : ""}
+            aria-pressed={boardMode === "presets"}
+            onClick={() => {
+              setBoardMode("presets");
+              replayAnimation();
+            }}
+          >
+            Jugadas pro
+          </button>
+          <button
+            type="button"
+            className={boardMode === "rope" ? "is-on" : ""}
+            aria-pressed={boardMode === "rope"}
+            onClick={() => setBoardMode("rope")}
+          >
+            Basculación
+          </button>
+          <button
+            type="button"
+            className={boardMode === "free" ? "is-on" : ""}
+            aria-pressed={boardMode === "free"}
+            onClick={() => setBoardMode("free")}
+          >
+            Pizarra libre
+          </button>
         </div>
 
-        {/* LAYOUT GRID */}
-        <div className="tactical-board-grid">
-          {/* COLUMNA 1: CANCHA SVG */}
-          <div className="tactical-court-wrap">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                width: "100%",
-                alignItems: "center",
-                marginBottom: 12,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span className="live-dot" style={{ background: "#0F7B4F" }} />
-                <span
-                  style={{
-                    fontSize: 12,
-                    color: "#ffffff",
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  {boardMode === "presets"
-                    ? "Animación en vivo"
-                    : boardMode === "rope"
-                      ? "Sincronía de pareja"
-                      : "Modo libre"}
-                </span>
-              </div>
+        <div className="hx-pz-grid">
+          {/* CONTROLES: arriba de la cancha en el celu, para tocar y ver. */}
+          <div className="hx-pz-controles">
+            {boardMode === "presets" && (
+              <>
+                <h2 className="hx-pz-titulo">Elegí la jugada</h2>
+                <div className="hx-pz-botones">
+                  {PRESET_TACTICS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`hx-pz-btn${item.id === activeTacticId ? " is-on" : ""}`}
+                      aria-pressed={item.id === activeTacticId}
+                      onClick={() => {
+                        setActiveTacticId(item.id);
+                        replayAnimation();
+                      }}
+                    >
+                      <span className="hx-pz-btn-cat">{item.category}</span>
+                      {item.title}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {boardMode === "rope" && (
+              <>
+                <h2 className="hx-pz-titulo">Elegí el momento del punto</h2>
+                <div className="hx-pz-botones">
+                  {ROPE_THEORY_PHASES.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      className={`hx-pz-btn${r.id === activeRopeId ? " is-on" : ""}`}
+                      aria-pressed={r.id === activeRopeId}
+                      onClick={() => setActiveRopeId(r.id)}
+                    >
+                      {r.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {boardMode === "free" && (
+              <>
+                <h2 className="hx-pz-titulo">Elegí a quién mover y tocá la cancha</h2>
+                <div className="hx-pz-botones">
+                  {FREE_PLAYER_BUTTONS.map((btn) => (
+                    <button
+                      key={btn.id}
+                      type="button"
+                      className={`hx-pz-btn${selectedFreePlayer === btn.id ? " is-on" : ""}`}
+                      aria-pressed={selectedFreePlayer === btn.id}
+                      onClick={() => setSelectedFreePlayer(btn.id)}
+                    >
+                      <span className="hx-pz-btn-cat">{btn.sub}</span>
+                      <span>
+                        <span
+                          className="hx-pz-punto"
+                          style={{ background: btn.color }}
+                          aria-hidden="true"
+                        />
+                        {btn.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* CANCHA SVG */}
+          <div className="tactical-court-wrap hx-pz-cancha">
+            <div className="hx-pz-barra">
+              <span className="hx-pz-vivo">
+                {boardMode === "presets"
+                  ? "Animación en vivo"
+                  : boardMode === "rope"
+                    ? "Sincronía de pareja"
+                    : "Modo libre"}
+              </span>
 
               {boardMode === "presets" && (
-                <button
-                  type="button"
-                  onClick={replayAnimation}
-                  className="btn btn-secondary"
-                  style={{
-                    height: 28,
-                    padding: "2px 10px",
-                    fontSize: 11,
-                    background: "rgba(255,255,255,0.1)",
-                    color: "#ffffff",
-                    borderColor: "rgba(255,255,255,0.2)",
-                  }}
-                >
-                  Repetir tiro
+                <button type="button" onClick={replayAnimation} className="hx-pz-repetir">
+                  <RotateCcw size={16} aria-hidden="true" /> Repetir tiro
+                </button>
+              )}
+              {boardMode === "free" && (
+                <button type="button" onClick={resetFreeCourt} className="hx-pz-repetir">
+                  <RotateCcw size={16} aria-hidden="true" /> Reiniciar
                 </button>
               )}
             </div>
@@ -870,443 +932,113 @@ export default function TacticalCourtSimulator() {
             </div>
           </div>
 
-          {/* COLUMNA 2: CONTROLES & DETALLES TÁCTICOS */}
-          <div className="tactical-info-card">
-            {/* MODO 1: JUGADAS PRO */}
+          {/* EXPLICACIÓN */}
+          <div className="tactical-info-card hx-pz-info">
             {boardMode === "presets" && (
               <>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 12,
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: 13,
-                      color: "var(--color-muted)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      margin: 0,
-                    }}
-                  >
-                    Elegí la jugada táctica:
-                  </h3>
-                  <span className="badge-linear badge-amber">
-                    {tactic.category}
-                  </span>
+                <div>
+                  <p className="hx-pz-kicker">{tactic.badge}</p>
+                  <h3 className="hx-pz-info-titulo">{tactic.title}</h3>
                 </div>
+                <ul className="hx-pz-datos" aria-label="Datos de la jugada">
+                  <li>{tactic.category}</li>
+                  <li>Dificultad {tactic.difficulty}</li>
+                  <li>Efectividad {tactic.effectiveness}</li>
+                </ul>
+                <p className="hx-pz-texto">{tactic.desc}</p>
 
-                {/* SELECTOR DE JUGADAS */}
-                <ScrollRow
-                  axis="y"
-                  className="tactic-buttons-list"
-                  style={{ maxHeight: 320, paddingRight: 4 }}
-                >
-                  {PRESET_TACTICS.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={`tactic-select-btn${item.id === activeTacticId ? " active" : ""}`}
-                      onClick={() => {
-                        setActiveTacticId(item.id);
-                        replayAnimation();
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <strong style={{ fontSize: 13.5 }}>{item.title}</strong>
-                        <span
-                          className={`badge-linear ${item.badgeColor}`}
-                          style={{ fontSize: 10 }}
-                        >
-                          {item.category}
-                        </span>
+                <ol className="hx-pz-fases" aria-label="Secuencia del golpe, paso a paso">
+                  {tactic.phases.map((ph, idx) => (
+                    <li key={idx} className="hx-pz-fase">
+                      <span className="hx-paso-num" aria-hidden="true">{idx + 1}</span>
+                      <div>
+                        <strong>{ph.phase.replace(/^\d+\.\s*/, "")}</strong>
+                        <span>{ph.desc}</span>
                       </div>
-                    </button>
+                    </li>
                   ))}
-                </ScrollRow>
+                </ol>
 
-                {/* DETALLE Y SPECS */}
-                <div className="tactic-detail-box">
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: 8,
-                    }}
-                  >
-                    <h4
-                      style={{
-                        fontSize: 17,
-                        color: "var(--color-ink)",
-                        margin: 0,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {tactic.title}
-                    </h4>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <span
-                        className="badge-linear badge-amber"
-                      >
-                        {tactic.category}
-                      </span>
-                    </div>
-                  </div>
+                <p className="hx-pz-tip">
+                  <strong>Consejo de los profes</strong>
+                  {tactic.tip}
+                </p>
 
-                  <p
-                    style={{
-                      fontSize: 13.5,
-                      color: "var(--color-body)",
-                      lineHeight: 1.55,
-                      margin: "6px 0 12px",
-                    }}
-                  >
-                    {tactic.desc}
-                  </p>
-
-                  {/* FASES DE EJECUCIÓN */}
-                  <div
-                    style={{
-                      background: "var(--color-surface-card)",
-                      border: "1px solid var(--color-hairline)",
-                      borderRadius: "var(--radius-md)",
-                      padding: "10px 12px",
-                      marginBottom: 12,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 11,
-                        textTransform: "uppercase",
-                        fontWeight: 700,
-                        color: "var(--color-muted)",
-                        display: "block",
-                        marginBottom: 6,
-                      }}
-                    >
-                      Secuencia del golpe, paso a paso:
-                    </span>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: 8,
-                      }}
-                    >
-                      {tactic.phases.map((ph, idx) => (
-                        <div key={idx} style={{ fontSize: 12 }}>
-                          <strong
-                            style={{
-                              color: "var(--color-ink)",
-                              display: "block",
-                            }}
-                          >
-                            {ph.phase}
-                          </strong>
-                          <span
-                            style={{
-                              color: "var(--color-muted)",
-                              fontSize: 11.5,
-                            }}
-                          >
-                            {ph.desc}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pro-tip-box">
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        color: "var(--color-accent-orange-text)",
-                        fontWeight: 600,
-                        fontSize: 12.5,
-                        marginBottom: 2,
-                      }}
-                    >
-                      <span>Consejo de los profes:</span>
-                    </div>
-                    <p
-                      style={{
-                        fontSize: 12.5,
-                        color: "var(--color-ink)",
-                        margin: 0,
-                        lineHeight: 1.45,
-                      }}
-                    >
-                      {tactic.tip}
-                    </p>
-                  </div>
-
-                  <a
-                    href={buildTacticWhatsAppUrl(tactic)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-secondary"
-                    style={{
-                      width: "100%",
-                      marginTop: 12,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      fontSize: 13,
-                      padding: "10px 14px",
-                      borderColor: "#1fa855",
-                      color: "#ffffff",
-                      background: "#1fa855",
-                      fontWeight: 600,
-                      textDecoration: "none",
-                    }}
-                    title="Enviar esta jugada táctica a tu compañero por WhatsApp"
-                  >
-                    <Share2 size={20} aria-hidden="true" />
-                    <span>Compartir jugada con mi pareja</span>
-                  </a>
-                </div>
+                <a
+                  href={buildTacticWhatsAppUrl(tactic)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hx-wa"
+                  title="Enviar esta jugada táctica a tu compañero por WhatsApp"
+                >
+                  <WhatsAppLogo size={22} color="#ffffff" />
+                  <span>Mandar jugada a mi pareja</span>
+                </a>
               </>
             )}
 
-            {/* MODO 2: BASCULACIÓN & TEORÍA DE LA CUERDA */}
             {boardMode === "rope" && (
               <>
-                <div style={{ marginBottom: 14 }}>
-                  <span
-                    className="badge-linear badge-emerald"
-                    style={{ marginBottom: 6 }}
-                  >
-                    Sincronización táctica de pareja
-                  </span>
-                  <h4
-                    style={{
-                      fontSize: 18,
-                      color: "var(--color-ink)",
-                      margin: "4px 0 6px",
-                    }}
-                  >
-                    La teoría de la cuerda en pádel
-                  </h4>
-                  <p
-                    style={{
-                      fontSize: 13.5,
-                      color: "var(--color-body)",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    En el pádel moderno, una pareja exitosa se mueve unida por
-                    una cuerda imaginaria de 3 metros. Si tu compañero bascula
-                    al centro o retrocede, vos debés acompañar para no dejar
-                    huecos libres.
-                  </p>
+                <div>
+                  <p className="hx-pz-kicker">Sincronización de pareja</p>
+                  <h3 className="hx-pz-info-titulo">{rope.name}</h3>
                 </div>
+                <p className="hx-pz-texto">{rope.desc}</p>
+                <p className="hx-pz-texto">
+                  En el pádel moderno, una pareja exitosa se mueve unida por
+                  una cuerda imaginaria de 3 metros. Si tu compañero bascula al
+                  centro o retrocede, vos debés acompañar para no dejar huecos
+                  libres.
+                </p>
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                    marginBottom: 16,
-                  }}
-                >
-                  {ROPE_THEORY_PHASES.map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      className={`tactic-select-btn${r.id === activeRopeId ? " active" : ""}`}
-                      onClick={() => setActiveRopeId(r.id)}
-                    >
-                      <strong
-                        style={{
-                          fontSize: 14,
-                          display: "block",
-                          marginBottom: 2,
-                        }}
-                      >
-                        {r.name}
-                      </strong>
-                      <span
-                        style={{ fontSize: 12.5, color: "var(--color-muted)" }}
-                      >
-                        {r.desc}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-
-                <div
-                  className="pro-tip-box"
-                  style={{ background: "rgba(22, 163, 74, 0.12)", borderColor: "#16a34a" }}
-                >
-                  <strong
-                    style={{
-                      color: "#16a34a",
-                      fontSize: 13,
-                      display: "block",
-                      marginBottom: 4,
-                    }}
-                  >
-                    Regla de oro del doble:
-                  </strong>
-                  <span style={{ fontSize: 12.5, color: "var(--color-ink)" }}>
-                    "Nunca te quedes mirando el golpe de tu compañero: ajustá tu
-                    posición en cada tiro para cerrar la volea al centro o
-                    cubrir la pared descubierta."
-                  </span>
-                </div>
+                <p className="hx-pz-tip hx-pz-tip--verde">
+                  <strong>Regla de oro del doble</strong>
+                  &quot;Nunca te quedes mirando el golpe de tu compañero: ajustá
+                  tu posición en cada tiro para cerrar la volea al centro o
+                  cubrir la pared descubierta.&quot;
+                </p>
 
                 <a
                   href={buildRopeWhatsAppUrl(rope)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn btn-secondary"
-                  style={{
-                    width: "100%",
-                    marginTop: 12,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    fontSize: 13,
-                    padding: "10px 14px",
-                    borderColor: "#1fa855",
-                    color: "#ffffff",
-                    background: "#1fa855",
-                    fontWeight: 600,
-                    textDecoration: "none",
-                  }}
+                  className="hx-wa"
                   title="Enviar este movimiento táctico de pareja a tu compañero por WhatsApp"
                 >
-                  <Handshake size={20} aria-hidden="true" />
-                  <span>Compartir sincronización con mi pareja</span>
+                  <WhatsAppLogo size={22} color="#ffffff" />
+                  <span>Mandar movimiento a mi pareja</span>
                 </a>
               </>
             )}
 
-            {/* MODO 3: PIZARRA LIBRE */}
             {boardMode === "free" && (
               <>
-                <div style={{ marginBottom: 14 }}>
-                  <span
-                    className="badge-linear badge-amber"
-                    style={{ marginBottom: 6 }}
-                  >
-                    Entrenador táctico interactivo
-                  </span>
-                  <h4
-                    style={{
-                      fontSize: 18,
-                      color: "var(--color-ink)",
-                      margin: "4px 0 6px",
-                    }}
-                  >
-                    Diseñá tu propia estrategia
-                  </h4>
-                  <p
-                    style={{
-                      fontSize: 13.5,
-                      color: "var(--color-body)",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    Seleccioná qué jugador querés mover y hacé clic en cualquier
-                    punto de la cancha para ubicarlo tácticamente.
-                  </p>
+                <div>
+                  <p className="hx-pz-kicker">Entrenador táctico</p>
+                  <h3 className="hx-pz-info-titulo">Diseñá tu propia estrategia</h3>
                 </div>
-
-                {/* SELECTOR DE JUGADOR A MOVER */}
-                <div style={{ marginBottom: 16 }}>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "var(--color-muted)",
-                      textTransform: "uppercase",
-                      display: "block",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Seleccioná el jugador a mover:
-                  </label>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(2, 1fr)",
-                      gap: 8,
-                    }}
-                  >
-                    {[
-                      { id: "p1", name: "J1 (tu jugador)", color: "#E8722A" },
-                      { id: "p2", name: "J2 (tu pareja)", color: "#E8722A" },
-                      { id: "r1", name: "R1 (rival de drive)", color: "#38bdf8" },
-                      { id: "r2", name: "R2 (rival de revés)", color: "#38bdf8" },
-                    ].map((btn) => (
-                      <button
-                        key={btn.id}
-                        type="button"
-                        className={`quiz-opt-btn${selectedFreePlayer === btn.id ? " selected" : ""}`}
-                        onClick={() => setSelectedFreePlayer(btn.id)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          justifyContent: "center",
-                          padding: "10px",
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: "50%",
-                            background: btn.color,
-                          }}
-                        />
-                        <strong>{btn.name}</strong>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={resetFreeCourt}
-                    style={{ flex: 1, justifyContent: "center" }}
-                  >
-                    Reiniciar posiciones
-                  </button>
-                </div>
+                <p className="hx-pz-texto">
+                  Elegí qué jugador querés mover y tocá cualquier punto de la
+                  cancha para ubicarlo. Probá dónde parar a tu pareja cuando
+                  suben a la red o cuando defienden de fondo.
+                </p>
+                <button type="button" className="hx-btn2" onClick={resetFreeCourt}>
+                  <RotateCcw size={18} className="icono-marca" aria-hidden="true" /> Reiniciar posiciones
+                </button>
               </>
             )}
 
             {/* LINK CONSULTA ENTRENAMIENTO */}
-            <div style={{ marginTop: 20, textAlign: "center" }}>
-              <a
-                href={`https://wa.me/5492995974176?text=${encodeURIComponent(
-                  `¡Hola Muzzaga! Estuve usando la Pizarra Táctica en la web y me gustaría consultar por clases y clínicas de entrenamiento táctico (${tactic.title}).`,
-                )}`}
-                target="_blank"
-                rel="noopener"
-                className="tactical-clases-link whatsapp-text"
-              >
-                Consultar por clases por WhatsApp →
-              </a>
-            </div>
+            <a
+              href={`https://wa.me/5492995974176?text=${encodeURIComponent(
+                `¡Hola Muzzaga! Estuve usando la Pizarra Táctica en la web y me gustaría consultar por clases y clínicas de entrenamiento táctico (${tactic.title}).`,
+              )}`}
+              target="_blank"
+              rel="noopener"
+              className="tactical-clases-link whatsapp-text hx-pz-clases"
+            >
+              Consultar por clases por WhatsApp →
+            </a>
           </div>
         </div>
       </div>

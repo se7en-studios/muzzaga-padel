@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import "../herramientas.css";
 import PageCrumbs from "../../../components/PageCrumbs";
 import SiteHeader from "../../../components/SiteHeader";
@@ -23,82 +24,86 @@ export default function NivelPage() {
       <main className="page-main">
         <PageCrumbs items={[{ label: "Herramientas", href: "/#herramientas" }, { label: "Test de nivel" }]} />
 
-        <section className="section-turnos" style={{ paddingTop: 10 }}>
+        <section className="hx-tool hx-tool--nivel">
           <div className="container">
-            <div className="section-header-row">
+            <header className="hx-hero">
+              <span className="hx-hero-pelota" aria-hidden="true" />
+              <Image
+                src="/img/iconos/icono-nivel-v2.webp"
+                alt=""
+                width={124}
+                height={124}
+                priority
+                className="hx-hero-icono icono-3d"
+              />
+              <div className="hx-hero-cabeza">
+                <p className="hx-hero-kicker">Herramienta 02 · Competencia</p>
+                <h1 className="hx-hero-titulo">Test de nivel</h1>
+              </div>
+              <p className="hx-hero-desc">
+                6 situaciones de partido y te decimos tu categoría del pádel
+                argentino (8va a 1era) y tu nivel en la escala internacional
+                (1.0 a 7.0), para jugar siempre de igual a igual.
+              </p>
+              <ul className="hx-hero-chips" aria-label="Características">
+                <li>1 minuto</li>
+                <li>8va → 1era</li>
+                <li>Ficha para compartir</li>
+              </ul>
+            </header>
+
+            <div className="hx-nv-grid">
+              <RatingCalculator />
+
               <div>
-                <span className="badge-linear badge-indigo" style={{ marginBottom: 8 }}>
-                  Evaluación deportiva
-                </span>
-                <h1 className="section-title">Calculá tu nivel de juego</h1>
-                <p className="section-desc">
-                  Mapeamos la escala internacional de nivel (1.0 a 7.0) con las
-                  categorías del pádel argentino (8va a 1ra) para que siempre
-                  compitas de igual a igual.
+                <h2 className="hx-escalera-titulo">Categorías en Argentina</h2>
+                <p className="hx-escalera-desc">
+                  De 8va (debut) a 1era (élite). Tocá una para ver qué se juega en ese nivel.
                 </p>
-              </div>
-              <div className="mascot-section-badge">
-                <Mascota
-                  pose="pelota-padel-life"
-                  alt="Muzzaguito sosteniendo pelota de pádel"
-                  className="mascot-section-img"
-                />
-              </div>
-            </div>
 
-            <div className="rating-grid-layout" style={{ marginTop: 24 }}>
-              <div>
-                <h2 style={{ fontSize: 18, color: "var(--color-ink)", marginBottom: 14 }}>
-                  Categorías en Argentina
-                </h2>
-
-                {PADEL_LEVELS.map((lvl) => (
-                  <div className="rating-category-card" key={lvl.id}>
-                    <div>
-                      <strong
-                        style={{
-                          color: "var(--text-primary)",
-                          display: "block",
-                          fontSize: 15,
-                        }}
-                      >
-                        {lvl.name} · {lvl.tag}
-                      </strong>
-                      <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                        {lvl.desc}
-                      </span>
-                    </div>
-                    <span className={`badge-linear ${lvl.badge}`}>{lvl.ratingRange}</span>
-                  </div>
-                ))}
-
-                <div
-                  style={{
-                    marginTop: 24,
-                    padding: "16px 20px",
-                    background: "var(--color-canvas-soft)",
-                    border: "1px solid var(--color-hairline-strong)",
-                    borderRadius: "var(--radius-lg)",
-                  }}
-                >
-                  <h3 style={{ fontSize: 14, color: "var(--color-ink)", margin: "0 0 6px" }}>
-                    ¿Querés jugar en tu nivel?
-                  </h3>
-                  <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: "0 0 12px" }}>
-                    Reservá un turno y armá tu partido con jugadores de tu categoría.
-                  </p>
-                  <Link href="/#turnos" className="btn btn-secondary" style={{ fontSize: 13, padding: "6px 14px" }}>
-                    Reservar turno →
-                  </Link>
-                </div>
-              </div>
-
-              <div>
-                <RatingCalculator />
+                <ol className="hx-escalera">
+                  {PADEL_LEVELS.map((lvl, i) => (
+                    <li key={lvl.id}>
+                      <details className="hx-cat">
+                        <summary>
+                          <span className="hx-cat-num" style={{ "--i": i }}>
+                            {lvl.shortName}
+                          </span>
+                          <span className="hx-cat-txt">
+                            <strong>{lvl.tag}</strong>
+                            {lvl.name}
+                          </span>
+                          <span className="hx-cat-rango">{lvl.ratingRange}</span>
+                          <span className="hx-cat-flecha" aria-hidden="true" />
+                        </summary>
+                        <p>{lvl.desc}</p>
+                      </details>
+                    </li>
+                  ))}
+                </ol>
               </div>
             </div>
           </div>
         </section>
+
+        <aside className="hx-cierre" aria-label="Reservar turno">
+          <span className="hx-cierre-pelota" aria-hidden="true" />
+          <Mascota
+            pose="pelota-padel-life"
+            size="s"
+            alt=""
+            className="hx-cierre-masc"
+          />
+          <div className="hx-cierre-texto">
+            <h2 className="hx-cierre-titulo">Jugá en tu nivel</h2>
+            <p className="hx-cierre-desc">
+              Reservá un turno y armá tu partido con jugadores de tu categoría.
+            </p>
+          </div>
+          <Link href="/#turnos" className="hx-cierre-btn">
+            Reservar turno →
+          </Link>
+        </aside>
       </main>
       <SiteFooter />
       <BottomNav />

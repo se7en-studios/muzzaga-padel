@@ -9,6 +9,9 @@
    ========================================================================== */
 .hx-tool,
 .hx-cierre {
+  /* landing.css (donde vive --font-display) no se carga en las subpáginas:
+     sin esto los titulares caían en Poppins. */
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
   --hx-cancha: #2350d6;
   --hx-cancha-borde: #16349a;
   --hx-noche: #0b1a4d;
@@ -184,7 +187,7 @@
   }
 
   .hx-hero-cabeza {
-    padding-right: 34px;
+    padding-right: 0;
   }
 
   .hx-hero-kicker {
@@ -206,8 +209,11 @@
     font-size: 14.5px;
   }
 
+  /* En el celu la pelota baja a la esquina de abajo: arriba pisaba el
+     rótulo y el título. */
   .hx-hero-pelota {
-    top: -40px;
+    top: auto;
+    bottom: -44px;
     right: -40px;
     width: 96px;
     height: 96px;
@@ -469,6 +475,14 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+/* De a dos en el celu: menos relleno para que "Partidos parejos" entre en
+   un renglón. */
+.hx-acciones-2 .hx-btn2 {
+  gap: 6px;
+  padding: 8px;
+  font-size: 13.5px;
 }
 
 /* Campo de texto grande (alias, nombre, jugadores). 16 px para que el
@@ -892,6 +906,10 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .hx-dv-mini-monto {
+    white-space: nowrap;
+  }
+
   .hx-dv-mini-monto small {
     margin-left: 6px;
     font-family: var(--font-jetbrains-mono), monospace;
@@ -910,6 +928,7 @@
     background: rgba(255, 255, 255, 0.12);
     font-size: 13px;
     font-weight: 600;
+    white-space: nowrap;
   }
 }
 
@@ -1447,7 +1466,8 @@
   color: var(--color-ink);
 }
 
-.hx-cat:nth-child(n + 4) .hx-cat-num {
+/* Desde 4ta la placa ya es bastante azul: número en blanco. */
+.hx-escalera li:nth-child(n + 5) .hx-cat-num {
   color: #fff;
 }
 
@@ -2084,7 +2104,8 @@
   color: var(--color-ink);
 }
 
-.hx-pz-fase span {
+/* Solo el texto: la pelota del número también es un span. */
+.hx-pz-fase div > span {
   display: block;
   margin-top: 2px;
   font-size: 13px;
@@ -2255,12 +2276,12 @@
   }
 
   .hx-cierre-masc {
-    width: 84px;
+    width: 72px;
   }
 
   .hx-cierre-texto {
-    flex-basis: calc(100% - 100px);
-    padding-right: 30px;
+    flex-basis: calc(100% - 86px);
+    padding-right: 18px;
   }
 
   .hx-cierre-titulo {
@@ -2273,8 +2294,8 @@
   }
 
   .hx-cierre-pelota {
-    top: -44px;
-    right: -44px;
+    top: -54px;
+    right: -54px;
     width: 96px;
     height: 96px;
   }

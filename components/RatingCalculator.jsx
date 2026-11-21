@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Mascota from "./Mascota";
-import { getCategoryForRating } from "../data/levels";
+import { PADEL_LEVELS, getCategoryForRating } from "../data/levels";
+import { WhatsAppLogo } from "./BrandLogos";
 import {
   buildLevelShareMessage,
   buildLevelWhatsAppUrl,
@@ -12,13 +13,13 @@ import {
   Clock,
   BrickWall,
   Zap,
-  Share2,
   Trophy,
   MessageCircle,
   Activity,
   Users,
   Medal,
   RotateCcw,
+  ArrowLeft,
 } from "lucide-react";
 
 // 6 preguntas de 0 a 2 cubren toda la escala 1.0-7.0 (8va a 1era):
@@ -120,6 +121,9 @@ export default function RatingCalculator() {
   const [step, setStep] = useState(0); // índice de la pregunta actual; === QUESTIONS.length cuando terminó
   const [justFinished, setJustFinished] = useState(false);
   const [raw, setRaw] = useState(34);
+  // Qué preguntas ya respondió la persona: sin esto, la opción del medio
+  // (el valor de arranque) aparecía marcada en cada pregunta nueva.
+  const [answered, setAnswered] = useState({});
 
   const advanceTimer = useRef(null);
   const confettiTimer = useRef(null);
@@ -134,6 +138,7 @@ export default function RatingCalculator() {
   const quizDone = step >= QUESTIONS.length;
 
   function handleAnswer(key, val) {
+    setAnswered((prev) => ({ ...prev, [key]: true }));
     setQuizAnswers((prev) => ({ ...prev, [key]: val }));
     clearTimeout(advanceTimer.current);
     advanceTimer.current = setTimeout(() => {
@@ -162,6 +167,7 @@ export default function RatingCalculator() {
     clearTimeout(confettiTimer.current);
     setJustFinished(false);
     setQuizAnswers(DEFAULT_ANSWERS);
+    setAnswered({});
     setStep(0);
   }
 
@@ -204,356 +210,254 @@ export default function RatingCalculator() {
     `¡Hola Muzzaga! Hice el test de nivel en la web y me dio ${computedRating} (${category.name}). Quiero sumarme a los partidos abiertos y torneos.`,
   )}`;
 
+
   const showResult = mode === "slider" || quizDone;
   const currentQuestion = QUESTIONS[step];
+  // Dónde cae la pelota en la escala 1.0 → 7.0.
+  const scalePct = ((Number(computedRating) - 1) / 6) * 100;
+
+  const skillRows = [
+    { icon: Clock, label: "Experiencia", value: skills.experience },
+    { icon: BrickWall, label: "Rebote en el cristal", value: skills.wallPlay },
+    { icon: Zap, label: "Red y remate", value: skills.netPlay },
+    { icon: Activity, label: "Saque y desplazamiento", value: skills.serve },
+    { icon: Users, label: "Posicionamiento en pareja", value: skills.position },
+    { icon: Medal, label: "Experiencia competitiva", value: skills.tactic },
+  ];
 
   return (
-    <div className="rating-box">
-      <div className="rating-mode-switch">
+    <div className="hx-card hx-nv">
+      <div className="hx-segmento" role="group" aria-label="Modo del test">
         <button
           type="button"
-          className={`rating-tab-btn${mode === "quiz" ? " active" : ""}`}
+          className={mode === "quiz" ? "is-on" : ""}
+          aria-pressed={mode === "quiz"}
           onClick={() => setMode("quiz")}
         >
-          {/* Un solo span: como hijos sueltos del botón (flex), el espacio antes
+          {/* Un solo span: como hijos sueltos del botón, el espacio antes
               de "(6 preguntas)" se perdía. */}
           <span>
-            Test guiado<span className="rating-tab-extra"> (6 preguntas)</span>
+            Test guiado<span className="hx-segmento-extra"> · 6 preguntas</span>
           </span>
         </button>
         <button
           type="button"
-          className={`rating-tab-btn${mode === "slider" ? " active" : ""}`}
+          className={mode === "slider" ? "is-on" : ""}
+          aria-pressed={mode === "slider"}
           onClick={() => setMode("slider")}
         >
           Ajuste manual
         </button>
       </div>
 
-      {mode === "quiz" ? (
-        quizDone ? (
-          <p className="quiz-done-label">
-            🎉 ¡Test completado! Mirá tu resultado abajo.
-          </p>
-        ) : (
-          <div>
-            <div className="quiz-progress-label">
-              <span>
-                Pregunta {step + 1} de {QUESTIONS.length}
-              </span>
-              <span aria-hidden="true">{currentQuestion.emoji}</span>
-            </div>
-            <div className="quiz-progress-track">
-              <div
-                className="quiz-progress-fill"
-                style={{ width: `${(step / QUESTIONS.length) * 100}%` }}
-              />
-            </div>
+      {mode === "quiz" && !quizDone && (
+        <div>
+          <div className="hx-nv-progreso">
+            <span className="hx-nv-progreso-txt">
+              Pregunta <b>{step + 1}</b> de {QUESTIONS.length}
+            </span>
+            <ol className="hx-nv-pelotas" aria-hidden="true">
+              {QUESTIONS.map((q, i) => (
+                <li
+                  key={q.key}
+                  className={i < step ? "is-hecha" : i === step ? "is-actual" : ""}
+                />
+              ))}
+            </ol>
+          </div>
 
-            <div className="quiz-step" key={step}>
-              <label className="quiz-label">
-                {currentQuestion.emoji} {step + 1}. {currentQuestion.question}
-              </label>
-              <div className="quiz-options-grid">
-                {currentQuestion.options.map((opt) => (
+          <div className="hx-nv-paso" key={step}>
+            <span className="hx-nv-emoji" aria-hidden="true">
+              {currentQuestion.emoji}
+            </span>
+            <h2 className="hx-nv-pregunta" id={`pregunta-${currentQuestion.key}`}>
+              {currentQuestion.question}
+            </h2>
+            <div
+              className="hx-nv-opciones"
+              role="group"
+              aria-labelledby={`pregunta-${currentQuestion.key}`}
+            >
+              {currentQuestion.options.map((opt) => {
+                const on =
+                  answered[currentQuestion.key] &&
+                  quizAnswers[currentQuestion.key] === opt.val;
+                return (
                   <button
                     key={opt.val}
                     type="button"
-                    className={`quiz-opt-btn${quizAnswers[currentQuestion.key] === opt.val ? " selected" : ""}`}
+                    className={`hx-nv-opcion${on ? " is-on" : ""}`}
+                    aria-pressed={Boolean(on)}
                     onClick={() => handleAnswer(currentQuestion.key, opt.val)}
                   >
-                    <span className="quiz-opt-emoji" aria-hidden="true">
+                    <span className="hx-nv-opcion-emoji" aria-hidden="true">
                       {opt.emoji}
                     </span>
-                    {opt.label}
+                    <span>{opt.label}</span>
+                    <span className="hx-nv-opcion-check" aria-hidden="true" />
                   </button>
-                ))}
-              </div>
-              {step > 0 && (
-                <button
-                  type="button"
-                  className="quiz-back-btn"
-                  onClick={handleBack}
-                >
-                  ← Volver a la pregunta anterior
-                </button>
-              )}
+                );
+              })}
             </div>
+            {step > 0 && (
+              <button type="button" className="hx-nv-volver" onClick={handleBack}>
+                <ArrowLeft size={16} aria-hidden="true" /> Pregunta anterior
+              </button>
+            )}
           </div>
-        )
-      ) : (
-        <div style={{ marginBottom: 20 }}>
-          <label
-            style={{
-              fontSize: 13,
-              color: "var(--text-secondary)",
-              display: "block",
-              marginBottom: 8,
-              fontWeight: 500,
-            }}
-          >
-            Ajustá con la barra deslizante tu nivel estimado:
+        </div>
+      )}
+
+      {mode === "slider" && (
+        <div className="hx-nv-slider">
+          <label className="hx-etiqueta" htmlFor="nivel-manual">
+            Mové la pelota hasta tu nivel estimado:
           </label>
           <input
+            id="nivel-manual"
             type="range"
             min="10"
             max="70"
             step="1"
             value={raw}
             onChange={(e) => setRaw(Number(e.target.value))}
-            aria-label="Nivel de juego estimado"
+            aria-valuetext={`${computedRating}, ${category.name}`}
           />
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 11,
-              color: "var(--text-muted)",
-              marginTop: 4,
-            }}
-          >
-            <span>1.0 (8va)</span>
-            <span>3.5 (5ta)</span>
-            <span>7.0 (1era)</span>
+          <div className="hx-nv-slider-marcas" aria-hidden="true">
+            <span>1.0 · 8va</span>
+            <span>3.5 · 5ta</span>
+            <span>7.0 · 1era</span>
           </div>
         </div>
       )}
 
-      {/* CARNET DIGITAL OFICIAL DEL JUGADOR: recién se revela cuando el test
-          termina (ajuste manual la muestra siempre, al ser instantánea). */}
+      {/* FICHA DEL JUGADOR: recién aparece cuando el test termina (el ajuste
+          manual la muestra siempre, al ser instantáneo). */}
       {showResult && (
-        <div
-          key={category.id}
-          className="rating-reveal"
-          style={{
-            background: "linear-gradient(135deg, var(--color-surface-card), var(--color-canvas-soft))",
-            border: "1.5px solid var(--color-hairline-strong, #e2e8f0)",
-            borderRadius: "var(--radius-lg, 14px)",
-            padding: "16px 18px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-            margin: "18px 0 16px",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 4,
-              background: "linear-gradient(90deg, #ff7a1a, #ff3300)",
-            }}
-          />
+        <div className="hx-ficha" key={category.id} aria-live="polite">
+          <div className="hx-ficha-cancha">
+            {justFinished && (
+              <div className="confetti-layer" aria-hidden="true">
+                {CONFETTI_PIECES.map((p, i) => (
+                  <span
+                    key={i}
+                    className="confetti-piece"
+                    style={{ left: p.left, animationDelay: p.delay }}
+                  >
+                    {p.emoji}
+                  </span>
+                ))}
+              </div>
+            )}
 
-          {justFinished && (
-            <div className="confetti-layer" aria-hidden="true">
-              {CONFETTI_PIECES.map((p, i) => (
-                <span
-                  key={i}
-                  className="confetti-piece"
-                  style={{ left: p.left, animationDelay: p.delay }}
-                >
-                  {p.emoji}
-                </span>
-              ))}
-            </div>
-          )}
+            <p className="hx-ficha-kicker">
+              <span>Ficha de jugador</span>
+              <span>{playerName.trim() || "Muzzaga Pádel"}</span>
+            </p>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 12,
-            }}
-          >
             <div>
-              <span
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 800,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  color: "var(--color-accent-orange-text)",
-                  display: "block",
-                }}
-              >
-                Ficha de jugador
-              </span>
-              <strong style={{ fontSize: 15, color: "var(--color-ink)" }}>
-                Muzzaga Pádel Club
+              <strong className="hx-ficha-cat">
+                {category.shortName}
+                <small>{category.tag}</small>
               </strong>
+              <span className="hx-ficha-rating">
+                <b>{computedRating}</b> / 7.0
+              </span>
             </div>
 
             <Mascota
               pose={category.mascotPose}
               size="s"
               alt={`Muzzaguito festejando categoría ${category.name}`}
-              className="mascot-card"
+              className="hx-ficha-masc"
             />
           </div>
 
-          {/* Input opcional de nombre para personalizar */}
-          <div style={{ marginBottom: 12 }}>
-            <input
-              type="text"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="Escribí tu nombre (ej. Lucas)"
-              style={{
-                width: "100%",
-                height: 34,
-                fontSize: 12.5,
-                padding: "4px 10px",
-                borderRadius: 6,
-                border: "1px solid var(--color-hairline-strong)",
-                background: "var(--color-canvas)",
-                color: "var(--color-ink)",
-                boxSizing: "border-box",
-              }}
-            />
+          <div className="hx-escala" aria-hidden="true">
+            <div className="hx-escala-pista">
+              {PADEL_LEVELS.map((lvl, i) => (
+                <span
+                  key={lvl.id}
+                  className={`hx-escala-seg${lvl.id === category.id ? " is-on" : ""}`}
+                  style={{
+                    flexGrow: lvl.maxRating - lvl.minRating + 0.1,
+                    "--i": i,
+                  }}
+                />
+              ))}
+              <span className="hx-escala-marca" style={{ left: `${scalePct}%` }} />
+            </div>
+            <div className="hx-escala-nombres">
+              <span>8va · 1.0</span>
+              <span>{category.ratingRange}</span>
+              <span>1era · 7.0</span>
+            </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              justifyContent: "space-between",
-              gap: 12,
-              background: "rgba(255, 122, 26, 0.06)",
-              border: "1px solid rgba(255, 122, 26, 0.2)",
-              borderRadius: 8,
-              padding: "10px 14px",
-              marginBottom: 14,
-            }}
-          >
+          <div className="hx-ficha-cuerpo">
             <div>
-              <div style={{ fontSize: 11, color: "var(--color-muted)", textTransform: "uppercase", fontWeight: 700 }}>
-                Categoría Argentina
-              </div>
-              <strong style={{ fontSize: 18, color: "var(--color-ink)" }}>
-                {category.emoji} {category.name}
-              </strong>
-              <span style={{ fontSize: 12, color: "var(--color-muted)", display: "block" }}>
-                {category.tag} · {category.ratingRange}
-              </span>
+              <label className="hx-etiqueta" htmlFor="nivel-nombre">
+                Tu nombre para la ficha (opcional)
+              </label>
+              <input
+                id="nivel-nombre"
+                type="text"
+                className="hx-campo"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                placeholder="Ej. Lucas"
+                autoComplete="given-name"
+              />
             </div>
 
-            <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-              <div style={{ fontSize: 10, color: "var(--color-muted)", textTransform: "uppercase", fontWeight: 700 }}>
-                Rating Int.
-              </div>
-              <strong style={{ fontSize: 22, color: "var(--color-accent-orange)", fontWeight: 800 }}>
-                {computedRating}
-              </strong>
-              <span style={{ fontSize: 11, color: "var(--color-muted)" }}>/7.0</span>
-            </div>
-          </div>
+            <ul className="hx-skills" aria-label="Diagnóstico de habilidades">
+              {skillRows.map(({ icon: Icon, label, value }) => (
+                <li className="hx-skill" key={label}>
+                  <span className="hx-skill-ico">
+                    <Icon className="icono-marca" aria-hidden="true" />
+                  </span>
+                  <span className="hx-skill-txt">
+                    {label}
+                    <strong>{value}</strong>
+                  </span>
+                </li>
+              ))}
+            </ul>
 
-          {/* Diagnóstico de Habilidades */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gap: 6,
-              fontSize: 12,
-              marginBottom: 14,
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, borderBottom: "1px dashed var(--color-hairline, #e2e8f0)", paddingBottom: 4 }}>
-              <span style={{ color: "var(--color-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}><Clock size={20} className="icono-marca" aria-hidden="true" /> Experiencia:</span>
-              <strong style={{ color: "var(--color-ink)", textAlign: "right" }}>{skills.experience}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, borderBottom: "1px dashed var(--color-hairline, #e2e8f0)", paddingBottom: 4 }}>
-              <span style={{ color: "var(--color-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}><BrickWall size={20} className="icono-marca" aria-hidden="true" /> Rebote en el cristal:</span>
-              <strong style={{ color: "var(--color-ink)", textAlign: "right" }}>{skills.wallPlay}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, borderBottom: "1px dashed var(--color-hairline, #e2e8f0)", paddingBottom: 4 }}>
-              <span style={{ color: "var(--color-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}><Zap size={20} className="icono-marca" aria-hidden="true" /> Red y remate:</span>
-              <strong style={{ color: "var(--color-ink)", textAlign: "right" }}>{skills.netPlay}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, borderBottom: "1px dashed var(--color-hairline, #e2e8f0)", paddingBottom: 4 }}>
-              <span style={{ color: "var(--color-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}><Activity size={20} className="icono-marca" aria-hidden="true" /> Saque y desplazamiento:</span>
-              <strong style={{ color: "var(--color-ink)", textAlign: "right" }}>{skills.serve}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, borderBottom: "1px dashed var(--color-hairline, #e2e8f0)", paddingBottom: 4 }}>
-              <span style={{ color: "var(--color-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}><Users size={20} className="icono-marca" aria-hidden="true" /> Posicionamiento en pareja:</span>
-              <strong style={{ color: "var(--color-ink)", textAlign: "right" }}>{skills.position}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-              <span style={{ color: "var(--color-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}><Medal size={20} className="icono-marca" aria-hidden="true" /> Experiencia competitiva:</span>
-              <strong style={{ color: "var(--color-ink)", textAlign: "right" }}>{skills.tactic}</strong>
-            </div>
-          </div>
+            <p className="hx-ficha-desc">{category.desc}</p>
 
-          <p className="rating-desc-text" style={{ margin: "0 0 14px", fontSize: 12.5, lineHeight: 1.45 }}>
-            {category.desc}
-          </p>
-
-          {/* Acciones del Carnet */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <a
-              href={shareWhatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-whatsapp"
-              style={{
-                width: "100%",
-                justifyContent: "center",
-                minHeight: 44,
-                fontSize: 13.5,
-                textDecoration: "none",
-              }}
-              title="Compartir mi nivel de pádel con mi compañero o grupo"
-            >
-              <Share2 size={20} aria-hidden="true" />
-              <span>Compartir ficha por WhatsApp</span>
-            </a>
-
-            <div className="rating-share-actions">
-              {/* Antes era "#torneos", que en esta página no existe: no llevaba a ningún lado. */}
+            <div className="hx-acciones">
               <a
-                href="/torneos"
-                className="btn btn-secondary"
-                style={{
-                  justifyContent: "center",
-                  fontSize: 12,
-                  height: 36,
-                  textDecoration: "none",
-                  textAlign: "center",
-                }}
-              >
-                <Trophy size={20} className="icono-marca" aria-hidden="true" /> Ver torneos
-              </a>
-
-              <a
-                href={clubContactWhatsappUrl}
+                href={shareWhatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-secondary"
-                style={{
-                  justifyContent: "center",
-                  fontSize: 12,
-                  height: 36,
-                  textDecoration: "none",
-                  textAlign: "center",
-                }}
+                className="hx-wa"
+                title="Compartir mi nivel de pádel con mi compañero o grupo"
               >
-                <MessageCircle size={20} className="icono-marca" aria-hidden="true" /> Partidos parejos
+                <WhatsAppLogo size={22} color="#ffffff" />
+                <span>Compartir mi ficha</span>
               </a>
-            </div>
 
-            {mode === "quiz" && quizDone && (
-              <button
-                type="button"
-                className="quiz-restart-btn"
-                onClick={handleRestart}
-              >
-                <RotateCcw size={14} aria-hidden="true" /> Volver a hacer el test
-              </button>
-            )}
+              <div className="hx-acciones-2">
+                <a href="/torneos" className="hx-btn2">
+                  <Trophy size={18} className="icono-marca" aria-hidden="true" /> Ver torneos
+                </a>
+                <a
+                  href={clubContactWhatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hx-btn2"
+                >
+                  <MessageCircle size={18} className="icono-marca" aria-hidden="true" /> Partidos parejos
+                </a>
+              </div>
+
+              {mode === "quiz" && quizDone && (
+                <button type="button" className="hx-nv-otra" onClick={handleRestart}>
+                  <RotateCcw size={16} aria-hidden="true" /> Volver a hacer el test
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

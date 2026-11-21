@@ -5,6 +5,7 @@ import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
 import BottomNav from "../../../components/BottomNav";
 import AmericanoGenerator from "../../../components/AmericanoGenerator";
+import Mascota from "../../../components/Mascota";
 import { pageMetadata } from "../../../lib/pageMeta";
 
 export const metadata = pageMetadata({
@@ -23,28 +24,19 @@ export default function AmericanoPage() {
 
         <AmericanoGenerator />
 
-        <div className="container" style={{ margin: "40px auto 60px", textAlign: "center" }}>
-          <div
-            style={{
-              background: "var(--color-surface-card)",
-              border: "1px solid var(--color-hairline-strong)",
-              borderRadius: "var(--radius-xl)",
-              padding: "32px 24px",
-              maxWidth: 600,
-              margin: "0 auto",
-            }}
-          >
-            <h3 style={{ fontSize: 20, color: "var(--color-ink)", marginBottom: 8 }}>
-              ¿Organizan un americano en Muzzaga?
-            </h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 20 }}>
-              Reservá turnos consecutivos para jugar el torneo con tus amigos y disfrutar del mejor tercer tiempo en la cantina.
+        <aside className="hx-cierre" aria-label="Reservar turno">
+          <span className="hx-cierre-pelota" aria-hidden="true" />
+          <Mascota pose="trofeo-bolso" size="s" alt="" className="hx-cierre-masc" />
+          <div className="hx-cierre-texto">
+            <h2 className="hx-cierre-titulo">¿Arman un americano?</h2>
+            <p className="hx-cierre-desc">
+              Reservá turnos seguidos para jugar el torneo con tus amigos y quedarse al tercer tiempo en la cantina.
             </p>
-            <Link href="/#turnos" className="btn btn-linear-primary" style={{ padding: "10px 24px" }}>
-              Reservar turno →
-            </Link>
           </div>
-        </div>
+          <Link href="/#turnos" className="hx-cierre-btn">
+            Reservar turno →
+          </Link>
+        </aside>
       </main>
       <SiteFooter />
       <BottomNav />
