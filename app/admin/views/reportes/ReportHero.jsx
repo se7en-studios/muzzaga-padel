@@ -86,10 +86,12 @@ export default function ReportHero({
           <p className="rp-verdict-text">Este período todavía no empezó.</p>
         ) : change == null ? (
           <>
-            <span className="rp-verdict is-even">
-              <Equal size={20} strokeWidth={2.5} aria-hidden />
-              {p.cobrado > 0 ? "Igual" : "Sin datos"}
-            </span>
+            {p.cobrado > 0 && (
+              <span className="rp-verdict is-even">
+                <Equal size={20} strokeWidth={2.5} aria-hidden />
+                Igual
+              </span>
+            )}
             <p className="rp-verdict-text">
               {p.cobrado > 0
                 ? "Igual que el período anterior."
@@ -145,7 +147,7 @@ export default function ReportHero({
 
         {inProgress && change != null && (
           <p className="rp-hero-note">
-            Como el mes no terminó, se compara lo que entra por día, no el
+            Como el período no terminó, se compara lo que entra por día, no el
             total.
           </p>
         )}

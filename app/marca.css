@@ -52,94 +52,6 @@
   font-weight: 700;
 }
 
-/* Footer: cada pill con el hover de su marca. */
-.footer-pill-wa:hover {
-  border-color: rgba(37, 211, 102, 0.55);
-  background: rgba(37, 211, 102, 0.12);
-}
-
-.footer-pill-ig:hover {
-  border-color: rgba(214, 41, 118, 0.55);
-  background: rgba(214, 41, 118, 0.12);
-}
-
-.footer-pill-maps:hover {
-  border-color: rgba(66, 133, 244, 0.55);
-  background: rgba(66, 133, 244, 0.12);
-}
-
-/* El footer es más oscuro que la página: arranca del color de la página y
-   oscurece de a poco (va adentro del footer porque tiene overflow hidden). */
-.app-footer {
-  background-image: linear-gradient(180deg, var(--color-canvas) 0, #0e0e0d 160px);
-  background-repeat: no-repeat;
-  border-top: 0;
-}
-
-/* Sin la rayita naranja de arriba: con el degradé ya no hace falta marcar el borde. */
-.app-footer::before {
-  display: none;
-}
-
-/* --------------------------------------------------------------------------
-   FOOTER: Panel de Control y crédito de se7en
-   -------------------------------------------------------------------------- */
-.footer-admin-card-btn {
-  position: relative;
-  overflow: hidden;
-  justify-content: flex-start;
-  gap: 12px;
-  padding: 12px 16px 12px 12px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #f08a45 0%, var(--color-accent-orange) 50%, #c9581a 100%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #fff;
-  font-size: 14px;
-  letter-spacing: 0.01em;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 12px 28px -12px rgba(232, 114, 42, 0.8);
-}
-
-/* Un brillo que cruza el botón al pasar el mouse. */
-.footer-admin-card-btn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
-  translate: -120% 0;
-  transition: translate 0.7s var(--ease);
-  pointer-events: none;
-}
-
-.footer-admin-card-btn:hover {
-  background: linear-gradient(135deg, #f39a5a 0%, #ec7c36 50%, #d0611f 100%);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #fff;
-}
-
-.footer-admin-card-btn:hover::after {
-  translate: 120% 0;
-}
-
-.footer-admin-icon {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.22);
-  flex-shrink: 0;
-}
-
-/* Solo "Admin" y el candado: el botón va al ancho de su contenido. */
-.footer-admin-card-btn {
-  align-self: flex-start;
-  padding-right: 22px;
-  font-size: 15px;
-  letter-spacing: 0.04em;
-}
-
 .footer-credit {
   display: inline-flex;
   align-items: center;
@@ -153,12 +65,6 @@
 .footer-credit img {
   height: 20px;
   width: auto;
-}
-
-@media (max-width: 768px) {
-  .footer-bottom-bar {
-    flex-wrap: wrap;
-  }
 }
 
 /* Barra de abajo (celu). */
@@ -176,18 +82,8 @@
   transform: translateY(-2px) scale(1.12);
 }
 
-/* Footer: Club y horarios. */
-.footer-info-bullet:has(.icono-3d) {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  margin-top: -2px;
-}
-
 /* Los íconos chicos con una sombra más corta: la de 6 px los ensuciaba. */
-.bottom-bar-3d,
-.footer-info-bullet .icono-3d {
+.bottom-bar-3d {
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
 

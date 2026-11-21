@@ -53,16 +53,17 @@ export default function DailyChart({ days, today }) {
     <figure className="rp-chart">
       <div className="rp-chart-head">
         <div className="rp-chart-legend">
-          <span className="is-turnos">Turnos {formatARS(turnos)}</span>
-          <span className="is-cantina">Cantina {formatARS(cantina)}</span>
-          <span className="is-avg">Promedio por día {formatARS(avg)}</span>
-        </div>
-        {best && total(best) > 0 && (
-          <span className="rp-chart-best">
-            Mejor día: <strong>{formatDate(best.date, "long")}</strong> ·{" "}
-            {formatARS(total(best))}
+          <span className="is-turnos">
+            Turnos <strong>{formatARS(turnos)}</strong>
           </span>
-        )}
+          <span className="is-cantina">
+            Cantina <strong>{formatARS(cantina)}</strong>
+          </span>
+          <span className="is-weekend">Sábado y domingo</span>
+          <span className="is-avg">
+            Promedio <strong>{formatARS(avg)}</strong> por día
+          </span>
+        </div>
       </div>
       <div
         className="rp-chart-plot"
@@ -78,30 +79,57 @@ export default function DailyChart({ days, today }) {
           <span className="rp-chart-grid" style={{ bottom: "50%" }} />
           <span className="rp-chart-grid" style={{ bottom: "100%" }} />
           {avg > 0 && (
-            <span className="rp-chart-avg" style={{ bottom: pct(avg) }} />
+            <span className="rp-chart-avg" style={{ bottom: pct(avg) }}>
+              <em>Promedio</em>
+            </span>
           )}
           <div
             className="rp-chart-bars"
             style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
           >
-            {days.map((d) => {
+            {days.map((d, i) => {
               const wd = weekday(d.date);
               const future = !isPast(d);
+              const isBest = best && d.date === best.date && total(best) > 0;
+              // El cartelito del mouse se abre hacia adentro en las puntas.
+              const edge = i < n * 0.35 ? " tip-start" : i >= n * 0.65 ? " tip-end" : "";
               return (
                 <div
                   key={d.date}
-                  className={`rp-bar${future ? " is-future" : ""}${wd === 0 || wd === 6 ? " is-weekend" : ""}${d.date === today ? " is-today" : ""}`}
-                  title={
+                  style={{ "--i": i }}
+                  className={`rp-bar${future ? " is-future" : ""}${wd === 0 || wd === 6 ? " is-weekend" : ""}${d.date === today ? " is-today" : ""}${isBest ? " is-best" : ""}${edge}`}
+                  data-tip={
                     future
                       ? `${formatDate(d.date, "long")}: todavía no pasó`
-                      : `${formatDate(d.date, "long")}: ${formatARS(total(d))} (turnos ${formatARS(d.cobradoTurnos)} · cantina ${formatARS(d.cantina)})`
+                      : `${formatDate(d.date, "long")}: ${formatARS(total(d))}`
+                  }
+                  title={
+                    future
+                      ? undefined
+                      : `Turnos ${formatARS(d.cobradoTurnos)} · cantina ${formatARS(d.cantina)}`
                   }
                 >
+                  {isBest && (
+                    <span
+                      className="rp-bar-best"
+                      style={{ bottom: pct(total(d)) }}
+                      aria-hidden
+                    >
+                      <i />
+                      {shortK(total(d))}
+                    </span>
+                  )}
                   {!future && (
-                    <>
-                      <span className="is-turnos" style={{ height: pct(d.cobradoTurnos) }} />
-                      <span className="is-cantina" style={{ height: pct(d.cantina) }} />
-                    </>
+                    <span className="rp-bar-stack" style={{ height: pct(total(d)) }}>
+                      <span
+                        className="is-cantina"
+                        style={{ flexGrow: d.cantina }}
+                      />
+                      <span
+                        className="is-turnos"
+                        style={{ flexGrow: d.cobradoTurnos }}
+                      />
+                    </span>
                   )}
                 </div>
               );
@@ -128,8 +156,8 @@ export default function DailyChart({ days, today }) {
         })}
       </div>
       <figcaption className="rp-chart-caption">
-        Sábados y domingos con fondo marcado; la pelotita es hoy. La línea
-        punteada es el promedio por día.
+        La pelotita marca hoy y el mejor día. Los días que todavía no
+        pasaron quedan rayados.
         <span className="rp-hover-hint">
           {" "}
           Pasá el mouse por una barra para ver el detalle.

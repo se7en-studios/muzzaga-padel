@@ -28,7 +28,7 @@ const LINKS = [
  */
 export default function Footer({ location = DEFAULT }) {
   return (
-    <footer className="app-footer pie-sitio">
+    <footer className="pie-sitio">
       <div className="container pie-contenido">
         <div className="pie-grid">
           {/* Marca: placa con el escudo, Muzzaguito y los tres contactos. */}
@@ -141,34 +141,32 @@ export default function Footer({ location = DEFAULT }) {
           <p className="pie-copy">
             © 2026 Muzzaga Pádel · Catriel, Río Negro. Todos los derechos reservados.
           </p>
-          <div className="pie-base-links">
-            <a
-              className="footer-credit"
-              href="https://www.instagram.com/se7enstudio.ar/"
-              target="_blank"
-              rel="noopener"
-              aria-label="Sitio hecho por se7en (Instagram @se7enstudio.ar)"
-            >
-              <span className="s7-label">Sitio hecho por</span>
-              <span className="s7-badge">
-                <Image src="/img/se7en-logo.webp" alt="" width={72} height={20} />
-                <span className="s7-sep" aria-hidden="true" />
-                <span className="s7-ig">
-                  <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>
-                  se7enstudio.ar
-                </span>
+          <a
+            className="footer-credit"
+            href="https://www.instagram.com/se7enstudio.ar/"
+            target="_blank"
+            rel="noopener"
+            aria-label="Sitio hecho por se7en (Instagram @se7enstudio.ar)"
+          >
+            <span className="s7-label">Sitio hecho por</span>
+            <span className="s7-badge">
+              <Image src="/img/se7en-logo.webp" alt="" width={72} height={20} />
+              <span className="s7-sep" aria-hidden="true" />
+              <span className="s7-ig">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>
+                se7enstudio.ar
               </span>
-            </a>
-            {/* Acceso del personal: discreto, para quien lo busca. */}
-            <a
-              href="/admin"
-              className="pie-admin"
-              aria-label="Admin: panel de administración del club"
-            >
-              <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-              <span>Admin</span>
-            </a>
-          </div>
+            </span>
+          </a>
+          {/* Acceso del personal: discreto, para quien lo busca. */}
+          <a
+            href="/admin"
+            className="pie-admin"
+            aria-label="Admin: panel de administración del club"
+          >
+            <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+            <span>Admin</span>
+          </a>
         </div>
       </div>
 

@@ -35,7 +35,6 @@ import { WhatsAppMiniIcon } from "../adminHelpers";
 import ClientDrawer, { avatarTone, initials } from "./clientes/ClientDrawer";
 import StaffPinModal from "../ui/StaffPinModal";
 import { adminDeleteClient } from "../actions";
-import { DEMO_CLIENTS } from "./clientes/__demoData"; // DEMO-TEMP
 
 const SEARCH_DEBOUNCE_MS = 250;
 const ICON = { size: 16, strokeWidth: 1.75, "aria-hidden": true };
@@ -95,7 +94,6 @@ export default function ClientesView({
   onToast,
   onReloadClients,
 }) {
-  if (typeof window !== "undefined" && window.location.search.includes("demo")) clients = DEMO_CLIENTS; // DEMO-TEMP
   const [searchInput, setSearchInput] = useState(initialSearch);
   const [search, setSearch] = useState(initialSearch);
   const [segment, setSegment] = useState("all");
@@ -207,11 +205,13 @@ export default function ClientesView({
               <span className="cc-board-hint">{meta.hint}</span>
               {/* Qué parte de la base es este segmento, de un vistazo. */}
               <span className="cc-board-share" aria-hidden>
-                <span
-                  style={{
-                    width: `${list.length ? Math.round((counts[s.id] / list.length) * 100) : 0}%`,
-                  }}
-                />
+                {counts[s.id] > 0 && (
+                  <span
+                    style={{
+                      width: `${Math.round((counts[s.id] / list.length) * 100)}%`,
+                    }}
+                  />
+                )}
               </span>
             </button>
           );
@@ -287,7 +287,8 @@ export default function ClientesView({
             disabled={visible.length === 0}
             title="Exportar a CSV"
           >
-            <Download size={15} aria-hidden /> Exportar CSV
+            <Download size={15} aria-hidden />{" "}
+            <span className="cc-csv-label">Exportar CSV</span>
           </button>
         </div>
 

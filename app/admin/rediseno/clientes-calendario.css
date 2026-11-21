@@ -275,6 +275,48 @@
   color: var(--text-muted);
 }
 
+/* Franja de color arriba: cada segmento se reconoce por su color aunque no
+   esté elegido. */
+.admin-root .cc-board-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--seg-bg);
+}
+
+/* Qué parte de la base es el segmento: barrita finita abajo de todo. */
+.admin-root .cc-board-share {
+  display: block;
+  width: 100%;
+  height: 5px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: #efeadf;
+  overflow: hidden;
+}
+
+.admin-root .cc-board-share > span {
+  display: block;
+  height: 100%;
+  min-width: 5px;
+  border-radius: inherit;
+  background: var(--seg-bg);
+}
+
+.admin-root .cc-board-tile[aria-pressed="true"]::before {
+  display: none;
+}
+
+.admin-root .cc-board-tile[aria-pressed="true"] .cc-board-share {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.admin-root .cc-board-tile[aria-pressed="true"] .cc-board-share > span {
+  background: var(--cc-ball);
+  box-shadow: 0 0 8px rgba(215, 240, 58, 0.6);
+}
+
 /* Elegido: se vuelve cancha, con sus líneas y la pelotita en la esquina. */
 .admin-root .cc-board-tile[aria-pressed="true"] {
   border-color: var(--cc-court-deep);
@@ -463,6 +505,30 @@
 
 .admin-root .cc-roster-count strong {
   color: var(--text);
+}
+
+/* Lo que se debe entre todos, al lado del conteo. */
+.admin-root .cc-debt-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 13.5px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .cc-debt-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
 }
 
 .admin-root .cc-csv {
@@ -733,6 +799,53 @@
   color: #b91c1c;
 }
 
+/* Segunda línea chiquita debajo de un dato (promedio, fecha exacta). */
+.admin-root .cc-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.admin-root .cc-money {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Si debe, una franja roja a la izquierda de la fila (como la de la agenda). */
+.admin-root .cc-roster tr[data-owes] td:first-child {
+  box-shadow: inset 3px 0 0 #dc2626;
+}
+
+/* En la lista el WhatsApp va suave, para que doce botones verdes no tapen
+   los nombres; se pinta entero al pasar por la fila o el botón. */
+.admin-root .cc-contact .cc-wa-sm {
+  border: 1px solid #bfe3cb;
+  background: #ecf8f0;
+  color: #166534;
+  box-shadow: none;
+}
+
+.admin-root .cc-contact .cc-wa-sm:hover,
+.admin-root .cc-contact .cc-wa-sm:focus-visible {
+  border-color: var(--cc-wa);
+  background: var(--cc-wa);
+  color: #ffffff;
+}
+
+@media (hover: hover) {
+  .admin-root .cc-roster tbody tr:hover .cc-contact .cc-wa-sm {
+    border-color: var(--cc-wa);
+    background: var(--cc-wa);
+    color: #ffffff;
+    box-shadow: 0 4px 10px -6px rgba(21, 128, 61, 0.8);
+  }
+}
+
 /* Inactivos: la fila un poco más gris, sin perder lectura. */
 .admin-root .cc-roster tr[data-inactive] .cc-player-name strong {
   color: var(--text-secondary);
@@ -748,7 +861,7 @@
   animation: none;
 }
 
-.admin-root .cc-drawer > :not(.cc-drawer-hero) {
+.admin-root .cc-drawer > :not(.cc-drawer-hero):not(.cc-drawer-stats) {
   margin-inline: 20px;
 }
 
@@ -759,8 +872,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 26px 56px 22px 20px;
-  border-bottom: 3px solid #ffffff;
+  padding: 26px 56px 20px 20px;
   background-color: var(--cc-court);
   background-image:
     var(--cc-court-lines),
@@ -924,46 +1036,82 @@
   color: #b91c1c;
 }
 
+/* Marcador de la ficha: sigue la cancha del encabezado pero más oscuro,
+   como el tablero de un partido, y cierra con la línea de fondo blanca. */
 .admin-root .cc-drawer-stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 0;
-  margin-bottom: 0;
+  grid-template-columns: 0.8fr 1.25fr 1.15fr 0.9fr;
+  margin: -18px 0 0;
+  padding: 12px 8px 14px;
+  border-bottom: 3px solid #ffffff;
+  box-shadow: 0 10px 20px -16px rgba(13, 31, 92, 0.9);
+  background-color: #0d2373;
+  background-image:
+    linear-gradient(180deg, rgba(7, 16, 52, 0.72), rgba(7, 16, 52, 0.86)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 220px 220px;
+  color: #ffffff;
 }
 
 .admin-root .cc-drawer-stats > div {
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: var(--surface-muted);
-  border: 1px solid #efeadf;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 12px;
+}
+
+.admin-root .cc-drawer-stats > div + div {
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .admin-root .cc-drawer-stats dt {
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
 }
 
 .admin-root .cc-drawer-stats dd {
-  margin: 4px 0 0;
-  font-size: 17px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
   font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Los turnos, en amarillo pelota: es el número que define la categoría. */
 .admin-root .cc-drawer-stats dd.is-big {
-  font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 34px;
   font-weight: 800;
-  line-height: 1;
-  color: var(--cc-court-ink);
+  color: #e4f75a;
+  text-shadow: 0 0 14px rgba(215, 240, 58, 0.35);
 }
 
 .admin-root .cc-drawer-stats > div[data-inactive] dd {
-  color: #c2410c;
+  color: #ffb37a;
+}
+
+/* Categoría y posición anotadas por el staff. */
+.admin-root .cc-chip.cc-chip-level {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: var(--cc-court-ink);
+}
+
+.admin-root .cc-chip.cc-chip-side {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #ffffff;
+  box-shadow: none;
 }
 
 .admin-root .cc-drawer-section {
@@ -1082,17 +1230,41 @@
   padding: 0;
 }
 
+/* Línea de tiempo: las fechas quedan unidas por una línea punteada, y el
+   separador arranca después de la fecha. */
 .admin-root .cc-history li {
+  position: relative;
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px dashed var(--border);
+  background: linear-gradient(var(--border), var(--border)) no-repeat
+    58px 100% / calc(100% - 58px) 1px;
+}
+
+.admin-root .cc-history li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  top: 62px;
+  bottom: -8px;
+  width: 2px;
+  background: repeating-linear-gradient(
+    180deg,
+    #b9c7f2 0 4px,
+    transparent 4px 8px
+  );
 }
 
 .admin-root .cc-history li:last-child {
-  border-bottom: none;
+  background: none;
+}
+
+.admin-root .cc-history .cc-date-tile {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 0 3px var(--surface);
 }
 
 .admin-root .cc-history li.is-voided {
@@ -1624,32 +1796,36 @@
    CELU
    ========================================================================== */
 @media (max-width: 767px) {
-  /* Marcador: tira horizontal que se desliza, con imán en cada tarjeta. */
+  /* Marcador: grilla sin deslizar, así los cinco segmentos se ven siempre.
+     "Todos" va a lo ancho y los otros cuatro de a dos, en formato renglón. */
   .admin-root .cc-board {
-    display: flex;
-    gap: 10px;
-    margin-inline: -16px;
-    padding: 2px 16px 6px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-  }
-
-  .admin-root .cc-board::-webkit-scrollbar {
-    display: none;
-  }
-
-  .admin-root .cc-board {
-    scroll-padding-inline: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .admin-root .cc-board-tile {
-    flex: 0 0 auto;
-    min-width: 118px;
-    scroll-snap-align: start;
-    padding: 10px 14px 10px 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "top num"
+      "hint num"
+      "share share";
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 0;
+    min-height: 64px;
+    padding: 10px 12px 9px;
     border-radius: 14px;
   }
+
+  .admin-root .cc-board-tile[data-seg="all"] {
+    grid-column: 1 / -1;
+  }
+
+  .admin-root .cc-board-top { grid-area: top; }
+  .admin-root .cc-board-hint { grid-area: hint; }
+  .admin-root .cc-board-num { grid-area: num; }
+  .admin-root .cc-board-share { grid-area: share; }
 
   .admin-root .cc-board-icon {
     width: 24px;
@@ -1666,20 +1842,35 @@
   }
 
   .admin-root .cc-board-num {
-    margin-top: 4px;
+    margin-top: 0;
     font-size: 32px;
   }
 
   .admin-root .cc-board-hint {
+    padding-left: 32px;
     font-size: 12px;
-    white-space: nowrap;
+    line-height: 1.25;
   }
 
+  .admin-root .cc-board-share {
+    height: 4px;
+    margin-top: 7px;
+  }
+
+  .admin-root .cc-board-tile[aria-pressed="true"] .cc-board-top {
+    padding-right: 0;
+  }
+
+  /* La pelotita del elegido, chiquita en la esquina: no pisa el número. */
   .admin-root .cc-board-tile[aria-pressed="true"]::after {
-    top: 9px;
-    right: 9px;
-    width: 10px;
-    height: 10px;
+    top: 7px;
+    right: 7px;
+    width: 9px;
+    height: 9px;
+  }
+
+  .admin-root .cc-board-tile[aria-pressed="true"] .cc-board-num {
+    padding-right: 10px;
   }
 
   .admin-root .cc-invite .cc-wa {
@@ -1696,10 +1887,26 @@
     gap: 10px;
   }
 
+  /* Arriba el buscador con el CSV al lado; abajo el conteo y la deuda. */
   .admin-root .cc-search {
-    flex-basis: 100%;
+    flex: 1 1 220px;
+    min-width: 0;
     max-width: none;
     height: 48px;
+  }
+
+  .admin-root .cc-csv {
+    order: 1;
+    margin-left: 0;
+  }
+
+  .admin-root .cc-roster-count {
+    order: 2;
+    flex: 1 0 auto;
+  }
+
+  .admin-root .cc-debt-pill {
+    order: 3;
   }
 
   .admin-root .admin-dashboard-layout .cc-search input:not([type="checkbox"]):not([type="radio"]) {
@@ -1715,8 +1922,32 @@
     height: 44px;
   }
 
+  /* En el celu el CSV queda como botón cuadrado con el ícono, así entra en
+     el mismo renglón que el conteo. El texto sigue ahí para los lectores. */
   .admin-root .cc-csv {
-    height: 44px;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+  }
+
+  .admin-root .cc-csv-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .admin-root .cc-roster-count {
+    font-size: 13.5px;
+  }
+
+  .admin-root .cc-debt-pill {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 13px;
   }
 
   .admin-root .cc-roster-scroll {
@@ -1731,13 +1962,12 @@
 
   /* El encabezado queda como fila de "ordenar por", con chips táctiles. */
   .admin-root .cc-roster thead tr {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     padding: 10px 12px;
-    overflow-x: auto;
     border-bottom: 1px solid var(--border);
     background: var(--surface-muted);
-    scrollbar-width: none;
   }
 
   .admin-root .cc-roster thead th {
@@ -1753,12 +1983,22 @@
   }
 
   .admin-root .cc-sort {
-    height: 44px;
-    padding: 0 12px;
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 4px 6px;
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: 12px;
     background: var(--surface);
-    font-size: 12px;
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    line-height: 1.15;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .admin-root .cc-roster thead th {
+    min-width: 0;
   }
 
   .admin-root .cc-sort[aria-pressed="true"] {
@@ -1806,7 +2046,41 @@
   .admin-root .cc-roster td.cc-col-count { grid-area: count; }
   .admin-root .cc-roster td.cc-col-money { grid-area: money; }
   .admin-root .cc-roster td.cc-col-last { grid-area: last; }
-  .admin-root .cc-roster td.cc-col-contact { grid-area: contact; }
+  /* La celda de contacto se "disuelve" en la ficha: solo queda el WhatsApp
+     al lado del nombre, así el nombre tiene lugar y no se parte en dos
+     renglones. Borrar sigue estando en la ficha del cliente (zona de
+     peligro, abajo de todo), lejos del pulgar. */
+  .admin-root .cc-roster td.cc-col-contact,
+  .admin-root .cc-roster td.cc-col-contact .cc-contact {
+    display: contents;
+  }
+
+  .admin-root .cc-contact .cc-wa-sm,
+  .admin-root .cc-contact .cc-no-phone {
+    grid-area: contact;
+    justify-self: end;
+  }
+
+  .admin-root .cc-contact .cc-trash {
+    display: none;
+  }
+
+  .admin-root .cc-roster tbody tr[data-owes] {
+    border-color: #fecaca;
+    box-shadow: inset 4px 0 0 #dc2626, 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .admin-root .cc-roster tbody tr[data-owes] td:first-child {
+    box-shadow: none;
+  }
+
+  .admin-root .cc-roster .cc-sub {
+    display: none;
+  }
+
+  .admin-root .cc-money {
+    font-size: 13.5px;
+  }
 
   .admin-root .cc-roster td.cc-col-count,
   .admin-root .cc-roster td.cc-col-money,
@@ -1823,6 +2097,7 @@
 
   .admin-root .cc-roster td.cc-col-last {
     justify-self: start;
+    max-width: 100%;
     overflow: hidden;
   }
 
@@ -1879,11 +2154,16 @@
     gap: 6px;
   }
 
-  /* En el celu el WhatsApp es un botón redondo grande: se reconoce solo. */
+  /* En el celu el WhatsApp es un botón redondo grande y lleno: se reconoce
+     solo y es la acción principal de la ficha. */
   .admin-root .cc-contact .cc-wa-sm {
     width: 48px;
     height: 48px;
     padding: 0;
+    border-color: var(--cc-wa);
+    background: var(--cc-wa);
+    color: #ffffff;
+    box-shadow: 0 4px 10px -6px rgba(21, 128, 61, 0.8);
   }
 
   .admin-root .cc-contact .cc-wa-sm svg {
@@ -1902,11 +2182,6 @@
     text-align: right;
   }
 
-  .admin-root .cc-trash {
-    width: 44px;
-    height: 48px;
-  }
-
   .admin-root .cc-roster-empty,
   .admin-root .cc-roster-empty td {
     display: block;
@@ -1918,7 +2193,7 @@
     padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   }
 
-  .admin-root .cc-drawer > :not(.cc-drawer-hero) {
+  .admin-root .cc-drawer > :not(.cc-drawer-hero):not(.cc-drawer-stats) {
     margin-inline: 16px;
   }
 
@@ -1944,6 +2219,33 @@
   .admin-root .cc-history li {
     grid-template-columns: 44px minmax(0, 1fr) auto;
     gap: 10px;
+    background-position: 54px 100%;
+    background-size: calc(100% - 54px) 1px;
+  }
+
+  .admin-root .cc-history li:not(:last-child)::after {
+    left: 21px;
+  }
+
+  .admin-root .cc-drawer-stats {
+    padding: 10px 4px 12px;
+  }
+
+  .admin-root .cc-drawer-stats > div {
+    padding: 2px 8px;
+  }
+
+  .admin-root .cc-drawer-stats dt {
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+  }
+
+  .admin-root .cc-drawer-stats dd {
+    font-size: 19px;
+  }
+
+  .admin-root .cc-drawer-stats dd.is-big {
+    font-size: 30px;
   }
 
   /* ---------- Calendario en el celu ---------- */
@@ -2246,6 +2548,39 @@
 
   .admin-root .cc-heat-cell:hover:not(:disabled) {
     transform: translateY(-2px);
+  }
+
+  /* Las barritas del marcador se llenan de izquierda a derecha al entrar. */
+  .admin-root .cc-board-share > span {
+    transform-origin: left center;
+    animation: ccShareGrow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @keyframes ccShareGrow {
+    from { transform: scaleX(0); }
+    to { transform: none; }
+  }
+
+  /* El tablero de la ficha aparece un toque después del encabezado. */
+  .admin-root .cc-drawer-stats > div {
+    animation: ccStatIn 0.35s ease-out both;
+  }
+
+  .admin-root .cc-drawer-stats > div:nth-child(2) { animation-delay: 0.04s; }
+  .admin-root .cc-drawer-stats > div:nth-child(3) { animation-delay: 0.08s; }
+  .admin-root .cc-drawer-stats > div:nth-child(4) { animation-delay: 0.12s; }
+
+  @keyframes ccStatIn {
+    from { transform: translateY(6px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+
+  .admin-root .cc-contact .cc-wa-sm {
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  }
+
+  .admin-root .cc-contact .cc-wa-sm:active {
+    transform: scale(0.96);
   }
 
   /* La pelotita del segmento elegido pica una vez al cambiar. */

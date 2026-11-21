@@ -30,7 +30,6 @@ import { EmptyState, SkeletonRows } from "../../ui/states";
 import { WhatsAppMiniIcon } from "../../adminHelpers";
 import StaffPinModal from "../../ui/StaffPinModal";
 import { PADEL_LEVELS } from "../../../../data/levels";
-import { demoDetail } from "./__demoData"; // DEMO-TEMP
 
 const STATUS_LABEL = {
   confirmado: "Confirmado",
@@ -75,8 +74,7 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
   useEffect(() => {
     let cancelled = false;
     setDetail(null);
-    (window.location.search.includes("demo") ? Promise.resolve(demoDetail(client)) : adminGetClientDetail(client.key)).then( // DEMO-TEMP
-(res) => {
+    adminGetClientDetail(client.key).then((res) => {
       if (cancelled) return;
       if (res.ok) {
         setDetail(res);
