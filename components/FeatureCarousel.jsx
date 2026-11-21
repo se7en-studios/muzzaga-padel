@@ -1,294 +1,256 @@
 "use client";
 
-// Adaptado de un componente shadcn/Tailwind/TS (motion + hugeicons) al stack
-// real del proyecto: JS + CSS plano en globals.css, sin Tailwind ni TS. Los
-// íconos son los 3D de la marca que ya usa AmenitiesSection, y las fotos son
-// las reales del club (public/img), no placeholders de stock.
+// Galería de Instalaciones: un carrusel con scroll-snap nativo (se desliza
+// con el dedo, la rueda o las flechas) en vez de animarlo con JS. Las
+// pastillas de arriba saltan a cada foto y se marcan solas al deslizar.
+// El JS solo sabe cuál es la foto activa y la rota sola mientras nadie la
+// toca. CSS en app/secciones/camaras-instalaciones.css (prefijo ig-).
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, MotionConfig } from "motion/react";
 import Image from "next/image";
 
-// Íconos 3D de la marca (fieltro naranja, como Muzzaguito), los mismos de la
-// ficha técnica y la biblioteca en public/img/iconos.
-function Icon3D({ src }) {
-  return (
-    <Image src={src} alt="" width={30} height={30} className="icono-3d fc-pill-3d" aria-hidden="true" />
-  );
-}
-
-const IconCourt = () => <Icon3D src="/img/iconos/icono-cristal.webp" />;
-const IconBulb = () => <Icon3D src="/img/iconos/icono-led.webp" />;
-const IconCantina = () => <Icon3D src="/img/iconos/icono-cantina.webp" />;
-const IconTrophy = () => <Icon3D src="/img/iconos/biblioteca/icono-trofeo.webp" />;
-const IconSofa = () => <Icon3D src="/img/iconos/biblioteca/icono-living.webp" />;
-const IconShower = () => <Icon3D src="/img/iconos/biblioteca/icono-ducha.webp" />;
-
+// Íconos 3D de la marca (public/img/iconos), los mismos de la ficha técnica.
 // La foto de cada tarjeta sale de Configuración → Sitio web (slot
 // `inst-<id>` en lib/siteContent.js, que también tiene las de por defecto).
-// No hay foto real de "alquiler de paletas": se sacó esa feature en vez de
-// ilustrarla con una imagen que no la muestra.
 const FEATURES = [
   {
     id: "canchas",
     label: "Canchas de cristal",
-    icon: IconCourt,
+    icon: "/img/iconos/icono-cristal.webp",
     description: "2 canchas de cristal templado con rebote parejo.",
   },
   {
     id: "led",
     label: "Iluminación LED",
-    icon: IconBulb,
+    icon: "/img/iconos/icono-led.webp",
     description:
       "Luz LED en todas las canchas para jugar de noche sin perder nitidez.",
   },
   {
     id: "cantina",
     label: "Cantina propia",
-    icon: IconCantina,
+    icon: "/img/iconos/icono-cantina.webp",
     description: "Pizzas caseras, minutas y bebidas para el tercer tiempo.",
   },
   {
     id: "torneos",
     label: "Torneos todo el año",
-    icon: IconTrophy,
+    icon: "/img/iconos/biblioteca/icono-trofeo.webp",
     description: "Torneos y ligas internas durante toda la temporada.",
   },
   {
     id: "living",
     label: "Living y tercer tiempo",
-    icon: IconSofa,
+    icon: "/img/iconos/biblioteca/icono-living.webp",
     description:
       "Pantalla grande, mesas y buena previa para quedarte después de jugar.",
   },
   {
     id: "vestuarios",
     label: "Vestuarios y duchas",
-    icon: IconShower,
+    icon: "/img/iconos/biblioteca/icono-ducha.webp",
     description: "Duchas y baños para cambiarte después de jugar.",
   },
 ];
 
-// Misma curva que --ease en globals.css: motion no lee variables CSS.
-const EASE = [0.16, 1, 0.3, 1];
-const MOVE = { duration: 0.4, ease: EASE };
-const ITEM_HEIGHT = 52;
-// Deslizar la foto: pasa si se arrastró más que esto o se soltó rápido.
-const SWIPE_PX = 50;
-const SWIPE_VELOCITY = 400;
-// Rotación automática: da tiempo a leer el texto de cada foto. Cada toque o
-// deslizamiento reinicia la cuenta (el efecto depende de `step`).
-const AUTOPLAY_MS = 5500;
-
-const wrap = (min, max, v) => {
-  const rangeSize = max - min;
-  return ((((v - min) % rangeSize) + rangeSize) % rangeSize) + min;
-};
+const TOTAL = FEATURES.length;
+const pad = (n) => String(n).padStart(2, "0");
+// Rotación automática: da tiempo a leer el texto de cada foto. Se apaga
+// para siempre apenas la persona toca, desliza o usa el teclado.
+const AUTOPLAY_MS = 6000;
 
 export default function FeatureCarousel({ photos }) {
-  const [step, setStep] = useState(0);
+  const [active, setActive] = useState(0);
+  const [autoplay, setAutoplay] = useState(false);
   const wrapRef = useRef(null);
-  const [inView, setInView] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isTabVisible, setIsTabVisible] = useState(true);
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const trackRef = useRef(null);
+  const chipsRef = useRef(null);
 
-  const currentIndex =
-    ((step % FEATURES.length) + FEATURES.length) % FEATURES.length;
-
-  const handleChipClick = (index) => {
-    const diff = (index - currentIndex + FEATURES.length) % FEATURES.length;
-    if (diff > 0) setStep((s) => s + diff);
+  // Centra la tarjeta `i` dentro de la tira (solo en horizontal: nunca
+  // mueve la página).
+  const irA = (i, smooth = true) => {
+    const track = trackRef.current;
+    const card = track?.children[(i + TOTAL) % TOTAL];
+    if (!card) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    track.scrollTo({
+      left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2,
+      behavior: smooth && !reduce ? "smooth" : "auto",
+    });
   };
 
-  // Preferencias y visibilidad: solo rota si la sección se ve en pantalla, la
-  // pestaña está activa, no hay "reducir movimiento" y nadie la está usando.
+  // La foto activa es la que quedó más cerca del centro de la tira.
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onMotion = () => setReduceMotion(mq.matches);
-    const onVisibility = () => setIsTabVisible(!document.hidden);
-    onMotion();
-    onVisibility();
-    mq.addEventListener("change", onMotion);
-    document.addEventListener("visibilitychange", onVisibility);
-    const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.4 },
-    );
-    if (wrapRef.current) observer.observe(wrapRef.current);
+    const track = trackRef.current;
+    if (!track) return undefined;
+    let frame = 0;
+    const medir = () => {
+      frame = 0;
+      const centro = track.scrollLeft + track.clientWidth / 2;
+      let mejor = 0;
+      let dist = Infinity;
+      [...track.children].forEach((card, i) => {
+        const d = Math.abs(card.offsetLeft + card.offsetWidth / 2 - centro);
+        if (d < dist) {
+          dist = d;
+          mejor = i;
+        }
+      });
+      setActive(mejor);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(medir);
+    };
+    track.addEventListener("scroll", onScroll, { passive: true });
     return () => {
-      mq.removeEventListener("change", onMotion);
-      document.removeEventListener("visibilitychange", onVisibility);
-      observer.disconnect();
+      track.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
     };
   }, []);
 
-  const shouldAutoplay = inView && isTabVisible && !isPaused && !reduceMotion;
+  // Rota sola solo si la galería se ve, la pestaña está activa y no hay
+  // "reducir movimiento".
   useEffect(() => {
-    if (!shouldAutoplay) return undefined;
-    const id = setTimeout(() => setStep((s) => s + 1), AUTOPLAY_MS);
+    const wrap = wrapRef.current;
+    if (!wrap) return undefined;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    let enPantalla = false;
+    let tocada = false;
+    const actualizar = () => setAutoplay(enPantalla && !tocada && !document.hidden);
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        enPantalla = entry.isIntersecting;
+        actualizar();
+      },
+      { threshold: 0.5 },
+    );
+    io.observe(wrap);
+    const tomarControl = () => {
+      tocada = true;
+      actualizar();
+    };
+    const eventos = ["pointerdown", "wheel", "keydown", "touchstart"];
+    eventos.forEach((ev) => wrap.addEventListener(ev, tomarControl, { passive: true }));
+    document.addEventListener("visibilitychange", actualizar);
+    return () => {
+      io.disconnect();
+      eventos.forEach((ev) => wrap.removeEventListener(ev, tomarControl));
+      document.removeEventListener("visibilitychange", actualizar);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!autoplay) return undefined;
+    const id = setTimeout(() => irA(active + 1), AUTOPLAY_MS);
     return () => clearTimeout(id);
-  }, [shouldAutoplay, step]);
+  }, [autoplay, active]);
 
-  // El mouse encima pausa la rotación; en celular no hay "encima", así que ahí
-  // solo manda el reinicio de la cuenta al tocar o deslizar.
-  const pauseProps = {
-    onPointerEnter: (e) => e.pointerType === "mouse" && setIsPaused(true),
-    onPointerLeave: (e) => e.pointerType === "mouse" && setIsPaused(false),
-  };
+  // La pastilla activa siempre a la vista dentro de su fila (en celu la
+  // fila se desliza de costado).
+  useEffect(() => {
+    const row = chipsRef.current;
+    const chip = row?.children[active];
+    if (!row || !chip || row.scrollWidth <= row.clientWidth) return;
+    row.scrollTo({
+      left: chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2,
+      behavior: "smooth",
+    });
+  }, [active]);
 
-  const getCardStatus = (index) => {
-    const diff = index - currentIndex;
-    const len = FEATURES.length;
-    let normalizedDiff = diff;
-    if (diff > len / 2) normalizedDiff -= len;
-    if (diff < -len / 2) normalizedDiff += len;
-    if (normalizedDiff === 0) return "active";
-    if (normalizedDiff === -1) return "prev";
-    if (normalizedDiff === 1) return "next";
-    return "hidden";
-  };
-
-  // Con "reducir movimiento" motion deja las fotos quietas y solo cambia la
-  // opacidad.
   return (
-    <MotionConfig reducedMotion="user">
-    <div className="fc-wrap" ref={wrapRef} {...pauseProps}>
-      <div className="fc-frame">
-        <div className="fc-nav">
-          <div className="fc-nav-fade fc-nav-fade-top" />
-          <div className="fc-nav-fade fc-nav-fade-bottom" />
-          <div className="fc-nav-track">
-            {FEATURES.map((feature, index) => {
-              const isActive = index === currentIndex;
-              const distance = index - currentIndex;
-              const wrappedDistance = wrap(
-                -(FEATURES.length / 2),
-                FEATURES.length / 2,
-                distance,
-              );
-              const Icon = feature.icon;
+    <div
+      className="ig-wrap"
+      ref={wrapRef}
+      role="region"
+      aria-roledescription="carrusel"
+      aria-label="Fotos de las instalaciones"
+    >
+      <div className="ig-chips" ref={chipsRef}>
+        {FEATURES.map((f, i) => (
+          <button
+            key={f.id}
+            type="button"
+            className="ig-chip"
+            aria-current={i === active ? "true" : undefined}
+            aria-controls={`ig-foto-${f.id}`}
+            onClick={() => irA(i)}
+          >
+            <Image src={f.icon} alt="" width={30} height={30} className="icono-3d ig-chip-3d" aria-hidden="true" />
+            <span className="ig-chip-num" aria-hidden="true">{pad(i + 1)}</span>
+            <span className="ig-chip-label">{f.label}</span>
+          </button>
+        ))}
+      </div>
 
-              return (
-                <motion.div
-                  key={feature.id}
-                  style={{ height: ITEM_HEIGHT }}
-                  animate={{
-                    y: wrappedDistance * ITEM_HEIGHT,
-                    opacity: 1 - Math.abs(wrappedDistance) * 0.25,
-                  }}
-                  transition={MOVE}
-                  className="fc-nav-item"
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleChipClick(index)}
-                    className={`fc-pill${isActive ? " active" : ""}`}
-                  >
-                    <span className="fc-pill-icon">
-                      <Icon />
-                    </span>
-                    <span className="fc-pill-label">{feature.label}</span>
-                  </button>
-                </motion.div>
-              );
-            })}
+      <div className="ig-stage">
+        <ul className="ig-track" ref={trackRef} tabIndex={0} aria-label="Deslizá para ver las fotos">
+          {FEATURES.map((f, i) => {
+            const photo = photos[`inst-${f.id}`];
+            return (
+              <li
+                key={f.id}
+                id={`ig-foto-${f.id}`}
+                className={`ig-card${i === active ? " is-activa" : ""}`}
+                aria-roledescription="foto"
+                aria-label={`${i + 1} de ${TOTAL}: ${f.label}`}
+              >
+                {/* Mide 78vw (máx. 340 px) en celu y 400 px en compu:
+                    next/image sirve ese ancho y no el archivo entero. */}
+                <Image
+                  src={photo.src}
+                  alt={photo.alt}
+                  fill
+                  sizes="(max-width: 1023px) min(78vw, 340px), 400px"
+                  draggable={false}
+                  className="ig-img"
+                />
+                <span className="ig-marcador" aria-hidden="true">
+                  <b>{pad(i + 1)}</b> / {pad(TOTAL)}
+                </span>
+                <div className="ig-caption">
+                  <span className="ig-tag">{f.label}</span>
+                  <p className="ig-desc">{f.description}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="ig-controles">
+          <button
+            type="button"
+            className="ig-flecha"
+            aria-label="Foto anterior"
+            onClick={() => irA(active - 1)}
+          >
+            <span aria-hidden="true">←</span>
+          </button>
+          {/* Un tramo por foto: el activo se llena (naranja) mientras rota sola. */}
+          <div className="ig-tramos" aria-hidden="true">
+            {FEATURES.map((f, i) => (
+              <span
+                key={f.id}
+                className={`ig-tramo${i === active ? " is-activo" : ""}${i < active ? " is-visto" : ""}`}
+              >
+                {i === active && autoplay && (
+                  <span key={active} className="ig-tramo-relleno" style={{ "--ig-ms": `${AUTOPLAY_MS}ms` }} />
+                )}
+              </span>
+            ))}
           </div>
-        </div>
-
-        <div className="fc-stage">
-          {/* Marcador tipo tablero de cancha: en qué foto vas de cuántas. */}
-          <div className="fc-marcador" aria-hidden="true">
-            <span className="fc-marcador-num">
-              {String(currentIndex + 1).padStart(2, "0")}
-            </span>
-            <span className="fc-marcador-total">
-              / {String(FEATURES.length).padStart(2, "0")}
-            </span>
-          </div>
-          {/* Barra del tiempo que falta para la próxima foto. Solo existe
-              mientras rota sola, y la key la reinicia en cada cambio, así
-              que va pareja con el temporizador de arriba. */}
-          {shouldAutoplay && (
-            <span
-              key={step}
-              className="fc-progreso"
-              style={{ "--fc-ms": `${AUTOPLAY_MS}ms` }}
-              aria-hidden="true"
-            />
-          )}
-          <div className="fc-stage-card-wrap">
-            {FEATURES.map((feature, index) => {
-              const status = getCardStatus(index);
-              const isActive = status === "active";
-              const isPrev = status === "prev";
-              const isNext = status === "next";
-              const photo = photos[`inst-${feature.id}`];
-
-              return (
-                <motion.div
-                  key={feature.id}
-                  initial={false}
-                  animate={{
-                    x: isActive ? 0 : isPrev ? -100 : isNext ? 100 : 0,
-                    scale: isActive ? 1 : isPrev || isNext ? 0.85 : 0.7,
-                    opacity: isActive ? 1 : isPrev || isNext ? 0.4 : 0,
-                    rotate: isPrev ? -3 : isNext ? 3 : 0,
-                  }}
-                  style={{
-                    zIndex: isActive ? 20 : isPrev || isNext ? 10 : 0,
-                    pointerEvents: isActive ? "auto" : "none",
-                    // De costado la arrastra; para arriba y abajo sigue la página.
-                    touchAction: "pan-y",
-                  }}
-                  drag={isActive ? "x" : false}
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.35}
-                  dragSnapToOrigin
-                  onDragEnd={(_, info) => {
-                    if (info.offset.x < -SWIPE_PX || info.velocity.x < -SWIPE_VELOCITY) {
-                      setStep((s) => s + 1);
-                    } else if (info.offset.x > SWIPE_PX || info.velocity.x > SWIPE_VELOCITY) {
-                      setStep((s) => s - 1);
-                    }
-                  }}
-                  transition={MOVE}
-                  className={`fc-stage-card${isActive ? " is-active" : ""}`}
-                >
-                  {/* La tarjeta mide 320 × 400 (420 × 525 desde 1024): next/image
-                      sirve ese ancho en vez del archivo entero. */}
-                  <Image
-                    src={photo.src}
-                    alt={photo.alt}
-                    fill
-                    sizes="(max-width: 1023px) 320px, 420px"
-                    draggable={false}
-                    className={`fc-stage-img${isActive ? " active" : ""}`}
-                  />
-
-                  <AnimatePresence>
-                    {isActive && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={MOVE}
-                        className="fc-stage-caption"
-                      >
-                        <span className="fc-stage-tag">
-                          {index + 1} · {feature.label}
-                        </span>
-                        <p className="fc-stage-desc">{feature.description}</p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
+          <span className="ig-contador" aria-live={autoplay ? "off" : "polite"}>
+            <b>{pad(active + 1)}</b> / {pad(TOTAL)}
+          </span>
+          <button
+            type="button"
+            className="ig-flecha"
+            aria-label="Foto siguiente"
+            onClick={() => irA(active + 1)}
+          >
+            <span aria-hidden="true">→</span>
+          </button>
         </div>
       </div>
     </div>
-    </MotionConfig>
   );
 }

@@ -16,13 +16,16 @@ const toMinutes = (hhmm) => {
   return h * 60 + m;
 };
 
+// `short`: la misma etiqueta para la celda angosta del celu (dos canchas
+// lado a lado); el texto completo sigue en el aria-label del turno.
 function paymentBadge(b) {
   const state = paymentState(b);
-  if (state === "bloqueado") return { state, label: "Bloqueado" };
-  if (state === "prueba") return { state, label: "Prueba" };
-  if (state === "pagado") return { state, label: "Pagado" };
-  if (state === "senado") return { state, label: `Pagó seña · debe ${formatARS(pendingAmount(b))}` };
-  return { state, label: `Debe ${formatARS(pendingAmount(b))}` };
+  if (state === "bloqueado") return { state, label: "Bloqueado", short: "Bloqueado" };
+  if (state === "prueba") return { state, label: "Prueba", short: "Prueba" };
+  if (state === "pagado") return { state, label: "Pagado", short: "Pagado" };
+  const debe = formatARS(pendingAmount(b));
+  if (state === "senado") return { state, label: `Pagó seña · debe ${debe}`, short: `Seña · debe ${debe}` };
+  return { state, label: `Debe ${debe}`, short: `Debe ${debe}` };
 }
 
 /**
@@ -154,7 +157,9 @@ export default function CourtTimeline({
                     >
                       <span className="admin-slot-court">{court.name}</span>
                       <span className="admin-slot-name">{b.playerName}</span>
-                      <span className="admin-slot-badge">{badge.label}</span>
+                      <span className="admin-slot-badge" data-short={badge.short}>
+                        <span className="admin-slot-badge-long">{badge.label}</span>
+                      </span>
                     </button>
                     {b.playerPhone && (
                       <a
