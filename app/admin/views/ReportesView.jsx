@@ -5,9 +5,13 @@ import {
   ArrowDown,
   ArrowUp,
   BarChart3,
+  CalendarCheck,
   ChevronLeft,
   ChevronRight,
+  Coins,
   Download,
+  Gauge,
+  HandCoins,
   Printer,
 } from "lucide-react";
 import { adminGetReport } from "../actions";
@@ -15,8 +19,11 @@ import { isoAddDays, isoWeekday, todayInClub } from "../../../lib/booking";
 import { trendPct } from "../../../lib/metrics";
 import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
 import { EmptyState, SkeletonCards, SkeletonRows } from "../ui/states";
-import { PAYMENT_METHODS } from "../adminHelpers";
 import DailyChart from "./reportes/DailyChart";
+import Highlights from "./reportes/Highlights";
+import OccupancyHeat from "./reportes/OccupancyHeat";
+import ReportHero from "./reportes/ReportHero";
+import { PaymentMix, TopClients, TopProducts } from "./reportes/Rankings";
 
 const ICON = { size: 16, strokeWidth: 1.75, "aria-hidden": true };
 const MONTH_NAMES = [
@@ -32,15 +39,6 @@ const MONTH_NAMES = [
   "Octubre",
   "Noviembre",
   "Diciembre",
-];
-const WEEKDAY_NAMES = [
-  "Domingo",
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
 ];
 const MODES = [
   { id: "mes", label: "Mes" },
@@ -349,6 +347,15 @@ function periodPhrase(from, to) {
   return /^\d/.test(name) ? `del ${name}` : `en ${name.toLowerCase()}`;
 }
 
+function SectionHead({ title, hint }) {
+  return (
+    <header className="rp-section-head">
+      <h3 className="admin-section-title">{title}</h3>
+      {hint && <p>{hint}</p>}
+    </header>
+  );
+}
+
 /**
  * Cuerpo del reporte. Arriba la respuesta a "¿cómo me fue?" en grande; abajo
  * el detalle (días, horarios, medios de pago, rankings).
@@ -357,9 +364,6 @@ export function ReportContent({ report, loading }) {
   const t = report.totals;
   const p = report.previousTotals;
   const heat = report.heatmap;
-  const mixTotal = report.paymentMix.reduce((s, m) => s + m.amount, 0) || 0;
-  const methodLabel = (m) =>
-    PAYMENT_METHODS.find((x) => x.value === m)?.label || m;
 
   // Si el período no terminó, comparar el total contra un período completo
   // engaña (parece que se vendió menos). En ese caso se compara el promedio
@@ -369,99 +373,59 @@ export function ReportContent({ report, loading }) {
   const elapsed = report.days.filter((d) => d.date <= today).length;
   const inProgress = elapsed > 0 && elapsed < totalDays;
   const notStarted = elapsed === 0;
+  const name = periodName(report.from, report.to);
+  const prevLabel = periodName(report.previous.from, report.previous.to);
   const prevName = periodPhrase(report.previous.from, report.previous.to);
   const perDay = (total, n) => (n > 0 ? total / n : 0);
   const cur = inProgress ? perDay(t.cobrado, elapsed) : t.cobrado;
   const prev = inProgress ? perDay(p.cobrado, totalDays) : p.cobrado;
   const change = trendPct(cur, prev);
-  const turnosShare = t.cobrado > 0 ? (t.cobradoTurnos / t.cobrado) * 100 : 0;
+  const hasData =
+    t.cobrado > 0 || t.turnos > 0 || t.cantina > 0 || t.porCobrar > 0;
 
   return (
-        <div className={loading ? "admin-content-loading" : ""}>
-          <section className="rp-hero" aria-label="Cómo fue el período">
-            <div className="rp-hero-main">
-              <span className="rp-hero-kicker">
-                {periodName(report.from, report.to)}
-                {inProgress && ` · van ${elapsed} de ${totalDays} días`}
-              </span>
-              <span className="rp-hero-label">Cobraste</span>
-              <strong
-                className={`rp-hero-amount${t.cobrado > 0 ? "" : " is-zero"}`}
-              >
-                {formatARS(t.cobrado)}
-              </strong>
-              {t.cobrado > 0 && (
-                <div
-                  className="rp-split"
-                  role="img"
-                  aria-label={`Turnos ${formatARS(t.cobradoTurnos)}, cantina ${formatARS(t.cantina)}`}
-                >
-                  <span className="is-turnos" style={{ width: `${turnosShare}%` }} />
-                  <span className="is-cantina" style={{ width: `${100 - turnosShare}%` }} />
-                </div>
-              )}
-              <div className="rp-split-legend">
-                <span className="is-turnos">
-                  Turnos <strong>{formatARS(t.cobradoTurnos)}</strong>
-                </span>
-                <span className="is-cantina">
-                  Cantina <strong>{formatARS(t.cantina)}</strong>
-                </span>
-              </div>
-            </div>
+    <div className={`rp-body${loading ? " admin-content-loading" : ""}`}>
+      <ReportHero
+        name={name}
+        prevLabel={prevLabel}
+        prevName={prevName}
+        totals={t}
+        previousTotals={p}
+        inProgress={inProgress}
+        notStarted={notStarted}
+        elapsed={elapsed}
+        totalDays={totalDays}
+        cur={cur}
+        prev={prev}
+        change={change}
+      />
 
-            <div className="rp-hero-side">
-              {notStarted ? (
-                <p className="rp-verdict-text">
-                  Este período todavía no empezó.
-                </p>
-              ) : change == null ? (
-                <p className="rp-verdict-text">
-                  {p.cobrado > 0
-                    ? "Igual que el período anterior."
-                    : `Sin cobros ${prevName} para comparar.`}
-                </p>
-              ) : (
-                <>
-                  <span
-                    className={`rp-verdict ${change > 0 ? "is-up" : "is-down"}`}
-                  >
-                    {change > 0 ? (
-                      <ArrowUp size={18} strokeWidth={2.5} aria-hidden />
-                    ) : (
-                      <ArrowDown size={18} strokeWidth={2.5} aria-hidden />
-                    )}
-                    {Math.abs(change).toLocaleString("es-AR")}%{" "}
-                    {change > 0 ? "más" : "menos"}
-                  </span>
-                  <p className="rp-verdict-text">
-                    {inProgress ? (
-                      <>
-                        Por día: <strong>{formatARS(cur)}</strong> contra{" "}
-                        {formatARS(prev)} {prevName}.
-                      </>
-                    ) : (
-                      <>
-                        Contra <strong>{formatARS(prev)}</strong>{" "}
-                        {prevName}.
-                      </>
-                    )}
-                  </p>
-                </>
-              )}
-              {inProgress && change != null && (
-                <p className="rp-hero-note">
-                  El período no terminó: se compara el promedio por día, no el
-                  total.
-                </p>
-              )}
-            </div>
-          </section>
-
-          <div className="admin-kpis-3 rp-kpis">
-            <div className="admin-kravio-kpi-card">
-              <div className="admin-kravio-kpi-header">
-                <span className="admin-kravio-kpi-title">Turnos jugados</span>
+      {!hasData ? (
+        <section className="rp-empty">
+          <EmptyState
+            icon={BarChart3}
+            mascot={notStarted ? "descanso-mate" : "pelota-padel-life"}
+            title={
+              notStarted
+                ? "Este período todavía no empezó"
+                : `Todavía no hay movimientos ${periodPhrase(report.from, report.to)}`
+            }
+            text={
+              notStarted
+                ? "Cuando arranque, acá vas a ver cuánta plata entró cada día y qué horarios se llenan."
+                : "Cuando se carguen cobros en la Agenda y ventas en la Cantina, acá vas a ver cuánta plata entró cada día, qué horarios se llenan y quiénes juegan más."
+            }
+          />
+        </section>
+      ) : (
+        <>
+          <div className="rp-kpis">
+            <article className="rp-kpi is-court">
+              <header>
+                <span className="rp-kpi-icon" aria-hidden>
+                  <CalendarCheck size={18} strokeWidth={2} />
+                </span>
+                <span className="rp-kpi-title">Turnos jugados</span>
                 {inProgress ? (
                   <Delta
                     current={perDay(t.turnos, elapsed)}
@@ -471,90 +435,91 @@ export function ReportContent({ report, loading }) {
                 ) : (
                   <Delta current={t.turnos} previous={p.turnos} />
                 )}
-              </div>
-              <div className="admin-kravio-kpi-content">
-                <div className="admin-kravio-kpi-left">
-                  <div className="admin-kravio-kpi-number">{t.turnos}</div>
-                  <span className="admin-cell-sub">
-                    {elapsed > 0 &&
-                      `${(t.turnos / elapsed).toLocaleString("es-AR", { maximumFractionDigits: 1 })} por día · `}
-                    facturado {formatARS(t.facturadoTurnos)}
-                  </span>
-                </div>
-              </div>
-            </div>
+              </header>
+              <strong className="rp-kpi-number">{t.turnos}</strong>
+              <span className="rp-kpi-sub">
+                {elapsed > 0 &&
+                  `${(t.turnos / elapsed).toLocaleString("es-AR", { maximumFractionDigits: 1 })} por día · `}
+                facturado {formatARS(t.facturadoTurnos)}
+              </span>
+            </article>
 
-            <div className="admin-kravio-kpi-card">
-              <div className="admin-kravio-kpi-header">
-                <span className="admin-kravio-kpi-title">Ocupación de canchas</span>
+            <article className="rp-kpi is-court">
+              <header>
+                <span className="rp-kpi-icon" aria-hidden>
+                  <Gauge size={18} strokeWidth={2} />
+                </span>
+                <span className="rp-kpi-title">Canchas ocupadas</span>
                 <Delta current={t.ocupacionPct} previous={p.ocupacionPct} points />
-              </div>
-              <div className="admin-kravio-kpi-content">
-                <div className="admin-kravio-kpi-left">
-                  <div className="admin-kravio-kpi-number">
-                    {formatPct(t.ocupacionPct)}
-                  </div>
-                  {t.ocupacionPct != null && (
-                    <span className="rp-meter" aria-hidden>
-                      <span style={{ width: `${Math.min(100, t.ocupacionPct)}%` }} />
-                    </span>
-                  )}
-                  <span className="admin-cell-sub">
-                    De los cupos de los días abiertos hasta hoy
+              </header>
+              <strong className="rp-kpi-number">{formatPct(t.ocupacionPct)}</strong>
+              {t.ocupacionPct != null && (
+                <span className="rp-meter" aria-hidden>
+                  <span style={{ width: `${Math.min(100, t.ocupacionPct)}%` }}>
+                    <i />
                   </span>
-                </div>
-              </div>
-            </div>
+                </span>
+              )}
+              <span className="rp-kpi-sub">
+                De los turnos que se podían reservar hasta hoy
+              </span>
+            </article>
 
-            <div className="admin-kravio-kpi-card">
-              <div className="admin-kravio-kpi-header">
-                <span className="admin-kravio-kpi-title">Por cobrar</span>
+            <article className="rp-kpi is-money">
+              <header>
+                <span className="rp-kpi-icon" aria-hidden>
+                  <Coins size={18} strokeWidth={2} />
+                </span>
+                <span className="rp-kpi-title">Promedio por día</span>
+              </header>
+              <strong className="rp-kpi-number">
+                {formatARS(Math.round(perDay(t.cobrado, elapsed)))}
+              </strong>
+              <span className="rp-kpi-sub">
+                {elapsed > 0
+                  ? `Lo cobrado repartido en ${plural(elapsed, "día", "días")}`
+                  : "Todavía no pasó ningún día"}
+              </span>
+            </article>
+
+            <article className={`rp-kpi ${t.porCobrar > 0 ? "is-owe" : "is-money"}`}>
+              <header>
+                <span className="rp-kpi-icon" aria-hidden>
+                  <HandCoins size={18} strokeWidth={2} />
+                </span>
+                <span className="rp-kpi-title">Por cobrar</span>
                 <Delta current={t.porCobrar} previous={p.porCobrar} goodWhenDown />
-              </div>
-              <div className="admin-kravio-kpi-content">
-                <div className="admin-kravio-kpi-left">
-                  <div
-                    className="admin-kravio-kpi-number"
-                    style={{ color: t.porCobrar > 0 ? "#c2410c" : undefined }}
-                  >
-                    {formatARS(t.porCobrar)}
-                  </div>
-                  <span className="admin-cell-sub">
-                    {t.pagadosSinCobro > 0
-                      ? `Ojo: ${plural(t.pagadosSinCobro, "turno marcado pagado sin cobro cargado", "turnos marcados pagados sin cobro cargado")}`
-                      : t.porCobrar > 0
-                        ? "Saldos de turnos y cuentas de cantina"
-                        : "Todo cobrado"}
-                  </span>
-                </div>
-              </div>
-            </div>
+              </header>
+              <strong className="rp-kpi-number">{formatARS(t.porCobrar)}</strong>
+              <span className="rp-kpi-sub">
+                {t.pagadosSinCobro > 0
+                  ? `Ojo: ${plural(t.pagadosSinCobro, "turno marcado pagado sin cobro cargado", "turnos marcados pagados sin cobro cargado")}`
+                  : t.porCobrar > 0
+                    ? "Saldos de turnos y cuentas de cantina"
+                    : "Todo cobrado"}
+              </span>
+            </article>
           </div>
 
-          <section className="admin-report-section">
-            <h3 className="admin-section-title">Plata que entró cada día</h3>
-            <div className="admin-kravio-table-card rp-chart-card">
+          <Highlights days={report.days} heat={heat} today={today} />
+
+          <section className="admin-report-section rp-section">
+            <SectionHead
+              title="Plata que entró cada día"
+              hint="Cada barra es un día: verde oscuro lo de los turnos, verde claro lo de la cantina."
+            />
+            <div className="rp-card rp-chart-card">
               <DailyChart days={report.days} today={today} />
             </div>
           </section>
 
-          <section className="admin-report-section">
-            <h3 className="admin-section-title">Ocupación por día y horario</h3>
-            <p className="admin-field-hint" style={{ marginTop: -6 }}>
-              Qué franjas se llenan y cuáles quedan vacías: la base para definir
-              precios de horario pico.
-            </p>
-            {heat.weekdays.length > 0 && (
-              <div className="rp-heat-legend" aria-hidden>
-                <span>Vacío</span>
-                {[0, 1, 2, 3, 4].map((l) => (
-                  <i key={l} data-heat={l} />
-                ))}
-                <span>Lleno</span>
-              </div>
-            )}
+          <section className="admin-report-section rp-section">
+            <SectionHead
+              title="Qué horarios se llenan"
+              hint="Cada cuadradito es un día y un horario: cuanto más azul, más canchas ocupadas. Sirve para decidir el precio de horario pico o dónde hacer promos."
+            />
             {heat.weekdays.length === 0 ? (
-              <div className="admin-settings-card">
+              <div className="rp-card">
                 <EmptyState
                   icon={BarChart3}
                   mascot="pelota-padel-life"
@@ -562,175 +527,19 @@ export function ReportContent({ report, loading }) {
                 />
               </div>
             ) : (
-              <div className="admin-kravio-table-card admin-heat-table-wrap" style={{ padding: 16 }}>
-                <table className="admin-heat-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">
-                        <span className="sr-only">Día</span>
-                      </th>
-                      {heat.starts.map((s) => (
-                        <th key={s} scope="col">
-                          {s}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {heat.weekdays.map((wd) => (
-                      <tr key={wd}>
-                        <th scope="row">{WEEKDAY_NAMES[wd]}</th>
-                        {heat.starts.map((s) => {
-                          const c = heat.cells[`${wd}|${s}`];
-                          if (!c?.available)
-                            return <td key={s} data-heat="closed" />;
-                          const pct = Math.round(
-                            (c.booked / c.available) * 100,
-                          );
-                          const level =
-                            pct === 0
-                              ? 0
-                              : pct < 25
-                                ? 1
-                                : pct < 50
-                                  ? 2
-                                  : pct < 75
-                                    ? 3
-                                    : 4;
-                          return (
-                            <td
-                              key={s}
-                              data-heat={level}
-                              title={`${WEEKDAY_NAMES[wd]} ${s}: ${c.booked} de ${c.available} cupos (${pct}%)`}
-                            >
-                              {pct}%
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="rp-card rp-heat-card">
+                <OccupancyHeat heat={heat} />
               </div>
             )}
           </section>
 
-          <div className="admin-report-grid">
-            <section className="admin-report-section">
-              <h3 className="admin-section-title">Métodos de pago</h3>
-              <div className="admin-kravio-table-card" style={{ padding: 20 }}>
-                {mixTotal === 0 ? (
-                  <p className="admin-field-hint">Sin cobros en el período.</p>
-                ) : (
-                  <>
-                    <div
-                      className="admin-mix-bar"
-                      role="img"
-                      aria-label="Distribución de cobros por método"
-                    >
-                      {report.paymentMix.map((m) => (
-                        <span
-                          key={m.method}
-                          data-method={m.method}
-                          style={{ width: `${m.pct}%` }}
-                        />
-                      ))}
-                    </div>
-                    <ul className="admin-mix-list">
-                      {report.paymentMix.map((m) => (
-                        <li key={m.method} data-method={m.method}>
-                          <span>{methodLabel(m.method)}</span>
-                          <strong>{formatARS(m.amount)}</strong>
-                          <span className="admin-cell-sub">
-                            {formatPct(m.pct)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </div>
-            </section>
-
-            <section className="admin-report-section">
-              <h3 className="admin-section-title">Top productos de cantina</h3>
-              <div className="admin-kravio-table-card" style={{ overflow: "hidden" }}>
-                <table className="admin-kravio-table" style={{ margin: 0 }}>
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th>Unidades</th>
-                      <th style={{ textAlign: "right" }}>Vendido</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.topProducts.length === 0 ? (
-                      <tr>
-                        <td colSpan="3" className="admin-field-hint" style={{ textAlign: "center", padding: 20 }}>
-                          Sin ventas en el período.
-                        </td>
-                      </tr>
-                    ) : (
-                      report.topProducts.map((row) => (
-                        <tr key={row.name}>
-                          <td data-label="Producto">
-                            <strong>{row.name}</strong>
-                            <span className="rp-rank-bar is-money" aria-hidden>
-                              <span style={{ width: `${(row.revenue / (report.topProducts[0]?.revenue || 1)) * 100}%` }} />
-                            </span>
-                          </td>
-                          <td data-label="Unidades">{row.qty} un.</td>
-                          <td data-label="Vendido" style={{ textAlign: "right", fontWeight: 700, color: "#15803d" }}>
-                            {formatARS(row.revenue)}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section className="admin-report-section">
-              <h3 className="admin-section-title">Top clientes</h3>
-              <div className="admin-kravio-table-card" style={{ overflow: "hidden" }}>
-                <table className="admin-kravio-table" style={{ margin: 0 }}>
-                  <thead>
-                    <tr>
-                      <th>Cliente</th>
-                      <th>Turnos</th>
-                      <th style={{ textAlign: "right" }}>Facturado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.topClients.length === 0 ? (
-                      <tr>
-                        <td colSpan="3" className="admin-field-hint" style={{ textAlign: "center", padding: 20 }}>
-                          Sin turnos en el período.
-                        </td>
-                      </tr>
-                    ) : (
-                      report.topClients.map((row) => (
-                        <tr key={row.key}>
-                          <td data-label="Cliente">
-                            <strong>{row.name}</strong>
-                            <span className="rp-rank-bar" aria-hidden>
-                              <span style={{ width: `${(row.turnos / (Math.max(...report.topClients.map((c) => c.turnos)) || 1)) * 100}%` }} />
-                            </span>
-                          </td>
-                          <td data-label="Turnos">{row.turnos} turnos</td>
-                          <td data-label="Facturado" style={{ textAlign: "right", fontWeight: 700, color: "var(--color-ink)" }}>
-                            {formatARS(row.facturado)}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+          <div className="rp-panels">
+            <PaymentMix mix={report.paymentMix} />
+            <TopProducts rows={report.topProducts} />
+            <TopClients rows={report.topClients} />
           </div>
-
+        </>
+      )}
           {/* Firmas de auditoría e impresión PDF */}
           <div
             className="admin-print-only"

@@ -1170,25 +1170,40 @@
   }
 }
 
+
 /* ==========================================================================
    NÚMEROS DEL MES
-   Arriba la respuesta en grande ("cobraste tanto, mejor o peor que antes");
-   el detalle va después, para quien quiera mirarlo.
+   Arriba, sobre la cancha, la respuesta en grande: cuánto entró y si fue
+   mejor o peor que antes. Después cuatro números clave, lo que se destaca
+   (mejor día, horario más pedido) y el detalle para quien quiera mirarlo.
+   Verde = plata que entró; naranja = plata que falta cobrar; azul cancha =
+   turnos y ocupación; la pelotita marca lo importante (hoy, el mejor).
    ========================================================================== */
+.admin-root .rp-body {
+  --rp-card-radius: 16px;
+  --rp-turnos: #15803d;
+  --rp-cantina: #86d9a3;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- El cartel: la cancha con el total ---------- */
 .admin-root .rp-hero {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: 18px 28px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
+  gap: 22px 32px;
   align-items: center;
-  margin-bottom: 18px;
-  padding: 24px 28px;
-  border-radius: 18px;
-  background:
-    radial-gradient(70% 140% at 100% 0%, rgba(35, 80, 214, 0.55), transparent 65%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' fill='none' stroke='white' stroke-opacity='.07'%3E%3Crect x='3' y='3' width='194' height='94' rx='2' stroke-width='1.5'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3'/%3E%3Cpath d='M31 3v94M169 3v94M31 50h138' stroke-width='1'/%3E%3C/svg%3E") right -40px center / 420px auto no-repeat,
-    var(--night, #1b1b19);
+  padding: 28px 30px;
+  overflow: hidden;
+  border: 1px solid var(--tr-court-deep);
+  border-radius: 20px;
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-bg);
+  background-size: var(--tr-court-size);
+  background-repeat: no-repeat, no-repeat, repeat;
   color: #ffffff;
-  box-shadow: 0 18px 34px -24px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 22px 40px -26px rgba(13, 31, 92, 0.85);
 }
 
 .admin-root .rp-hero-main {
@@ -1201,56 +1216,68 @@
 .admin-root .rp-hero-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  align-self: flex-start;
+  gap: 9px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  background: rgba(11, 22, 56, 0.45);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--on-night-soft, #cfcabd);
+  color: #ffffff;
 }
 
 .admin-root .rp-hero-kicker::before {
   content: "";
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--tr-ball);
-  box-shadow: 0 0 10px rgba(215, 240, 58, 0.5);
+  box-shadow: 0 0 12px rgba(215, 240, 58, 0.6);
 }
 
 .admin-root .rp-hero-label {
-  margin-top: 6px;
+  margin-top: 14px;
   font-family: var(--font-display);
   font-size: 22px;
   font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-/* Verde = plata cobrada (más clarito para que se lea sobre el oscuro). */
+/* La plata que entró, en verde claro para que se lea sobre la cancha. */
 .admin-root .rp-hero-amount {
   font-family: var(--font-display);
-  font-size: clamp(44px, 6vw, 72px);
+  font-size: clamp(56px, 6.4vw, 92px);
   font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: 0.01em;
+  line-height: 0.92;
+  letter-spacing: 0.005em;
   font-variant-numeric: tabular-nums;
-  color: #4ade80;
+  color: #9cf5b9;
+  text-shadow: 0 3px 0 rgba(8, 20, 60, 0.35);
   overflow-wrap: anywhere;
 }
 
-/* Sin cobros no hay "plata" que pintar de verde. */
 .admin-root .rp-hero-amount.is-zero {
   color: #ffffff;
 }
 
 .admin-root .rp-split {
   display: flex;
-  height: 10px;
-  margin-top: 12px;
+  gap: 3px;
+  height: 12px;
+  margin-top: 16px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.admin-root .rp-split > span {
+  border-radius: 999px;
+  transform-origin: left center;
 }
 
 .admin-root .rp-split .is-turnos {
@@ -1258,23 +1285,23 @@
 }
 
 .admin-root .rp-split .is-cantina {
-  background: #a7f3c0;
+  background: #c7f9d6;
 }
 
 .admin-root .rp-split-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 18px;
-  margin-top: 8px;
-  font-size: 14.5px;
-  color: var(--on-night-soft, #cfcabd);
+  gap: 4px 22px;
+  margin-top: 10px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .admin-root .rp-split-legend span::before {
   content: "";
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
   margin-right: 7px;
   border-radius: 3px;
   vertical-align: 0;
@@ -1285,7 +1312,7 @@
 }
 
 .admin-root .rp-split-legend .is-cantina::before {
-  background: #a7f3c0;
+  background: #c7f9d6;
 }
 
 .admin-root .rp-split-legend strong {
@@ -1293,85 +1320,450 @@
   font-variant-numeric: tabular-nums;
 }
 
-.admin-root .rp-hero-side {
+.admin-root .rp-split-legend em {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(11, 22, 56, 0.4);
+  font-size: 12.5px;
+  font-style: normal;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Cuántos días van del período: la pelotita en la punta. */
+.admin-root .rp-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 460px;
+  margin-top: 18px;
+}
+
+.admin-root .rp-progress-label {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.admin-root .rp-progress-label strong {
+  color: #ffffff;
+}
+
+.admin-root .rp-progress-track {
+  position: relative;
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-root .rp-progress-track > span {
+  position: relative;
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.admin-root .rp-progress-track i {
+  position: absolute;
+  top: 50%;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- La comparación: una tarjeta blanca sobre la cancha ---------- */
+.admin-root .rp-versus {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  padding: 18px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
+  gap: 10px;
+  min-width: 0;
+  padding: 20px 22px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: 0 14px 30px -16px rgba(5, 12, 40, 0.65);
+}
+
+.admin-root .rp-versus-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .admin-root .rp-verdict {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px 6px 10px;
+  padding: 6px 16px 6px 10px;
   border-radius: 999px;
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 32px;
   font-weight: 800;
   line-height: 1;
   text-transform: uppercase;
 }
 
 .admin-root .rp-verdict.is-up {
-  background: rgba(74, 222, 128, 0.16);
-  color: #86efac;
+  background: #e3f6e9;
+  color: var(--tr-money);
 }
 
 .admin-root .rp-verdict.is-down {
-  background: rgba(248, 113, 113, 0.16);
-  color: #fca5a5;
+  background: #fdeaea;
+  color: #b91c1c;
+}
+
+.admin-root .rp-verdict.is-even {
+  background: #f1ede4;
+  color: var(--text-secondary);
 }
 
 .admin-root .rp-verdict-text {
   margin: 0;
-  font-size: 16px;
+  font-size: 15.5px;
   line-height: 1.4;
-  color: #ffffff;
+  color: var(--text-secondary);
 }
 
-.admin-root .rp-verdict-text strong {
+.admin-root .rp-versus-bars {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 4px 0 0;
+}
+
+.admin-root .rp-versus-bars > div {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-root .rp-versus-bars dt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.admin-root .rp-versus-bars dd {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.admin-root .rp-versus-track {
+  display: block;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f1ede4;
+}
+
+.admin-root .rp-versus-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #b9b3a6;
+  transform-origin: left center;
+}
+
+.admin-root .rp-versus-bars .is-cur .rp-versus-track > span {
+  background: var(--tr-money);
+}
+
+.admin-root .rp-versus-bars strong {
+  min-width: 108px;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.admin-root .rp-versus-bars .is-cur strong {
+  color: var(--tr-money);
+}
+
+.admin-root .rp-versus-bars .is-prev strong {
+  color: var(--text-secondary);
+}
+
+.admin-root .rp-versus-bars small {
+  margin-left: 3px;
+  font-family: var(--font-inter, inherit);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
 .admin-root .rp-hero-note {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.4;
-  color: var(--on-night-soft, #cfcabd);
+  color: var(--text-muted);
 }
 
+/* ---------- Cuatro números clave ---------- */
 .admin-root .rp-kpis {
-  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 14px;
+  margin-top: 16px;
 }
 
-/* Ocupación: la barra llena en azul cancha (dato real, sin escala trucha). */
+.admin-root .rp-kpi {
+  --kpi: var(--tr-court);
+  --kpi-tint: rgba(35, 80, 214, 0.09);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 18px 20px 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--rp-card-radius);
+  background: var(--surface, #ffffff);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-root .rp-kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--kpi);
+}
+
+.admin-root .rp-kpi.is-money {
+  --kpi: #16a34a;
+  --kpi-tint: rgba(22, 163, 74, 0.1);
+}
+
+.admin-root .rp-kpi.is-owe {
+  --kpi: #e8722a;
+  --kpi-tint: rgba(232, 114, 42, 0.13);
+}
+
+.admin-root .rp-kpi header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+}
+
+.admin-root .rp-kpi-icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--kpi-tint);
+  color: var(--kpi);
+}
+
+.admin-root .rp-kpi-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-secondary);
+}
+
+.admin-root .rp-kpi .admin-kpi-trend {
+  flex-shrink: 0;
+}
+
+.admin-root .rp-kpi-number {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.admin-root .rp-kpi.is-money .rp-kpi-number {
+  color: var(--tr-money);
+}
+
+.admin-root .rp-kpi.is-owe .rp-kpi-number {
+  color: var(--tr-owe);
+}
+
+.admin-root .rp-kpi-sub {
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* Ocupación: la barra en azul cancha con la pelotita en la punta. */
 .admin-root .rp-meter {
   display: block;
   width: 100%;
-  max-width: 220px;
-  height: 8px;
-  margin: 4px 0 6px;
-  overflow: hidden;
+  height: 10px;
+  margin: 4px 0 2px;
   border-radius: 999px;
   background: #e8ecf8;
 }
 
 .admin-root .rp-meter > span {
+  position: relative;
   display: block;
   height: 100%;
   border-radius: inherit;
   background: var(--tr-court);
+  transform-origin: left center;
+}
+
+.admin-root .rp-meter i {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- Lo que se destaca: una franja con cuatro datos ---------- */
+.admin-root .rp-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  margin-top: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--rp-card-radius);
+  background: var(--surface, #ffffff);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-root .rp-highlight {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px 18px;
+  border-left: 1px dashed var(--border-strong);
+  margin-left: -1px;
+}
+
+.admin-root .rp-highlight > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-root .rp-highlight-icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(35, 80, 214, 0.1);
+  color: var(--tr-court);
+}
+
+.admin-root .rp-highlight.is-gold .rp-highlight-icon {
+  background: var(--tr-ball);
+  color: #3a4a05;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+}
+
+.admin-root .rp-highlight.is-money .rp-highlight-icon {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--tr-money);
+}
+
+.admin-root .rp-highlight.is-hot .rp-highlight-icon {
+  background: rgba(232, 114, 42, 0.14);
+  color: #c2410c;
+}
+
+.admin-root .rp-highlight-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .rp-highlight-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+.admin-root .rp-highlight-sub {
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+/* ---------- Secciones y tarjetas del detalle ---------- */
+.admin-root .rp-section {
+  margin-top: 30px;
+}
+
+.admin-root .rp-section-head {
+  margin-bottom: 12px;
+}
+
+.admin-root .rp-section-head .admin-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.admin-root .rp-section-head .admin-section-title::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--tr-ball);
+}
+
+.admin-root .rp-section-head p {
+  max-width: 72ch;
+  margin: 4px 0 0 22px;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.admin-root .rp-card {
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--rp-card-radius);
+  background: var(--surface, #ffffff);
+  box-shadow: var(--shadow-card);
 }
 
 /* ---------- Gráfico diario ---------- */
 .admin-root .rp-chart-card {
-  padding: 18px 20px 14px;
+  padding: 20px 22px 16px;
 }
 
 .admin-root .rp-chart {
@@ -1379,61 +1771,57 @@
 }
 
 .admin-root .rp-chart-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px 16px;
-  margin-bottom: 14px;
+  margin-bottom: 28px;
 }
 
 .admin-root .rp-chart-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  gap: 6px 20px;
   font-size: 14px;
-  font-weight: 600;
   color: var(--text-secondary);
+}
+
+.admin-root .rp-chart-legend strong {
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
 .admin-root .rp-chart-legend span::before {
   content: "";
   display: inline-block;
-  width: 11px;
-  height: 11px;
-  margin-right: 6px;
+  width: 12px;
+  height: 12px;
+  margin-right: 7px;
   border-radius: 3px;
   vertical-align: -1px;
 }
 
 .admin-root .rp-chart-legend .is-turnos::before {
-  background: var(--tr-money);
+  background: var(--rp-turnos);
 }
 
 .admin-root .rp-chart-legend .is-cantina::before {
-  background: #7fd69c;
+  background: var(--rp-cantina);
+}
+
+.admin-root .rp-chart-legend .is-weekend::before {
+  border: 1px solid rgba(35, 80, 214, 0.3);
+  background: rgba(35, 80, 214, 0.1);
 }
 
 .admin-root .rp-chart-legend .is-avg::before {
-  width: 16px;
+  width: 18px;
   height: 0;
   border-top: 2px dashed var(--text);
   border-radius: 0;
-  vertical-align: 3px;
-}
-
-.admin-root .rp-chart-best {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.admin-root .rp-chart-best strong {
-  color: var(--text);
+  vertical-align: 4px;
 }
 
 .admin-root .rp-chart-plot {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr);
-  height: 240px;
+  height: 260px;
 }
 
 .admin-root .rp-chart-y {
@@ -1464,58 +1852,147 @@
 }
 
 .admin-root .rp-chart-avg {
-  z-index: 2;
-  border-top: 2px dashed var(--text);
-  opacity: 0.7;
+  z-index: 3;
+  border-top: 2px dashed rgba(27, 27, 25, 0.6);
+}
+
+.admin-root .rp-chart-avg em {
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--night, #1b1b19);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
 }
 
 .admin-root .rp-chart-bars {
   position: relative;
   display: grid;
   height: 100%;
-  gap: 3px;
+  gap: 4px;
 }
 
 .admin-root .rp-bar {
   position: relative;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
+  justify-content: flex-end;
   height: 100%;
-  border-radius: 4px 4px 0 0;
+  border-radius: 6px 6px 0 0;
 }
 
 .admin-root .rp-bar.is-weekend {
-  background: rgba(35, 80, 214, 0.06);
+  background: rgba(35, 80, 214, 0.08);
 }
 
 .admin-root .rp-bar.is-future {
-  background:
-    repeating-linear-gradient(135deg, transparent 0 5px, rgba(27, 27, 25, 0.04) 5px 7px);
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 5px,
+    rgba(27, 27, 25, 0.05) 5px 7px
+  );
 }
 
-.admin-root .rp-bar > span {
-  display: block;
+.admin-root .rp-bar-stack {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 5px 5px 0 0;
+  transform-origin: center bottom;
 }
 
-.admin-root .rp-bar .is-turnos {
-  background: var(--tr-money);
+.admin-root .rp-bar-stack > span {
+  flex-basis: 0;
+  min-height: 0;
 }
 
-.admin-root .rp-bar .is-cantina {
-  border-radius: 4px 4px 0 0;
-  background: #7fd69c;
+.admin-root .rp-bar-stack .is-turnos {
+  background: var(--rp-turnos);
 }
 
-.admin-root .rp-bar:hover > span {
-  filter: brightness(1.12);
+.admin-root .rp-bar-stack .is-cantina {
+  background: var(--rp-cantina);
+}
+
+.admin-root .rp-bar:hover .rp-bar-stack {
+  filter: brightness(1.1);
+}
+
+/* El mejor día: la pelotita con el monto arriba de la barra. */
+.admin-root .rp-bar-best {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 4px;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--tr-money);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .rp-bar-best i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Cartelito al pasar el mouse. */
+.admin-root .rp-bar::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  z-index: 5;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--night, #1b1b19);
+  box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.5);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #ffffff;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  /* Oculto del todo (no con opacidad): así no estira la página en el celu. */
+  display: none;
+}
+
+.admin-root .rp-bar.tip-start::after {
+  left: 0;
+  transform: translate(0, -100%);
+}
+
+.admin-root .rp-bar.tip-end::after {
+  left: auto;
+  right: 0;
+  transform: translate(0, -100%);
+}
+
+@media (hover: hover) {
+  .admin-root .rp-bar:hover::after {
+    display: block;
+  }
 }
 
 .admin-root .rp-chart-x {
   display: grid;
-  gap: 3px;
-  margin: 6px 0 0 52px;
+  gap: 4px;
+  margin: 8px 0 0 52px;
   font-size: 12px;
   text-align: center;
   color: var(--text-muted);
@@ -1544,15 +2021,6 @@
   font-weight: 800;
 }
 
-/* Rankings y tablas del reporte a todo el ancho de la tarjeta. */
-.admin-root .admin-report .admin-kravio-table {
-  width: 100%;
-}
-
-.admin-root .admin-report .admin-kravio-table th {
-  text-align: left;
-}
-
 /* En pantallas táctiles no hay "pasar el mouse": el aviso sobra. */
 @media (hover: none) {
   .admin-root .rp-hover-hint {
@@ -1561,50 +2029,304 @@
 }
 
 .admin-root .rp-chart-caption {
-  margin-top: 10px;
+  margin-top: 12px;
   font-size: 13px;
   color: var(--text-muted);
 }
 
-/* ---------- Ocupación por horario ---------- */
+/* ---------- Qué horarios se llenan ---------- */
+.admin-root .rp-heat-card {
+  padding: 18px 18px 14px;
+}
+
 .admin-root .rp-heat-legend {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
-  margin: 0 0 8px;
-  font-size: 12.5px;
+  gap: 6px 16px;
+  margin: 0 0 10px 4px;
+  font-size: 13px;
   color: var(--text-muted);
 }
 
-.admin-root .rp-heat-legend span:first-child {
-  margin-right: 4px;
-}
-
-.admin-root .rp-heat-legend span:last-child {
-  margin-left: 4px;
+.admin-root .rp-heat-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .admin-root .rp-heat-legend i {
-  width: 22px;
-  height: 12px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  width: 20px;
+  height: 14px;
+  border-radius: 4px;
   background: var(--heat-bg, #ffffff);
 }
 
-.admin-root .admin-heat-table th[scope="row"] {
+.admin-root .rp-heat-legend i[data-heat="0"] {
+  border: 1px dashed var(--border-strong);
+}
+
+.admin-root .rp-heat-legend i.rp-heat-ball {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+}
+
+.admin-root .rp-heat-scroll {
+  padding: 0;
+}
+
+.admin-root .rp-heat-table {
+  padding: 0;
+  border-spacing: 5px;
+}
+
+.admin-root .rp-heat-table thead th {
+  padding-bottom: 2px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .rp-heat-table th[scope="row"] {
+  padding-right: 10px;
+  font-size: 14px;
   font-weight: 600;
+  text-align: left;
   color: var(--text-secondary);
 }
 
-/* ---------- Rankings: barrita relativa al primero ---------- */
+.admin-root .rp-heat-table .rp-wd-short {
+  display: none;
+}
+
+.admin-root .rp-heat-table td {
+  position: relative;
+  min-width: 58px;
+  height: 42px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--heat-bg);
+  color: var(--heat-fg);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .rp-heat-table td[data-heat="0"] {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  color: var(--text-muted);
+}
+
+.admin-root .rp-heat-table td[data-heat="3"] {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Lleno: la cancha de verdad, con su césped. */
+.admin-root .rp-heat-table td[data-heat="4"] {
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-plain);
+  background-size: auto, 200px 200px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.admin-root .rp-heat-table td[data-heat="closed"] {
+  background: repeating-linear-gradient(135deg, #efe8de 0 5px, #e6ded2 5px 10px);
+}
+
+.admin-root .rp-heat-table td.is-top {
+  box-shadow: 0 0 0 2px #d7f03a, 0 6px 14px -6px rgba(13, 31, 92, 0.6);
+}
+
+.admin-root .rp-heat-table td.is-top::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Cómo te pagaron y rankings ---------- */
+.admin-root .rp-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 16px;
+  margin-top: 30px;
+  align-items: start;
+}
+
+.admin-root .rp-panel {
+  min-width: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--rp-card-radius);
+  background: var(--surface, #ffffff);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-root .rp-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.admin-root .rp-panel-title::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--tr-ball);
+}
+
+.admin-root .rp-panel-empty {
+  margin: 0;
+  padding: 18px 0 8px;
+  font-size: 14.5px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.admin-root .rp-mix-bar {
+  display: flex;
+  gap: 3px;
+  height: 16px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.admin-root .rp-mix-bar span {
+  background: var(--method);
+  transform-origin: left center;
+}
+
+.admin-root .rp-mix-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root .rp-mix-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 54px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+}
+
+.admin-root .rp-mix-list li + li {
+  border-top: 1px dashed var(--border);
+}
+
+.admin-root .rp-mix-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.admin-root .rp-mix-name::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--method);
+}
+
+.admin-root .rp-mix-list strong {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.admin-root .rp-mix-pct {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.admin-root .rp-rank {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root .rp-rank li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+}
+
+.admin-root .rp-rank li + li {
+  border-top: 1px dashed var(--border);
+}
+
+.admin-root .rp-rank-pos {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1ede4;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* El primero, con la pelotita. */
+.admin-root .rp-rank li:first-child .rp-rank-pos {
+  background: var(--tr-ball);
+  color: #1b1b19;
+  box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.35);
+}
+
+.admin-root .rp-rank-name {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-root .rp-rank-name strong {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
 .admin-root .rp-rank-bar {
   display: block;
-  height: 4px;
-  margin-top: 5px;
-  border-radius: 999px;
-  background: var(--border);
+  height: 5px;
   overflow: hidden;
+  border-radius: 999px;
+  background: #efeae0;
 }
 
 .admin-root .rp-rank-bar > span {
@@ -1612,37 +2334,179 @@
   height: 100%;
   border-radius: inherit;
   background: var(--tr-court);
+  transform-origin: left center;
 }
 
-.admin-root .rp-rank-bar.is-money > span {
+.admin-root .rp-rank.is-money .rp-rank-bar > span {
   background: var(--tr-money);
+}
+
+.admin-root .rp-rank-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.admin-root .rp-rank-value strong {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.05;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.admin-root .rp-rank.is-money .rp-rank-value strong {
+  color: var(--tr-money);
+}
+
+.admin-root .rp-rank-value small {
+  font-size: 12.5px;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+/* ---------- Sin datos ---------- */
+.admin-root .rp-empty {
+  margin-top: 16px;
+  border: 2px dashed rgba(35, 80, 214, 0.25);
+  border-radius: var(--rp-card-radius);
+  background:
+    radial-gradient(420px 180px at 50% 0, rgba(35, 80, 214, 0.07), transparent 70%),
+    var(--surface, #ffffff);
+}
+
+.admin-root .rp-empty .admin-empty {
+  padding: 40px 20px 44px;
+}
+
+.admin-root .rp-empty .admin-empty p {
+  max-width: 52ch;
 }
 
 /* ---------- Números en el celu ---------- */
 @media (max-width: 767px) {
   .admin-root .rp-hero {
     grid-template-columns: minmax(0, 1fr);
-    padding: 20px 18px;
-    /* Sin la cancha dibujada: en angosto quedaba encima del número. */
-    background:
-      radial-gradient(90% 60% at 100% 0%, rgba(35, 80, 214, 0.5), transparent 70%),
-      var(--night, #1b1b19);
+    padding: 20px 16px 16px;
+    border-radius: 18px;
+    background-image:
+      linear-gradient(180deg, rgba(11, 26, 77, 0.3), rgba(11, 26, 77, 0.62)),
+      url("/img/fondo/textura-cesped.jpg");
+    background-size: auto, 220px 220px;
+    background-repeat: no-repeat, repeat;
   }
 
-  .admin-root .rp-hero-side {
-    padding: 14px 16px;
+  .admin-root .rp-hero-kicker {
+    font-size: 12px;
+  }
+
+  .admin-root .rp-hero-amount {
+    font-size: 54px;
+  }
+
+  .admin-root .rp-versus {
+    padding: 16px;
   }
 
   .admin-root .rp-verdict {
-    font-size: 22px;
+    font-size: 26px;
+  }
+
+  .admin-root .rp-versus-bars strong {
+    min-width: 0;
+    font-size: 19px;
+  }
+
+  .admin-root .rp-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .admin-root .rp-kpi {
+    padding: 14px 14px 12px;
+  }
+
+  .admin-root .rp-kpi header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .admin-root .rp-kpi-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .admin-root .rp-kpi-title {
+    flex-basis: calc(100% - 40px);
+    font-size: 13.5px;
+  }
+
+  .admin-root .rp-kpi-number {
+    font-size: 30px;
+  }
+
+  .admin-root .rp-kpi-sub {
+    font-size: 12.5px;
+  }
+
+  .admin-root .rp-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-root .rp-highlight {
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border-left: 0;
+    margin-left: 0;
+    border-top: 1px dashed var(--border-strong);
+    margin-top: -1px;
+  }
+
+  .admin-root .rp-highlight:nth-child(even) {
+    border-left: 1px dashed var(--border-strong);
+  }
+
+  .admin-root .rp-highlight-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .admin-root .rp-highlight-value {
+    font-size: 23px;
+  }
+
+  .admin-root .rp-highlight-sub {
+    font-size: 12.5px;
+  }
+
+  .admin-root .rp-section {
+    margin-top: 24px;
+  }
+
+  .admin-root .rp-section-head p {
+    margin-left: 0;
+    font-size: 14px;
   }
 
   .admin-root .rp-chart-card {
     padding: 14px 12px 12px;
   }
 
+  .admin-root .rp-chart-head {
+    margin-bottom: 26px;
+  }
+
+  .admin-root .rp-chart-legend {
+    font-size: 13px;
+    gap: 4px 14px;
+  }
+
   .admin-root .rp-chart-plot {
-    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-columns: 40px minmax(0, 1fr);
     height: 200px;
   }
 
@@ -1657,7 +2521,7 @@
   }
 
   .admin-root .rp-chart-x {
-    margin-left: 42px;
+    margin-left: 40px;
     font-size: 11.5px;
   }
 
@@ -1668,20 +2532,118 @@
     visibility: hidden;
   }
 
-  .admin-root .rp-chart-head {
-    flex-direction: column;
+  .admin-root .rp-bar-best {
+    font-size: 10.5px;
+  }
+
+  .admin-root .rp-heat-card {
+    padding: 14px 8px 10px;
+  }
+
+  .admin-root .rp-heat-legend {
+    gap: 6px 12px;
+    font-size: 12px;
+  }
+
+  .admin-root .rp-heat-table {
+    border-spacing: 3px;
+  }
+
+  .admin-root .rp-heat-table td {
+    min-width: 46px;
+    height: 38px;
+    font-size: 15px;
+  }
+
+  .admin-root .rp-heat-table .rp-wd-long {
+    display: none;
+  }
+
+  .admin-root .rp-heat-table .rp-wd-short {
+    display: inline;
   }
 
   /* La tabla de horarios se desliza; el día queda fijo a la izquierda. */
-  .admin-root .admin-heat-table th[scope="row"] {
+  .admin-root .rp-heat-table th[scope="row"] {
     position: sticky;
     left: 0;
-    z-index: 1;
-    background: var(--surface);
+    z-index: 2;
+    padding-right: 6px;
+    background: var(--surface, #ffffff);
+  }
+
+  .admin-root .rp-panels {
+    margin-top: 24px;
+  }
+
+  .admin-root .rp-panel {
+    padding: 16px;
   }
 }
 
-/* ---------- Números impresos: el cartel en claro para no gastar tinta ---------- */
+/* ---------- Movimiento: solo si la persona no pidió reducirlo ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .rp-hero-amount,
+  .admin-root .rp-versus {
+    animation: rpRise 0.45s ease-out both;
+  }
+
+  .admin-root .rp-versus {
+    animation-delay: 0.08s;
+  }
+
+  .admin-root .rp-split > span,
+  .admin-root .rp-versus-track > span,
+  .admin-root .rp-meter > span,
+  .admin-root .rp-mix-bar span,
+  .admin-root .rp-rank-bar > span {
+    animation: rpGrowX 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .admin-root .rp-bar-stack {
+    animation: rpGrowY 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 14ms);
+  }
+
+  .admin-root .rp-progress-track i,
+  .admin-root .rp-heat-table td.is-top::after {
+    animation: rpBounce 2.4s ease-in-out 0.6s 2;
+  }
+
+  @keyframes rpRise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  @keyframes rpGrowX {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes rpGrowY {
+    from {
+      transform: scaleY(0);
+    }
+  }
+
+  @keyframes rpBounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    20% {
+      transform: translateY(-5px);
+    }
+    40% {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* ---------- Números impresos: en claro para no gastar tinta ---------- */
 @media print {
   .admin-root .rp-hero {
     border: 2px solid #141412;
@@ -1691,60 +2653,92 @@
     break-inside: avoid;
   }
 
-  .admin-root .rp-hero-label,
-  .admin-root .rp-verdict-text,
-  .admin-root .rp-split-legend strong {
-    color: #141412;
+  .admin-root .rp-hero-kicker {
+    padding-left: 0;
+    background: none;
+    color: #4a473f;
   }
 
-  .admin-root .rp-hero-kicker,
-  .admin-root .rp-hero-note,
-  .admin-root .rp-split-legend {
+  .admin-root .rp-hero-label,
+  .admin-root .rp-split-legend strong {
+    color: #141412;
+    text-shadow: none;
+  }
+
+  .admin-root .rp-split-legend,
+  .admin-root .rp-progress-label,
+  .admin-root .rp-progress-label strong {
+    color: #4a473f;
+  }
+
+  .admin-root .rp-split-legend em {
+    background: #f1ede4;
     color: #4a473f;
   }
 
   .admin-root .rp-hero-amount {
     color: #15803d;
+    text-shadow: none;
   }
 
   .admin-root .rp-hero-amount.is-zero {
     color: #141412;
   }
 
-  .admin-root .rp-hero-side {
-    border-color: #d3ccbd;
-    background: #ffffff;
+  .admin-root .rp-versus {
+    border: 1px solid #d3ccbd;
+    box-shadow: none;
   }
 
-  .admin-root .rp-verdict.is-up {
-    color: #15803d;
+  .admin-root .rp-progress-track {
+    background: #e7e2d6;
   }
 
-  .admin-root .rp-verdict.is-down {
-    color: #b91c1c;
+  .admin-root .rp-progress-track > span {
+    background: #8a857a;
   }
 
   .admin-root .rp-split,
   .admin-root .rp-split span,
   .admin-root .rp-split-legend span::before,
+  .admin-root .rp-progress-track,
+  .admin-root .rp-progress-track span,
+  .admin-root .rp-progress-track i,
+  .admin-root .rp-verdict,
+  .admin-root .rp-versus-track,
+  .admin-root .rp-versus-track span,
+  .admin-root .rp-kpi::before,
+  .admin-root .rp-kpi-icon,
+  .admin-root .rp-highlight-icon,
   .admin-root .rp-bar,
-  .admin-root .rp-bar > span,
+  .admin-root .rp-bar-stack span,
+  .admin-root .rp-bar-best i,
   .admin-root .rp-chart-legend span::before,
+  .admin-root .rp-chart-x .is-today,
   .admin-root .rp-meter,
-  .admin-root .rp-meter > span,
+  .admin-root .rp-meter span,
+  .admin-root .rp-meter i,
+  .admin-root .rp-heat-legend i,
+  .admin-root .rp-heat-table td,
+  .admin-root .rp-mix-bar span,
+  .admin-root .rp-mix-name::before,
+  .admin-root .rp-rank-pos,
   .admin-root .rp-rank-bar,
-  .admin-root .rp-rank-bar > span,
-  .admin-root .rp-heat-legend i {
+  .admin-root .rp-rank-bar > span {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  .admin-root .rp-chart-card,
-  .admin-root .rp-kpis {
-    break-inside: avoid;
-  }
-
+  .admin-root .rp-bar::after,
   .admin-root .rp-chart-caption {
     display: none;
+  }
+
+  .admin-root .rp-kpis,
+  .admin-root .rp-highlights,
+  .admin-root .rp-card,
+  .admin-root .rp-panel {
+    break-inside: avoid;
+    box-shadow: none;
   }
 }

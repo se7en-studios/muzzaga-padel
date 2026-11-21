@@ -1,0 +1,594 @@
+/* ==========================================================================
+   PIE DEL SITIO: el cierre de la transmisión
+   La cancha azul con su textura (de día más clara, de noche casi marino),
+   con la línea de fondo blanca como marco. La marca va como placa de TV,
+   el horario en el tablero de LED (igual que en Ubicación), los links como
+   fichas con línea de cancha y la red separa el cierre: copyright, crédito
+   de se7en y el acceso del personal, chico. Al final, el nombre gigante.
+   Lo importa components/Footer.jsx: se ve en todas las páginas públicas.
+   ========================================================================== */
+.pie-sitio {
+  --pie-azul: #2350d6;
+  --pie-velo-arriba: rgba(11, 26, 77, 0.24);
+  --pie-velo-abajo: rgba(8, 18, 56, 0.78);
+  --pie-texto: rgba(255, 255, 255, 0.9);
+  --pie-texto-suave: rgba(255, 255, 255, 0.78);
+  --pie-linea: rgba(255, 255, 255, 0.85);
+  --pie-panel: rgba(8, 18, 56, 0.42);
+  --pie-pelota: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  --pie-display: var(--font-display, var(--font-barlow-condensed)), "Barlow Condensed", "Arial Narrow", sans-serif;
+
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 44px 0 env(safe-area-inset-bottom, 0px);
+  color: var(--pie-texto);
+  background-color: var(--pie-azul);
+  background-image:
+    linear-gradient(180deg, var(--pie-velo-arriba) 0%, var(--pie-velo-abajo) 100%),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 200px 200px;
+  background-repeat: no-repeat, repeat;
+}
+
+/* De noche: la misma cancha con las luces bajas. */
+@media (prefers-color-scheme: dark) {
+  .pie-sitio {
+    --pie-velo-arriba: rgba(6, 14, 44, 0.72);
+    --pie-velo-abajo: rgba(3, 8, 28, 0.94);
+    --pie-texto-suave: rgba(255, 255, 255, 0.72);
+    --pie-linea: rgba(255, 255, 255, 0.55);
+    --pie-panel: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* La línea de fondo: marco blanco de cancha, abierto abajo (ahí sigue el
+   nombre gigante). */
+.pie-sitio::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 14px 14px 0;
+  border: 2px solid var(--pie-linea);
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* La línea central de saque: solo en la compu, entre las columnas. */
+@media (min-width: 1024px) {
+  .pie-sitio::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 14px;
+    left: 50%;
+    width: 2px;
+    height: 36px;
+    translate: -50% 0;
+    background: linear-gradient(180deg, var(--pie-linea), transparent);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+}
+
+.pie-contenido {
+  display: flex;
+  flex-direction: column;
+}
+
+.pie-sitio a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pie-sitio :focus-visible {
+  outline: 2px solid #d7f03a;
+  outline-offset: 3px;
+}
+
+.pie-grid {
+  display: grid;
+  gap: 28px;
+}
+
+/* --------------------------------------------------------------------------
+   Placa de la marca (como la de un partido en la tele)
+   -------------------------------------------------------------------------- */
+.pie-marca {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.pie-placa {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+}
+
+.pie-escudo {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 8px 18px -6px rgba(3, 8, 28, 0.7);
+}
+
+.pie-placa-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pie-nombre {
+  font-family: var(--pie-display);
+  font-size: 26px;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+/* La ciudad como zócalo naranja de la placa. */
+.pie-lugar {
+  align-self: flex-start;
+  padding: 3px 8px 2px;
+  border-radius: 4px;
+  background: #e8722a;
+  color: #ffffff;
+  font-family: var(--pie-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+/* Muzzaguito se asoma al costado de la placa, chiquito. */
+.pie-sitio .pie-mascota {
+  flex: 0 0 auto;
+  width: 68px;
+  margin: -8px 0 -10px auto;
+  filter: drop-shadow(0 8px 12px rgba(3, 8, 28, 0.55));
+  transform-origin: center bottom;
+}
+
+.pie-desc {
+  margin: 0;
+  max-width: 420px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--pie-texto-suave);
+}
+
+.pie-saludo {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Los tres contactos en una fila; WhatsApp es el principal. */
+.pie-acciones {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 420px;
+}
+
+.pie-accion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.pie-accion svg {
+  flex: 0 0 auto;
+}
+
+.pie-sitio .pie-accion-wa {
+  background: var(--wa-verde, #1fa855);
+  border-color: var(--wa-verde, #1fa855);
+  box-shadow: 0 10px 22px -12px rgba(3, 8, 28, 0.8);
+}
+
+@media (hover: hover) {
+  .pie-accion:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px);
+  }
+
+  .pie-sitio .pie-accion-wa:hover {
+    background: var(--wa-verde-hover, #178f47);
+    border-color: var(--wa-verde-hover, #178f47);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Títulos: rótulo de transmisión con la pelota adelante
+   -------------------------------------------------------------------------- */
+.pie-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-family: var(--pie-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.pie-titulo::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--pie-pelota);
+  box-shadow: 0 0 10px rgba(215, 240, 58, 0.55);
+}
+
+/* --------------------------------------------------------------------------
+   Navegación: fichas con línea de cancha
+   -------------------------------------------------------------------------- */
+.pie-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pie-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+@media (hover: hover) {
+  .pie-chip:hover {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #1a3fae;
+    transform: translateY(-2px);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Club y horarios: el tablero de LED
+   -------------------------------------------------------------------------- */
+.pie-tablero {
+  display: grid;
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1.3px) 0 0 / 6px 6px,
+    linear-gradient(180deg, #1f201a 0%, #0f100c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 14px 26px -16px rgba(3, 8, 28, 0.9);
+}
+
+.pie-tablero-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+}
+
+.pie-tablero-fila + .pie-tablero-fila {
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.pie-icono {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.pie-tablero-dato {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pie-tablero-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pie-hora {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #d7f03a;
+  text-shadow: 0 0 12px rgba(215, 240, 58, 0.45);
+}
+
+.pie-direccion {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.pie-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--pie-texto-suave);
+}
+
+.pie-specs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pie-icono-chico {
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+/* --------------------------------------------------------------------------
+   La red y el cierre
+   -------------------------------------------------------------------------- */
+.pie-red {
+  position: relative;
+  height: 9px;
+  margin: 28px 0 16px;
+  border-top: 2px solid rgba(255, 255, 255, 0.85);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.28) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 1px, transparent 1px 4px);
+  mask-image: linear-gradient(180deg, #000 30%, transparent);
+}
+
+/* Los postes en las puntas. */
+.pie-red::before,
+.pie-red::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+.pie-red::before {
+  left: 0;
+}
+
+.pie-red::after {
+  right: 0;
+}
+
+/* Celu: el copyright con "Admin" al lado y abajo el crédito de se7en. */
+.pie-base {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 16px;
+}
+
+.pie-copy {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--pie-texto-suave);
+}
+
+.pie-base .footer-credit {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+/* Crédito de se7en: la insignia oscura para que el naranja se lea sobre
+   el azul. El resto del estilo viene de marca.css. */
+.pie-sitio .footer-credit {
+  min-height: 44px;
+  color: var(--pie-texto-suave);
+}
+
+.pie-sitio .s7-badge {
+  min-height: 34px;
+  background: rgba(5, 12, 40, 0.55);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+@media (hover: hover) {
+  .pie-sitio a.footer-credit:hover .s7-badge {
+    background: rgba(5, 12, 40, 0.8);
+    border-color: rgba(232, 114, 42, 0.8);
+  }
+}
+
+/* Admin: un link chico con candado, sin pedir atención. */
+.pie-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.2s var(--ease);
+}
+
+.pie-sitio .pie-admin:hover {
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   El nombre gigante: más bajo que antes (era más de media pantalla en la
+   compu) y apoyado sobre la cancha.
+   -------------------------------------------------------------------------- */
+.pie-sitio .footer-wordmark {
+  margin-top: -36px;
+  padding-top: 72px;
+  font-size: clamp(84px, 24vw, 260px);
+}
+
+/* --------------------------------------------------------------------------
+   Movimiento (solo transform/opacity y solo si se acepta)
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* La pelota del título late como el punto de "en vivo". */
+  .pie-titulo::before {
+    animation: pieEnVivo 2.4s ease-in-out infinite;
+  }
+
+  @media (hover: hover) {
+    .pie-placa:hover .pie-mascota {
+      transform: rotate(-4deg) translateY(-2px);
+      transition: transform 0.3s var(--ease);
+    }
+  }
+}
+
+@keyframes pieEnVivo {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.82);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Celu: deja el lugar de la barra de abajo para que no tape el final.
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px), (max-width: 1180px) and (max-height: 500px) {
+  .pie-sitio {
+    padding-bottom: calc(var(--bottom-bar-h, 70px) + env(safe-area-inset-bottom, 0px) + 6px);
+  }
+}
+
+@media (max-width: 768px) {
+  .pie-sitio {
+    padding-top: 36px;
+  }
+
+  .pie-sitio::before {
+    inset: 10px 8px 0;
+  }
+
+  .pie-sitio .footer-wordmark {
+    margin-top: -40px;
+    padding-top: 64px;
+  }
+}
+
+@media (max-width: 360px) {
+  .pie-acciones {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pie-accion-wa {
+    grid-column: 1 / -1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Tablet y compu: columnas
+   -------------------------------------------------------------------------- */
+@media (min-width: 769px) {
+  .pie-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px 40px;
+  }
+
+  .pie-marca {
+    grid-column: 1 / -1;
+  }
+
+  .pie-base {
+    display: flex;
+    align-items: center;
+    gap: 16px 24px;
+  }
+
+  .pie-copy {
+    flex: 1 1 auto;
+  }
+
+  .pie-base .footer-credit {
+    flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pie-sitio {
+    padding-top: 64px;
+  }
+
+  .pie-grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+
+  .pie-marca {
+    grid-column: auto;
+  }
+
+  .pie-nombre {
+    font-size: 30px;
+  }
+
+  .pie-titulo {
+    margin-bottom: 16px;
+  }
+
+  .pie-red {
+    margin-top: 44px;
+  }
+}

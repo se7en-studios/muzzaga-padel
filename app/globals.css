@@ -4125,271 +4125,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 /* ==========================================================================
-   FOOTER & MOBILE BOTTOM BAR
+   FOOTER (el resto vive en components/Footer.css) & MOBILE BOTTOM BAR
    ========================================================================== */
-.app-footer {
-  background: #0e0e0d;
-  color: #d0cec7;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 68px 0 calc(36px + env(safe-area-inset-bottom, 0px));
-  position: relative;
-  overflow: hidden;
-}
-
-.app-footer::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 1200px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(232, 114, 42, 0.5) 50%, transparent);
-  pointer-events: none;
-}
-
-.footer-top-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 1.9fr;
-  gap: 48px;
-  padding-bottom: 40px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.footer-brand-col {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.footer-brand-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-brand-name {
-  display: block;
-  font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #ffffff;
-  line-height: 1.1;
-}
-
-.footer-brand-location {
-  display: block;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--color-accent-orange, #e8722a);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.footer-brand-desc {
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.65);
-  margin: 0;
-  max-width: 380px;
-}
-
-.footer-social-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.footer-social-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  font-size: 12.5px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.footer-social-pill:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
-  color: #ffffff;
-}
-
-.footer-pill-wa:hover {
-  border-color: rgba(37, 211, 102, 0.5);
-  background: rgba(37, 211, 102, 0.12);
-}
-
-.footer-pill-ig:hover {
-  border-color: rgba(225, 48, 108, 0.5);
-  background: rgba(225, 48, 108, 0.12);
-}
-
-.footer-pill-maps:hover {
-  border-color: rgba(234, 67, 53, 0.5);
-  background: rgba(234, 67, 53, 0.12);
-}
-
-.footer-mascot-box {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
-  margin-top: 8px;
-  max-width: 380px;
-}
-
-.footer-mascot {
-  flex-shrink: 0;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
-}
-
-.footer-mascot-text {
-  font-size: 12px;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.footer-links-group {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px;
-}
-
-.footer-col {
-  display: flex;
-  flex-direction: column;
-}
-
-.footer-col-title {
-  font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #ffffff;
-  margin: 0 0 16px;
-}
-
-.footer-links-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.footer-links-list a {
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.65);
-  text-decoration: none;
-  transition: color 0.18s ease, transform 0.18s ease;
-  display: inline-block;
-}
-
-.footer-links-list a:hover {
-  color: var(--color-accent-orange, #e8722a);
-  transform: translateX(3px);
-}
-
-.footer-club-info {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-}
-
-.footer-info-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 13px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.footer-info-bullet {
-  font-size: 14px;
-  flex-shrink: 0;
-  line-height: 1.3;
-}
-
-.footer-col-admin {
-  display: flex;
-  flex-direction: column;
-}
-
-.footer-admin-text {
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.55);
-  margin: 0 0 16px;
-}
-
-.footer-admin-card-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(232, 114, 42, 0.16), rgba(232, 114, 42, 0.06));
-  border: 1px solid rgba(232, 114, 42, 0.35);
-  color: #ff9a5a;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 14px -4px rgba(232, 114, 42, 0.2);
-}
-
-.footer-admin-card-btn:hover {
-  background: linear-gradient(135deg, rgba(232, 114, 42, 0.3), rgba(232, 114, 42, 0.12));
-  border-color: rgba(232, 114, 42, 0.6);
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -4px rgba(232, 114, 42, 0.35);
-}
-
-.footer-admin-arrow {
-  font-size: 16px;
-  transition: transform 0.2s ease;
-}
-
-.footer-admin-card-btn:hover .footer-admin-arrow {
-  transform: translate(2px, -2px);
-}
-
-.footer-bottom-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding-top: 24px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.footer-specs {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  letter-spacing: 0.02em;
-}
-
 /* El nombre gigante al pie: cada letra es un recorte (background-clip)
    de tres capas: un brillo diagonal que la cruza una vez, un grano de
    ruido SVG y el degradé de color. La primera va en naranja. Las letras
@@ -4479,54 +4216,18 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 /* Con el nombre al pie, el footer llega hasta el borde: sin el aire de
-   abajo del body ni el del propio footer. En el celu, el footer deja el
-   lugar de la pastilla de abajo para que no tape las letras. */
+   abajo del body. El lugar de la pastilla de abajo del celu lo deja el
+   propio footer (components/Footer.css). */
 body:has(.footer-wordmark) {
   padding-bottom: 0;
 }
 
-.app-footer:has(.footer-wordmark) {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
 @media (max-width: 768px) {
-  .app-footer:has(.footer-wordmark) {
-    padding-bottom: calc(var(--bottom-bar-h) + env(safe-area-inset-bottom, 0px));
-  }
-
   .footer-wordmark {
     margin-top: -60px;
   }
 }
 
-@media (max-width: 900px) {
-  .footer-top-grid {
-    grid-template-columns: 1fr;
-    gap: 36px;
-  }
-  .footer-links-group {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .footer-col-admin {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 640px) {
-  .app-footer {
-    padding-top: 48px;
-    padding-bottom: calc(72px + var(--bottom-pill-h, 56px) + env(safe-area-inset-bottom, 0px));
-  }
-  .footer-links-group {
-    grid-template-columns: 1fr;
-    gap: 28px;
-  }
-  .footer-bottom-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-}
 
 /* Barra de abajo en el celu: una pastilla flotante, como la de Instagram.
    Al bajar se achica y quedan los íconos; al subir (o arriba de todo)
@@ -7035,14 +6736,6 @@ body:has(.footer-wordmark) {
   align-items: center;
 }
 
-/* Links del pie: cada uno ocupa su renglón de 44 px (antes 22 px + 8 de
-   separación). */
-.app-footer a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
-
 .mobile-swipe-hint {
   display: none;
 }
@@ -8417,8 +8110,7 @@ textarea:focus-visible {
 }
 
 .mascot-section-img,
-.flash-mascot,
-.footer-mascot {
+.flash-mascot {
   display: block;
   height: auto;
   object-fit: contain;
@@ -8445,8 +8137,7 @@ textarea:focus-visible {
    scroll: eso queda para la del hero. */
 @media (hover: hover) {
   .mascot-section-img:hover,
-  .flash-mascot:hover,
-  .footer-mascot-box:hover .footer-mascot {
+  .flash-mascot:hover {
     transform: rotate(-3deg);
   }
 }
@@ -8646,31 +8337,6 @@ textarea:focus-visible {
   flex: 0 0 auto;
   align-self: flex-end;
   margin: 0;
-}
-
-/* Footer: tamaño S, al lado del texto en tarjeta oscura translúcida. */
-.footer-mascot-box {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  max-width: 380px;
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.footer-mascot {
-  flex: 0 0 auto;
-  width: var(--mascota-s);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
-}
-
-.footer-mascot-text {
-  font-size: 12px;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.7);
 }
 
 /* Canchas Abiertas sin partidos: la mascota invita a armar uno. El
@@ -8922,41 +8588,6 @@ textarea:focus-visible {
 @media (min-width: 769px) {
   .install-prompt {
     display: none;
-  }
-}
-
-/* ==========================================================================
-   PIE EN EL CELU (todas las páginas): los 6 links de "Navegación" iban uno
-   debajo del otro con ~58 px cada uno. En dos columnas, como botones, se
-   tocan fácil y la lista ocupa la mitad.
-   ========================================================================== */
-@media (max-width: 640px) {
-  .footer-links-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .footer-links-list li {
-    display: flex;
-  }
-
-  .footer-links-list a {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 0 14px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    color: rgba(255, 255, 255, 0.82);
-    font-size: 14px;
-  }
-
-  .footer-links-list a:hover {
-    transform: none;
-    border-color: rgba(232, 114, 42, 0.5);
   }
 }
 

@@ -115,6 +115,12 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
     (b) => b.status !== "cancelado" && b.total > b.paid,
   );
   const owedTotal = owed.reduce((s, b) => s + (b.total - b.paid), 0);
+  // Categoría y posición que el staff ya anotó (mismas etiquetas rápidas de
+  // abajo): se muestran en la ficha para no tener que leer la nota.
+  const levelTag = PADEL_LEVELS.map((l) => l.shortName).find((t) =>
+    savedNote.includes(t),
+  );
+  const sideTags = ["Drive", "Revés"].filter((t) => savedNote.includes(t));
 
   return (
     <div className="admin-drawer-backdrop cc-drawer-backdrop" onClick={onClose}>
@@ -126,7 +132,11 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Ficha del jugador: la cancha azul de fondo, como en la agenda. */}
-        <header className="cc-drawer-hero" data-tier={tier}>
+        <header
+          className="cc-drawer-hero"
+          data-tier={tier}
+          data-inactive={inactive || undefined}
+        >
           <button
             type="button"
             className="cc-drawer-close"
@@ -149,6 +159,14 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
               <span className="cc-chip" data-tier={tier}>
                 {cat.category}
               </span>
+              {levelTag && (
+                <span className="cc-chip cc-chip-level">{levelTag}</span>
+              )}
+              {sideTags.map((t) => (
+                <span key={t} className="cc-chip cc-chip-side">
+                  {t}
+                </span>
+              ))}
               {inactive && (
                 <span className="cc-chip" data-tier="inactivo">
                   Inactivo
@@ -161,6 +179,26 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
             </span>
           </div>
         </header>
+
+        {/* Marcador de la ficha: los números clave, como el tablero de un partido. */}
+        <dl className="cc-drawer-stats" data-tier={tier}>
+          <div>
+            <dt>Turnos</dt>
+            <dd className="is-big">{client.count}</dd>
+          </div>
+          <div>
+            <dt>En turnos</dt>
+            <dd>{formatARS(client.totalSpent)}</dd>
+          </div>
+          <div data-inactive={inactive || undefined}>
+            <dt>Último turno</dt>
+            <dd>{formatRelativeDays(client.lastDate, today)}</dd>
+          </div>
+          <div>
+            <dt>Desde</dt>
+            <dd>{client.firstDate ? formatDate(client.firstDate) : "—"}</dd>
+          </div>
+        </dl>
 
         {client.phone && (
           <div className="cc-drawer-actions">
@@ -194,25 +232,6 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
             </span>
           </div>
         )}
-
-        <dl className="cc-drawer-stats">
-          <div>
-            <dt>Turnos</dt>
-            <dd className="is-big">{client.count}</dd>
-          </div>
-          <div>
-            <dt>Total en turnos</dt>
-            <dd>{formatARS(client.totalSpent)}</dd>
-          </div>
-          <div data-inactive={inactive || undefined}>
-            <dt>Último turno</dt>
-            <dd>{formatRelativeDays(client.lastDate, today)}</dd>
-          </div>
-          <div>
-            <dt>Cliente desde</dt>
-            <dd>{client.firstDate ? formatDate(client.firstDate) : "—"}</dd>
-          </div>
-        </dl>
 
         <section className="cc-drawer-section">
           <div className="cc-drawer-section-head">
