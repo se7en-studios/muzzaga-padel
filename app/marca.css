@@ -1,8 +1,8 @@
 /* ==========================================================================
    MARCA EN TODO EL SITIO
    Lo que comparten todas las páginas: los íconos 3D, el botón verde de
-   WhatsApp, la barra de abajo del celu y el footer (Admin con el candado y
-   el crédito de se7en). Vivía en fondo-cancha.css, que solo carga la home,
+   WhatsApp, la barra de abajo del celu y el crédito de se7en (también lo
+   usa el admin; el resto del footer está en components/Footer.css). Vivía en fondo-cancha.css, que solo carga la home,
    y en Torneos, Menú y Herramientas el footer quedaba con el estilo viejo.
    Se importa desde app/layout.js después de globals.css.
    ========================================================================== */
