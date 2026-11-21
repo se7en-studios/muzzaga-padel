@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeftRight,
   Banknote,
+  Check,
   Coins,
   Download,
   Lock,
   LockOpen,
+  Minus,
   Package,
+  Plus,
   QrCode,
   Receipt,
   Scale,
@@ -56,7 +59,7 @@ const CategoryIcon = ({ id, ...props }) => {
   return <Icon size={15} strokeWidth={2} aria-hidden {...props} />;
 };
 const DIFF_TEXT = {
-  ok: "Cuadra exacto",
+  ok: "Lo contado coincide con lo esperado",
   minor: "Diferencia chica",
   major: "Diferencia grande: revisá antes de cerrar",
 };
@@ -299,6 +302,10 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
   const liveDiff =
     counted === "" ? null : Number(counted) - summary.expectedCash;
   const tone = liveDiff == null ? null : cashDiffTone(liveDiff);
+  const billTotal = BILL_DENOMINATIONS.reduce(
+    (sum, d) => sum + d * (parseInt(billCounts[d], 10) || 0),
+    0,
+  );
 
   return (
     <div className={`admin-caja${loading ? " admin-content-loading" : ""}`}>
@@ -429,7 +436,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
 
       <div className="admin-cash-grid">
         {/* EGRESOS */}
-        <section className="admin-settings-card">
+        <section className="admin-settings-card admin-caja-expenses">
           <h3 className="admin-section-title admin-caja-card-title">
             <Receipt {...ICON} /> Egresos del día
             {summary.totalExpenses > 0 && (
@@ -450,6 +457,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                   <button
                     key={c.id}
                     type="button"
+                    data-cat={c.id}
                     aria-pressed={expense.category === c.id}
                     onClick={() =>
                       setExpense((x) => ({ ...x, category: c.id }))
@@ -517,18 +525,20 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
               }
             />
           ) : (
+            <div className="admin-caja-receipt">
             <ul className="admin-expense-list">
               {summary.expensesList.map((x) => (
-                <li key={x.id} className="admin-expense-row">
+                <li key={x.id} className="admin-expense-row" data-cat={x.category}>
+                  <span className="admin-caja-cat-icon" data-cat={x.category}>
+                    <CategoryIcon id={x.category} size={18} />
+                  </span>
                   <div className="admin-expense-main">
-                    <span className="admin-caja-cat" data-cat={x.category}>
-                      <CategoryIcon id={x.category} />
+                    <span className="admin-expense-concept">{x.concept}</span>
+                    <small className="admin-expense-meta">
                       {categoryLabel(x.category)}
-                    </span>
-                    <span className="admin-expense-concept">
-                      {x.concept}
-                      {x.notes && <small> · {x.notes}</small>}
-                    </span>
+                      {x.createdAt ? ` · ${formatTime(x.createdAt)}` : ""}
+                      {x.notes ? ` · ${x.notes}` : ""}
+                    </small>
                   </div>
                   <div className="admin-expense-side">
                     <strong className="is-negative">
@@ -549,11 +559,21 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                 </li>
               ))}
             </ul>
+              <div className="admin-caja-receipt-total">
+                <span>
+                  Total egresos
+                  <small>
+                    {plural(summary.expensesList.length, "salida", "salidas")}
+                  </small>
+                </span>
+                <strong>{formatARS(-summary.totalExpenses)}</strong>
+              </div>
+            </div>
           )}
         </section>
 
         {/* ARQUEO */}
-        <section className="admin-settings-card">
+        <section className="admin-settings-card admin-caja-arqueo">
           <h3 className="admin-section-title admin-caja-card-title">
             <Scale {...ICON} /> Arqueo y cierre
           </h3>
@@ -579,7 +599,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
               <div className="admin-bill-calc-wrap">
                 <button
                   type="button"
-                  className="btn btn-secondary admin-btn-xs"
+                  className="btn btn-secondary admin-btn-xs admin-bill-toggle"
                   aria-expanded={showBillCalc}
                   onClick={() => setShowBillCalc((v) => !v)}
                 >
@@ -593,27 +613,62 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
 
                 {showBillCalc && (
                   <div className="admin-bill-calc">
-                    {BILL_DENOMINATIONS.map((denom) => (
-                      <label key={denom} className="admin-bill-field" data-denom={denom}>
-                        <span className="admin-bill-note">{formatARS(denom)}</span>
-                        <input
-                          type="number"
-                          min={0}
-                          inputMode="numeric"
-                          placeholder="Cant."
-                          value={billCounts[denom]}
-                          onChange={(e) =>
-                            handleBillChange(denom, e.target.value)
-                          }
-                        />
-                        <small className="admin-bill-sub">
-                          {(parseInt(billCounts[denom], 10) || 0) > 0
-                            ? formatARS(denom * parseInt(billCounts[denom], 10))
-                            : "—"}
-                        </small>
-                      </label>
-                    ))}
+                    <div className="admin-bill-grid">
+                      {BILL_DENOMINATIONS.map((denom) => {
+                        const qty = parseInt(billCounts[denom], 10) || 0;
+                        const step = (delta) => {
+                          const next = Math.max(0, qty + delta);
+                          handleBillChange(denom, next > 0 ? String(next) : "");
+                        };
+                        return (
+                          <div
+                            key={denom}
+                            className={`admin-bill-field${qty > 0 ? " has-qty" : ""}`}
+                            data-denom={denom}
+                          >
+                            <span className="admin-bill-note" aria-hidden="true">
+                              <span>{formatARS(denom)}</span>
+                            </span>
+                            <div className="admin-bill-stepper">
+                              <button
+                                type="button"
+                                aria-label={`Un billete de ${formatARS(denom)} menos`}
+                                disabled={qty === 0}
+                                onClick={() => step(-1)}
+                              >
+                                <Minus size={16} strokeWidth={2.5} aria-hidden />
+                              </button>
+                              <input
+                                type="number"
+                                min={0}
+                                inputMode="numeric"
+                                placeholder="0"
+                                aria-label={`Cantidad de billetes de ${formatARS(denom)}`}
+                                value={billCounts[denom]}
+                                onChange={(e) =>
+                                  handleBillChange(denom, e.target.value)
+                                }
+                              />
+                              <button
+                                type="button"
+                                aria-label={`Un billete de ${formatARS(denom)} más`}
+                                onClick={() => step(1)}
+                              >
+                                <Plus size={16} strokeWidth={2.5} aria-hidden />
+                              </button>
+                            </div>
+                            <small className="admin-bill-sub">
+                              {qty > 0 ? formatARS(denom * qty) : "—"}
+                            </small>
+                          </div>
+                        );
+                      })}
+                    </div>
                     <div className="admin-bill-calc-foot">
+                      <span className="admin-bill-total">
+                        Total en billetes
+                        <strong>{formatARS(billTotal)}</strong>
+                      </span>
                       <button
                         type="button"
                         className="admin-link-danger"
@@ -635,10 +690,13 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
             <div
               className="admin-cash-diff admin-caja-score"
               data-tone={tone}
+              data-sign={liveDiff === 0 ? "zero" : liveDiff > 0 ? "over" : "under"}
               role="status"
               aria-live="polite"
             >
-              {/* Marcador: esperado contra contado, y el resultado abajo. */}
+              {/* Marcador: esperado contra contado arriba y el veredicto
+                  grande abajo, para que se lea desde el otro lado del
+                  mostrador. */}
               <dl className="admin-caja-score-row">
                 <div>
                   <dt>Esperado</dt>
@@ -650,8 +708,24 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                 </div>
               </dl>
               <div className="admin-caja-score-result">
-                <span>{DIFF_TEXT[tone]}</span>
-                <strong>{diffLabel(liveDiff)}</strong>
+                <strong className="admin-caja-score-verdict">
+                  {liveDiff === 0 ? (
+                    <>
+                      Cuadra
+                      <span className="admin-caja-score-check" aria-hidden="true">
+                        <Check size={22} strokeWidth={3} />
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {liveDiff > 0 ? "Sobran" : "Faltan"}{" "}
+                      <span className="admin-caja-score-amount">
+                        {formatARS(Math.abs(liveDiff))}
+                      </span>
+                    </>
+                  )}
+                </strong>
+                <span className="admin-caja-score-note">{DIFF_TEXT[tone]}</span>
               </div>
             </div>
           )}
@@ -670,6 +744,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                   onChange={(e) => setClosingNotes(e.target.value)}
                 />
               </div>
+              <div className="admin-caja-close-bar">
               <button
                 type="button"
                 className="btn btn-linear-primary admin-btn-block admin-btn-lg admin-caja-close-btn"
@@ -678,6 +753,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
               >
                 <Lock {...ICON} /> Cerrar caja del día
               </button>
+              </div>
             </>
           )}
         </section>
