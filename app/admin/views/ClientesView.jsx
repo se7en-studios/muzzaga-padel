@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   formatARS,
+  formatDate,
   formatRelativeDays,
   normalizeSearch,
   plural,
@@ -34,6 +35,7 @@ import { WhatsAppMiniIcon } from "../adminHelpers";
 import ClientDrawer, { avatarTone, initials } from "./clientes/ClientDrawer";
 import StaffPinModal from "../ui/StaffPinModal";
 import { adminDeleteClient } from "../actions";
+import { DEMO_CLIENTS } from "./clientes/__demoData"; // DEMO-TEMP
 
 const SEARCH_DEBOUNCE_MS = 250;
 const ICON = { size: 16, strokeWidth: 1.75, "aria-hidden": true };
@@ -93,6 +95,7 @@ export default function ClientesView({
   onToast,
   onReloadClients,
 }) {
+  if (typeof window !== "undefined" && window.location.search.includes("demo")) clients = DEMO_CLIENTS; // DEMO-TEMP
   const [searchInput, setSearchInput] = useState(initialSearch);
   const [search, setSearch] = useState(initialSearch);
   const [segment, setSegment] = useState("all");
@@ -172,6 +175,9 @@ export default function ClientesView({
   }
 
   const maxCount = Math.max(1, ...list.map((c) => c.count || 0));
+  // Solo para mostrar: cuánta plata quedó "en la calle" entre todos.
+  const debtors = list.filter((c) => c.owed > 0);
+  const debtTotal = debtors.reduce((sum, c) => sum + c.owed, 0);
 
   return (
     <div className="cc-clientes">
@@ -199,6 +205,14 @@ export default function ClientesView({
               </span>
               <strong className="cc-board-num">{counts[s.id]}</strong>
               <span className="cc-board-hint">{meta.hint}</span>
+              {/* Qué parte de la base es este segmento, de un vistazo. */}
+              <span className="cc-board-share" aria-hidden>
+                <span
+                  style={{
+                    width: `${list.length ? Math.round((counts[s.id] / list.length) * 100) : 0}%`,
+                  }}
+                />
+              </span>
             </button>
           );
         })}
@@ -256,6 +270,16 @@ export default function ClientesView({
             <strong>{visible.length}</strong> de {list.length}{" "}
             {list.length === 1 ? "jugador" : "jugadores"}
           </span>
+          {debtTotal > 0 && (
+            <span
+              className="cc-debt-pill"
+              title="Saldo de turnos sin cobrar, sumando a todos"
+            >
+              <span className="cc-debt-pill-dot" aria-hidden />
+              {plural(debtors.length, "debe", "deben")}{" "}
+              <strong>{formatARS(debtTotal)}</strong>
+            </span>
+          )}
           <button
             type="button"
             className="cc-csv"
@@ -321,6 +345,7 @@ export default function ClientesView({
                       key={c.key}
                       data-tier={tier}
                       data-inactive={inactive || undefined}
+                      data-owes={c.owed > 0 || undefined}
                       onClick={() => setOpenClient(c)}
                     >
                       <td className="cc-col-player">
@@ -378,13 +403,26 @@ export default function ClientesView({
                         </span>
                       </td>
                       <td className="cc-col-money" data-label="Gastado">
-                        {formatARS(c.totalSpent || 0)}
+                        <span className="cc-money">
+                          {formatARS(c.totalSpent || 0)}
+                        </span>
+                        {c.count > 1 && c.totalSpent > 0 && (
+                          <small className="cc-sub">
+                            {formatARS(Math.round(c.totalSpent / c.count))} por
+                            turno
+                          </small>
+                        )}
                       </td>
                       <td className="cc-col-last" data-label="Último turno">
                         <span className="cc-last" data-fresh={fresh}>
                           <span className="cc-last-dot" aria-hidden />
                           {formatRelativeDays(c.lastDate, today)}
                         </span>
+                        {c.lastDate && (
+                          <small className="cc-sub">
+                            el {formatDate(c.lastDate)}
+                          </small>
+                        )}
                         {inactive && (
                           <span className="cc-chip" data-tier="inactivo">
                             Inactivo

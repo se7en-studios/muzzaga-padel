@@ -17,6 +17,7 @@ import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
 import { EmptyState, SkeletonCards, SkeletonRows } from "../ui/states";
 import { PAYMENT_METHODS } from "../adminHelpers";
 import DailyChart from "./reportes/DailyChart";
+import { demoReport } from "./reportes/zzDemoReport"; // ZZDEMO
 
 const ICON = { size: 16, strokeWidth: 1.75, "aria-hidden": true };
 const MONTH_NAMES = [
@@ -129,7 +130,9 @@ export default function ReportesView({ onExpiredSession }) {
     let cancelled = false;
     setLoading(true);
     setError("");
-    adminGetReport(period.from, period.to).then((res) => {
+    // ZZDEMO
+    const zzDemo = process.env.NODE_ENV !== "production" && typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo");
+    (zzDemo ? Promise.resolve(demoReport(period.from, period.to)) : adminGetReport(period.from, period.to)).then((res) => {
       if (cancelled) return;
       setLoading(false);
       if (res.ok) setReport(res);
