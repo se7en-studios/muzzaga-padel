@@ -45,6 +45,43 @@ export function longDayLabel(iso) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+const monthFormat = new Intl.DateTimeFormat("es-AR", {
+  timeZone: "UTC",
+  month: "short",
+});
+
+/**
+ * La fecha como tablero LED de la cancha: día de la semana, número grande y
+ * mes. Si dura varios días, arriba va "VIE A DOM". Solo decorativo: la fecha
+ * completa se lee en el texto de al lado.
+ */
+export function Marcador({ date, dateEnd, className = "" }) {
+  let label = "Fecha";
+  let num = "--";
+  let mon = "a definir";
+  if (date) {
+    const [y, m, d] = date.split("-");
+    const at = new Date(Date.UTC(+y, m - 1, +d));
+    label = weekdayFormat.format(at).replace(".", "");
+    num = d;
+    mon = monthFormat.format(at).replace(".", "");
+    if (dateEnd && dateEnd !== date) {
+      const [y2, m2, d2] = dateEnd.split("-");
+      const end = weekdayFormat
+        .format(new Date(Date.UTC(+y2, m2 - 1, +d2)))
+        .replace(".", "");
+      label = `${label} a ${end}`;
+    }
+  }
+  return (
+    <span className={`tn-marcador ${className}`.trim()} aria-hidden>
+      <span className="tn-marcador-label">{label}</span>
+      <span className="tn-marcador-num">{num}</span>
+      <span className="tn-marcador-mes">{mon}</span>
+    </span>
+  );
+}
+
 /** Rango de fechas del torneo: "Sáb 07/11" o "Vie 06/11 al Dom 08/11". */
 export function tournamentDates(t) {
   if (!t?.date) return "Sin fecha";

@@ -1,0 +1,1822 @@
+/* ==========================================================================
+   MODALES DEL TURNO: "NUEVA RESERVA" Y "DETALLE" (.admin-bk)
+   Se abren decenas de veces por día en el mostrador. Los dos tienen la
+   misma armazón: cabecera fija, cuerpo que scrollea y abajo lo que se
+   toca siempre (guardar / acciones rápidas), así el botón nunca queda
+   fuera de la pantalla.
+   - Nueva reserva: tres pasos (cuándo → quién → pago) y al costado un
+     ticket que se completa solo. En el celu el ticket se achica y queda
+     fijo abajo con el botón.
+   - Detalle: un "pase de cancha" azul con el tablero (cancha, día, hora),
+     el semáforo de cobro en grande y los jugadores parados en una mini
+     cancha.
+   Carga después de base.css: las reglas viejas de .admin-detail siguen
+   valiendo para los otros modales (PIN, Cantina, Clientes).
+   ========================================================================== */
+
+.admin-root .admin-modal-card.admin-bk {
+  /* Mini cancha estirable (la de base.css guarda la proporción). */
+  --bk-court-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='6' width='192' height='88' stroke-width='2.5' vector-effect='non-scaling-stroke' stroke-opacity='.75'/%3E%3Cpath d='M100 0v100' stroke-width='4' stroke-dasharray='2 4' vector-effect='non-scaling-stroke' stroke-opacity='.85'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.5'/%3E%3C/svg%3E");
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 40px);
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--surface, #ffffff);
+  box-shadow: var(--shadow-pop);
+  font-size: 16px;
+}
+
+.admin-root .admin-modal-card.admin-bk--create {
+  max-width: 940px;
+}
+
+.admin-root .admin-modal-card.admin-bk--detail {
+  max-width: 620px;
+}
+
+/* Etiquetas y textos de ayuda, iguales en los dos. */
+.admin-root .admin-bk .admin-field-label {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-bk .admin-field-label small,
+.admin-root .admin-bk legend small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* Campos de 48 px y letra de 16 px: en el iPhone no hace zoom al tocar.
+   Con el elemento en el selector para ganarle a la regla general de
+   inputs del admin (admin.css / base.css). */
+.admin-root .admin-modal-card.admin-bk :is(input.admin-input-field, select.admin-modal-select) {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control, 10px);
+  background-color: #ffffff;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.admin-root .admin-modal-card.admin-bk select.admin-modal-select {
+  padding-right: 36px;
+}
+
+.admin-root .admin-bk :is(.admin-input-field, .admin-modal-select):focus {
+  border-color: var(--court);
+  box-shadow: var(--court-ring);
+}
+
+.admin-root .admin-bk .admin-input-field::placeholder {
+  color: #8f8a7e;
+}
+
+/* ---------- Cabecera común ---------- */
+.admin-root .admin-bk-head {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0 16px;
+  padding: 22px 26px 16px;
+}
+
+.admin-root .admin-bk-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-bk-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.admin-root .admin-bk .admin-bk-close {
+  min-height: 44px;
+  padding: 0 16px 0 12px;
+}
+
+/* ==========================================================================
+   NUEVA RESERVA
+   ========================================================================== */
+.admin-root .admin-bk--create .admin-bk-head {
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #fbf8f1 0%, #ffffff 100%);
+  box-shadow: inset 0 5px 0 var(--court);
+}
+
+/* Los tres pasos arriba, como una barrita que se va completando. */
+.admin-root .admin-bk-stepper {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root .admin-bk-stepper li {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 12px 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #f4f0e7;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-root .admin-bk-stepper li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -11px;
+  width: 10px;
+  height: 2px;
+  background: var(--border-strong);
+}
+
+.admin-root .admin-bk-stepper li.is-done {
+  border-color: rgba(35, 80, 214, 0.28);
+  background: var(--court-tint);
+  color: var(--court-deep);
+}
+
+.admin-root .admin-bk-stepper-num,
+.admin-root .admin-bk-step-num {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  background: #ffffff;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+/* Paso listo: el número se vuelve pelotita. */
+.admin-root .admin-bk-stepper li.is-done .admin-bk-stepper-num,
+.admin-root .admin-bk-step.is-done .admin-bk-step-num {
+  border-color: #a9c41c;
+  background: var(--ball);
+  color: #1b1b19;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* Cuerpo en dos columnas: los pasos (scrollean) y el ticket fijo. */
+.admin-root .admin-bk .admin-bk-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 316px;
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 0;
+}
+
+.admin-root .admin-bk-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 0;
+  padding: 20px 26px 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Sin esto, lo que tiene overflow: hidden (el semáforo, la mini cancha) se
+   achica a cero cuando el cuerpo scrollea. */
+.admin-root .admin-bk-scroll > * {
+  flex-shrink: 0;
+}
+
+/* Reserva / Bloqueo y Cancha entera / Por jugador: controles segmentados. */
+.admin-root .admin-bk-type,
+.admin-root .admin-bk-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #f1ede4;
+}
+
+.admin-root .admin-bk-type button,
+.admin-root .admin-bk-seg button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 54px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+
+.admin-root .admin-bk-type button small,
+.admin-root .admin-bk-seg button small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-bk-type button:hover:not([aria-checked="true"]),
+.admin-root .admin-bk-seg button:hover:not([aria-checked="true"]) {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text);
+}
+
+.admin-root .admin-bk-type button[aria-checked="true"],
+.admin-root .admin-bk-seg button[aria-checked="true"] {
+  border-color: var(--border);
+  background: var(--surface, #ffffff);
+  color: #9a3412;
+  box-shadow:
+    inset 0 -3px 0 var(--brand),
+    0 2px 6px rgba(27, 27, 25, 0.1);
+}
+
+.admin-root .admin-bk-seg button[aria-checked="true"] small {
+  color: var(--text-secondary);
+}
+
+/* Cada paso con su número sobre un riel que los une. */
+.admin-root .admin-bk-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-left: 42px;
+}
+
+.admin-root .admin-bk-step::before {
+  content: "";
+  position: absolute;
+  top: 34px;
+  bottom: -14px;
+  left: 13px;
+  width: 2px;
+  border-radius: 1px;
+  background: repeating-linear-gradient(180deg, var(--border-strong) 0 6px, transparent 6px 11px);
+}
+
+.admin-root .admin-bk-step:last-child::before {
+  display: none;
+}
+
+.admin-root .admin-bk-step-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 -2px -42px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.admin-root .admin-bk-step-title .admin-bk-step-num {
+  width: 28px;
+  height: 28px;
+  border-color: var(--court);
+  color: var(--court);
+  font-size: 16px;
+}
+
+.admin-root .admin-bk .admin-create-field,
+.admin-root .admin-bk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Las canchas: dos mini canchas vistas desde arriba, con el césped azul. */
+.admin-root .admin-bk-courts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  grid-auto-flow: column;
+  gap: 12px;
+}
+
+.admin-root .admin-bk-court {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  aspect-ratio: 5 / 2;
+  min-height: 78px;
+  padding: 8px;
+  border: 2px solid #16349a;
+  border-radius: 12px;
+  background-color: #2350d6;
+  background-image:
+    var(--bk-court-lines),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.12), rgba(11, 26, 77, 0.5)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 180px 180px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  filter: saturate(0.4) brightness(0.92);
+}
+
+.admin-root .admin-bk-court:hover:not([aria-checked="true"]) {
+  filter: saturate(0.75);
+}
+
+.admin-root .admin-bk-court-name {
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: rgba(11, 26, 77, 0.55);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-bk-court-type {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.admin-root .admin-bk-court[aria-checked="true"] {
+  filter: none;
+  box-shadow:
+    0 0 0 3px #ffffff,
+    0 0 0 6px var(--brand),
+    0 14px 24px -12px rgba(13, 31, 92, 0.8);
+}
+
+/* Pelotita en la elegida. */
+.admin-root .admin-bk-court[aria-checked="true"]::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid #ffffff;
+  border-radius: 50%;
+  background: var(--ball);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Horarios (y cantidad de jugadores) como fichas. */
+.admin-root .admin-bk-times {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.admin-root .admin-bk-time {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 58px;
+  padding: 6px 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(27, 27, 25, 0.06);
+}
+
+.admin-root .admin-bk-time strong {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-bk-time small {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-bk-time:hover:not([aria-checked="true"]) {
+  border-color: var(--court);
+  background: var(--court-tint);
+}
+
+.admin-root .admin-bk-time[aria-checked="true"] {
+  border-color: var(--court-deep);
+  background-color: var(--court);
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.05), rgba(11, 26, 77, 0.4)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 160px 160px;
+  color: #ffffff;
+  box-shadow:
+    inset 0 -3px 0 var(--brand),
+    0 8px 16px -10px rgba(13, 31, 92, 0.8);
+}
+
+.admin-root .admin-bk-time[aria-checked="true"] small {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-root .admin-bk-count {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* "+ Anotar jugadores": renglón punteado que invita a tocar. */
+.admin-root .admin-bk-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--court-deep);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-root .admin-bk-add span {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.admin-root .admin-bk-add:hover {
+  border-color: var(--court);
+  background: var(--court-tint);
+}
+
+/* Turno fijo: la casilla como renglón entero. */
+.admin-root .admin-bk .admin-bk-check {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.admin-root .admin-bk .admin-bk-check span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.admin-root .admin-bk .admin-bk-check small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-bk .admin-bk-check input {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  accent-color: var(--brand-strong);
+}
+
+.admin-root .admin-bk .admin-bk-check:has(input:checked) {
+  border-color: rgba(194, 65, 12, 0.4);
+  background: #fff7f0;
+}
+
+.admin-root .admin-bk .admin-bk-weeks {
+  max-width: 160px;
+}
+
+/* ---------- Jugadores: posiciones en una mini cancha ---------- */
+.admin-root .admin-bk .admin-players-fields,
+.admin-root .admin-bk-lineup {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  grid-auto-flow: column;
+  gap: 12px 40px;
+  margin: 0;
+  padding: 16px 14px;
+  list-style: none;
+  border: 2px solid #16349a;
+  border-radius: 14px;
+  background-color: #2350d6;
+  background-image:
+    var(--bk-court-lines),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.1), rgba(11, 26, 77, 0.45)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 200px 200px;
+  background-repeat: no-repeat, no-repeat, repeat;
+}
+
+.admin-root .admin-bk .admin-players-fields label {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.admin-root .admin-modal-card.admin-bk .admin-players-fields input.admin-input-field {
+  padding-left: 46px;
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.6);
+}
+
+.admin-root .admin-bk .admin-players-fields .admin-input-field:focus {
+  border-color: #ffffff;
+  box-shadow:
+    0 0 0 3px var(--brand),
+    0 6px 12px -8px rgba(0, 0, 0, 0.6);
+}
+
+.admin-root .admin-players-slot,
+.admin-root .admin-bk-slot-num {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ball);
+  color: #1b1b19;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+}
+
+.admin-root .admin-players-slot {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  margin-top: -14px;
+  pointer-events: none;
+}
+
+.admin-root .admin-bk-lineup li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--text);
+  font-size: 15.5px;
+  font-weight: 600;
+  box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.6);
+}
+
+.admin-root .admin-bk-lineup li.is-owner {
+  box-shadow:
+    0 0 0 2.5px var(--brand),
+    0 6px 12px -8px rgba(0, 0, 0, 0.6);
+}
+
+.admin-root .admin-bk-lineup li.is-empty {
+  border: 1.5px dashed rgba(255, 255, 255, 0.6);
+  background: rgba(11, 26, 77, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  font-style: italic;
+  box-shadow: none;
+}
+
+.admin-root .admin-bk-lineup li.is-empty .admin-bk-slot-num {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-style: normal;
+  box-shadow: none;
+}
+
+.admin-root .admin-bk-slot-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* "reservó" va antes del nombre en el código (para el lector de pantalla)
+   pero se ve después, chiquito. */
+.admin-root .admin-bk-slot-tag {
+  order: 2;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--brand-tint);
+  color: #9a3412;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-bk-extra {
+  margin: 8px 0 0;
+  font-size: 14.5px;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-bk-owner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.admin-root .admin-bk-owner small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ---------- El ticket (resumen en vivo) ---------- */
+.admin-root .admin-bk-ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  padding: 20px 20px 22px;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  background: var(--bg, #f5f2ea);
+}
+
+.admin-root .admin-bk-ticket-paper {
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  background: #fffdf8;
+  box-shadow:
+    0 2px 4px rgba(27, 27, 25, 0.05),
+    0 26px 44px -28px rgba(11, 26, 77, 0.6);
+}
+
+.admin-root .admin-bk-ticket-head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 18px 22px;
+  background-color: var(--court);
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.02), rgba(11, 26, 77, 0.45)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 200px 200px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* El borde del papel, picado como un ticket de verdad. */
+.admin-root .admin-bk-ticket-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 8px;
+  background: radial-gradient(circle at 7px 8px, #fffdf8 5.5px, transparent 6px) 0 0 / 14px 8px repeat-x;
+  pointer-events: none;
+}
+
+.admin-root .admin-bk-ticket-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-root .admin-bk-ticket-kicker::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ball);
+  box-shadow: 0 0 10px rgba(215, 240, 58, 0.55);
+}
+
+.admin-root .admin-bk-ticket-time {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-bk-ticket-court {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.admin-root .admin-bk-ticket-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 18px;
+}
+
+.admin-root .admin-bk-ticket-rows > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.admin-root .admin-bk-ticket-rows dt {
+  flex-shrink: 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-bk-ticket-rows dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.admin-root .admin-bk-ticket-rows dd.is-empty {
+  font-weight: 500;
+  font-style: italic;
+  color: #b45309;
+}
+
+/* El total, después del corte con muescas. */
+.admin-root .admin-bk-ticket-total {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 18px 16px;
+  border-top: 2px dashed #e3dccb;
+}
+
+.admin-root .admin-bk-ticket-total::before,
+.admin-root .admin-bk-ticket-total::after {
+  content: "";
+  position: absolute;
+  top: -11px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg, #f5f2ea);
+}
+
+.admin-root .admin-bk-ticket-total::before {
+  left: -11px;
+}
+
+.admin-root .admin-bk-ticket-total::after {
+  right: -11px;
+}
+
+.admin-root .admin-bk-ticket-amount,
+.admin-root .admin-bk-ticket-deposit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-root .admin-bk-ticket-amount span {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-bk-ticket-amount strong {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--brand-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-bk-ticket-deposit {
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-bk-ticket-deposit strong {
+  font-size: 15px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-bk-ticket-block {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* Botón de guardar: grande, naranja, con el total a la vista. */
+.admin-root .admin-dashboard-layout .admin-bk-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.admin-root .admin-bk-submit-price {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   DETALLE DEL TURNO
+   ========================================================================== */
+
+/* El pase de cancha: azul con el césped, el tablero y el nombre grande. */
+.admin-root .admin-bk-pass {
+  position: relative;
+  display: block;
+  padding: 18px 24px 26px;
+  background-color: var(--court);
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.08), rgba(11, 26, 77, 0.55)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 220px 220px;
+  color: #ffffff;
+}
+
+/* Borde de abajo picado, como el talón de una entrada. */
+.admin-root .admin-bk-pass::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 9px;
+  background: radial-gradient(circle at 8px 9px, var(--surface, #ffffff) 6px, transparent 6.5px) 0 0 / 16px 9px repeat-x;
+  pointer-events: none;
+}
+
+.admin-root .admin-bk-pass-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-root .admin-bk-pass .admin-bk-eyebrow {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-root .admin-bk-pass .admin-bk-eyebrow::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ball);
+  box-shadow: 0 0 10px rgba(215, 240, 58, 0.6);
+}
+
+.admin-root .admin-bk-code {
+  padding: 3px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 7px;
+  background: rgba(11, 26, 77, 0.4);
+  font-family: var(--font-jetbrains-mono, ui-monospace), monospace;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+}
+
+.admin-root .admin-bk-pass .admin-bk-close {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.admin-root .admin-bk-pass .admin-bk-close:hover {
+  background: rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+}
+
+.admin-root .admin-bk-pass .admin-bk-close:focus-visible {
+  outline-color: #ffffff;
+}
+
+/* Tablero: tres casilleros como el marcador de un partido. */
+.admin-root .admin-bk-board {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.25fr);
+  margin: 14px 0 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(5, 12, 40, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.admin-root .admin-bk-board > div {
+  min-width: 0;
+  padding: 8px 14px 10px;
+}
+
+.admin-root .admin-bk-board > div + div {
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.admin-root .admin-bk-board dt {
+  overflow: hidden;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.admin-root .admin-bk-board dd {
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #ecfb6f;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 14px rgba(215, 240, 58, 0.35);
+}
+
+.admin-root .admin-bk-board dd.is-text {
+  font-size: 24px;
+  line-height: 1.05;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.admin-root .admin-bk-board dd small {
+  margin-left: 6px;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: none;
+}
+
+.admin-root .admin-bk-name {
+  margin: 16px 0 0;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.admin-root .admin-bk-pass .admin-detail-tags {
+  margin-top: 10px;
+}
+
+.admin-root .admin-bk-pass .admin-detail-tag {
+  box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.35);
+}
+
+.admin-root .admin-bk-pass .admin-detail-tag:not(.is-vip, .is-new, .is-fixed, .is-danger) {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: #ffffff;
+  color: var(--text);
+}
+
+.admin-root .admin-bk-pass-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 10px;
+}
+
+.admin-root .admin-bk-pass .admin-detail-phone,
+.admin-root .admin-bk-pass .admin-detail-notes {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Cuerpo del detalle. */
+.admin-root .admin-bk--detail .admin-bk-scroll {
+  flex: 1 1 auto;
+  gap: 20px;
+  padding: 22px 24px 24px;
+}
+
+.admin-root .admin-bk :is(.admin-detail-section, .admin-detail-pay, .admin-detail-players, .admin-account-block) {
+  margin: 0;
+}
+
+.admin-root .admin-bk .admin-detail-subtitle {
+  margin: 0 0 10px;
+}
+
+.admin-root .admin-bk-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-root .admin-bk-section-head .admin-detail-subtitle {
+  margin: 0;
+}
+
+.admin-root .admin-bk-section-head .admin-players-toggle {
+  min-height: 44px;
+  margin: 0;
+  padding: 0 4px;
+}
+
+/* Semáforo de cobro: la palabra grande en su color, y la plata al lado. */
+.admin-root .admin-bk-money {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-bk-money-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 132px;
+  padding: 12px 16px;
+  background: #57544c;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.admin-root .admin-bk-money-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 14px 18px;
+  font-size: 14.5px;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-bk-money-kicker {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.admin-root strong.admin-bk-money-kicker {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--text);
+}
+
+.admin-root .admin-bk-money-amount {
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.admin-root .admin-bk-money.is-pagado {
+  border-color: #86efac;
+  background: #ecfdf5;
+}
+
+.admin-root .admin-bk-money.is-pagado .admin-bk-money-state {
+  background: #15803d;
+}
+
+.admin-root .admin-bk-money.is-pagado .admin-bk-money-amount,
+.admin-root .admin-bk-money.is-pagado .admin-bk-money-kicker {
+  color: #047857;
+}
+
+.admin-root .admin-bk-money.is-sena {
+  border-color: #fde047;
+  background: #fefce8;
+}
+
+.admin-root .admin-bk-money.is-sena .admin-bk-money-state {
+  background: #facc15;
+  color: #422006;
+}
+
+.admin-root .admin-bk-money.is-sena .admin-bk-money-amount {
+  color: #854d0e;
+}
+
+.admin-root .admin-bk-money.is-debe {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.admin-root .admin-bk-money.is-debe .admin-bk-money-state {
+  background: #dc2626;
+}
+
+.admin-root .admin-bk-money.is-debe .admin-bk-money-amount {
+  color: #b91c1c;
+}
+
+.admin-root .admin-bk-progress {
+  position: relative;
+  display: block;
+  height: 8px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(133, 77, 14, 0.16);
+}
+
+.admin-root .admin-bk-progress > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #eab308, #84cc16);
+}
+
+/* Cobro de un toque: cada medio de pago, una tecla grande. */
+.admin-root .admin-bk-pay {
+  scroll-margin: 16px;
+}
+
+.admin-root .admin-bk .admin-detail-question {
+  margin: 0 0 10px;
+}
+
+.admin-root .admin-bk .admin-detail-pay-methods {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-root .admin-bk .admin-detail-pay-btn {
+  min-height: 58px;
+  padding: 0 8px;
+  font-size: 16.5px;
+}
+
+.admin-root .admin-bk .admin-detail-wa a {
+  min-height: 48px;
+}
+
+/* Lo que no tiene vuelta, aparte y en rojo. */
+.admin-root .admin-bk-danger-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px dashed #fca5a5;
+}
+
+.admin-root .admin-bk-danger-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b91c1c;
+}
+
+/* Acciones rápidas, fijas abajo. Cancelar va aparte, después de una raya. */
+.admin-root .admin-bk-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px 24px 14px;
+  border-top: 1px solid var(--border);
+  background: #faf8f3;
+}
+
+.admin-root .admin-bk-actions:empty {
+  display: none;
+}
+
+.admin-root .admin-bk-act {
+  position: relative;
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 1px rgba(27, 27, 25, 0.05);
+}
+
+.admin-root .admin-bk-act:hover {
+  border-color: var(--text-muted);
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-bk-act small {
+  margin-left: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.88;
+}
+
+.admin-root .admin-bk-act.is-primary {
+  flex-grow: 1.5;
+  border-color: var(--brand-hover);
+  background: var(--brand-strong);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 8px 18px -10px rgba(194, 65, 12, 0.7);
+}
+
+.admin-root .admin-bk-act.is-primary:hover {
+  border-color: #7c2d12;
+  background: var(--brand-hover);
+}
+
+.admin-root .admin-bk-act.is-wa {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #14532d;
+}
+
+.admin-root .admin-bk-act.is-wa:hover {
+  border-color: #16a34a;
+  background: #dcfce7;
+}
+
+.admin-root .admin-bk-act.is-danger {
+  flex: 0 1 auto;
+  margin-left: 9px;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.admin-root .admin-bk-act.is-danger::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: -10px;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+/* Sola (un bloqueo cancelado no tiene más acciones): sin raya. */
+.admin-root .admin-bk-act.is-danger:first-child {
+  margin-left: auto;
+}
+
+.admin-root .admin-bk-act.is-danger:first-child::before {
+  display: none;
+}
+
+.admin-root .admin-bk-act.is-danger:hover {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+/* ==========================================================================
+   CELU: hojas que suben desde abajo, con lo importante fijo abajo
+   ========================================================================== */
+@media (max-width: 767px) {
+  .admin-root .admin-modal-card.admin-bk {
+    max-width: none;
+    max-height: 94dvh;
+    padding: 0;
+    border-radius: 22px 22px 0 0;
+  }
+
+  /* La manija, apoyada sobre la cabecera. */
+  .admin-root .admin-modal-card.admin-bk::before {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    z-index: 2;
+    margin: 0 0 0 -22px;
+  }
+
+  .admin-root .admin-bk--detail.admin-modal-card::before {
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  .admin-root .admin-bk-head {
+    padding: 24px 16px 12px;
+  }
+
+  .admin-root .admin-bk-title {
+    font-size: 32px;
+  }
+
+  .admin-root .admin-bk-stepper {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .admin-root .admin-bk-stepper li {
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 8px 0 4px;
+    font-size: 14.5px;
+  }
+
+  .admin-root .admin-bk-stepper li:not(:last-child)::after {
+    right: -9px;
+    width: 8px;
+  }
+
+  .admin-root .admin-bk-stepper-num {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+
+  /* Una sola columna: los pasos scrollean y el ticket queda abajo fijo. */
+  .admin-root .admin-bk .admin-bk-form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .admin-root .admin-bk-scroll {
+    flex: 1 1 auto;
+    gap: 20px;
+    padding: 16px 16px 24px;
+  }
+
+  .admin-root .admin-bk-step {
+    padding-left: 0;
+  }
+
+  .admin-root .admin-bk-step::before {
+    display: none;
+  }
+
+  .admin-root .admin-bk-step-title {
+    margin-left: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .admin-root .admin-bk-times {
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  }
+
+  .admin-root .admin-bk-time strong {
+    font-size: 22px;
+  }
+
+  .admin-root .admin-bk-court {
+    aspect-ratio: auto;
+    min-width: 0;
+    min-height: 80px;
+  }
+
+  .admin-root .admin-bk-court-name {
+    font-size: 20px;
+  }
+
+  .admin-root .admin-bk .admin-players-fields,
+  .admin-root .admin-bk-lineup {
+    gap: 10px 26px;
+    padding: 12px 10px;
+  }
+
+  .admin-root .admin-modal-card.admin-bk .admin-players-fields input.admin-input-field {
+    padding-left: 42px;
+    padding-right: 8px;
+  }
+
+  .admin-root .admin-players-slot {
+    left: 8px;
+  }
+
+  .admin-root .admin-bk-lineup li {
+    padding-right: 8px;
+    font-size: 14.5px;
+  }
+
+  .admin-root .admin-bk-slot-tag {
+    display: none;
+  }
+
+  /* El ticket se vuelve una tira: horario a la izquierda, total a la
+     derecha, y abajo el botón. */
+  .admin-root .admin-bk-ticket {
+    flex-shrink: 0;
+    gap: 10px;
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+    overflow: visible;
+    border-top: 1px solid var(--border);
+    border-left: none;
+    background: #faf8f3;
+    box-shadow: 0 -10px 24px -18px rgba(27, 27, 25, 0.5);
+  }
+
+  .admin-root .admin-bk-ticket-paper {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(27, 27, 25, 0.06);
+  }
+
+  .admin-root .admin-bk-ticket-head {
+    justify-content: center;
+    gap: 0;
+    padding: 7px 14px 8px;
+  }
+
+  .admin-root .admin-bk-ticket-head::after,
+  .admin-root .admin-bk-ticket-kicker,
+  .admin-root .admin-bk-ticket-rows,
+  .admin-root .admin-bk-ticket-amount span,
+  .admin-root .admin-bk-submit-price {
+    display: none;
+  }
+
+  .admin-root .admin-bk-ticket-time {
+    font-size: 24px;
+  }
+
+  .admin-root .admin-bk-ticket-court {
+    overflow: hidden;
+    font-size: 12.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-bk-ticket-total {
+    justify-content: center;
+    gap: 0;
+    padding: 6px 14px;
+    border-top: none;
+    border-left: 2px dashed #e3dccb;
+    text-align: right;
+  }
+
+  .admin-root .admin-bk-ticket-total::before,
+  .admin-root .admin-bk-ticket-total::after {
+    display: none;
+  }
+
+  .admin-root .admin-bk-ticket-amount,
+  .admin-root .admin-bk-ticket-deposit {
+    justify-content: flex-end;
+  }
+
+  .admin-root .admin-bk-ticket-amount strong {
+    font-size: 28px;
+  }
+
+  .admin-root .admin-bk-ticket-deposit {
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  .admin-root .admin-bk-ticket-deposit span {
+    font-size: 0;
+  }
+
+  .admin-root .admin-bk-ticket-deposit span::before {
+    content: "Seña";
+    font-size: 12px;
+  }
+
+  .admin-root .admin-bk-ticket-deposit strong {
+    font-size: 13px;
+  }
+
+  .admin-root .admin-bk-ticket-block {
+    max-width: 120px;
+    font-size: 13px;
+  }
+
+  .admin-root .admin-dashboard-layout .admin-bk-submit {
+    min-height: 54px;
+  }
+
+  /* Detalle: en el celu scrollea la hoja entera (el pase se va para
+     arriba y deja lugar) y las acciones quedan pegadas abajo. */
+  .admin-root .admin-modal-card.admin-bk--detail {
+    display: block;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .admin-root .admin-bk--detail .admin-bk-scroll {
+    overflow: visible;
+  }
+
+  .admin-root .admin-bk--detail .admin-bk-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    box-shadow: 0 -10px 24px -18px rgba(27, 27, 25, 0.5);
+  }
+
+  .admin-root .admin-bk-pass {
+    padding: 24px 16px 22px;
+  }
+
+  .admin-root .admin-bk-pass .admin-bk-eyebrow {
+    gap: 6px;
+    font-size: 11.5px;
+  }
+
+  .admin-root .admin-bk-code {
+    padding: 2px 7px;
+    font-size: 12px;
+  }
+
+  .admin-root .admin-bk-pass .admin-detail-tag {
+    padding: 2px 9px;
+    font-size: 12.5px;
+  }
+
+  .admin-root .admin-bk-pass .admin-detail-phone,
+  .admin-root .admin-bk-pass .admin-detail-notes {
+    font-size: 14px;
+  }
+
+  .admin-root .admin-bk-board > div {
+    padding: 7px 10px 9px;
+  }
+
+  .admin-root .admin-bk-board dt {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .admin-root .admin-bk-board dd {
+    font-size: 34px;
+  }
+
+  .admin-root .admin-bk-board dd.is-text {
+    font-size: 19px;
+  }
+
+  .admin-root .admin-bk-board dd small {
+    display: block;
+    margin: 2px 0 0;
+    font-size: 14px;
+  }
+
+  .admin-root .admin-bk-name {
+    margin-top: 14px;
+    font-size: 32px;
+  }
+
+  .admin-root .admin-bk--detail .admin-bk-scroll {
+    padding: 18px 16px 22px;
+  }
+
+  .admin-root .admin-bk-money {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-root .admin-bk-money-state {
+    justify-content: flex-start;
+    min-width: 0;
+    padding: 8px 16px;
+    font-size: 24px;
+  }
+
+  .admin-root .admin-bk-money-amount {
+    font-size: 42px;
+  }
+
+  .admin-root .admin-bk .admin-detail-pay-methods {
+    gap: 6px;
+  }
+
+  .admin-root .admin-bk .admin-detail-pay-btn {
+    padding: 0 4px;
+    font-size: 14.5px;
+    line-height: 1.15;
+  }
+
+  .admin-root .admin-bk-type button,
+  .admin-root .admin-bk-seg button {
+    font-size: 15px;
+  }
+
+  .admin-root .admin-bk-type button small,
+  .admin-root .admin-bk-seg button small {
+    font-size: 12px;
+  }
+
+  .admin-root .admin-bk-actions {
+    gap: 6px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-bk-act {
+    flex-direction: column;
+    gap: 3px;
+    min-height: 60px;
+    padding: 4px 6px;
+    font-size: 13.5px;
+  }
+
+  .admin-root .admin-bk-act > span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .admin-root .admin-bk-act small {
+    margin: 0;
+    font-size: 12.5px;
+  }
+
+  .admin-root .admin-bk-act.is-danger {
+    flex: 1 1 0;
+    margin-left: 7px;
+  }
+
+  .admin-root .admin-bk-act.is-danger::before {
+    left: -7px;
+  }
+}
+
+/* Celus angostos (360): el horario va solo en la tira del ticket. */
+@media (max-width: 380px) {
+  .admin-root .admin-bk-stepper li {
+    font-size: 13.5px;
+  }
+
+  .admin-root .admin-bk .admin-detail-pay-methods {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   MOVIMIENTO (solo transform y opacity, y solo si la persona lo acepta)
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-bk-court,
+  .admin-root .admin-bk-time,
+  .admin-root .admin-bk-act {
+    transition: transform 0.12s ease-out;
+  }
+
+  .admin-root .admin-bk-court:active,
+  .admin-root .admin-bk-time:active,
+  .admin-root .admin-bk-act:active {
+    transform: scale(0.97);
+  }
+
+  .admin-root .admin-bk-court[aria-checked="true"]::after {
+    animation: adminBkBall 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .admin-root .admin-bk-stepper li.is-done .admin-bk-stepper-num,
+  .admin-root .admin-bk-step.is-done .admin-bk-step-num {
+    animation: adminBkPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .admin-root .admin-bk-money-state {
+    animation: adminBkFade 0.3s ease-out 0.08s both;
+  }
+
+  @keyframes adminBkBall {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.4);
+    }
+  }
+
+  @keyframes adminBkPop {
+    from {
+      transform: scale(0.6);
+    }
+  }
+
+  @keyframes adminBkFade {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+  }
+}

@@ -12,7 +12,7 @@ import {
   adminSaveTournamentMatch,
 } from "../actions";
 import TournamentDetail from "./torneos/TournamentDetail";
-import { STATUS_LABELS, tournamentDates } from "./torneos/shared";
+import { Marcador, STATUS_LABELS, tournamentDates } from "./torneos/shared";
 
 const EMPTY_FORM = {
   name: "",
@@ -289,14 +289,38 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="tn-card tn-stack">
-          <div>
-            <h2 className="tn-card-title">Nuevo torneo</h2>
-            <p className="tn-muted" style={{ margin: 0 }}>
-              Poné el nombre, cuándo se juega y las categorías. Después anotás
-              las parejas.
-            </p>
+        <form onSubmit={handleCreate} className="tn-card tn-create">
+          {/* El afiche se va armando mientras escribís. */}
+          <div className="tn-create-poster">
+            <Marcador date={form.date} dateEnd={form.dateEnd} />
+            <div className="tn-create-poster-text">
+              <span className="tn-hero-kicker">Nuevo torneo</span>
+              <h2
+                className={`tn-card-title tn-create-title${form.name.trim() ? "" : " is-placeholder"}`}
+              >
+                {form.name.trim() || "Nombre del torneo"}
+              </h2>
+              <span className="tn-create-poster-sub">
+                {tournamentDates(form)}
+                {Number(form.price) > 0 &&
+                  ` · ${formatARS(form.price)} por pareja`}
+              </span>
+              {form.categories.length > 0 && (
+                <span className="tn-hero-chips">
+                  {form.categories.map((c) => (
+                    <span key={c} className="tn-hero-chip">
+                      {c}
+                    </span>
+                  ))}
+                </span>
+              )}
+            </div>
           </div>
+          <div className="tn-create-body tn-stack">
+          <p className="tn-muted" style={{ margin: 0 }}>
+            Poné el nombre, cuándo se juega y las categorías. Después anotás
+            las parejas.
+          </p>
           <div className="tn-grid-form">
             <label className="tn-field" style={{ gridColumn: "1 / -1" }}>
               <span className="admin-field-label">Nombre del torneo *</span>
@@ -416,31 +440,62 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
               {creating ? "Creando..." : "Crear y anotar parejas →"}
             </button>
           </div>
+          </div>
         </form>
       )}
 
       {!tournaments ? (
         <SkeletonRows count={3} height={110} />
+      ) : tournaments.length === 0 ? (
+        showCreate ? null : (
+          <div className="tn-empty-poster">
+            <img
+              className="tn-empty-mascot"
+              src="/img/mascotas/muzzaguito-trofeo-paleta.webp"
+              alt=""
+              width={150}
+              height={150}
+              loading="lazy"
+              decoding="async"
+            />
+            <div className="tn-empty-text">
+              <span className="tn-hero-kicker">Torneos del club</span>
+              <h2 className="tn-empty-title">Todavía no hay torneos</h2>
+              <p>
+                Creá el torneo del finde y llevalo de punta a punta desde acá.
+              </p>
+              <ol className="tn-empty-steps">
+                <li>
+                  <strong>Anotás</strong> las parejas y quién pagó
+                </li>
+                <li>
+                  <strong>Sorteás</strong> las zonas y armás los horarios
+                </li>
+                <li>
+                  <strong>Sacás</strong> el PDF y cargás el cuadro
+                </li>
+              </ol>
+              <button
+                type="button"
+                className="tn-cta"
+                onClick={openCreate}
+              >
+                <Plus size={18} aria-hidden /> Crear el primer torneo
+              </button>
+            </div>
+          </div>
+        )
       ) : visible.length === 0 ? (
         <div className="tn-card">
           <EmptyState
             icon={Trophy}
             mascot="trofeo-paleta"
             title={
-              tournaments.length
-                ? "No hay torneos acá"
-                : "Todavía no hay torneos"
+              statusFilter === "finalizado"
+                ? "Todavía no terminó ningún torneo"
+                : "No hay torneos activos"
             }
-            text={
-              tournaments.length
-                ? "Cambiá el filtro para ver los demás."
-                : "Creá el torneo del finde: elegís categorías, anotás parejas, sorteás zonas y sacás el PDF con los horarios."
-            }
-            action={
-              !tournaments.length
-                ? { label: "Crear el primer torneo", onClick: openCreate }
-                : undefined
-            }
+            text="Cambiá el filtro para ver los demás."
           />
         </div>
       ) : (
@@ -459,8 +514,9 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
 }
 
 /**
- * Tarjeta de un torneo en la lista: arriba la cancha azul con el nombre (se
- * reconoce de lejos), abajo categorías, cobro y cuánto falta jugar.
+ * Tarjeta de un torneo en la lista, como el afiche de /torneos: arriba la
+ * cancha azul con la fecha en el tablero LED y el nombre grande (se reconoce
+ * de lejos), abajo categorías con sus parejas, cobro y cuánto falta jugar.
  */
 export function TournamentCard({ t, onOpen }) {
   const status = STATUS_LABELS[t.status] || STATUS_LABELS.abierto;
@@ -469,6 +525,10 @@ export function TournamentCard({ t, onOpen }) {
   const paid = players.filter((p) => p.paid).length;
   const owe = players.length - paid;
   const pct = total ? Math.round((played / total) * 100) : 0;
+  const paidPct = players.length ? Math.round((paid / players.length) * 100) : 0;
+  const countByCat = {};
+  for (const p of players)
+    countByCat[p.categoryId] = (countByCat[p.categoryId] || 0) + 1;
   return (
     <button
       type="button"
@@ -477,46 +537,74 @@ export function TournamentCard({ t, onOpen }) {
       onClick={onOpen}
     >
       <span className="tn-tcard-court">
-        <span className="tn-tcard-top">
-          <span className={`badge-linear ${status.tone}`}>{status.label}</span>
+        <Marcador date={t.date} dateEnd={t.dateEnd} />
+        <span className="tn-tcard-head">
+          <span className="tn-tcard-status" data-status={t.status}>
+            {status.label}
+          </span>
+          <span className="tn-list-name">{t.name}</span>
           <span className="tn-tcard-date">{tournamentDates(t)}</span>
         </span>
-        <span className="tn-list-name">{t.name}</span>
+        {Number(t.price) > 0 && (
+          <span className="tn-tcard-price">
+            {formatARS(t.price)} <small>x pareja</small>
+          </span>
+        )}
       </span>
       <span className="tn-tcard-body">
         <span className="tn-tcard-cats">
           {t.categories.map((c) => (
             <span key={c.id} className="tn-tcard-cat">
               {c.name}
+              <small>{countByCat[c.id] || 0}</small>
             </span>
           ))}
         </span>
-        <span className="tn-tcard-stats">
-          <span>
-            <strong>{players.length}</strong>{" "}
-            {players.length === 1 ? "pareja" : "parejas"}
-          </span>
-          <span className="is-paid">
-            <strong>{paid}</strong> pagaron
-          </span>
-          {owe > 0 && (
-            <span className="is-owe">
-              <strong>{owe}</strong> {owe === 1 ? "debe" : "deben"}
+        <span className="tn-tcard-meters">
+          <span className="tn-tcard-meter">
+            <span className="tn-tcard-meter-label">
+              <span>Inscripción</span>
+              <span>
+                <strong>{players.length}</strong>{" "}
+                {players.length === 1 ? "pareja" : "parejas"} ·{" "}
+                <strong className="is-paid">{paid}</strong> pagaron
+                {owe > 0 && (
+                  <>
+                    {" "}
+                    · <strong className="is-owe">{owe}</strong>{" "}
+                    {owe === 1 ? "debe" : "deben"}
+                  </>
+                )}
+              </span>
             </span>
-          )}
+            <span className="tn-paybar" aria-hidden>
+              <span style={{ width: `${paidPct}%` }} />
+            </span>
+          </span>
+          <span className="tn-tcard-meter">
+            <span className="tn-tcard-meter-label">
+              <span>Partidos</span>
+              <span>
+                {total > 0 ? (
+                  <>
+                    <strong>{played}</strong> de {total} jugados
+                  </>
+                ) : (
+                  "Sin sorteo todavía"
+                )}
+              </span>
+            </span>
+            <span
+              className={`tn-progress${total ? "" : " is-empty"}`}
+              aria-hidden
+            >
+              {total > 0 && <span style={{ width: `${pct}%` }} />}
+            </span>
+          </span>
         </span>
-        {total > 0 ? (
-          <span className="tn-tcard-progress">
-            <span className="tn-progress" aria-hidden>
-              <span style={{ width: `${pct}%` }} />
-            </span>
-            <span className="tn-muted">
-              {played} de {total} partidos jugados
-            </span>
-          </span>
-        ) : (
-          <span className="tn-muted">Sin sorteo todavía</span>
-        )}
+        <span className="tn-tcard-go">
+          Abrir torneo <span aria-hidden>→</span>
+        </span>
       </span>
     </button>
   );

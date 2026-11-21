@@ -4,16 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+// Cada herramienta tiene su color (--hl-acento): se reconoce de lejos y
+// combina con el encabezado de su página (/herramientas/*, clases hx-).
 const TOOLS = [
   {
     key: "dividir",
     short: "Dividir gastos",
     href: "/herramientas/dividir-gastos",
     badge: "Para grupos",
-    badgeColor: "badge-emerald",
     icon: "/img/iconos/icono-dividir.webp",
     title: "Dividir cancha y tercer tiempo",
-    desc: "Calculá en segundos cuánto paga cada uno por el turno y los consumos de cantina. Copiá el desglose directo al grupo de WhatsApp.",
+    desc: "Cuánto pone cada uno por la cancha y la cantina. Lo mandás al grupo de WhatsApp en un toque.",
     cta: "Abrir calculadora",
   },
   {
@@ -21,10 +22,9 @@ const TOOLS = [
     short: "Test de nivel",
     href: "/herramientas/nivel",
     badge: "Competencia",
-    badgeColor: "badge-indigo",
     icon: "/img/iconos/icono-nivel-v2.webp",
-    title: "Test de nivel y categorías",
-    desc: "6 situaciones de partido para saber tu categoría, de 8va a 1era, en la escala internacional (1.0 a 7.0). Ideal para anotarte en partidos parejos.",
+    title: "Test de nivel",
+    desc: "6 situaciones de partido y te decimos tu categoría, de 8va a 1era (escala 1.0 a 7.0).",
     cta: "Calcular mi nivel",
   },
   {
@@ -32,22 +32,20 @@ const TOOLS = [
     short: "Pizarra táctica",
     href: "/herramientas/pizarra",
     badge: "Estrategia",
-    badgeColor: "badge-amber",
     icon: "/img/iconos/icono-pizarra.webp",
-    title: "Pizarra táctica interactiva",
-    desc: "Simulador interactivo de jugadas en cancha de cristal: repasá paso a paso la víbora a la reja, el smash por 3, bandejas y chiquitas.",
-    cta: "Ver simulador táctico",
+    title: "Pizarra táctica",
+    desc: "Víbora a la reja, smash por 3, bandeja: mirá cada jugada paso a paso sobre la cancha.",
+    cta: "Ver jugadas",
   },
   {
     key: "americano",
     short: "Americano",
     href: "/herramientas/americano",
-    badge: "Torneos express",
-    badgeColor: "badge-emerald",
+    badge: "Torneo express",
     icon: "/img/iconos/icono-americano.webp",
-    title: "Generador de torneo americano",
-    desc: "Armá el fixture de rotación para 4 a 8 jugadores donde todos juegan con todos en partidos cortos y equilibrados.",
-    cta: "Generar fixture",
+    title: "Torneo americano",
+    desc: "Fixture para 4 a 8 jugadores: todos con todos, partidos cortos y tabla en vivo.",
+    cta: "Armar fixture",
   },
 ];
 
@@ -93,10 +91,36 @@ function ToolPreview({ tool }) {
             strokeDasharray="4 4"
             strokeLinecap="round"
           />
-          <path d="M98 14 L105 22 L95 25" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="14" cy="54" r="6" fill="#e8722a" stroke="#fff" strokeWidth="1.5" />
-          <circle cx="62" cy="50" r="6" fill="#e8722a" stroke="#fff" strokeWidth="1.5" />
-          <circle className="tool-prev-pelota" cx="104" cy="22" r="4.5" fill="#d7f03a" />
+          <path
+            d="M98 14 L105 22 L95 25"
+            stroke="#fff"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle
+            cx="14"
+            cy="54"
+            r="6"
+            fill="#e8722a"
+            stroke="#fff"
+            strokeWidth="1.5"
+          />
+          <circle
+            cx="62"
+            cy="50"
+            r="6"
+            fill="#e8722a"
+            stroke="#fff"
+            strokeWidth="1.5"
+          />
+          <circle
+            className="tool-prev-pelota"
+            cx="104"
+            cy="22"
+            r="4.5"
+            fill="#d7f03a"
+          />
         </svg>
         <span className="tool-prev-cap">Víbora a la reja</span>
       </span>
@@ -104,9 +128,15 @@ function ToolPreview({ tool }) {
   }
   return (
     <span className="tool-prev tool-prev-americano">
-      <span><b>R1</b> A·B vs C·D</span>
-      <span><b>R2</b> A·C vs B·D</span>
-      <span><b>R3</b> A·D vs B·C</span>
+      <span>
+        <b>R1</b> A·B vs C·D
+      </span>
+      <span>
+        <b>R2</b> A·C vs B·D
+      </span>
+      <span>
+        <b>R3</b> A·D vs B·C
+      </span>
     </span>
   );
 }
@@ -176,47 +206,54 @@ export default function ClubToolsSection() {
             >
               Herramientas gratis
             </span>
-            <h2 className="section-title">
-              Herramientas para jugar mejor
-            </h2>
+            <h2 className="section-title">Herramientas para jugar mejor</h2>
             <p className="section-desc">
-              Herramientas interactivas creadas para ayudarte a organizar tus
-              partidos, mejorar tu táctica y saber tu categoría.
+              Gratis y desde el celu: dividí la cuenta, medí tu nivel, repasá
+              jugadas o armá un americano con amigos.
             </p>
           </div>
         </div>
 
-        <div className="tools-grid" ref={trackRef}>
-          {TOOLS.map((tool, idx) => (
-            <div
-              key={tool.href}
-              className={`club-tool-card tool-${tool.key}${active === idx ? " is-active" : ""}`}
-            >
-              <div className="tool-cancha">
-                <span className="tool-num" aria-hidden="true">
-                  {String(idx + 1).padStart(2, "0")}
-                </span>
-                <span className={`badge-linear ${tool.badgeColor}`}>
-                  {tool.badge}
-                </span>
-                <span className="club-tool-icon" aria-hidden="true">
-                  <Image src={tool.icon} alt="" width={76} height={76} className="icono-3d" />
-                </span>
-                <span aria-hidden="true">
+        <div className="hl-track" ref={trackRef}>
+          {TOOLS.map((tool, idx) => {
+            const num = String(idx + 1).padStart(2, "0");
+            return (
+              <article
+                key={tool.href}
+                className={`hl-card hl-${tool.key}${active === idx ? " is-active" : ""}`}
+              >
+                <div className="hl-cancha" aria-hidden="true">
+                  <span className="hl-pelota" />
+                  <span className="hl-num">{num}</span>
+                  <span className="hl-icono">
+                    <Image
+                      src={tool.icon}
+                      alt=""
+                      width={104}
+                      height={104}
+                      className="icono-3d"
+                    />
+                  </span>
                   <ToolPreview tool={tool} />
-                </span>
-              </div>
+                </div>
 
-              <div className="tool-body">
-                <h3 className="club-tool-title">{tool.title}</h3>
-                <p className="club-tool-desc">{tool.desc}</p>
-              </div>
+                <div className="hl-body">
+                  <p className="hl-kicker">
+                    Herramienta {num} · {tool.badge}
+                  </p>
+                  <h3 className="hl-title">{tool.title}</h3>
+                  <p className="hl-desc">{tool.desc}</p>
+                </div>
 
-              <Link href={tool.href} className="club-tool-link">
-                {tool.cta}
-              </Link>
-            </div>
-          ))}
+                <Link href={tool.href} className="hl-cta">
+                  {tool.cta}
+                  <span className="hl-cta-flecha" aria-hidden="true">
+                    →
+                  </span>
+                </Link>
+              </article>
+            );
+          })}
         </div>
 
         {/* Indicador del carrusel (solo celu): una pelotita por herramienta. */}

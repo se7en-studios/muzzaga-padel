@@ -420,6 +420,17 @@ function FixtureView({
           </button>
         </div>
       ) : (
+        <div className="tn-zones-board">
+        <div className="tn-board-head">
+          <span className="tn-board-ball" aria-hidden />
+          <span className="tn-board-title">Zonas · {category.name}</span>
+          <span className="tn-board-meta">
+            {fixture.groups.length}{" "}
+            {fixture.groups.length === 1 ? "zona" : "zonas"}
+            {fixture.qualify > 0 &&
+              ` · pasan ${fixture.qualify === 1 ? "el 1°" : `los ${fixture.qualify} primeros`}`}
+          </span>
+        </div>
         <div className="tn-zones">
           {fixture.groups.map((g) => (
             <div key={g.id} className="tn-zone">
@@ -448,7 +459,9 @@ function FixtureView({
                       key={r.pairId}
                       className={i < fixture.qualify ? "is-qualified" : ""}
                     >
-                      <td>{i + 1}</td>
+                      <td>
+                        <span className="tn-pos">{i + 1}</span>
+                      </td>
                       <td>
                         {pairName(pairsById[r.pairId]) || "Pareja quitada"}
                       </td>
@@ -483,13 +496,15 @@ function FixtureView({
             </div>
           ))}
         </div>
-      )}
-      {fixture.format === "zonas" && fixture.qualify > 0 && (
-        <p className="tn-muted" style={{ margin: 0 }}>
-          La raya naranja marca a los que pasan al cuadro. Desempate: partidos
-          ganados, resultado entre ellos (si empatan dos), diferencia de sets y
-          de games.
-        </p>
+        {fixture.qualify > 0 && (
+          <p className="tn-board-note tn-zones-note">
+            La pelotita y la raya naranja marcan a los que pasan al cuadro.
+            Desempate:
+            partidos ganados, resultado entre ellos (si empatan dos),
+            diferencia de sets y de games.
+          </p>
+        )}
+        </div>
       )}
     </div>
   );
