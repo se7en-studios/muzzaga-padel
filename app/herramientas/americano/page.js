@@ -1,4 +1,5 @@
 import Link from "next/link";
+import "../herramientas.css";
 import PageCrumbs from "../../../components/PageCrumbs";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
