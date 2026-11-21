@@ -235,7 +235,6 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
           </div>
         )}
 
-
         <section className="cc-drawer-section">
           <div className="cc-drawer-section-head">
             <label htmlFor="client-note">Notas y etiquetas</label>
