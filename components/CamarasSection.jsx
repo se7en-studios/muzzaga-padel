@@ -275,47 +275,91 @@ const BEELUP_CANCHAS = ["El Tano", "La Vasca"];
 function BeelupCartel({ href }) {
   return (
     <div className="bl-card">
-      <div className="bl-head">
-        <span className="bl-logo">
-          <img src={BEELUP_ICON} alt="" width={34} height={36} />
-          <span>beelup</span>
-        </span>
-        <span className="bl-chip">
-          <span className="bl-rec" aria-hidden="true" />
-          Ya disponible en Muzzaga
-        </span>
+      {/* El celular con la repetición: lo que el jugador va a encontrar. */}
+      <div className="bl-phone-wrap" aria-hidden="true">
+        <div className="bl-phone">
+          <div className="bl-screen">
+            <div className="bl-scr-top">
+              <span className="bl-scr-brand">
+                <img src={BEELUP_ICON} alt="" width={14} height={15} />
+                beelup
+              </span>
+              <span className="bl-scr-tag">EL TANO · 20:00</span>
+            </div>
+            <span className="bl-scr-play">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M7 4.5v15l13-7.5z" />
+              </svg>
+            </span>
+            <div className="bl-scr-bar">
+              <span className="bl-scr-moment">★ Punto del partido · 41:12</span>
+              <span className="bl-scr-track">
+                <span className="bl-scr-fill" />
+                <span className="bl-scr-mark" style={{ left: "22%" }} />
+                <span className="bl-scr-mark" style={{ left: "48%" }} />
+                <span className="bl-scr-mark" style={{ left: "71%" }} />
+              </span>
+              <span className="bl-scr-times">
+                <span>41:12</span>
+                <span>1:30:00</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <span className="bl-bubble">¡Mirá este punto! 🎾</span>
       </div>
-      <p className="bl-title">Reviví tu partido</p>
-      <p className="bl-sub">
-        Cada partido queda grabado. Encontrá tus mejores jugadas y compartilas
-        con tus amigos.
-      </p>
-      <ol className="bl-steps" aria-label="Cómo encontrar tu video en Beelup">
-        <li>
-          <small>Club</small>
-          <b>Muzzaga Pádel</b>
-        </li>
-        <li>
-          <small>Cancha</small>
-          <b>{BEELUP_CANCHAS.join(" · ")}</b>
-        </li>
-        <li>
-          <small>Cuándo</small>
-          <b>Día y horario</b>
-        </li>
-      </ol>
-      <a
-        className="bl-btn"
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Ver mi video
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
-          <path d="M10 8.5v7l6-3.5z" fill="currentColor" />
-        </svg>
-      </a>
+
+      <div className="bl-copy">
+        <div className="bl-head">
+          <span className="bl-logo">
+            <img src={BEELUP_ICON} alt="" width={34} height={36} />
+            <span>beelup</span>
+          </span>
+          <span className="bl-chip">
+            <span className="bl-rec" aria-hidden="true" />
+            Cámaras en las 2 canchas
+          </span>
+        </div>
+        <p className="bl-title">
+          Reviví tu <em>partido</em>
+        </p>
+        <p className="bl-sub">
+          Cada partido en Muzzaga queda grabado. Buscá tu turno, encontrá tus
+          mejores jugadas y compartilas con tus amigos.
+        </p>
+        <ul className="bl-perks">
+          <li>🎥 Tu partido completo</li>
+          <li>⭐ Tus mejores puntos</li>
+          <li>📲 Para compartir</li>
+        </ul>
+        <ol className="bl-search" aria-label="Cómo encontrar tu video en Beelup">
+          <li>
+            <small>Club</small>
+            <b>Muzzaga Pádel</b>
+          </li>
+          <li>
+            <small>Cancha</small>
+            <b>{BEELUP_CANCHAS.join(" · ")}</b>
+          </li>
+          <li>
+            <small>Cuándo</small>
+            <b>Día y horario</b>
+          </li>
+        </ol>
+        <a
+          className="bl-btn"
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Ver mi partido
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+            <path d="M10 8.5v7l6-3.5z" fill="currentColor" />
+          </svg>
+        </a>
+        <p className="bl-url">Se abre beelup.com · elegí Muzzaga Pádel, tu cancha y el horario</p>
+      </div>
     </div>
   );
 }
