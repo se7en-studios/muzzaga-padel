@@ -404,6 +404,13 @@ export default function PairsTab({
                 )}
               </form>
             )}
+            {pairs.length > 0 && (
+              <span className="tn-paybar is-wide" aria-hidden>
+                <span
+                  style={{ width: `${Math.round((paid / pairs.length) * 100)}%` }}
+                />
+              </span>
+            )}
             <span className="tn-pairs-summary">
               <span className="tn-pairs-pill is-paid">
                 <strong>{paid}</strong> pagaron
@@ -509,7 +516,7 @@ export default function PairsTab({
                     </td>
                   </tr>
                 ) : (
-                  <tr key={p.id}>
+                  <tr key={p.id} data-paid={p.paid ? "si" : "no"}>
                     <td className="tn-col-num tn-muted">{i + 1}</td>
                     <td className="tn-pair-name">
                       <strong>
@@ -541,14 +548,14 @@ export default function PairsTab({
                           href={`https://wa.me/${toWhatsappNumber(p.phone)}`}
                           target="_blank"
                           rel="noopener"
-                          className="tn-icon-btn"
-                          title={`Escribir a ${p.phone}`}
+                          className="tn-wa"
+                          title={`Escribir por WhatsApp a ${p.phone}`}
                         >
-                          <WhatsAppMiniIcon />{" "}
-                          <span className="tn-muted">{p.phone}</span>
+                          <WhatsAppMiniIcon />
+                          <span>{p.phone}</span>
                         </a>
                       ) : (
-                        <span className="tn-muted">—</span>
+                        <span className="tn-wa-none">Sin teléfono</span>
                       )}
                     </td>
                     <td>

@@ -15,7 +15,7 @@ import {
   adminUpdateTournamentStatus,
 } from "../../actions";
 import { usePinGate } from "../../ui/usePinGate";
-import { STATUS_LABELS, tournamentDates } from "./shared";
+import { Marcador, STATUS_LABELS, tournamentDates } from "./shared";
 import PairsTab from "./PairsTab";
 import DrawTab from "./DrawTab";
 import ScheduleTab from "./ScheduleTab";
@@ -253,6 +253,11 @@ export default function TournamentDetail({
           </form>
         ) : (
           <div className="tn-row-between tn-hero-row">
+            <Marcador
+              date={t.date}
+              dateEnd={t.dateEnd}
+              className="tn-hero-marcador"
+            />
             <div className="tn-hero-text">
               <span className="tn-hero-kicker">Torneo de pádel</span>
               <h2 className="tn-card-title tn-hero-title">{t.name}</h2>

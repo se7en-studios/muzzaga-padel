@@ -27,20 +27,32 @@
 
 /* ==========================================================================
    TORNEOS · LISTA
-   Cada torneo es una "entrada": arriba la cancha con el nombre grande (se
-   reconoce de lejos desde el mostrador), abajo lo que importa para el día.
+   Cada torneo es un afiche, como en /torneos: arriba la cancha con la fecha
+   en el tablero LED y el nombre grande (se reconoce de lejos desde el
+   mostrador), abajo categorías, cobro y partidos.
    ========================================================================== */
+.admin-root .tn-list {
+  grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr));
+  gap: 18px;
+}
+
 .admin-root .tn-list-item.tn-tcard {
   padding: 0;
   gap: 0;
   overflow: hidden;
-  border-color: var(--border);
-  box-shadow: 0 1px 2px rgba(27, 27, 25, 0.05);
+  border-color: rgba(13, 31, 92, 0.14);
+  border-radius: 18px;
+  box-shadow: 0 18px 36px -30px rgba(13, 31, 92, 0.7);
 }
 
 .admin-root .tn-list-item.tn-tcard:hover {
   border-color: var(--tr-court);
-  box-shadow: 0 14px 28px -18px rgba(13, 31, 92, 0.55);
+  box-shadow: 0 22px 40px -24px rgba(13, 31, 92, 0.65);
+}
+
+.admin-root .tn-list-item.tn-tcard:focus-visible {
+  outline: 3px solid var(--tr-court);
+  outline-offset: 3px;
 }
 
 .admin-root .tn-tcard > span {
@@ -48,48 +60,131 @@
   flex-direction: column;
 }
 
-.admin-root .tn-tcard-court {
-  gap: 10px;
-  min-height: 118px;
-  padding: 14px 18px 16px;
+.admin-root .tn-tcard > .tn-tcard-court {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  min-height: 150px;
+  padding: 18px 18px 20px;
   background-color: var(--tr-court);
-  background-image: var(--tr-court-bg);
-  background-size: var(--tr-court-size);
-  background-repeat: no-repeat, no-repeat, repeat;
+  background-image: var(--tr-court-lines), url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, 200px 200px;
+  background-repeat: no-repeat, repeat;
   color: #ffffff;
+}
+
+/* Oscurece donde va el texto y deja el reflector naranja abajo, como el afiche. */
+.admin-root .tn-tcard-court::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.78) 0%, rgba(11, 26, 77, 0.4) 60%, rgba(11, 26, 77, 0.6) 100%),
+    radial-gradient(ellipse 70% 50% at 100% 100%, rgba(232, 114, 42, 0.32), transparent 70%);
 }
 
 /* Terminado: la cancha apagada, para que los activos salten a la vista. */
 .admin-root .tn-tcard[data-status="finalizado"] .tn-tcard-court {
-  filter: saturate(0.25) brightness(0.9);
+  filter: saturate(0.25) brightness(0.92);
 }
 
-.admin-root .tn-tcard-top {
+.admin-root .tn-tcard-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
 }
 
-.admin-root .tn-tcard-date {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+/* Estado: chip con lucecita; verde anotando, naranja jugando, gris terminado. */
+.admin-root .tn-tcard-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  background: rgba(8, 18, 60, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-family: var(--font-jetbrains-mono), var(--font-code);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.admin-root .tn-tcard-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
+}
+
+.admin-root .tn-tcard-status[data-status="cerrado"]::before {
+  background: #ff9a52;
+  box-shadow: 0 0 0 3px rgba(232, 114, 42, 0.3);
+}
+
+.admin-root .tn-tcard-status[data-status="finalizado"]::before {
+  background: #c9d4f7;
+  box-shadow: none;
 }
 
 .admin-root .tn-tcard .tn-list-name {
-  margin-top: auto;
-  font-size: 28px;
-  line-height: 1;
+  margin-top: 2px;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 0.95;
   color: #ffffff;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  overflow-wrap: anywhere;
+}
+
+.admin-root .tn-tcard-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Precio como entrada de tribuna: amarillo pelota con muescas. */
+.admin-root .tn-tcard-price {
+  position: absolute;
+  right: 16px;
+  bottom: -14px;
+  z-index: 1;
+  padding: 6px 16px;
+  border-radius: 6px;
+  background: var(--tr-ball-solid);
+  color: var(--tr-navy);
+  font-family: var(--font-jetbrains-mono), var(--font-code);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 16px -10px rgba(0, 0, 0, 0.6);
+  -webkit-mask:
+    radial-gradient(circle 5px at left center, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 5px at right center, #0000 98%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 5px at left center, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 5px at right center, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+.admin-root .tn-tcard-price small {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.75;
 }
 
 .admin-root .tn-tcard-body {
-  gap: 10px;
-  padding: 14px 18px 16px;
+  flex: 1;
+  gap: 14px;
+  padding: 18px 18px 16px;
 }
 
 .admin-root .tn-tcard-cats {
@@ -99,40 +194,109 @@
 }
 
 .admin-root .tn-tcard-cat {
-  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 11px;
   border-radius: 999px;
-  background: rgba(35, 80, 214, 0.08);
+  border: 1px solid rgba(35, 80, 214, 0.25);
+  background: rgba(35, 80, 214, 0.06);
   color: var(--tr-court-deep);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 700;
 }
 
-.admin-root .tn-tcard-stats {
+.admin-root .tn-tcard-cat small {
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--tr-court);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .tn-tcard-meters {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-root .tn-tcard-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.admin-root .tn-tcard-meter-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   flex-wrap: wrap;
-  gap: 4px 14px;
-  font-size: 14px;
+  gap: 2px 10px;
+  font-size: 13.5px;
   color: var(--text-secondary);
 }
 
-.admin-root .tn-tcard-stats strong {
-  font-size: 16px;
+.admin-root .tn-tcard-meter-label > span:first-child {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .tn-tcard-meter-label strong {
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
-.admin-root .tn-tcard-stats .is-paid strong {
+.admin-root .tn-tcard-meter-label strong.is-paid {
   color: var(--tr-money);
 }
 
-.admin-root .tn-tcard-stats .is-owe strong {
+.admin-root .tn-tcard-meter-label strong.is-owe {
   color: var(--tr-owe);
 }
 
-.admin-root .tn-tcard-progress {
+.admin-root .tn-tcard-go {
   display: flex;
-  flex-direction: column;
+  flex-direction: row !important;
+  justify-content: flex-end;
   gap: 6px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tr-court);
+}
+
+/* Cobro: verde lo pagado, naranja lo que falta. */
+.admin-root .tn-paybar {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(232, 114, 42, 0.22);
+  overflow: hidden;
+}
+
+.admin-root .tn-paybar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
+.admin-root .tn-paybar.is-wide {
+  max-width: 420px;
+  margin: 10px 0 2px;
 }
 
 /* Barra de partidos jugados con la pelotita en la punta. */
@@ -140,6 +304,10 @@
   height: 8px;
   overflow: visible;
   background: #e8ecf8;
+}
+
+.admin-root .tn-progress.is-empty {
+  background: repeating-linear-gradient(90deg, #e8ecf8 0 8px, transparent 8px 12px);
 }
 
 .admin-root .tn-progress > span {
@@ -160,6 +328,54 @@
   border-radius: 50%;
   background: var(--tr-ball);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- Marcador LED: la fecha como el tablero de la cancha ---------- */
+.admin-root .tn-marcador {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  width: 84px;
+  min-height: 94px;
+  padding: 8px 6px 10px;
+  border-radius: 14px;
+  background: var(--tr-navy);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 0 0 3px rgba(0, 0, 0, 0.35),
+    0 12px 24px -12px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  text-align: center;
+}
+
+.admin-root .tn-marcador-label {
+  font-family: var(--font-jetbrains-mono), var(--font-code);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+  white-space: nowrap;
+}
+
+.admin-root .tn-marcador-num {
+  font-family: var(--font-jetbrains-mono), var(--font-code);
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--tr-ball-solid);
+  text-shadow: 0 0 10px rgba(215, 240, 58, 0.45);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .tn-marcador-mes {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
 }
 
 /* ==========================================================================
@@ -1170,6 +1386,638 @@
   }
 }
 
+
+/* ==========================================================================
+   TORNEOS · SALA DE CONTROL
+   Afiche del torneo nuevo, cancha vacía, parejas con cobro y WhatsApp, y las
+   zonas sobre la cancha azul. Va después del resto de torneos para pisarlo.
+   ========================================================================== */
+
+/* ---------- Encabezado del torneo con el tablero LED ---------- */
+.admin-root .tn-hero-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px 22px;
+}
+
+.admin-root .tn-hero-marcador {
+  width: 92px;
+  min-height: 102px;
+}
+
+/* ---------- Torneo nuevo: el afiche se arma mientras escribís ---------- */
+.admin-root .tn-card.tn-create {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(13, 31, 92, 0.16);
+  border-radius: 18px;
+  box-shadow: 0 22px 40px -30px rgba(13, 31, 92, 0.7);
+}
+
+.admin-root .tn-create-poster {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 20px 22px;
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-lines), url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, 200px 200px;
+  background-repeat: no-repeat, repeat;
+  color: #ffffff;
+}
+
+.admin-root .tn-create-poster::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(11, 26, 77, 0.82) 0%, rgba(11, 26, 77, 0.35) 75%),
+    radial-gradient(ellipse 50% 70% at 100% 100%, rgba(232, 114, 42, 0.3), transparent 70%);
+}
+
+.admin-root .tn-create-poster-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-root .tn-card-title.tn-create-title {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 0.95;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  overflow-wrap: anywhere;
+}
+
+.admin-root .tn-card-title.tn-create-title.is-placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  text-shadow: none;
+}
+
+.admin-root .tn-create-poster-sub {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.admin-root .tn-create-body {
+  padding: 18px 22px 20px;
+}
+
+/* ---------- Sin torneos: la cancha vacía esperando el primero ---------- */
+.admin-root .tn-empty-poster {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 28px;
+  padding: 34px 40px;
+  border-radius: 22px;
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-lines), url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, 200px 200px;
+  background-repeat: no-repeat, repeat;
+  color: #ffffff;
+  box-shadow: 0 24px 48px -32px rgba(13, 31, 92, 0.8);
+}
+
+.admin-root .tn-empty-poster::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(11, 26, 77, 0.35) 0%, rgba(11, 26, 77, 0.8) 45%, rgba(11, 26, 77, 0.6) 100%),
+    radial-gradient(ellipse 45% 60% at 0% 100%, rgba(232, 114, 42, 0.35), transparent 70%);
+}
+
+.admin-root .tn-empty-mascot {
+  width: 170px;
+  height: 170px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.45));
+}
+
+.admin-root .tn-empty-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-root .tn-empty-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.admin-root .tn-empty-text p {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 15.5px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.admin-root .tn-empty-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 6px;
+  padding: 0;
+  list-style: none;
+  counter-reset: tnpaso;
+}
+
+.admin-root .tn-empty-steps li {
+  counter-increment: tnpaso;
+  display: inline-block;
+  padding: 6px 14px 6px 6px;
+  line-height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(8, 18, 60, 0.45);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.admin-root .tn-empty-steps li::before {
+  content: counter(tnpaso);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--tr-ball);
+  color: var(--tr-navy);
+  margin-right: 8px;
+  font-size: 12.5px;
+  font-weight: 800;
+  vertical-align: top;
+}
+
+.admin-root .tn-empty-steps strong {
+  color: #ffffff;
+}
+
+/* Botón principal de afiche: naranja como "Reservar". */
+.admin-root .tn-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 999px;
+  background: #e8722a;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 12px 24px -12px rgba(232, 114, 42, 0.95);
+}
+
+.admin-root .tn-cta:hover {
+  background: #d4621c;
+}
+
+.admin-root .tn-cta:focus-visible {
+  outline: 3px solid var(--tr-ball-solid);
+  outline-offset: 3px;
+}
+
+/* ---------- Parejas: cobro de un vistazo y WhatsApp a un toque ---------- */
+.admin-root .tn-pairs tbody tr[data-paid] td:first-child {
+  box-shadow: inset 4px 0 0 rgba(232, 114, 42, 0.75);
+}
+
+.admin-root .tn-pairs tbody tr[data-paid="si"] td:first-child {
+  box-shadow: inset 4px 0 0 #22c55e;
+}
+
+.admin-root .tn-pairs td.tn-col-num {
+  padding-left: 14px;
+  font-family: var(--font-jetbrains-mono), var(--font-code);
+  font-size: 13px;
+}
+
+.admin-root .tn-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 12px 0 10px;
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  border-radius: 999px;
+  background: rgba(37, 211, 102, 0.1);
+  color: #15803d;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.admin-root .tn-wa svg {
+  width: 16px;
+  height: 16px;
+  color: #16a34a;
+}
+
+.admin-root .tn-wa:hover {
+  border-color: #16a34a;
+  background: #25d366;
+  color: #ffffff;
+}
+
+.admin-root .tn-wa:hover svg {
+  color: #ffffff;
+}
+
+.admin-root .tn-wa:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+}
+
+.admin-root .tn-wa-none {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Pago como ficha con lucecita: tocás y cambia. */
+.admin-root .tn-pay {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+}
+
+.admin-root .tn-pay::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e8722a;
+  box-shadow: 0 0 0 3px rgba(232, 114, 42, 0.2);
+}
+
+.admin-root .tn-pay.is-paid::before {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.admin-root .tn-pay:hover {
+  border-color: currentColor;
+}
+
+/* ---------- Zonas: las planillas pegadas sobre la cancha azul ---------- */
+.admin-root .tn-zones-board {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 18px 18px 14px;
+  border-radius: 18px;
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-lines), url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, 200px 200px;
+  background-repeat: no-repeat, repeat;
+  color: #ffffff;
+  box-shadow: 0 22px 40px -28px rgba(8, 16, 41, 0.9);
+}
+
+.admin-root .tn-zones-board::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(11, 26, 77, 0.6), rgba(11, 26, 77, 0.35) 40%, rgba(11, 26, 77, 0.6));
+}
+
+.admin-root .tn-zones-board .tn-board-head {
+  margin-bottom: 14px;
+}
+
+.admin-root .tn-zones-board .tn-board-meta {
+  background: rgba(8, 18, 60, 0.5);
+}
+
+.admin-root .tn-zones-board .tn-zones {
+  gap: 14px;
+}
+
+.admin-root .tn-zones-board .tn-zone {
+  border: 0;
+  border-radius: 14px;
+  color: var(--text);
+  box-shadow: 0 16px 30px -18px rgba(0, 0, 0, 0.65);
+}
+
+.admin-root .tn-zones-board .tn-zone-head {
+  background-color: var(--tr-navy);
+  background-image: none;
+  border-bottom: 3px solid var(--tr-ball-solid);
+}
+
+.admin-root .tn-zones-note {
+  margin: 14px 2px 0;
+  font-size: 13.5px;
+  color: #e3e9ff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.admin-root .tn-pos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #eef1f8;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.admin-root .tn-standings tr.is-qualified .tn-pos {
+  background: var(--tr-ball);
+  color: var(--tr-navy);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.admin-root .tn-standings th {
+  background: #f6f7fb;
+}
+
+/* ---------- Cuadro: el tablero va sobre la cancha azul ---------- */
+.admin-root .tn-board {
+  isolation: isolate;
+  background-color: var(--tr-court);
+  background-image: var(--tr-court-lines), url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, 200px 200px;
+  background-repeat: no-repeat, repeat;
+  background-position: center, 0 0;
+}
+
+.admin-root .tn-board::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(35, 80, 214, 0.15), transparent 70%),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.62) 0%, rgba(8, 16, 41, 0.78) 100%);
+}
+
+.admin-root .bk-screen {
+  --bk-line: rgba(255, 255, 255, 0.55);
+}
+
+.admin-root .bk-screen .bk-match {
+  background: linear-gradient(180deg, rgba(14, 27, 74, 0.96) 0%, rgba(9, 18, 52, 0.96) 100%);
+}
+
+/* ---------- Cronograma: la hora en el tablero LED ---------- */
+.admin-root .tn-slot-time {
+  justify-content: center;
+  align-self: start;
+  margin-top: 4px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  background: var(--tr-navy);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-jetbrains-mono), var(--font-code);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--tr-ball-solid);
+  text-shadow: 0 0 8px rgba(215, 240, 58, 0.4);
+}
+
+/* ---------- Celu ---------- */
+@media (max-width: 720px) {
+  .admin-root .tn-list {
+    gap: 14px;
+  }
+
+  .admin-root .tn-tcard > .tn-tcard-court {
+    gap: 12px;
+    min-height: 0;
+    padding: 16px 14px 22px;
+  }
+
+  .admin-root .tn-marcador {
+    width: 70px;
+    min-height: 80px;
+    border-radius: 12px;
+  }
+
+  .admin-root .tn-marcador-num {
+    font-size: 30px;
+  }
+
+  .admin-root .tn-marcador-label {
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .admin-root .tn-tcard .tn-list-name {
+    font-size: 28px;
+  }
+
+  .admin-root .tn-tcard-body {
+    padding: 20px 14px 14px;
+  }
+
+  .admin-root .tn-tcard-go {
+    min-height: 44px;
+    align-items: center;
+    padding-top: 4px;
+  }
+
+  .admin-root .tn-hero-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .admin-root .tn-hero-row .tn-hero-tools {
+    grid-column: 1 / -1;
+  }
+
+  .admin-root .tn-hero-marcador {
+    width: 70px;
+    min-height: 80px;
+  }
+
+  .admin-root .tn-create-poster {
+    gap: 12px;
+    padding: 16px 14px;
+  }
+
+  .admin-root .tn-card-title.tn-create-title {
+    font-size: 28px;
+  }
+
+  .admin-root .tn-create-body {
+    padding: 16px 14px 18px;
+  }
+
+  .admin-root .tn-create-body .tn-row > input[type="text"] {
+    max-width: none !important;
+    flex: 1 1 180px;
+  }
+
+  .admin-root .tn-empty-poster {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 6px;
+    padding: 24px 18px 24px;
+    text-align: center;
+  }
+
+  .admin-root .tn-empty-mascot {
+    width: 130px;
+    height: 130px;
+  }
+
+  .admin-root .tn-empty-text {
+    align-items: center;
+  }
+
+  .admin-root .tn-empty-title {
+    font-size: 36px;
+  }
+
+  .admin-root .tn-empty-steps {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .admin-root .tn-empty-steps li {
+    text-align: left;
+  }
+
+  .admin-root .tn-cta {
+    width: 100%;
+    min-height: 54px;
+    padding: 0 16px;
+    font-size: 19px;
+    white-space: nowrap;
+  }
+
+  .admin-root .tn-paybar.is-wide {
+    max-width: none;
+  }
+
+  /* Parejas en tarjetas: nombre y pago arriba, WhatsApp y acciones abajo. */
+  .admin-root .tn-pairs tbody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 12px 0 12px 14px;
+  }
+
+  .admin-root .tn-pairs tbody tr[data-paid] {
+    box-shadow: inset 4px 0 0 rgba(232, 114, 42, 0.75);
+  }
+
+  .admin-root .tn-pairs tbody tr[data-paid="si"] {
+    box-shadow: inset 4px 0 0 #22c55e;
+  }
+
+  .admin-root .tn-pairs tbody tr td:first-child {
+    box-shadow: none !important;
+  }
+
+  .admin-root .tn-pairs td.tn-pair-name {
+    grid-column: 1 / -1;
+  }
+
+  .admin-root .tn-wa {
+    min-height: 44px;
+    padding: 0 14px 0 12px;
+  }
+
+  .admin-root .tn-zones-board {
+    margin: 0 -4px;
+    padding: 14px 10px 12px;
+    border-radius: 14px;
+  }
+
+  .admin-root .tn-zones-board .tn-board-head::after {
+    content: none;
+  }
+
+  .admin-root .tn-zones-board .tn-board-meta {
+    margin-left: 0;
+  }
+
+  .admin-root .tn-slot-time {
+    font-size: 15px;
+    padding: 7px 2px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .tn-tcard-status[data-status="cerrado"]::before {
+    animation: tnLive 1.6s ease-in-out infinite;
+  }
+
+  @keyframes tnLive {
+    50% {
+      opacity: 0.35;
+      transform: scale(0.8);
+    }
+  }
+
+  .admin-root .tn-tcard-go span {
+    display: inline-block;
+    transition: transform 0.18s ease;
+  }
+
+  .admin-root .tn-tcard:hover .tn-tcard-go span {
+    transform: translateX(4px);
+  }
+
+  .admin-root .tn-empty-mascot {
+    animation: tnMascota 3.2s ease-in-out infinite;
+  }
+
+  @keyframes tnMascota {
+    50% {
+      transform: translateY(-6px) rotate(-3deg);
+    }
+  }
+
+  .admin-root .tn-wa,
+  .admin-root .tn-cta {
+    transition: transform 0.15s ease;
+  }
+
+  .admin-root .tn-cta:active,
+  .admin-root .tn-wa:active {
+    transform: scale(0.97);
+  }
+}
 
 /* ==========================================================================
    NÚMEROS DEL MES
