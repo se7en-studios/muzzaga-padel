@@ -333,127 +333,487 @@
 }
 
 /* ==========================================================================
-   INSTALACIONES: carrusel con marcador y ficha técnica sobre una cancha
+   INSTALACIONES: galería con scroll-snap y ficha técnica sobre una cancha
+   (components/FeatureCarousel.jsx, prefijo ig-)
+   - Celu: pastillas en una fila que se desliza, fotos de costado con la
+     siguiente asomando y una barra de tramos con el contador.
+   - Compu: las seis pastillas en columna a la izquierda y las fotos sobre
+     una media cancha dibujada, con las vecinas apagadas a los costados.
+   - Mientras carga una foto se ve la cancha azul con sus líneas, nunca un
+     cuadro negro vacío.
    ========================================================================== */
-
-/* Detrás de las fotos, la media cancha vista desde arriba (perímetro, red
-   punteada al medio, líneas de saque y central) y la luz de un reflector.
-   Estático: las fotos tapan el centro y las líneas asoman a los costados. */
-#instalaciones .fc-stage {
-  isolation: isolate;
+#instalaciones .ig-wrap {
+  --ig-card: min(74vw, 340px);
+  --ig-gutter: 24px;
+  --ig-naranja: #e8722a;
+  --ig-amarillo: #d7f03a;
+  margin-top: 12px;
 }
 
-#instalaciones .fc-stage::before {
-  content: "";
-  position: absolute;
-  inset: 22px;
-  z-index: -1;
-  pointer-events: none;
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  background-image:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.32) 0 2px, transparent 2px 6px),
-    linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14)),
-    linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14)),
-    linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14)),
-    radial-gradient(60% 40% at 50% 0%, rgba(255, 255, 255, 0.12), transparent 75%);
-  background-size: 100% 3px, 100% 2px, 100% 2px, 2px 69.5%, 100% 100%;
-  background-position: 0 50%, 0 15.25%, 0 84.75%, 50% 50%, 0 0;
-  background-repeat: no-repeat;
-}
-
-/* Marcador tipo tablero: número en amarillo pelota, mono y parejo. */
-.fc-marcador {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  z-index: 25;
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  padding: 6px 11px 7px;
-  border-radius: 9px;
-  background: #0b0f1e;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #fff;
-  font-family: var(--font-jetbrains-mono), monospace;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.8);
-  pointer-events: none;
-}
-
-.fc-marcador-num {
-  font-size: 26px;
-  font-weight: 800;
-  color: #d7f03a;
-  text-shadow: 0 0 12px rgba(215, 240, 58, 0.35);
-}
-
-.fc-marcador-total {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* Cuánto falta para la próxima foto: una línea naranja que se llena. */
-.fc-progreso {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 26;
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-accent-orange), #ffb27f);
-  transform: scaleX(0);
-  transform-origin: left center;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .fc-progreso {
-    animation: fcProgreso var(--fc-ms, 5500ms) linear forwards;
+@media (max-width: 768px) {
+  #instalaciones .ig-wrap {
+    --ig-gutter: 16px;
   }
 }
 
-@keyframes fcProgreso {
+/* ---------- Pastillas ---------- */
+#instalaciones .ig-chips {
+  display: flex;
+  gap: 8px;
+  margin-inline: calc(-1 * var(--ig-gutter));
+  padding: 2px var(--ig-gutter) 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  /* Los bordes se desvanecen: se entiende que la fila sigue de costado. */
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--ig-gutter), #000 calc(100% - 32px), transparent 100%);
+}
+
+#instalaciones .ig-chips::-webkit-scrollbar {
+  display: none;
+}
+
+#instalaciones .ig-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 16px 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(7, 14, 40, 0.5);
+  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.82);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--t-hover) var(--ease),
+    border-color var(--t-hover) var(--ease),
+    color var(--t-hover) var(--ease);
+}
+
+#instalaciones .ig-chip:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+
+#instalaciones .ig-chip[aria-current="true"] {
+  background: #fff;
+  border-color: #fff;
+  color: #1b1b19;
+  box-shadow: 0 8px 20px -10px rgba(4, 10, 32, 0.8);
+}
+
+#instalaciones .ig-chip:focus-visible,
+#instalaciones .ig-flecha:focus-visible,
+#instalaciones .ig-track:focus-visible {
+  outline: 2px solid var(--ig-amarillo);
+  outline-offset: 2px;
+}
+
+#instalaciones .ig-chip-3d {
+  width: 26px;
+  height: 26px;
+  margin: -4px 0;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+  transition: opacity var(--t-hover) var(--ease), transform var(--t-hover) var(--ease);
+}
+
+#instalaciones .ig-chip:not([aria-current="true"]) .ig-chip-3d {
+  opacity: 0.7;
+}
+
+#instalaciones .ig-chip[aria-current="true"] .ig-chip-3d {
+  transform: scale(1.12) rotate(-6deg);
+}
+
+/* El número solo en la lista de compu; en celu la pastilla va corta. */
+#instalaciones .ig-chip-num {
+  display: none;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ig-amarillo);
+}
+
+#instalaciones .ig-chip[aria-current="true"] .ig-chip-num {
+  color: #c2410c;
+}
+
+/* ---------- Tira de fotos ---------- */
+#instalaciones .ig-stage {
+  position: relative;
+  margin-top: 14px;
+}
+
+/* La tira va de borde a borde de la pantalla y cada foto frena centrada:
+   el relleno de los costados deja centrar también la primera y la última. */
+#instalaciones .ig-track {
+  display: flex;
+  gap: 12px;
+  margin: 0 calc(-1 * var(--ig-gutter));
+  padding: 6px calc(50% + var(--ig-gutter) - var(--ig-card) / 2) 10px;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+#instalaciones .ig-track::-webkit-scrollbar {
+  display: none;
+}
+
+#instalaciones .ig-card {
+  position: relative;
+  flex: none;
+  width: var(--ig-card);
+  aspect-ratio: 4 / 5;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 3px solid var(--ig-naranja);
+  /* Lo que se ve mientras carga la foto: césped azul con la red y las
+     líneas de saque, en vez de un cuadro oscuro vacío. */
+  background-color: var(--cancha-azul, #2350d6);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 2px, transparent 2px 6px),
+    linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)),
+    linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)),
+    linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)),
+    radial-gradient(80% 50% at 50% 0%, rgba(255, 255, 255, 0.22), transparent 70%),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.2), rgba(11, 26, 77, 0.6)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 3px, 100% 2px, 100% 2px, 2px 69.5%, 100% 100%, 100% 100%, 220px 220px;
+  background-position: 0 50%, 0 15.25%, 0 84.75%, 50% 50%, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  box-shadow: 0 22px 44px -22px rgba(232, 114, 42, 0.55), 0 18px 40px -24px rgba(4, 10, 32, 0.9);
+}
+
+#instalaciones .ig-img {
+  z-index: -1;
+  object-fit: cover;
+  filter: saturate(0.82) contrast(1.06);
+  user-select: none;
+}
+
+/* Marcador tipo tablero: número en amarillo pelota, mono y parejo. */
+#instalaciones .ig-marcador {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 5px 9px 6px;
+  border-radius: 9px;
+  background: rgba(11, 15, 30, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  pointer-events: none;
+}
+
+#instalaciones .ig-marcador b,
+#instalaciones .ig-contador b {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ig-amarillo);
+  text-shadow: 0 0 12px rgba(215, 240, 58, 0.35);
+}
+
+#instalaciones .ig-caption {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 56px 16px 16px;
+  background: linear-gradient(to top, rgba(5, 8, 20, 0.92) 0%, rgba(5, 8, 20, 0.5) 55%, transparent 100%);
+  pointer-events: none;
+}
+
+#instalaciones .ig-tag {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--ig-naranja);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px -6px rgba(232, 114, 42, 0.7);
+}
+
+#instalaciones .ig-desc {
+  margin: 0;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+/* Las fotos de los costados se apagan y achican a medida que se alejan del
+   centro, atadas al deslizamiento (sin JS). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    #instalaciones .ig-card {
+      animation: igFoco linear both;
+      animation-timeline: view(inline);
+    }
+  }
+}
+
+@keyframes igFoco {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Sin esa animación: las de los costados apagadas con la clase de JS. */
+@supports not (animation-timeline: view()) {
+  #instalaciones .ig-card:not(.is-activa) {
+    opacity: 0.55;
+  }
+}
+
+/* ---------- Flechas, tramos y contador ---------- */
+#instalaciones .ig-controles {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+#instalaciones .ig-flecha {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(7, 14, 40, 0.55);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--t-hover) var(--ease), color var(--t-hover) var(--ease);
+}
+
+#instalaciones .ig-flecha:hover {
+  background: #fff;
+  color: #1b1b19;
+}
+
+#instalaciones .ig-tramos {
+  flex: 1;
+  display: flex;
+  gap: 5px;
+  min-width: 0;
+}
+
+#instalaciones .ig-tramo {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+#instalaciones .ig-tramo.is-visto {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+#instalaciones .ig-tramo.is-activo {
+  flex: 2.6;
+  background: var(--ig-naranja);
+}
+
+/* Rotando sola: el tramo activo se llena en el tiempo que falta. */
+#instalaciones .ig-tramo.is-activo:has(.ig-tramo-relleno) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+#instalaciones .ig-tramo-relleno {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--ig-naranja), #ffb27f);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #instalaciones .ig-tramo-relleno {
+    animation: igRelleno var(--ig-ms, 6000ms) linear forwards;
+  }
+}
+
+@keyframes igRelleno {
   to {
     transform: scaleX(1);
   }
 }
 
-/* Pastillas del carrusel con 44 px de alto para el dedo. */
-#instalaciones .fc-pill {
-  min-height: 44px;
+#instalaciones .ig-contador {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 768px) {
-  /* El panel de pastillas medía 280 px y empujaba la foto media pantalla
-     abajo: con 228 entran 3 enteras y 2 asomando. */
-  #instalaciones .fc-nav {
-    min-height: 228px;
+/* El número grande ya está en la foto: en el contador va más chico. */
+#instalaciones .ig-contador b {
+  font-size: 15px;
+}
+
+/* ---------- Compu: lista a la izquierda, fotos sobre la cancha ---------- */
+@media (min-width: 1024px) {
+  #instalaciones .ig-wrap {
+    --ig-card: 380px;
+    --ig-gutter: 0px;
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    margin-top: 8px;
+    overflow: hidden;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--cancha-vidrio);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 40px 90px -40px rgba(4, 10, 32, 0.9);
   }
 
-  /* Lugar arriba para el marcador, así no pisa la foto. */
-  #instalaciones .fc-stage {
-    padding-top: 60px;
+  #instalaciones .ig-chips {
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+    padding: 32px 24px;
+    overflow: visible;
+    mask-image: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
   }
 
-  #instalaciones .fc-stage::before {
-    inset: 12px;
+  #instalaciones .ig-chip {
+    gap: 12px;
+    min-height: 54px;
+    padding: 8px 18px 8px 14px;
+    border-radius: 14px;
+    border-color: transparent;
+    background: transparent;
+    backdrop-filter: none;
+    font-size: 13px;
   }
 
-  .fc-marcador {
+  #instalaciones .ig-chip:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  #instalaciones .ig-chip[aria-current="true"] {
+    background: #fff;
+    border-color: #fff;
+  }
+
+  #instalaciones .ig-chip-num {
+    display: inline;
+    order: -1;
+    min-width: 20px;
+  }
+
+  #instalaciones .ig-chip-3d {
+    width: 30px;
+    height: 30px;
+  }
+
+  #instalaciones .ig-stage {
+    margin: 0;
+    padding: 28px 0 24px;
+    isolation: isolate;
+  }
+
+  /* Detrás de las fotos, la media cancha vista desde arriba (perímetro,
+     red punteada al medio, líneas de saque y central) y un reflector. */
+  #instalaciones .ig-stage::before {
+    content: "";
+    position: absolute;
+    inset: 22px;
+    z-index: -1;
+    pointer-events: none;
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    background-image:
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.32) 0 2px, transparent 2px 6px),
+      linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14)),
+      linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14)),
+      linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14)),
+      radial-gradient(60% 40% at 50% 0%, rgba(255, 255, 255, 0.12), transparent 75%);
+    background-size: 100% 3px, 100% 2px, 100% 2px, 2px 69.5%, 100% 100%;
+    background-position: 0 50%, 0 15.25%, 0 84.75%, 50% 50%, 0 0;
+    background-repeat: no-repeat;
+  }
+
+  #instalaciones .ig-track {
+    gap: 20px;
+    padding-block: 8px 14px;
+    /* Las vecinas se desvanecen hacia los bordes del panel. */
+    mask-image: linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%);
+  }
+
+  #instalaciones .ig-marcador {
     top: 14px;
     left: 14px;
-    padding: 5px 9px 6px;
   }
 
-  .fc-marcador-num {
-    font-size: 20px;
+  #instalaciones .ig-marcador b {
+    font-size: 22px;
   }
 
-  .fc-marcador-total {
-    font-size: 11px;
+  #instalaciones .ig-caption {
+    padding: 72px 22px 22px;
+    gap: 10px;
+  }
+
+  #instalaciones .ig-tag {
+    font-size: 16px;
+  }
+
+  #instalaciones .ig-desc {
+    font-size: 17px;
+  }
+
+  #instalaciones .ig-controles {
+    width: calc(var(--ig-card) + 120px);
+    margin: 4px auto 0;
   }
 }
 
@@ -595,6 +955,84 @@
 
   #instalaciones .spec-title-row {
     gap: 6px 8px;
+  }
+
+  /* Más compacta: menos relleno y las cuatro pestañas en una sola fila,
+     con el ícono arriba del nombre (antes iban en 2 × 2). */
+  #instalaciones .spec-panel {
+    margin-top: 36px;
+    padding: 16px 14px 14px;
+    border-radius: 20px;
+  }
+
+  #instalaciones .spec-panel-head {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  #instalaciones .spec-heading {
+    font-size: 22px;
+  }
+
+  #instalaciones .spec-tabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 3px;
+    padding: 3px;
+  }
+
+  #instalaciones .spec-tab {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 58px;
+    padding: 8px 2px 6px;
+    font-size: 11.5px;
+    letter-spacing: -0.01em;
+  }
+
+  #instalaciones .spec-tab .icono-3d {
+    margin: 0;
+  }
+
+  #instalaciones .spec-detail {
+    row-gap: 10px;
+    padding: 12px;
+  }
+
+  #instalaciones .spec-desc {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+/* ---------- Celu: la sección más corta ---------- */
+/* 120 px de aire arriba y abajo era mucho: con 84 alcanza para que el
+   césped se funda con la página. Los degradés y el perimetral se acortan
+   en la misma medida. */
+@media (max-width: 768px) {
+  #instalaciones {
+    padding-block: 84px;
+  }
+
+  #instalaciones::before {
+    background-image:
+      linear-gradient(180deg, var(--color-canvas) 0, transparent 150px, transparent calc(100% - 170px), var(--color-canvas) 100%),
+      linear-gradient(180deg, rgba(7, 16, 52, 0.78) 0%, rgba(7, 16, 52, 0.5) 30%, rgba(7, 16, 52, 0.55) 70%, rgba(7, 16, 52, 0.78) 100%),
+      url("/img/fondo/textura-cesped.jpg");
+    mask-image: linear-gradient(
+      180deg,
+      transparent 0,
+      rgba(0, 0, 0, 0.4) 60px,
+      #000 150px,
+      #000 calc(100% - 170px),
+      rgba(0, 0, 0, 0.4) calc(100% - 70px),
+      transparent 100%
+    );
+  }
+
+  #instalaciones::after {
+    top: 62px;
+    bottom: 54px;
   }
 }
 

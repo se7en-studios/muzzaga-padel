@@ -6,6 +6,7 @@ import {
   Ban,
   Banknote,
   BookOpen,
+  ChevronUp,
   ClipboardList,
   Minus,
   NotebookPen,
@@ -439,6 +440,10 @@ export default function CantinaView({ onExpiredSession, onToast }) {
         </span>
         <span className="admin-product-name">{item.name}</span>
         <span className="admin-product-price">{formatARS(item.price)}</span>
+        {/* El "+" dice que la tarjeta entera suma uno: no es otro botón. */}
+        <span className="admin-product-add" aria-hidden="true">
+          <Plus size={18} strokeWidth={2.6} aria-hidden />
+        </span>
         {/* key={qty}: la pelotita se vuelve a montar y "rebota" en cada toque. */}
         {qty > 0 && (
           <span key={qty} className="admin-product-qty">
@@ -505,13 +510,15 @@ export default function CantinaView({ onExpiredSession, onToast }) {
       ) : (
         <ul className="admin-pos-lines">
           {cart.map((it) => (
-            <li key={it.name}>
+            <li key={it.name} data-category={itemsByName.get(it.name)?.category}>
               <span className="admin-pos-line-icon" aria-hidden="true">
                 {productIcon(it.name, itemsByName.get(it.name)?.category)}
               </span>
               <span className="admin-pos-line-name">
                 {it.name}
-                <small>{formatARS(it.price)} c/u</small>
+                <small>
+                  {it.qty} × {formatARS(it.price)}
+                </small>
               </span>
               <span className="admin-pos-qty">
                 <button
@@ -546,9 +553,19 @@ export default function CantinaView({ onExpiredSession, onToast }) {
         </ul>
       )}
 
-      <div className="admin-pos-total">
-        <span>Total</span>
-        <strong>{formatARS(cartTotal)}</strong>
+      {/* Pie del ticket: subtotal chico y el total grande. */}
+      <div className="admin-pos-summary">
+        {cart.length > 0 && (
+          <div className="admin-pos-subtotal">
+            <span>Subtotal · {plural(cartCount, "producto", "productos")}</span>
+            <span>{formatARS(cartTotal)}</span>
+          </div>
+        )}
+        <div className="admin-pos-total">
+          <span>Total</span>
+          {/* key: el número "salta" cada vez que cambia el total. */}
+          <strong key={cartTotal}>{formatARS(cartTotal)}</strong>
+        </div>
       </div>
 
       <div
@@ -1031,11 +1048,17 @@ export default function CantinaView({ onExpiredSession, onToast }) {
         onClick={() => setIsCartOpen(true)}
         aria-label={`Ver venta actual: ${plural(cartCount, "producto", "productos")}, ${formatARS(cartTotal)}`}
       >
-        <span className="admin-pos-cartbar-ball" aria-hidden="true">
+        <span key={cartCount} className="admin-pos-cartbar-ball" aria-hidden="true">
           {cartCount}
         </span>
-        <span>{cartCount ? "Ver venta" : "Venta vacía"}</span>
+        <span className="admin-pos-cartbar-label">
+          {cartCount ? "Ver venta" : "Venta vacía"}
+          {cartCount > 0 && <small>Tocá para cobrar</small>}
+        </span>
         <strong>{formatARS(cartTotal)}</strong>
+        {cartCount > 0 && (
+          <ChevronUp className="admin-pos-cartbar-chevron" size={20} strokeWidth={2.4} aria-hidden />
+        )}
       </button>
 
       {voiding && (
