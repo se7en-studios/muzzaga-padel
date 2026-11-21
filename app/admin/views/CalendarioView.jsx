@@ -14,7 +14,6 @@ import { adminGetMonthStats } from "../actions";
 import { todayInClub } from "../../../lib/booking";
 import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
 import { Skeleton } from "../ui/states";
-import { zzDemoMonth } from "./zzCalendarioDemo"; // zz demo TEMPORAL
 
 const MONTH_NAMES = [
   "Enero",
@@ -78,7 +77,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    (typeof window !== "undefined" && window.location.search.includes("demo") ? Promise.resolve(zzDemoMonth(year, month, todayIso)) : adminGetMonthStats(year, month)).then((res) => { // zz demo TEMPORAL
+    adminGetMonthStats(year, month).then((res) => {
       if (cancelled) return;
       setLoading(false);
       if (res.ok) setMonthStats(res);
