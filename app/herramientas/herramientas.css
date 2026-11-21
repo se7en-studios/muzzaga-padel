@@ -1,1 +1,2466 @@
-/* Rediseño de las herramientas (/herramientas/*). Se carga después de globals.css y marca.css. */
+/* Rediseño de las herramientas (/herramientas/*). Se carga después de globals.css y marca.css.
+   Todo con prefijo hx- para no pelear con las reglas viejas de globals.css:
+   las cuatro páginas comparten la cancha azul del encabezado, los pasos con
+   pelota, los botones grandes para el dedo, el "marcador" del resultado y el
+   botón de WhatsApp. Mismo lenguaje que las tarjetas de la landing. */
+
+/* ==========================================================================
+   TOKENS (locales a las herramientas, no tocan :root)
+   ========================================================================== */
+.hx-tool,
+.hx-cierre {
+  /* landing.css (donde vive --font-display) no se carga en las subpáginas:
+     sin esto los titulares caían en Poppins. */
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --hx-cancha: #2350d6;
+  --hx-cancha-borde: #16349a;
+  --hx-noche: #0b1a4d;
+  --hx-noche-2: #13286f;
+  --hx-lima: #d7f03a;
+  --hx-pelota: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  --hx-wa: #0f7b4f;
+  --hx-wa-hover: #0c6340;
+  /* Azul para texto/bordes sobre el fondo de la página (cambia en oscuro). */
+  --hx-azul: #2350d6;
+  --hx-azul-suave: rgba(35, 80, 214, 0.08);
+  --hx-lineas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='7' width='192' height='86' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.55'/%3E%3Cpath d='M31 7v86M169 7v86M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.3'/%3E%3C/svg%3E");
+  --hx-cesped:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.2), rgba(11, 26, 77, 0.6)),
+    url("/img/fondo/textura-cesped.jpg");
+}
+
+@media (prefers-color-scheme: dark) {
+  .hx-tool,
+  .hx-cierre {
+    /* El azul cancha sobre el fondo casi negro daba 2,4:1: para texto y
+       bordes va uno más claro. */
+    --hx-azul: #8ea6ff;
+    --hx-azul-suave: rgba(110, 140, 255, 0.14);
+  }
+}
+
+.hx-tool {
+  position: relative;
+  padding: 4px 0 24px;
+}
+
+/* ==========================================================================
+   ENCABEZADO: la herramienta sale a la cancha
+   Igual que la tarjeta de la landing: césped azul con líneas, el ícono 3D y
+   una pelota entrando por la esquina. Así se reconoce de dónde vino.
+   ========================================================================== */
+.hx-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 20px;
+  row-gap: 10px;
+  padding: 26px 30px 26px 22px;
+  margin-bottom: 24px;
+  border-radius: 24px;
+  border: 1px solid var(--hx-cancha-borde);
+  background-color: var(--hx-cancha);
+  background-image: var(--hx-lineas), var(--hx-cesped);
+  background-size: 100% 100%, auto, 200px 200px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  box-shadow: 0 18px 36px -22px rgba(13, 31, 92, 0.85);
+  overflow: hidden;
+  color: #fff;
+}
+
+.hx-hero-icono {
+  grid-row: 1 / span 3;
+  width: 124px;
+  height: 124px;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.4));
+}
+
+.hx-hero-cabeza {
+  min-width: 0;
+  padding-right: 70px;
+}
+
+.hx-hero-kicker {
+  margin: 0 0 6px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--hx-lima);
+}
+
+.hx-hero-titulo {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 56px;
+  line-height: 0.92;
+  letter-spacing: 0.005em;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.hx-hero-desc {
+  grid-column: 2;
+  margin: 0;
+  max-width: 62ch;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.94);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.hx-hero-chips {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-hero-chips li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(11, 26, 77, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* La pelota grande de la esquina, con sus costuras. */
+.hx-hero-pelota,
+.hx-cierre-pelota {
+  position: absolute;
+  top: -34px;
+  right: -26px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--hx-pelota);
+  box-shadow: inset -8px -10px 18px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.hx-hero-pelota::before,
+.hx-hero-pelota::after,
+.hx-cierre-pelota::before,
+.hx-cierre-pelota::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 86px;
+  border: 5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+}
+
+.hx-hero-pelota::before,
+.hx-cierre-pelota::before {
+  left: -54px;
+}
+
+.hx-hero-pelota::after,
+.hx-cierre-pelota::after {
+  right: -54px;
+}
+
+@media (max-width: 640px) {
+  .hx-hero {
+    column-gap: 12px;
+    padding: 16px 16px 18px 10px;
+    margin-bottom: 16px;
+    border-radius: 20px;
+  }
+
+  .hx-hero-icono {
+    grid-row: 1;
+    width: 78px;
+    height: 78px;
+  }
+
+  .hx-hero-cabeza {
+    padding-right: 0;
+  }
+
+  .hx-hero-kicker {
+    font-size: 10.5px;
+    margin-bottom: 4px;
+  }
+
+  .hx-hero-titulo {
+    font-size: 34px;
+  }
+
+  .hx-hero-desc,
+  .hx-hero-chips {
+    grid-column: 1 / -1;
+    padding-left: 6px;
+  }
+
+  .hx-hero-desc {
+    font-size: 14.5px;
+  }
+
+  /* En el celu la pelota baja a la esquina de abajo: arriba pisaba el
+     rótulo y el título. */
+  .hx-hero-pelota {
+    top: auto;
+    bottom: -44px;
+    right: -40px;
+    width: 96px;
+    height: 96px;
+  }
+}
+
+/* ==========================================================================
+   PIEZAS COMUNES: tarjetas, pasos con pelota, números grandes, segmentos
+   ========================================================================== */
+.hx-card {
+  position: relative;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 10px 26px -20px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 640px) {
+  .hx-card {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+}
+
+/* Paso numerado: el número va adentro de una pelota de pádel. */
+.hx-paso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.hx-paso-num {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--hx-pelota);
+  box-shadow: 0 3px 8px -3px rgba(80, 100, 0, 0.7);
+  font-family: var(--font-display), sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  color: #24310a;
+}
+
+.hx-paso-titulo {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 23px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--color-ink);
+}
+
+.hx-paso-desc {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+/* Selector de cantidades: números grandes, uno por dedo. */
+.hx-numeros {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hx-num {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 68px;
+  padding: 6px 2px;
+  border-radius: 16px;
+  border: 1.5px solid var(--color-hairline-strong);
+  background: var(--color-canvas-soft);
+  color: var(--color-ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hx-num-valor {
+  font-family: var(--font-display), sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 0.9;
+}
+
+.hx-num-cap {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.hx-num:hover {
+  border-color: var(--hx-azul);
+}
+
+/* El elegido sale a la cancha: azul con el número en verde pelota. */
+.hx-num.is-on {
+  border-color: var(--hx-cancha-borde);
+  background-color: var(--hx-cancha);
+  background-image: var(--hx-cesped);
+  background-size: auto, 160px 160px;
+  box-shadow: 0 10px 18px -10px rgba(13, 31, 92, 0.9);
+  color: #fff;
+}
+
+.hx-num.is-on .hx-num-valor {
+  color: var(--hx-lima);
+}
+
+.hx-num.is-on .hx-num-cap {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Segmentos (modos del test y de la pizarra). */
+.hx-segmento {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 18px;
+  border-radius: 16px;
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline-strong);
+}
+
+.hx-segmento button {
+  min-height: 48px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-body);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.15;
+  cursor: pointer;
+}
+
+.hx-segmento button:hover {
+  color: var(--color-ink);
+}
+
+.hx-segmento button.is-on {
+  background-color: var(--hx-cancha);
+  background-image: var(--hx-cesped);
+  background-size: auto, 160px 160px;
+  color: #fff;
+  box-shadow: 0 6px 14px -8px rgba(13, 31, 92, 0.9);
+}
+
+.hx-segmento-extra {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+@media (max-width: 400px) {
+  .hx-segmento button {
+    font-size: 13px;
+  }
+
+  .hx-segmento-extra {
+    display: none;
+  }
+}
+
+/* --- Botones de acción -------------------------------------------------- */
+/* WhatsApp: el botón más importante de cada herramienta, grande y verde. */
+.hx-wa {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--hx-wa);
+  background: var(--hx-wa);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 12px 22px -12px rgba(15, 123, 79, 0.9);
+  cursor: pointer;
+}
+
+.hx-wa:hover {
+  background: var(--hx-wa-hover);
+  border-color: var(--hx-wa-hover);
+  color: #fff;
+}
+
+.hx-wa svg {
+  flex: 0 0 auto;
+}
+
+.hx-btn2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--color-hairline-strong);
+  background: var(--color-surface-card);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.hx-btn2:hover {
+  border-color: var(--color-accent-orange);
+  color: var(--color-ink);
+}
+
+.hx-btn2.is-ok {
+  border-color: var(--hx-wa);
+  color: var(--hx-wa);
+}
+
+@media (prefers-color-scheme: dark) {
+  .hx-btn2.is-ok {
+    color: #34d399;
+    border-color: #34d399;
+  }
+}
+
+.hx-acciones {
+  display: grid;
+  gap: 8px;
+}
+
+.hx-acciones-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* De a dos en el celu: menos relleno para que "Partidos parejos" entre en
+   un renglón. */
+.hx-acciones-2 .hx-btn2 {
+  gap: 6px;
+  padding: 8px;
+  font-size: 13.5px;
+}
+
+/* Campo de texto grande (alias, nombre, jugadores). 16 px para que el
+   iPhone no haga zoom al tocarlo. */
+.hx-campo {
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--color-hairline-strong);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.hx-campo::placeholder {
+  color: var(--color-muted);
+}
+
+.hx-campo:focus {
+  outline: none;
+  border-color: var(--hx-azul);
+  box-shadow: 0 0 0 3px var(--hx-azul-suave);
+}
+
+.hx-etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-body);
+}
+
+/* --- Marcador: el resultado, como el tablero de un partido -------------- */
+.hx-marcador {
+  position: relative;
+  padding: 18px 20px 20px;
+  border-radius: 20px;
+  border: 1px solid #0a1640;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(35, 80, 214, 0.55), transparent 60%),
+    linear-gradient(160deg, var(--hx-noche-2), var(--hx-noche));
+  color: #fff;
+  overflow: hidden;
+  box-shadow: 0 18px 34px -22px rgba(5, 13, 38, 0.95);
+}
+
+/* Las líneas de la cancha, muy tenues, como reflejo del tablero. */
+.hx-marcador::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--hx-lineas) no-repeat;
+  background-size: 100% 100%;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.hx-marcador > * {
+  position: relative;
+}
+
+.hx-marcador-label {
+  margin: 0;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hx-lima);
+}
+
+.hx-marcador-valor {
+  display: block;
+  margin: 4px 0 2px;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  font-size: 72px;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.005em;
+  color: #fff;
+  text-shadow: 0 0 22px rgba(215, 240, 58, 0.25);
+}
+
+.hx-marcador-sub {
+  margin: 0;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* ==========================================================================
+   DIVIDIR GASTOS
+   ========================================================================== */
+.hx-dv-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 24px;
+  align-items: start;
+}
+
+.hx-dv-config {
+  display: grid;
+  gap: 16px;
+}
+
+/* El turno: una mini cancha con el precio, como un cartel del club. */
+.hx-dv-turno {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--hx-cancha-borde);
+  background-color: var(--hx-cancha);
+  background-image: var(--hx-lineas), var(--hx-cesped);
+  background-size: 100% 100%, auto, 200px 200px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #fff;
+}
+
+.hx-dv-turno-nombre {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.hx-dv-turno-dur {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hx-dv-turno-precio {
+  text-align: right;
+}
+
+.hx-dv-turno-precio strong {
+  display: block;
+  font-family: var(--font-display), sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.hx-dv-turno-precio span {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(11, 26, 77, 0.6);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--hx-lima);
+}
+
+/* Productos de la cantina: tarjetitas en grilla, todas a la vista (antes
+   era una fila que había que deslizar y no se sabía cuántas había). */
+.hx-dv-extras {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-dv-extra {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 116px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1.5px solid var(--color-hairline-strong);
+  background: var(--color-canvas-soft);
+}
+
+.hx-dv-extra.is-on {
+  border-color: var(--hx-azul);
+  background: var(--hx-azul-suave);
+}
+
+.hx-dv-extra-nombre {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-ink);
+}
+
+.hx-dv-extra-precio {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.hx-dv-sumar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--color-hairline-strong);
+  background: var(--color-surface-card);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hx-dv-sumar:hover {
+  border-color: var(--color-accent-orange);
+  border-style: solid;
+}
+
+/* Contador: menos, cantidad en una pelota, más. */
+.hx-dv-contador {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 4px;
+}
+
+.hx-dv-contador button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-hairline-strong);
+  background: var(--color-surface-card);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.hx-dv-contador button:last-child {
+  border-color: var(--color-accent-orange);
+  background: var(--color-accent-orange);
+  color: #fff;
+}
+
+.hx-dv-qty {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--hx-pelota);
+  font-family: var(--font-display), sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: #24310a;
+  font-variant-numeric: tabular-nums;
+}
+
+.hx-dv-mas {
+  margin-top: 12px;
+}
+
+/* --- Resumen (marcador + ticket) ---------------------------------------- */
+.hx-dv-resumen {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: 14px;
+  scroll-margin-top: 90px;
+}
+
+.hx-dv-marcador {
+  padding-right: 96px;
+}
+
+.hx-dv-masc {
+  position: absolute !important;
+  right: -6px;
+  bottom: -8px;
+  width: 104px;
+  height: auto;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.45));
+}
+
+/* Una pelota por jugador: se ve de un golpe entre cuántos se divide. */
+.hx-dv-pelotas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-dv-pelotas li {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--hx-pelota);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+}
+
+.hx-ticket {
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--color-hairline-strong);
+  background: var(--color-surface-card);
+}
+
+.hx-ticket-fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+  color: var(--color-body);
+}
+
+.hx-ticket-fila strong {
+  flex: 0 0 auto;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 13.5px;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.hx-ticket-nota {
+  display: block;
+  font-size: 11.5px;
+  color: var(--color-muted);
+}
+
+.hx-ticket-total {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 2px dashed var(--color-hairline-strong);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.hx-ticket-total strong {
+  font-family: var(--font-display), sans-serif;
+  font-size: 26px;
+  color: var(--color-accent-orange-text);
+}
+
+.hx-aviso {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-body);
+}
+
+.hx-aviso strong {
+  color: var(--color-ink);
+}
+
+/* Mini marcador que acompaña mientras elegís (solo celu): el total por
+   jugador queda siempre a la vista, arriba de la barra de abajo. */
+.hx-dv-mini {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .hx-dv-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .hx-dv-resumen {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .hx-dv-mini {
+    position: sticky;
+    bottom: calc(var(--bottom-bar-h) + 10px + env(safe-area-inset-bottom, 0px));
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 56px;
+    padding: 8px 8px 8px 16px;
+    border-radius: 18px;
+    border: 1px solid #0a1640;
+    background: linear-gradient(160deg, var(--hx-noche-2), var(--hx-noche));
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 14px 28px -12px rgba(5, 13, 38, 0.9);
+  }
+
+  .hx-dv-mini-monto {
+    font-family: var(--font-display), sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hx-dv-mini-monto {
+    white-space: nowrap;
+  }
+
+  .hx-dv-mini-monto small {
+    margin-left: 6px;
+    font-family: var(--font-jetbrains-mono), monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--hx-lima);
+  }
+
+  .hx-dv-mini-ir {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 40px;
+    padding: 0 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .hx-dv-extras {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .hx-dv-extra {
+    padding: 10px;
+  }
+
+  .hx-marcador-valor {
+    font-size: 64px;
+  }
+}
+
+@media (max-width: 360px) {
+  .hx-numeros {
+    gap: 5px;
+  }
+
+  .hx-num-valor {
+    font-size: 28px;
+  }
+}
+
+/* ==========================================================================
+   TEST DE NIVEL
+   ========================================================================== */
+.hx-nv-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.hx-nv {
+  padding: 20px;
+}
+
+/* Progreso: seis pelotas, una por pregunta. */
+.hx-nv-progreso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.hx-nv-progreso-txt {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.hx-nv-progreso-txt b {
+  font-size: 15px;
+  color: var(--color-ink);
+}
+
+.hx-nv-pelotas {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-nv-pelotas li {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-hairline-strong);
+  transform: scale(0.7);
+}
+
+.hx-nv-pelotas li.is-hecha {
+  background: var(--hx-pelota);
+  transform: none;
+}
+
+.hx-nv-pelotas li.is-actual {
+  background: transparent;
+  box-shadow: inset 0 0 0 3px var(--color-accent-orange);
+  transform: none;
+}
+
+.hx-nv-emoji {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 10px;
+  border-radius: 16px;
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  font-size: 28px;
+}
+
+.hx-nv-pregunta {
+  margin: 0 0 16px;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.05;
+  color: var(--color-ink);
+}
+
+.hx-nv-opciones {
+  display: grid;
+  gap: 10px;
+}
+
+/* Cada respuesta es una tarjeta grande: emoji, texto y una "pelota" que se
+   prende al elegirla. */
+.hx-nv-opcion {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 26px;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 10px 14px 10px 10px;
+  border-radius: 18px;
+  border: 1.5px solid var(--color-hairline-strong);
+  background: var(--color-surface-card);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: 15.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hx-nv-opcion:hover {
+  border-color: var(--hx-azul);
+}
+
+.hx-nv-opcion-emoji {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--color-canvas-soft);
+  font-size: 24px;
+}
+
+.hx-nv-opcion-check {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--color-hairline-strong);
+}
+
+.hx-nv-opcion.is-on {
+  border-color: var(--hx-azul);
+  background: var(--hx-azul-suave);
+  font-weight: 600;
+}
+
+.hx-nv-opcion.is-on .hx-nv-opcion-emoji {
+  background: var(--color-surface-card);
+}
+
+.hx-nv-opcion.is-on .hx-nv-opcion-check {
+  border-color: transparent;
+  background: var(--hx-pelota);
+  box-shadow: 0 2px 6px rgba(80, 100, 0, 0.6);
+}
+
+.hx-nv-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 10px 0 4px;
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hx-nv-volver:hover {
+  color: var(--color-accent-orange-text);
+}
+
+/* Ajuste manual: la barra es una cinta 8va → 1era con la pelota de
+   cursor. */
+.hx-nv-slider {
+  margin-bottom: 18px;
+}
+
+.hx-nv-slider input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  margin: 6px 0 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.hx-nv-slider input[type="range"]::-webkit-slider-runnable-track {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c7d2fe, var(--hx-cancha) 55%, var(--color-accent-orange));
+}
+
+.hx-nv-slider input[type="range"]::-moz-range-track {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c7d2fe, var(--hx-cancha) 55%, var(--color-accent-orange));
+}
+
+.hx-nv-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 34px;
+  height: 34px;
+  margin-top: -11px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: var(--hx-pelota);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.hx-nv-slider input[type="range"]::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: var(--hx-pelota);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.hx-nv-slider-marcas {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+/* --- Ficha del jugador: el resultado como cartel de marcador ------------ */
+.hx-ficha {
+  position: relative;
+  margin-top: 4px;
+}
+
+.hx-ficha-cancha {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  padding: 16px 18px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--hx-cancha-borde);
+  background-color: var(--hx-cancha);
+  background-image: var(--hx-lineas), var(--hx-cesped);
+  background-size: 100% 100%, auto, 200px 200px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #fff;
+  overflow: hidden;
+  box-shadow: 0 18px 34px -22px rgba(13, 31, 92, 0.95);
+}
+
+.hx-ficha-kicker {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--hx-lima);
+}
+
+.hx-ficha-kicker span:last-child {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hx-ficha-cat {
+  display: block;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 92px;
+  line-height: 0.82;
+  color: #fff;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+.hx-ficha-cat small {
+  display: block;
+  margin-top: 8px;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--hx-lima);
+}
+
+.hx-ficha-rating {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(11, 26, 77, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hx-ficha-rating b {
+  font-family: var(--font-display), sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+}
+
+.hx-ficha-masc {
+  width: 132px;
+  height: auto;
+  margin: 0 -6px -10px 0;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
+}
+
+/* Escala 1.0 → 7.0 con las ocho categorías y la pelota donde quedaste. */
+.hx-escala {
+  margin: 18px 4px 6px;
+}
+
+.hx-escala-pista {
+  position: relative;
+  display: flex;
+  gap: 3px;
+  height: 14px;
+}
+
+.hx-escala-seg {
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--hx-cancha) calc(18% + var(--i) * 10%), var(--color-canvas-soft));
+}
+
+.hx-escala-seg.is-on {
+  background: var(--color-accent-orange);
+}
+
+.hx-escala-marca {
+  position: absolute;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: var(--hx-pelota);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.hx-escala-nombres {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.hx-ficha-cuerpo {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.hx-skills {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-skill {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+}
+
+.hx-skill-ico {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-surface-card);
+}
+
+.hx-skill-ico svg {
+  width: 18px;
+  height: 18px;
+}
+
+.hx-skill-txt {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--color-muted);
+}
+
+.hx-skill-txt strong {
+  display: block;
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+.hx-ficha-desc {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border-left: 4px solid var(--color-accent-orange);
+  background: var(--color-accent-orange-subtle);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-body);
+}
+
+.hx-nv-otra {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  border: 1.5px dashed var(--color-hairline-strong);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--color-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hx-nv-otra:hover {
+  border-color: var(--color-accent-orange);
+  color: var(--color-accent-orange-text);
+}
+
+/* --- Escalera de categorías --------------------------------------------- */
+.hx-escalera-titulo {
+  margin: 0 0 4px;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--color-ink);
+}
+
+.hx-escalera-desc {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-body);
+}
+
+.hx-escalera {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-cat {
+  border-radius: 16px;
+  border: 1px solid var(--color-hairline-strong);
+  background: var(--color-surface-card);
+  overflow: hidden;
+}
+
+.hx-cat summary {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto 18px;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 14px 8px 8px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.hx-cat summary::-webkit-details-marker {
+  display: none;
+}
+
+/* La categoría en una placa que se va poniendo más azul a medida que
+   subís (8va clarita, 1era cancha plena). */
+.hx-cat-num {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--hx-cancha) calc(12% + var(--i) * 12.5%), var(--color-canvas-soft));
+  font-family: var(--font-display), sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+/* Desde 4ta la placa ya es bastante azul: número en blanco. */
+.hx-escalera li:nth-child(n + 5) .hx-cat-num {
+  color: #fff;
+}
+
+.hx-cat-txt {
+  min-width: 0;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.hx-cat-txt strong {
+  display: block;
+  font-size: 15px;
+  color: var(--color-ink);
+}
+
+.hx-cat-rango {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.hx-cat-flecha {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--color-muted);
+  border-bottom: 2px solid var(--color-muted);
+  transform: rotate(45deg) translateY(-3px);
+}
+
+.hx-cat[open] .hx-cat-flecha {
+  transform: rotate(-135deg) translateY(-2px);
+}
+
+.hx-cat[open] {
+  border-color: var(--hx-azul);
+}
+
+.hx-cat p {
+  margin: 0;
+  padding: 0 16px 14px 78px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-body);
+}
+
+@media (max-width: 900px) {
+  .hx-nv-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hx-nv {
+    padding: 14px;
+  }
+
+  .hx-nv-pregunta {
+    font-size: 27px;
+  }
+
+  .hx-nv-opcion {
+    grid-template-columns: 44px minmax(0, 1fr) 24px;
+    gap: 10px;
+    min-height: 68px;
+    font-size: 15px;
+  }
+
+  .hx-nv-opcion-emoji {
+    width: 44px;
+    height: 44px;
+  }
+
+  .hx-ficha-cat {
+    font-size: 80px;
+  }
+
+  .hx-ficha-masc {
+    width: 112px;
+  }
+
+  .hx-cat p {
+    padding-left: 16px;
+  }
+}
+
+@media (min-width: 641px) {
+  .hx-skills {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ==========================================================================
+   TORNEO AMERICANO
+   ========================================================================== */
+.hx-am-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.hx-am-config {
+  display: grid;
+  gap: 16px;
+}
+
+.hx-am-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-am-meta li {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--hx-azul-suave);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hx-azul);
+}
+
+.hx-am-nombres {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.hx-am-nombre {
+  position: relative;
+}
+
+.hx-am-nombre .hx-paso-num {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.hx-am-nombre .hx-campo {
+  padding-left: 48px;
+}
+
+.hx-am-fixture {
+  display: grid;
+  gap: 14px;
+}
+
+.hx-am-cabeza {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hx-am-rondas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada ronda es un tablero: dos parejas y sus games, como en la tele. */
+.hx-am-ronda {
+  padding: 12px 12px 10px;
+}
+
+.hx-am-ronda-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.hx-am-ronda-num {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hx-lima);
+}
+
+.hx-am-descansa {
+  min-width: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.hx-am-descansa b {
+  color: #fff;
+  font-weight: 600;
+}
+
+.hx-am-fila {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.hx-am-fila + .hx-am-fila {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Pelotita de "va ganando". */
+.hx-am-saque {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.hx-am-fila.is-gana .hx-am-saque {
+  background: var(--hx-pelota);
+  box-shadow: 0 0 8px rgba(215, 240, 58, 0.7);
+}
+
+.hx-am-pareja {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.hx-am-pareja i {
+  font-style: normal;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.hx-am-fila:not(.is-gana) .hx-am-pareja {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.hx-am-games {
+  width: 56px;
+  height: 52px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--hx-lima);
+  font-family: var(--font-display), sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.hx-am-games::-webkit-outer-spin-button,
+.hx-am-games::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.hx-am-games::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.hx-am-games:focus {
+  outline: 2px solid var(--hx-lima);
+  outline-offset: 1px;
+}
+
+/* Tabla en vivo: suma los games de cada jugador. */
+.hx-am-tabla {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-am-tabla li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--color-hairline);
+  font-size: 15px;
+  color: var(--color-ink);
+}
+
+.hx-am-tabla li:last-child {
+  border-bottom: 0;
+}
+
+.hx-am-pos {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-canvas-soft);
+  font-family: var(--font-display), sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.hx-am-tabla li:first-child .hx-am-pos {
+  background: var(--hx-pelota);
+  color: #24310a;
+}
+
+.hx-am-tabla-nombre {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.hx-am-tabla-pts {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 13px;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.hx-am-tabla-pts b {
+  font-family: var(--font-display), sans-serif;
+  font-size: 22px;
+  color: var(--color-ink);
+}
+
+.hx-nota {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  .hx-am-rondas {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .hx-am-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .hx-am-rondas {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .hx-am-rondas {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .hx-am-nombres {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   PIZARRA TÁCTICA
+   Arriba de la cancha van los botones (jugada, fase o jugador) y abajo la
+   explicación: en el celu tocás y ves la jugada sin tener que subir.
+   ========================================================================== */
+.hx-pz-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-areas:
+    "cancha controles"
+    "cancha info";
+  grid-template-rows: auto 1fr;
+  gap: 16px 28px;
+  align-items: start;
+}
+
+.hx-pz-controles {
+  grid-area: controles;
+}
+
+.hx-pz-cancha {
+  grid-area: cancha;
+}
+
+.hx-pz-info {
+  grid-area: info;
+}
+
+.hx-pz-titulo {
+  margin: 0 0 10px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.hx-pz-botones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hx-pz-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1.5px solid var(--color-hairline-strong);
+  background: var(--color-surface-card);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hx-pz-btn:hover {
+  border-color: var(--hx-azul);
+}
+
+.hx-pz-btn-cat {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent-orange-text);
+}
+
+.hx-pz-btn.is-on {
+  border-color: var(--hx-cancha-borde);
+  background-color: var(--hx-cancha);
+  background-image: var(--hx-cesped);
+  background-size: auto, 160px 160px;
+  color: #fff;
+  box-shadow: 0 10px 18px -10px rgba(13, 31, 92, 0.9);
+}
+
+.hx-pz-btn.is-on .hx-pz-btn-cat {
+  color: var(--hx-lima);
+}
+
+.hx-pz-punto {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  vertical-align: -1px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+/* La cancha: marco azul noche en vez del negro, la misma familia que el
+   marcador de las otras herramientas. */
+.hx-pz-cancha.tactical-court-wrap {
+  padding: 16px 16px 14px;
+  border-radius: 22px;
+  border: 1px solid #0a1640;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(35, 80, 214, 0.5), transparent 65%),
+    linear-gradient(170deg, var(--hx-noche-2), var(--hx-noche));
+  box-shadow: 0 20px 38px -24px rgba(5, 13, 38, 0.95);
+}
+
+.hx-pz-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.hx-pz-vivo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hx-lima);
+}
+
+.hx-pz-vivo::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--hx-pelota);
+  box-shadow: 0 0 8px rgba(215, 240, 58, 0.8);
+}
+
+.hx-pz-repetir {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hx-pz-repetir:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hx-pz-cancha .court-glass-indicator {
+  margin-top: 10px;
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+
+.hx-pz-info.tactical-info-card {
+  padding: 22px;
+  border-radius: 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.hx-pz-info-titulo {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 30px;
+  line-height: 0.98;
+  color: var(--color-ink);
+}
+
+.hx-pz-kicker {
+  margin: 0 0 6px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent-orange-text);
+}
+
+.hx-pz-texto {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-body);
+}
+
+.hx-pz-datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-pz-datos li {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* Fases del golpe: numeradas con pelota, en línea de tiempo. */
+.hx-pz-fases {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-pz-fase {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  border-radius: 14px;
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+}
+
+.hx-pz-fase .hx-paso-num {
+  width: 30px;
+  height: 30px;
+  font-size: 17px;
+}
+
+.hx-pz-fase strong {
+  display: block;
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+/* Solo el texto: la pelota del número también es un span. */
+.hx-pz-fase div > span {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+.hx-pz-tip {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border-left: 4px solid var(--color-accent-orange);
+  background: var(--color-accent-orange-subtle);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+
+.hx-pz-tip strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--color-accent-orange-text);
+}
+
+.hx-pz-tip--verde {
+  border-left-color: #16a34a;
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.hx-pz-tip--verde strong {
+  color: #15803d;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hx-pz-tip--verde strong {
+    color: #34d399;
+  }
+}
+
+.hx-pz-clases {
+  justify-self: center;
+}
+
+@media (max-width: 900px) {
+  .hx-pz-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "controles"
+      "cancha"
+      "info";
+    grid-template-rows: none;
+    gap: 14px;
+  }
+
+  .hx-pz-cancha.tactical-court-wrap {
+    padding: 12px 10px 10px;
+  }
+
+  .hx-pz-cancha .tactical-court-svg {
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hx-pz-info.tactical-info-card {
+    padding: 18px 16px;
+  }
+
+  .hx-pz-info-titulo {
+    font-size: 27px;
+  }
+
+  .hx-pz-fases {
+    grid-template-columns: 1fr;
+  }
+
+  .hx-pz-btn {
+    min-height: 60px;
+    font-size: 13.5px;
+  }
+}
+
+/* ==========================================================================
+   CIERRE DE CADA PÁGINA: invitación a reservar, en la cancha azul
+   ========================================================================== */
+.hx-cierre {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: 880px;
+  margin: 28px auto 56px;
+  padding: 22px 28px 22px 16px;
+  border-radius: 22px;
+  border: 1px solid var(--hx-cancha-borde);
+  background-color: var(--hx-cancha);
+  background-image: var(--hx-lineas), var(--hx-cesped);
+  background-size: 100% 100%, auto, 200px 200px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  box-shadow: 0 16px 32px -20px rgba(13, 31, 92, 0.85);
+  overflow: hidden;
+  color: #fff;
+}
+
+.hx-cierre-masc {
+  position: relative;
+  flex: 0 0 auto;
+  width: 120px;
+  height: auto;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
+}
+
+.hx-cierre-texto {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hx-cierre-titulo {
+  margin: 0 0 6px;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 32px;
+  line-height: 0.98;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.hx-cierre-desc {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.hx-cierre-btn {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  margin-right: 64px;
+  padding: 0 22px;
+  border-radius: 14px;
+  background: var(--color-accent-orange);
+  border: 1px solid var(--color-accent-orange);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  box-shadow: 0 10px 20px -10px rgba(232, 114, 42, 0.9);
+}
+
+.hx-cierre-btn:hover {
+  background: var(--color-accent-orange-hover);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .hx-cierre {
+    flex-wrap: wrap;
+    gap: 12px 14px;
+    margin: 20px 16px 36px;
+    padding: 18px 16px;
+  }
+
+  .hx-cierre-masc {
+    width: 72px;
+  }
+
+  .hx-cierre-texto {
+    flex-basis: calc(100% - 86px);
+    padding-right: 18px;
+  }
+
+  .hx-cierre-titulo {
+    font-size: 26px;
+  }
+
+  .hx-cierre-btn {
+    flex-basis: 100%;
+    margin-right: 0;
+  }
+
+  .hx-cierre-pelota {
+    top: -54px;
+    right: -54px;
+    width: 96px;
+    height: 96px;
+  }
+}
+
+/* ==========================================================================
+   MOVIMIENTO: liviano (transform/opacity) y solo si la persona no pidió
+   reducirlo. Sin esto, todo se ve en su estado final.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes hx-entra {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes hx-icono {
+    from {
+      opacity: 0;
+      transform: translateY(14px) rotate(-8deg) scale(0.85);
+    }
+  }
+
+  @keyframes hx-pelota-gira {
+    from {
+      transform: rotate(-120deg) translate(20px, -20px);
+    }
+  }
+
+  @keyframes hx-pop {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.08);
+      opacity: 1;
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes hx-paso {
+    from {
+      opacity: 0;
+      transform: translateX(18px);
+    }
+  }
+
+  @keyframes hx-escala {
+    from {
+      transform: translateX(-60px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes hx-ficha {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.97);
+    }
+  }
+
+  .hx-hero-icono {
+    animation: hx-icono 0.6s var(--ease-mascota) both;
+  }
+
+  .hx-hero-pelota {
+    animation: hx-pelota-gira 0.7s var(--ease) both;
+  }
+
+  .hx-hero-cabeza,
+  .hx-hero-desc,
+  .hx-hero-chips {
+    animation: hx-entra 0.5s var(--ease) both;
+  }
+
+  .hx-hero-desc {
+    animation-delay: 80ms;
+  }
+
+  .hx-hero-chips {
+    animation-delay: 140ms;
+  }
+
+  /* Apretar: el botón se hunde un poco bajo el dedo. */
+  .hx-num,
+  .hx-nv-opcion,
+  .hx-pz-btn,
+  .hx-wa,
+  .hx-btn2,
+  .hx-dv-sumar,
+  .hx-dv-contador button,
+  .hx-segmento button {
+    transition: transform var(--t-hover) var(--ease);
+  }
+
+  .hx-num:active,
+  .hx-nv-opcion:active,
+  .hx-pz-btn:active,
+  .hx-wa:active,
+  .hx-btn2:active,
+  .hx-dv-sumar:active,
+  .hx-dv-contador button:active,
+  .hx-segmento button:active {
+    transform: scale(0.96);
+  }
+
+  .hx-wa:hover {
+    transform: translateY(-1px);
+  }
+
+  .hx-num.is-on .hx-num-valor,
+  .hx-dv-qty,
+  .hx-nv-opcion.is-on .hx-nv-opcion-check,
+  .hx-am-fila.is-gana .hx-am-saque {
+    animation: hx-pop 0.35s var(--ease-mascota) both;
+  }
+
+  .hx-marcador-valor,
+  .hx-dv-mini-monto {
+    animation: hx-entra 0.3s var(--ease) both;
+  }
+
+  .hx-dv-pelotas li {
+    animation: hx-pop 0.35s var(--ease-mascota) both;
+  }
+
+  .hx-dv-pelotas li:nth-child(2) { animation-delay: 40ms; }
+  .hx-dv-pelotas li:nth-child(3) { animation-delay: 80ms; }
+  .hx-dv-pelotas li:nth-child(4) { animation-delay: 120ms; }
+  .hx-dv-pelotas li:nth-child(5) { animation-delay: 160ms; }
+  .hx-dv-pelotas li:nth-child(6) { animation-delay: 200ms; }
+
+  .hx-nv-paso {
+    animation: hx-paso 0.3s var(--ease) both;
+  }
+
+  .hx-nv-pelotas li {
+    transition: transform var(--t-estado) var(--ease-mascota);
+  }
+
+  .hx-ficha {
+    animation: hx-ficha 0.45s var(--ease) both;
+  }
+
+  .hx-ficha-masc {
+    animation: hx-icono 0.6s var(--ease-mascota) 0.15s both;
+  }
+
+  .hx-escala-marca {
+    animation: hx-escala 0.8s var(--ease) 0.2s both;
+  }
+
+  .hx-cat-flecha {
+    transition: transform var(--t-estado) var(--ease);
+  }
+
+  .hx-cierre-pelota {
+    transition: transform 0.6s var(--ease-mascota);
+  }
+
+  .hx-cierre:hover .hx-cierre-pelota {
+    transform: rotate(-35deg);
+  }
+}

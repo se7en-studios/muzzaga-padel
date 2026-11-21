@@ -1,58 +1,450 @@
-/* Inscripción a torneos desde la web (components/TournamentSignup.jsx). */
+/* /torneos: portada, afiche del torneo abierto con la inscripción paso a
+   paso (components/TournamentSignup.jsx) y el cuadro de honor
+   (components/TorneosGallery.jsx). Mismo idioma que el cartel del inicio
+   (app/secciones/torneos-cantina.css): cancha azul, marcador LED, llave y
+   medallas. Las subpáginas no cargan landing.css, así que la tipografía
+   display y los colores de cancha se definen acá. */
+
+.tt-page {
+  --tt-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --tt-mono: var(--font-jetbrains-mono), "SF Mono", monospace;
+  --tt-cancha: #2350d6;
+  --tt-navy: #0b1a4d;
+  --tt-pelota: #d7f03a;
+  --tt-pelota-bg: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  /* Cancha vista desde arriba: apaisada en PC, parada en el celu. */
+  --tt-lineas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='3' y='6' width='194' height='88' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M100 0v100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M31 6v88M169 6v88M31 50h138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.28'/%3E%3C/svg%3E");
+  --tt-lineas-celu: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 200' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='6' y='3' width='88' height='194' stroke-width='2' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M0 100h100' stroke-width='3' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.45'/%3E%3Cpath d='M6 31h88M6 169h88M50 31v138' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.28'/%3E%3C/svg%3E");
+  overflow-x: clip; /* la tira de fotos es 100vw: que nunca empuje la página */
+}
+
+.tt-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   PORTADA
+   ========================================================================== */
+.tt-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px 24px;
+  margin-top: 6px;
+  margin-bottom: 22px;
+}
+
+.tt-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--tt-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent-orange-text);
+}
+
+.tt-pelota {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--tt-pelota-bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.tt-h1 {
+  margin: 6px 0 10px;
+  font-family: var(--tt-display);
+  font-size: clamp(64px, 17vw, 124px);
+  font-weight: 800;
+  line-height: 0.86;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+/* "de pádel" chiquito y en itálica naranja, como firma del afiche. */
+.tt-h1 span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.36em;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: var(--color-accent-orange);
+}
+
+.tt-lead {
+  max-width: 46ch;
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.tt-intro .tt-intro-mascota {
+  width: 190px;
+  margin-bottom: -6px;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.22));
+}
+
+/* ==========================================================================
+   AFICHE DEL TORNEO (abierto o "fecha a confirmar")
+   Izquierda: el torneo pegado sobre la cancha. Derecha: la planilla para
+   anotarse. En el celu van una abajo de la otra.
+   ========================================================================== */
+.tt-inscripcion {
+  margin-bottom: 8px;
+  scroll-margin-top: 100px;
+}
 
 .tsu-list {
   display: grid;
-  gap: 16px;
+  gap: 22px;
 }
 
 .tsu-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-  gap: 24px 32px;
-  padding: 28px 24px;
-  background: linear-gradient(135deg, var(--color-accent-orange-subtle) 0%, var(--color-surface-card) 100%);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  overflow: hidden;
   border: 1px solid var(--color-hairline-strong);
-  border-radius: var(--radius-xl);
+  border-radius: 22px;
+  background: var(--color-surface-card);
+  box-shadow: 0 24px 48px -32px rgba(13, 31, 92, 0.55);
 }
 
-@media (max-width: 860px) {
-  .tsu-card {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 22px 18px;
-  }
+.tsu-poster {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: 22px 20px;
+  padding: 30px 28px 26px;
+  color: #ffffff;
+  background-color: var(--tt-cancha);
+  background-image: var(--tt-lineas), url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, 200px 200px;
+  background-repeat: no-repeat, repeat;
+}
+
+/* Oscurece arriba (donde va el texto) y deja un brillo naranja de reflector abajo. */
+.tsu-poster::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.8) 0%, rgba(11, 26, 77, 0.45) 60%, rgba(11, 26, 77, 0.62) 100%),
+    radial-gradient(ellipse 70% 40% at 100% 100%, rgba(232, 114, 42, 0.3), transparent 70%);
+}
+
+/* Marcador: la fecha como tablero electrónico de la cancha. */
+.tt-marcador {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  align-self: start;
+  gap: 2px;
+  width: 92px;
+  min-height: 100px;
+  padding: 8px 6px 10px;
+  border-radius: 14px;
+  background: var(--tt-navy);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 0 0 3px rgba(0, 0, 0, 0.35),
+    0 12px 24px -12px rgba(0, 0, 0, 0.6);
+}
+
+.tt-marcador-label {
+  font-family: var(--tt-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tt-marcador-num {
+  font-family: var(--tt-mono);
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--tt-pelota);
+  /* Brillo de LED, sin animar: no cuesta nada pintar. */
+  text-shadow: 0 0 10px rgba(215, 240, 58, 0.45);
+}
+
+.tt-marcador-mes {
+  font-family: var(--tt-display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.tsu-info {
+  min-width: 0;
+}
+
+.tt-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--tt-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tt-pelota);
+}
+
+.tt-tag::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tt-pelota);
+  box-shadow: 0 0 0 4px rgba(215, 240, 58, 0.22);
 }
 
 .tsu-title {
-  font-size: 24px;
-  color: var(--color-ink);
-  margin: 10px 0 4px;
+  margin: 8px 0 6px;
+  font-family: var(--tt-display);
+  font-size: clamp(32px, 4.2vw, 50px);
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
   overflow-wrap: anywhere;
 }
 
 .tsu-when {
-  margin: 0 0 12px;
+  margin: 0;
+  max-width: 40ch;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--color-accent-orange-text);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
 }
 
+/* Precio y categorías en fichas: se ve de un vistazo si está la tuya. */
 .tsu-facts {
   list-style: none;
-  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
   padding: 0;
-  display: grid;
-  gap: 4px;
-  font-size: 14px;
-  color: var(--text-secondary);
+}
+
+.tsu-facts li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  font-family: var(--tt-mono);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: #ffffff;
 }
 
 .tsu-facts strong {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tsu-fact-count {
+  opacity: 0.75;
+}
+
+/* El precio va como entrada de tribuna: amarillo pelota con muescas. */
+.tsu-facts .tsu-fact-precio {
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 16px;
+  background: var(--tt-pelota);
+  color: var(--tt-navy);
+  -webkit-mask:
+    radial-gradient(circle 5px at left center, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 5px at right center, #0000 98%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 5px at left center, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 5px at right center, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* --------------------------------------------------------------------------
+   Llave: cuartos → semis → final → copa. Medidas fijas (244 × 100) para que
+   las líneas del SVG caigan justo entre las cajitas.
+   -------------------------------------------------------------------------- */
+.tt-llave {
+  grid-column: 1 / -1;
+  align-self: end;
+  justify-self: end;
+  display: grid;
+  grid-template-columns: 52px 52px 74px 24px;
+  column-gap: 14px;
+  width: 244px;
+  height: 100px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 244 100' fill='none' stroke='white' stroke-opacity='.6' stroke-width='1.5'%3E%3Cpath d='M52 12.5h7v25h-7M59 25h7M52 62.5h7v25h-7M59 75h7M118 25h7v50h-7M125 50h7M206 50h14'/%3E%3C/svg%3E") 0 0 / 244px 100px no-repeat;
+}
+
+.tt-llave-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.tt-llave-col i {
+  display: block;
+  height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tt-llave-col .tt-llave-vos {
+  position: relative;
+  height: 24px;
+  border-color: var(--tt-pelota);
+  background: rgba(215, 240, 58, 0.16);
+  font-family: var(--tt-mono);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 21px;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--tt-pelota);
+}
+
+.tt-llave-copa {
+  align-self: center;
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(245, 197, 66, 0.6));
+}
+
+/* --------------------------------------------------------------------------
+   PLANILLA: la inscripción en pasos numerados con pelotitas.
+   -------------------------------------------------------------------------- */
+.tsu-form,
+.tsu-done,
+.tt-pronto-side {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-width: 0;
+  padding: 28px 28px 26px;
+}
+
+.tsu-form-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin: 0;
+  font-family: var(--tt-display);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
   color: var(--color-ink);
 }
 
-.tsu-form {
-  display: grid;
-  gap: 14px;
+.tsu-form-head span {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-accent-orange-border);
+  background: var(--color-accent-orange-subtle);
+  font-family: var(--tt-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-accent-orange-text);
+}
+
+.tsu-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: tsu-paso;
+}
+
+.tsu-step {
+  position: relative;
   min-width: 0;
+  padding: 0 0 22px 48px;
+  counter-increment: tsu-paso;
+}
+
+/* El número del paso; cuando está completo pasa a pelota con tilde. */
+.tsu-step::before {
+  content: counter(tsu-paso);
+  position: absolute;
+  top: -3px;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--color-accent-orange);
+  background: var(--color-surface-card);
+  font-family: var(--tt-mono);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-accent-orange-text);
+}
+
+.tsu-step.is-ok::before {
+  content: "✓";
+  font-size: 17px;
+  border-color: #a9c41c;
+  background: var(--tt-pelota-bg);
+  color: var(--tt-navy);
+}
+
+/* La línea punteada que une los pasos, como la red. */
+.tsu-step::after {
+  content: "";
+  position: absolute;
+  top: 34px;
+  bottom: 4px;
+  left: 15px;
+  border-left: 2px dashed var(--color-hairline-strong);
+}
+
+.tsu-step:last-child {
+  padding-bottom: 0;
+}
+
+.tsu-step:last-child::after {
+  display: none;
+}
+
+.tsu-step-title {
+  display: block;
+  margin: 0 0 10px;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-ink);
 }
 
 .tsu-cats {
@@ -60,14 +452,6 @@
   margin: 0;
   padding: 0;
   min-width: 0;
-}
-
-.tsu-label {
-  display: block;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
 }
 
 .tsu-chips {
@@ -80,16 +464,23 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 8px 14px;
-  border: 1px solid var(--color-hairline-strong);
+  gap: 8px;
+  min-height: 46px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--color-hairline-strong);
   border-radius: 999px;
   background: var(--color-canvas-soft);
   color: var(--color-ink);
-  font-size: 14px;
-  font-weight: 600;
+  font-family: var(--tt-display);
+  font-size: 19px;
+  font-weight: 800;
+  text-transform: uppercase;
   cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.tsu-chip:hover {
+  border-color: var(--color-accent-orange);
 }
 
 .tsu-chip input {
@@ -106,43 +497,64 @@
 .tsu-chip.is-on {
   border-color: var(--color-accent-orange);
   background: var(--color-accent-orange);
-  color: #fff;
+  color: #ffffff;
 }
 
 .tsu-chip-count {
-  font-size: 12px;
+  font-family: var(--tt-mono);
+  font-size: 11px;
   font-weight: 500;
+  text-transform: none;
   opacity: 0.8;
 }
 
-.tsu-fields {
+/* Vos + tu compañero/a: lado a lado en PC, uno abajo del otro en el celu. */
+.tsu-pareja {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 10px;
 }
 
-.tsu-field:last-of-type {
-  grid-column: 1 / -1;
+.tsu-pareja-y {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 11px;
+  border-radius: 50%;
+  background: var(--color-accent-orange);
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
 }
 
-@media (max-width: 520px) {
-  .tsu-fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.tsu-field {
+  display: block;
+  min-width: 0;
+}
+
+.tsu-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .tsu-input {
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
   padding: 10px 14px;
   background: var(--color-canvas-soft);
-  border: 1px solid var(--color-hairline-strong);
-  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-hairline-strong);
+  border-radius: 12px;
   color: var(--color-ink);
   font: inherit;
   font-size: 16px; /* 16px: Safari no hace zoom al enfocar */
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .tsu-input::placeholder {
@@ -151,6 +563,15 @@
 
 .tsu-input:focus {
   border-color: var(--color-accent-orange);
+  box-shadow: 0 0 0 3px rgba(232, 114, 42, 0.2);
+}
+
+.tsu-hint {
+  display: block;
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
 }
 
 .tsu-trap {
@@ -163,28 +584,64 @@
 
 .tsu-error {
   margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.08);
   font-size: 14px;
   font-weight: 600;
-  color: #ef4444;
+  color: #b91c1c;
 }
 
 .tsu-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 18px;
+  gap: 10px 20px;
 }
 
-.tsu-row .btn {
-  padding: 10px 22px;
+/* Botón principal: naranja como "Reservar", con letra de afiche. */
+.tt-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-accent-orange);
+  color: #ffffff;
+  font-family: var(--tt-display);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 12px 24px -12px rgba(232, 114, 42, 0.95);
+  transition: background-color 0.15s ease;
 }
 
-.tsu-row .btn:disabled {
+.tt-cta:hover {
+  background: var(--color-accent-orange-hover);
+  color: #ffffff;
+}
+
+.tt-cta:focus-visible {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 3px;
+}
+
+.tt-cta:disabled {
   opacity: 0.6;
   cursor: wait;
 }
 
 .tsu-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   background: none;
   border: 0;
   padding: 0;
@@ -197,18 +654,694 @@
   cursor: pointer;
 }
 
+/* Inscripción hecha: tilde de pelota y la pareja con letra de afiche. */
 .tsu-done {
-  display: grid;
-  gap: 10px;
   align-content: center;
+  justify-items: start;
+  gap: 8px;
   color: var(--text-secondary);
 }
 
-.tsu-done strong {
-  font-size: 18px;
+.tsu-done p {
+  margin: 0;
+}
+
+.tsu-done-check {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background: var(--tt-pelota-bg);
+  color: var(--tt-navy);
+  font-size: 28px;
+  font-weight: 800;
+  box-shadow: 0 8px 18px -8px rgba(120, 140, 10, 0.8);
+}
+
+.tsu-done-title {
+  font-family: var(--tt-display);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
   color: var(--color-ink);
 }
 
-.tsu-done p {
-  margin: 0 0 4px;
+.tsu-done .tsu-done-pareja {
+  font-family: var(--tt-display);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-accent-orange-text);
+  overflow-wrap: anywhere;
+}
+
+.tsu-done-cat {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--tt-navy);
+  font-family: var(--tt-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--tt-pelota);
+}
+
+.tsu-done .tsu-row {
+  margin-top: 8px;
+}
+
+/* Sin torneo abierto: los pasos explican cómo funciona, sin formulario. */
+.tt-pronto .tsu-step-title {
+  margin-bottom: 0;
+}
+
+.tt-pronto .tsu-hint {
+  margin-top: 2px;
+}
+
+.tt-pronto .tsu-step {
+  padding-bottom: 16px;
+}
+
+/* ==========================================================================
+   CUADRO DE HONOR: la historia del club, torneo por torneo
+   ========================================================================== */
+.tg {
+  padding: 64px 0 24px;
+}
+
+.tg-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 18px 32px;
+  margin-bottom: 30px;
+}
+
+.tg-honor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-family: var(--tt-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent-orange-text);
+}
+
+/* La línea de la derecha imita la red: trama de cuadraditos. */
+.tg-honor::after {
+  content: "";
+  flex: 1;
+  max-width: 220px;
+  height: 8px;
+  opacity: 0.4;
+  background:
+    repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 6px),
+    linear-gradient(currentColor, currentColor) 0 0 / 100% 1px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat;
+}
+
+.tg-title {
+  margin: 0 0 8px;
+  font-family: var(--tt-display);
+  font-size: clamp(34px, 4.6vw, 56px);
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
+.tg-desc {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* Tablero LED con los números del club. */
+.tg-tablero {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-radius: 14px;
+  background: var(--tt-navy);
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 0 0 3px rgba(0, 0, 0, 0.35),
+    0 16px 30px -18px rgba(11, 26, 77, 0.8);
+}
+
+.tg-tablero div {
+  display: grid;
+  justify-items: center;
+  padding: 10px 22px 12px;
+}
+
+.tg-tablero div + div {
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.tg-tablero dt {
+  font-family: var(--tt-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tg-tablero dd {
+  margin: 0;
+  font-family: var(--tt-mono);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--tt-pelota);
+  text-shadow: 0 0 10px rgba(215, 240, 58, 0.45);
+}
+
+.tg-historia {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tg-torneo {
+  margin-bottom: 44px;
+}
+
+/* Placa del torneo: una franja de cancha con el nombre. */
+.tg-placa {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  color: #ffffff;
+  background-color: var(--tt-cancha);
+  background-image: var(--tt-lineas), url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, 200px 200px;
+  background-repeat: no-repeat, repeat;
+}
+
+.tg-placa::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(11, 26, 77, 0.85) 0%, rgba(11, 26, 77, 0.5) 100%);
+}
+
+.tg-placa-pelota {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--tt-pelota-bg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.tg-placa-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.tg-placa-title {
+  margin: 0;
+  font-family: var(--tt-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #ffffff;
+  overflow-wrap: anywhere;
+}
+
+.tg-placa-cats {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  font-family: var(--tt-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tg-placa-meta {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--tt-mono);
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+}
+
+.tg-placa-meta span + span::before {
+  content: "· ";
+}
+
+.tg-sub {
+  margin: 22px 0 12px;
+  font-family: var(--tt-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.tg-podio {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* Las fotos son botones (abren el lightbox): sin el estilo del navegador. */
+.tg-thumb {
+  display: block;
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  border-radius: 14px;
+}
+
+.tg-thumb:focus-visible {
+  outline: 3px solid var(--color-accent-orange);
+  outline-offset: 3px;
+}
+
+.tg-podio .torneo-thumb-badge {
+  padding: 34px 10px 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Campeones con aro dorado: resaltan sin leer nada. */
+.tg-thumb.is-oro {
+  border: 2px solid rgba(245, 197, 66, 0.95);
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.25), 0 16px 30px -18px rgba(184, 134, 11, 0.9);
+}
+
+.tg-thumb.is-plata {
+  border: 2px solid rgba(207, 214, 222, 0.95);
+}
+
+.tg-thumb.is-bronce {
+  border: 2px solid rgba(208, 138, 75, 0.95);
+}
+
+.tg-medalla {
+  position: absolute;
+  top: 18px;
+  left: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  font-family: var(--tt-display);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1;
+  color: #3a2a00;
+  box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+/* La cinta de la medalla, en los colores del club (azul cancha y naranja). */
+.tg-medalla::before {
+  content: "";
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  z-index: -1;
+  width: 24px;
+  height: 17px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #2350d6 50%, var(--color-accent-orange) 50%);
+  clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+}
+
+.tg-medalla.is-oro {
+  background: radial-gradient(circle at 30% 30%, #fff6c4 0, #f5c542 45%, #b8860b 100%);
+}
+
+.tg-medalla.is-plata {
+  background: radial-gradient(circle at 30% 30%, #ffffff 0, #cfd6de 45%, #8a96a3 100%);
+}
+
+.tg-medalla.is-bronce {
+  color: #2e1606;
+  background: radial-gradient(circle at 30% 30%, #ffd9b8 0, #d08a4b 45%, #8a4e1f 100%);
+}
+
+.tg .marquee-container {
+  padding: 4px 0 20px;
+}
+
+/* Cierre: después de las copas, el llamado a jugar la próxima. */
+.tg-cierre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin: 8px 0 32px;
+  padding: 22px 26px;
+  border: 1.5px dashed var(--color-accent-orange-border);
+  border-radius: 18px;
+  background: var(--color-accent-orange-subtle);
+}
+
+.tg-cierre p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.tg-cierre strong {
+  display: block;
+  font-family: var(--tt-display);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 960px) {
+  .tsu-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tsu-poster {
+    background-image: var(--tt-lineas-celu), url("/img/fondo/textura-cesped.jpg");
+  }
+
+  .tt-llave {
+    justify-self: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .tt-intro {
+    margin-bottom: 16px;
+    gap: 8px 4px;
+  }
+
+  .tt-intro .tt-intro-mascota {
+    width: 112px;
+    margin-right: -8px;
+  }
+
+  .tt-lead {
+    grid-column: 1 / -1;
+    font-size: 15px;
+  }
+
+  .tsu-card {
+    border-radius: 20px;
+  }
+
+  .tsu-poster {
+    gap: 16px 14px;
+    padding: 20px 16px 18px;
+  }
+
+  .tt-marcador {
+    width: 76px;
+    min-height: 86px;
+  }
+
+  .tt-marcador-num {
+    font-size: 32px;
+  }
+
+  .tt-marcador-mes {
+    font-size: 14px;
+  }
+
+  .tsu-title {
+    font-size: 32px;
+  }
+
+  .tsu-when {
+    font-size: 14px;
+  }
+
+  /* Las fichas pasan abajo, a lo ancho del afiche, para no apretarse. */
+  .tsu-info {
+    display: contents;
+  }
+
+  .tsu-info > .tt-tag,
+  .tsu-info > .tsu-title,
+  .tsu-info > .tsu-when {
+    grid-column: 2;
+  }
+
+  .tsu-info > .tt-tag {
+    align-self: start;
+  }
+
+  .tsu-poster {
+    grid-template-rows: none;
+    grid-template-areas: none;
+  }
+
+  .tsu-poster > .tt-marcador {
+    grid-row: 1 / span 3;
+  }
+
+  .tsu-facts {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+
+  /* Sin torneo, el texto es largo: que use todo el ancho del afiche. */
+  .tt-pronto .tsu-info > .tsu-when {
+    grid-column: 1 / -1;
+  }
+
+  /* Con inscripción abierta la protagonista es la planilla: la llave se
+     guarda en el celu para que el formulario quede más arriba. */
+  .tsu-card:not(.tt-pronto) .tt-llave {
+    display: none;
+  }
+
+  .tsu-form,
+  .tsu-done,
+  .tt-pronto-side {
+    padding: 22px 16px 20px;
+  }
+
+  .tsu-form-head {
+    font-size: 25px;
+  }
+
+  .tsu-pareja {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .tsu-pareja-y {
+    display: none;
+  }
+
+  /* En el celu el botón ocupa todo el ancho: es lo que se toca. */
+  .tsu-form .tt-cta,
+  .tsu-done .tt-cta,
+  .tt-pronto-side .tt-cta,
+  .tg-cierre .tt-cta {
+    width: 100%;
+  }
+
+  .tsu-row {
+    justify-content: center;
+  }
+
+  .tg {
+    padding-top: 48px;
+  }
+
+  .tg-head {
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: 24px;
+  }
+
+  .tg-tablero div {
+    padding: 8px 6px 10px;
+  }
+
+  .tg-tablero dd {
+    font-size: 28px;
+  }
+
+  .tg-torneo {
+    margin-bottom: 36px;
+  }
+
+  .tg-placa {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 12px 14px;
+    background-image: var(--tt-lineas-celu), url("/img/fondo/textura-cesped.jpg");
+  }
+
+  .tg-placa-pelota {
+    width: 20px;
+    height: 20px;
+  }
+
+  .tg-placa-title {
+    font-size: 22px;
+  }
+
+  .tg-placa-meta {
+    grid-column: 2;
+  }
+
+  .tg-podio {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .tg-podio .torneo-thumb-badge {
+    padding: 28px 6px 8px;
+    font-size: 12px;
+  }
+
+  .tg-medalla {
+    top: 15px;
+    left: 9px;
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .tg-medalla::before {
+    top: -11px;
+    width: 20px;
+    height: 14px;
+  }
+
+  .tg-cierre {
+    padding: 18px 16px;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .tg-cierre strong {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+}
+
+/* Modo oscuro: lo azul queda igual (es la cancha); se ajustan error y sombras. */
+@media (prefers-color-scheme: dark) {
+  .tsu-card {
+    box-shadow: 0 24px 48px -30px rgba(0, 0, 0, 0.9);
+  }
+
+  .tsu-error {
+    border-color: rgba(255, 138, 128, 0.4);
+    background: rgba(255, 138, 128, 0.1);
+    color: #ff8a80;
+  }
+
+  .tt-cta:focus-visible {
+    outline-color: #ffffff;
+  }
+}
+
+/* ==========================================================================
+   MOVIMIENTO: solo transform/opacity y en piezas chicas (anda en un J7).
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  /* El punto de "Inscripción abierta" titila como luz de en vivo. */
+  .tt-tag::before {
+    animation: tt-vivo 1.6s ease-in-out infinite;
+  }
+
+  /* "¿Tu pareja?" late suave: invita a anotarse. */
+  .tt-llave-vos::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 7px;
+    border: 1.5px solid var(--tt-pelota);
+    opacity: 0;
+    animation: tt-late 2.4s ease-out infinite;
+  }
+
+  .tt-llave-copa {
+    animation: tt-copa 3s ease-in-out infinite;
+  }
+
+  /* La pelotita de la portada pica de vez en cuando. */
+  .tt-eyebrow .tt-pelota {
+    animation: tt-pique 3.2s ease-in-out infinite;
+  }
+
+  /* Al completar un paso, la pelota "entra" con un rebote corto. */
+  .tsu-step.is-ok::before {
+    animation: tt-entra 0.35s ease-out;
+  }
+
+  .tsu-done-check {
+    animation: tt-entra 0.45s ease-out;
+  }
+
+  .tg-thumb {
+    transition: transform 0.2s ease;
+  }
+
+  @keyframes tt-vivo {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  @keyframes tt-late {
+    0% { opacity: 0.9; transform: scale(0.96); }
+    70%, 100% { opacity: 0; transform: scale(1.12); }
+  }
+
+  @keyframes tt-copa {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-3px) rotate(-6deg); }
+  }
+
+  @keyframes tt-pique {
+    0%, 60%, 100% { transform: translateY(0); }
+    70% { transform: translateY(-6px); }
+    80% { transform: translateY(0); }
+    88% { transform: translateY(-2px); }
+  }
+
+  @keyframes tt-entra {
+    0% { transform: scale(0.6); }
+    70% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
 }

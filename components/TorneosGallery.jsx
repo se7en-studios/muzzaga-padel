@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { MarqueeCard } from "./PhotoCard";
 import { useLightbox } from "./LightboxProvider";
+import { plural } from "../lib/format";
 
 const WHATSAPP = "5492995974176";
 
@@ -43,47 +44,79 @@ function JugadoresMarquee({ photos }) {
   );
 }
 
-function TorneoThumb({ src, alt, label }) {
+/** Medalla según la leyenda que carga el admin ("1er puesto…", "2do…"), igual que en el inicio. */
+function medalla(caption = "") {
+  if (/\b(1|1er|1ro|primer)\s*(°|º)?\s*puesto|campe[oó]n/i.test(caption)) return "oro";
+  if (/\b(2|2do|segundo)\s*(°|º)?\s*puesto|subcampe/i.test(caption)) return "plata";
+  if (/\b(3|3er|3ro|tercer)\s*(°|º)?\s*puesto/i.test(caption)) return "bronce";
+  return null;
+}
+const PUESTO = { oro: "1°", plata: "2°", bronce: "3°" };
+
+function TorneoThumb({ src, alt, label, sizes = "(max-width: 640px) 45vw, 160px" }) {
   const openLightbox = useLightbox();
+  const medal = medalla(label);
   return (
-    <div className="torneo-thumb" onClick={() => openLightbox(src, alt)}>
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        loading="lazy"
-        sizes="(max-width: 640px) 45vw, 160px"
-      />
+    <button
+      type="button"
+      className={`torneo-thumb tg-thumb${medal ? ` is-${medal}` : ""}`}
+      onClick={() => openLightbox(src, alt)}
+      aria-label={`Ampliar foto: ${label || alt}`}
+    >
+      <Image src={src} alt={alt} fill loading="lazy" sizes={sizes} />
+      {medal && (
+        <span className={`tg-medalla is-${medal}`} aria-hidden="true">
+          {PUESTO[medal]}
+        </span>
+      )}
       {label && (
         <div className="torneo-thumb-badge">
           <span>{label}</span>
         </div>
       )}
-    </div>
+    </button>
   );
 }
 
-const SUBTITLE_STYLE = {
-  fontSize: 15,
-  fontWeight: 700,
-  color: "var(--text-secondary)",
-};
-
-function TorneoBlock({ title, jugadores, ganadores }) {
+/** Un torneo del historial: placa con el nombre, el podio y la fecha en fotos. */
+function TorneoBlock({ torneo }) {
+  const { name, categories, title, jugadores, ganadores } = torneo;
   const marquee = jugadores.length >= MARQUEE_MIN;
   return (
-    <div style={{ marginBottom: 40 }}>
+    <li className="tg-torneo">
       <div className="container">
-        <span className="badge-linear badge-amber" style={{ marginBottom: 8 }}>
-          {title}
-        </span>
-        {jugadores.length > 0 && (
-          <h4 style={{ ...SUBTITLE_STYLE, margin: marquee ? "14px 0 4px" : "14px 0 10px" }}>
-            Jugadores
-          </h4>
+        <div className="tg-placa">
+          <span className="tg-placa-pelota" aria-hidden="true" />
+          <div className="tg-placa-text">
+            <h3 className="tg-placa-title">{name || title}</h3>
+            {categories && <span className="tg-placa-cats">{categories}</span>}
+          </div>
+          <p className="tg-placa-meta">
+            {ganadores.length > 0 && <span>{plural(ganadores.length, "podio", "podios")}</span>}
+            {jugadores.length > 0 && <span>{plural(jugadores.length, "foto", "fotos")}</span>}
+          </p>
+        </div>
+
+        {ganadores.length > 0 && (
+          <>
+            <p className="tg-sub">Podio</p>
+            <div className="tg-podio">
+              {ganadores.map((photo) => (
+                <TorneoThumb
+                  key={photo.id}
+                  src={photo.src}
+                  alt={photo.alt}
+                  label={photo.label}
+                  sizes="(max-width: 640px) 46vw, 270px"
+                />
+              ))}
+            </div>
+          </>
         )}
+
+        {jugadores.length > 0 && <p className="tg-sub">La fecha en fotos</p>}
         {jugadores.length > 0 && !marquee && (
-          <div className="torneo-thumb-grid" style={{ marginBottom: 12 }}>
+          <div className="torneo-thumb-grid">
             {jugadores.map((photo) => (
               <TorneoThumb key={photo.id} src={photo.src} alt={photo.alt} />
             ))}
@@ -92,42 +125,69 @@ function TorneoBlock({ title, jugadores, ganadores }) {
       </div>
 
       {marquee && <JugadoresMarquee photos={jugadores} />}
-
-      {ganadores.length > 0 && (
-        <div className="container">
-          <h4 style={{ ...SUBTITLE_STYLE, margin: "8px 0 10px" }}>Ganadores</h4>
-          <div className="torneo-thumb-grid">
-            {ganadores.map((photo) => (
-              <TorneoThumb
-                key={photo.id}
-                src={photo.src}
-                alt={photo.alt}
-                label={photo.label}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    </li>
   );
 }
 
 /** `signupOpen`: hay un torneo con inscripción abierta arriba (#inscripcion). */
 export default function TorneosGallery({ tournaments, signupOpen = false }) {
+  // El marcador de la cabecera: cuánta historia tiene el club.
+  const podios = tournaments.reduce((n, t) => n + t.ganadores.length, 0);
+  const fotos = tournaments.reduce((n, t) => n + t.jugadores.length + t.ganadores.length, 0);
   return (
-    <section id="torneos" className="section-bento">
+    <section id="torneos" className="tg">
       <div className="container">
-        <div className="section-header-row">
-          <div>
-            <h2 className="section-title">Torneos en Muzzaga</h2>
-            <p className="section-desc">
-              Torneos organizados durante todo el año, en todas las categorías.
-              Consultá fechas y premios por WhatsApp.
+        <div className="tg-head">
+          <div className="tg-head-text">
+            <p className="tg-honor">
+              <span aria-hidden="true">🏆</span> Cuadro de honor
+            </p>
+            <h2 className="tg-title">La historia del club, torneo por torneo</h2>
+            <p className="tg-desc">
+              Torneos todo el año, en todas las categorías. Tocá una foto para verla grande.
             </p>
           </div>
+          {tournaments.length > 0 && (
+            <dl className="tg-tablero">
+              <div>
+                <dt>Torneos</dt>
+                <dd>{tournaments.length}</dd>
+              </div>
+              <div>
+                <dt>Podios</dt>
+                <dd>{podios}</dd>
+              </div>
+              <div>
+                <dt>Fotos</dt>
+                <dd>{fotos}</dd>
+              </div>
+            </dl>
+          )}
+        </div>
+      </div>
+
+      {tournaments.length === 0 && (
+        <div className="container">
+          <p className="tg-desc">Pronto vas a ver acá las fotos de los torneos.</p>
+        </div>
+      )}
+
+      <ol className="tg-historia">
+        {tournaments.map((t) => (
+          <TorneoBlock key={t.id} torneo={t} />
+        ))}
+      </ol>
+
+      {/* Cierre: después de ver las copas, el llamado a jugar el próximo. */}
+      <div className="container">
+        <div className="tg-cierre">
+          <p>
+            <strong>¿La próxima foto es la tuya?</strong>
+            {signupOpen ? " La inscripción está abierta." : " Avisanos y te guardamos lugar."}
+          </p>
           {signupOpen ? (
-            <a href="#inscripcion" className="btn btn-linear-primary">
-              Inscribir mi pareja ↑
+            <a href="#inscripcion" className="tt-cta">
+              Inscribir mi pareja <span aria-hidden="true">↑</span>
             </a>
           ) : (
             <a
@@ -136,34 +196,14 @@ export default function TorneosGallery({ tournaments, signupOpen = false }) {
               )}`}
               target="_blank"
               rel="noopener"
-              className="btn btn-secondary-whatsapp"
-              style={{ gap: 8 }}
+              className="tt-cta tt-cta--wa"
             >
               <WhatsappIcon />
-              Inscribir mi pareja por WhatsApp →
+              Inscribir mi pareja por WhatsApp
             </a>
           )}
         </div>
-
-        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
-          Así se vivieron nuestros torneos
-        </h3>
       </div>
-
-      {tournaments.length === 0 && (
-        <div className="container">
-          <p className="section-desc">Pronto vas a ver acá las fotos de los torneos.</p>
-        </div>
-      )}
-
-      {tournaments.map((t) => (
-        <TorneoBlock
-          key={t.id}
-          title={t.title}
-          jugadores={t.jugadores}
-          ganadores={t.ganadores}
-        />
-      ))}
     </section>
   );
 }

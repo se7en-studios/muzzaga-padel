@@ -1,1 +1,1022 @@
-/* Rediseño de la carta (/menu). Se carga después de globals.css y marca.css. */
+/* Rediseño de la carta (/menu). Se carga después de globals.css y marca.css.
+   Idea: la carta es la pizarra del bar del club (como "Lo más pedido" de la
+   home) y el pedido es la cancha azul con la pelota. Pensado primero para el
+   celu, sentado en la mesa o en la cancha después de escanear el QR. */
+
+:root {
+  --carta-azul: #2350d6;
+  --carta-azul-osc: #1a3fae;
+  --carta-tiza: #f4f1e6;
+  --carta-pelota: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  --carta-cesped: url("/img/fondo/textura-cesped.jpg");
+  /* Líneas de la cancha (blancas, finitas) para el fondo azul. */
+  --carta-lineas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none' fill='none' stroke='white'%3E%3Crect x='4' y='6' width='192' height='88' stroke-width='1.5' vector-effect='non-scaling-stroke' stroke-opacity='.35'/%3E%3Cpath d='M100 0v100' stroke-width='2.5' stroke-dasharray='1 3' vector-effect='non-scaling-stroke' stroke-opacity='.4'/%3E%3Cpath d='M42 6v88M158 6v88M42 50h116' stroke-width='1.2' vector-effect='non-scaling-stroke' stroke-opacity='.25'/%3E%3C/svg%3E");
+  /* Alto del header pegado: las pestañas de categoría quedan justo abajo. */
+  --carta-nav-h: 78px;
+  /* El precio en naranja: en oscuro el de texto ya viene aclarado. */
+  --carta-tag-tacc-bg: #e6f6ee;
+  --carta-tag-tacc-fg: #0b6b43;
+  --carta-tag-bg: #fdf0e6;
+  --carta-tag-fg: #9a3412;
+  --carta-icono-bg: color-mix(in srgb, var(--carta-azul) 8%, var(--color-surface-card, #fff));
+}
+
+@media (max-width: 768px) {
+  :root {
+    --carta-nav-h: 64px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --carta-tag-tacc-bg: rgba(52, 211, 153, 0.12);
+    --carta-tag-tacc-fg: #34d399;
+    --carta-tag-bg: rgba(232, 114, 42, 0.14);
+    --carta-tag-fg: #ffb27f;
+    --carta-icono-bg: color-mix(in srgb, var(--carta-azul) 22%, var(--color-surface-card, #1c1c18));
+  }
+}
+
+.carta {
+  padding-bottom: 40px;
+}
+
+.carta-cargando {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+/* Pelotita de pádel: decorativa, se repite en la pizarra, "Todo" y el pedido. */
+.carta-pelota {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--carta-pelota);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+/* La costura blanca. */
+.carta-pelota::after {
+  content: "";
+  position: absolute;
+  inset: 1px -5px 1px 6px;
+  border: 1.2px solid rgba(255, 255, 255, 0.85);
+  border-right: 0;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+}
+
+/* ==========================================================================
+   1 · PIZARRA DE ENTRADA
+   Pizarrón verde con marco de madera, igual receta que la home (un fondo al
+   padding y otro al borde, así el marco conserva las esquinas). Igual en
+   claro y oscuro: es un objeto, no una superficie del tema.
+   ========================================================================== */
+.carta-pizarra {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "texto mascota"
+    "ubic ubic"
+    "acciones acciones";
+  column-gap: 8px;
+  margin: 4px 0 16px;
+  padding: 16px 14px 14px 16px;
+  border: 10px solid transparent;
+  border-radius: 18px;
+  color: var(--carta-tiza);
+  background:
+    radial-gradient(ellipse 60% 45% at 18% 8%, rgba(255, 255, 255, 0.07), transparent 70%) padding-box,
+    radial-gradient(ellipse 50% 40% at 85% 92%, rgba(255, 255, 255, 0.05), transparent 70%) padding-box,
+    linear-gradient(#24332b, #1d2a23) padding-box,
+    repeating-linear-gradient(100deg, rgba(0, 0, 0, 0.12) 0 3px, transparent 3px 11px) border-box,
+    linear-gradient(135deg, #a06a3c, #7a4a24 50%, #94603a) border-box;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 0 40px rgba(0, 0, 0, 0.35),
+    0 18px 36px -22px rgba(0, 0, 0, 0.7);
+}
+
+.carta-pizarra-texto {
+  grid-area: texto;
+  min-width: 0;
+}
+
+.carta-pizarra-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Aire para el tilde de "MENÚ", que si no toca la línea de arriba. */
+  margin: 0 0 10px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(244, 241, 230, 0.7);
+}
+
+/* Título en tiza: condensada, mayúscula y el borde apenas difuso. */
+.carta-titulo {
+  margin: 0;
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  font-size: clamp(32px, 8.6vw, 60px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--carta-tiza);
+  text-shadow: 0 0 1px rgba(244, 241, 230, 0.7), 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.carta-pizarra-desc {
+  margin: 10px 0 0;
+  max-width: 52ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: rgba(244, 241, 230, 0.78);
+}
+
+/* Cómo pedir, en tres pasos de tiza: se entiende sin leer el párrafo. */
+.carta-pasos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 12px 0 0;
+  padding: 10px 0 0;
+  list-style: none;
+  border-top: 2px dashed rgba(244, 241, 230, 0.3);
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--carta-tiza);
+}
+
+.carta-pasos li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.carta-pasos b {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid rgba(215, 240, 58, 0.7);
+  border-radius: 50%;
+  font-size: 13px;
+  color: #d7f03a;
+}
+
+/* Muzzaguito con la pizza y la birra, asomado sobre el marco. En celu va
+   en la esquina, así el título no se parte en tres renglones. */
+.carta-pizarra-mascota.mascota {
+  grid-area: mascota;
+  align-self: start;
+  width: 104px;
+  margin: -6px -10px 0 0;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
+}
+
+/* En celu el párrafo y los pasos van abajo de la mascota, a todo el
+   ancho: el texto de la pizarra se "abre" en la grilla (display: contents). */
+@media (max-width: 639px) {
+  .carta-pizarra {
+    grid-template-areas:
+      "kicker mascota"
+      "titulo mascota"
+      "desc desc"
+      "pasos pasos"
+      "ubic ubic"
+      "acciones acciones";
+    grid-template-rows: auto 1fr;
+  }
+
+  .carta-pizarra-texto {
+    display: contents;
+  }
+
+  .carta-pizarra-kicker {
+    grid-area: kicker;
+  }
+
+  .carta-titulo {
+    grid-area: titulo;
+    align-self: center;
+  }
+
+  .carta-pizarra-desc {
+    grid-area: desc;
+  }
+
+  .carta-pasos {
+    grid-area: pasos;
+  }
+}
+
+/* Celu: "Quitar ubicación" baja abajo del lugar, así "Mesa 1 (Cantina)"
+   no se parte letra por letra. */
+@media (max-width: 639px) {
+  .carta-ubicacion {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 0;
+    padding-bottom: 0;
+  }
+
+  .carta-ubicacion-quitar {
+    grid-column: 2;
+    justify-self: start;
+    padding: 0;
+  }
+}
+
+/* Celu chico: el párrafo es ambientación (lo de pagar primero ya lo dice el
+   pedido). Sin él los productos aparecen antes, que es a lo que se viene. */
+@media (max-width: 480px) {
+  .carta-pizarra-desc {
+    display: none;
+  }
+
+  .carta-pasos {
+    margin-top: 14px;
+  }
+}
+
+/* Papelito del QR: amarillo pelota, pinchado con cinta y un poco torcido. */
+.carta-ubicacion {
+  grid-area: ubic;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 16px;
+  padding: 8px 6px 8px 12px;
+  border-radius: 4px;
+  background: linear-gradient(170deg, #f1ff8f, #dcf24a);
+  color: #1d2a23;
+  transform: rotate(-1deg);
+  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.6);
+}
+
+.carta-ubicacion::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 56px;
+  height: 16px;
+  margin-left: -28px;
+  background: rgba(244, 241, 230, 0.55);
+  transform: rotate(3deg);
+}
+
+.carta-ubicacion-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.carta-ubicacion-texto span {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #3d5214;
+}
+
+.carta-ubicacion-texto strong {
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+}
+
+.carta-ubicacion-quitar {
+  min-height: 44px;
+  padding: 0 10px;
+  border: none;
+  background: none;
+  color: #2b3a12;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* Botones dentro de la pizarra: en celu, uno al lado del otro. */
+.carta .menu-header-actions {
+  grid-area: acciones;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: auto;
+  margin-top: 16px;
+}
+
+.carta .menu-header-actions .btn {
+  width: 100%;
+  height: auto;
+  min-height: 46px;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 8px;
+  font-size: 14.5px;
+  white-space: nowrap;
+}
+
+/* "Ver mi pedido" en tiza sobre el pizarrón (el negro se perdía). */
+.carta .btn.menu-cart-open {
+  background: var(--carta-tiza);
+  border: 1px solid var(--carta-tiza);
+  color: #1d2a23;
+}
+
+.carta .menu-cart-open-count {
+  background: var(--carta-azul);
+  color: #ffffff;
+}
+
+.carta-consulta-extra {
+  display: none;
+}
+
+/* ==========================================================================
+   2 · BUSCADOR Y CATEGORÍAS
+   ========================================================================== */
+.carta-buscar {
+  position: relative;
+  display: block;
+  max-width: 460px;
+  margin-bottom: 4px;
+}
+
+.carta-buscar svg {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  translate: 0 -50%;
+  color: var(--color-muted);
+  pointer-events: none;
+}
+
+/* 16 px: con menos, el iPhone hace zoom al tocar el buscador. */
+.carta-buscar input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px 0 44px;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-card);
+  color: var(--color-ink);
+  font-size: 16px;
+}
+
+.carta-buscar input::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+/* Las pestañas quedan pegadas bajo el header: se salta de las pizzas a las
+   birras sin volver arriba. Fondo esmerilado para que la lista no se mezcle. */
+.carta-filtros {
+  position: sticky;
+  top: var(--carta-nav-h);
+  z-index: 5;
+  margin: 0 -16px 8px;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--color-canvas) 90%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.carta .menu-category-tabs {
+  padding-block: 2px;
+}
+
+.carta-cat {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 10px 0 14px;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-card);
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.carta-cat .icono-marca {
+  width: 18px;
+  height: 18px;
+}
+
+.carta-cat-n {
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-canvas-soft);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+/* Activa: un pedazo de cancha azul, con el ícono amarillo pelota. */
+.carta-cat.active {
+  border-color: var(--carta-azul);
+  background:
+    linear-gradient(rgba(35, 80, 214, 0.86), rgba(35, 80, 214, 0.86)),
+    var(--carta-cesped) center / 160px;
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.35);
+}
+
+.carta-cat.active .icono-marca {
+  color: #d7f03a;
+}
+
+.carta-cat.active .carta-cat-n {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.carta-cat:focus-visible {
+  outline: 2px solid var(--color-accent-orange);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   3 · LISTA DE PRODUCTOS
+   ========================================================================== */
+.carta-grupo + .carta-grupo {
+  margin-top: 22px;
+}
+
+/* Título de grupo como una línea de cancha: nombre, raya y cantidad. */
+.carta-grupo-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 10px;
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.carta-grupo-titulo::after {
+  content: "";
+  flex: 1;
+  order: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-hairline-strong);
+}
+
+.carta-grupo-n {
+  order: 2;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--color-muted);
+}
+
+.carta-lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Celu: renglón compacto (ícono · nombre y precio · botón) para que entren
+   varios productos por pantalla y el botón quede siempre bajo el pulgar. */
+.carta .carta-item {
+  position: relative;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "icon info control"
+    "icon price control";
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 2px;
+  min-height: 74px;
+  padding: 10px 10px 10px 10px;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 16px;
+  background: var(--color-surface-card);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition:
+    border-color var(--t-hover) var(--ease),
+    box-shadow var(--t-hover) var(--ease);
+}
+
+/* Ya está en el pedido: borde azul cancha y una franja a la izquierda. */
+.carta .carta-item.is-en-pedido {
+  border-color: var(--carta-azul);
+  box-shadow: inset 4px 0 0 var(--carta-azul), 0 6px 16px -10px rgba(35, 80, 214, 0.6);
+}
+
+.carta .carta-item-icon {
+  align-self: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--carta-azul) 18%, transparent);
+  background: var(--carta-icono-bg);
+  font-size: 26px;
+}
+
+.carta .carta-item-info {
+  align-self: end;
+  gap: 4px 6px;
+}
+
+.carta .carta-item-name {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.carta-item-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--carta-tag-bg);
+  color: var(--carta-tag-fg);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.carta-item-tag.is-sintacc,
+.carta-item-tag.is-vegana {
+  background: var(--carta-tag-tacc-bg);
+  color: var(--carta-tag-tacc-fg);
+}
+
+/* Precio grande, en la condensada de la marca: es lo segundo que se lee. */
+.carta .carta-item-price {
+  align-self: start;
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent-orange-text);
+}
+
+/* El control mide siempre lo mismo ("Agregar" o "− 1 +"): nada se corre. */
+.carta .carta-item .menu-item-control {
+  width: 112px;
+}
+
+/* "Agregar" en amarillo pelota: el botón que más se toca, el más visible. */
+.carta .menu-add-btn {
+  width: 100%;
+  height: 44px;
+  gap: 4px;
+  padding: 0 10px;
+  border: 1px solid #a9c41c;
+  border-radius: var(--radius-pill);
+  background: var(--carta-pelota);
+  color: #1b1b19;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 2px 0 #8aa315, 0 4px 10px -4px rgba(120, 150, 10, 0.6);
+}
+
+.carta .menu-add-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #8aa315;
+}
+
+.carta .menu-add-btn:focus-visible,
+.carta .qty-stepper button:focus-visible {
+  outline: 2px solid var(--carta-azul);
+  outline-offset: 2px;
+}
+
+/* Ya sumado: el stepper con el borde azul cancha. */
+.carta .carta-item .qty-stepper {
+  width: 112px;
+  justify-content: space-between;
+  border: 1.5px solid var(--carta-azul);
+  background: var(--color-surface-card);
+}
+
+.carta .carta-item .qty-stepper button {
+  color: var(--color-ink);
+}
+
+.carta .carta-item .qty-stepper-value {
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  font-size: 20px;
+}
+
+/* Sin resultados. */
+.carta-vacia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 20px;
+  border: 2px dashed var(--color-hairline-strong);
+  border-radius: 16px;
+  text-align: center;
+  color: var(--color-body);
+}
+
+.carta-vacia p {
+  margin: 0;
+  max-width: 36ch;
+}
+
+.carta-vacia .btn {
+  min-height: 44px;
+}
+
+/* Tablet y compu: tarjetas tipo ficha en grilla (ícono arriba, precio y
+   botón abajo). Así los nombres no se parten en "Pizza / muzza". */
+@media (min-width: 640px) {
+  .carta-lista {
+    grid-template-columns: repeat(auto-fill, minmax(min(228px, 100%), 1fr));
+    gap: 12px;
+  }
+
+  .carta .carta-item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "icon info info"
+      "price price control";
+    align-content: start;
+    row-gap: 12px;
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .carta .carta-item.is-en-pedido {
+    box-shadow: inset 0 4px 0 var(--carta-azul), 0 8px 20px -12px rgba(35, 80, 214, 0.6);
+  }
+
+  .carta .carta-item-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 25px;
+  }
+
+  .carta .carta-item-info {
+    align-self: center;
+  }
+
+  .carta .carta-item-price {
+    align-self: center;
+    font-size: 24px;
+  }
+}
+
+/* ==========================================================================
+   4 · CIERRE: "¿Venís a jugar?" en la cancha azul
+   ========================================================================== */
+.carta-cierre {
+  max-width: 640px;
+  margin: 44px auto 0;
+  padding: 28px 22px;
+  border-radius: 20px;
+  text-align: center;
+  color: #ffffff;
+  background:
+    var(--carta-lineas) center / 100% 100% no-repeat,
+    linear-gradient(rgba(26, 63, 174, 0.82), rgba(35, 80, 214, 0.78)),
+    var(--carta-cesped) center / cover;
+  box-shadow: 0 18px 36px -22px rgba(11, 26, 77, 0.8);
+}
+
+.carta-cierre h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+}
+
+.carta-cierre p {
+  margin: 0 auto 18px;
+  max-width: 40ch;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.btn.carta-cierre-btn {
+  min-height: 46px;
+  padding: 0 24px;
+  border: 1px solid #a9c41c;
+  border-radius: var(--radius-pill);
+  background: var(--carta-pelota);
+  color: #1b1b19;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   5 · EL PEDIDO
+   Barra de abajo (celu) como un pedazo de cancha con la pelota; la hoja y
+   el panel de compu arrancan con una franja de pizarra ("la comanda").
+   ========================================================================== */
+.menu-cart-bar {
+  min-height: 66px;
+  gap: 10px;
+  padding: 0 10px 0 10px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
+  /* Sin la red del medio: cruzaba el texto. Queda la línea de fondo. */
+  background:
+    linear-gradient(rgba(26, 63, 174, 0.9), rgba(35, 80, 214, 0.86)),
+    var(--carta-cesped) center / 220px;
+  color: #ffffff;
+  text-align: left;
+  box-shadow:
+    inset 0 0 0 4px rgba(26, 63, 174, 0.9),
+    inset 0 0 0 5.5px rgba(255, 255, 255, 0.35),
+    0 14px 30px -8px rgba(11, 26, 77, 0.6),
+    0 0 0 1px rgba(11, 26, 77, 0.35);
+}
+
+/* El carrito adentro de la pelota, con el número en naranja. */
+.menu-cart-bar-icon {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  background: var(--carta-pelota);
+  color: #1b1b19;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.menu-cart-bar-badge {
+  top: -6px;
+  right: -8px;
+  border: 2px solid #ffffff;
+  min-width: 22px;
+  height: 22px;
+}
+
+.menu-cart-bar-label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.menu-cart-bar-sub {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.menu-cart-bar-total {
+  flex: none;
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  margin-left: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.menu-cart-bar-arrow {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-accent-orange);
+  color: #1b1b19;
+}
+
+/* La cabeza del panel: franja de pizarra con el título en tiza. */
+.menu-cart-head {
+  border-bottom: 4px solid #7a4a24;
+  background:
+    radial-gradient(ellipse 60% 80% at 15% 0%, rgba(255, 255, 255, 0.07), transparent 70%),
+    linear-gradient(#24332b, #1d2a23);
+}
+
+.menu-cart-head h2 {
+  align-items: center;
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--carta-tiza);
+  text-shadow: 0 0 1px rgba(244, 241, 230, 0.6);
+}
+
+.menu-cart-head-count {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  text-shadow: none;
+  color: rgba(244, 241, 230, 0.7);
+}
+
+.menu-cart-close {
+  background: rgba(244, 241, 230, 0.12);
+  color: var(--carta-tiza);
+}
+
+.menu-cart-head h2:focus-visible {
+  outline-color: #d7f03a;
+}
+
+/* Renglones como comanda: líneas punteadas y subtotal en mono. */
+.menu-cart-lines li {
+  border-bottom: 1px dashed var(--color-hairline-strong);
+}
+
+.menu-cart-line-total {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-weight: 700;
+}
+
+.menu-cart-panel .qty-stepper {
+  border: 1.5px solid var(--carta-azul);
+}
+
+.menu-cart-total strong {
+  font-family: var(--font-display), "Barlow Condensed", sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+/* Lo elegido y el botón principal, en azul cancha. */
+.menu-cart-pay-option.is-on {
+  border-color: var(--carta-azul);
+  background: var(--carta-azul);
+  color: #ffffff;
+}
+
+.menu-cart-panel .btn-linear-primary.menu-cart-send {
+  border: 1px solid var(--carta-azul-osc);
+  background: var(--carta-azul);
+  color: #ffffff;
+}
+
+.menu-cart-panel .btn-linear-primary.menu-cart-send:hover:not(:disabled) {
+  background: var(--carta-azul-osc);
+}
+
+.menu-cart-empty .icono-marca {
+  color: var(--carta-azul);
+}
+
+@media (prefers-color-scheme: dark) {
+  .menu-cart-empty .icono-marca {
+    color: #8fa8ff;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (min-width: 640px) {
+  .carta-consulta-extra {
+    display: inline;
+  }
+
+  .carta .menu-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .carta .menu-header-actions .btn {
+    width: auto;
+    padding: 0 18px;
+  }
+}
+
+@media (min-width: 769px) {
+  .carta-filtros {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+/* Compu: pizarra ancha, mascota grande a la derecha y los botones abajo del
+   texto (el pedido ya está a la vista al costado). */
+@media (min-width: 900px) {
+  .carta-pizarra {
+    grid-template-areas:
+      "texto mascota"
+      "ubic mascota"
+      "acciones mascota";
+    grid-template-rows: auto auto 1fr;
+    column-gap: 24px;
+    margin: 8px 0 24px;
+    padding: 22px 26px 20px 28px;
+    border-width: 12px;
+  }
+
+  .carta-pizarra-desc {
+    font-size: 15px;
+  }
+
+  .carta-pasos {
+    font-size: 18px;
+  }
+
+  .carta-pizarra-mascota.mascota {
+    width: 190px;
+    margin: -6px -8px -24px 0;
+  }
+
+  .carta-ubicacion {
+    justify-self: start;
+    min-width: 360px;
+  }
+
+  .carta .menu-header-actions {
+    align-self: end;
+  }
+}
+
+/* ==========================================================================
+   MOVIMIENTO: solo transform/opacity y en piezas chicas (anda en un celu
+   humilde). Con "reducir movimiento" no se anima nada de esto.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  /* La pelota de la pizarra pica de vez en cuando. */
+  .carta-pizarra-kicker .carta-pelota {
+    animation: carta-pique 3.2s ease-in-out infinite;
+  }
+
+  /* Al sumar un producto, el "− 1 +" entra con un saltito. */
+  .carta .carta-item .qty-stepper {
+    animation: carta-entra 260ms var(--ease-mascota, ease-out);
+  }
+
+  /* Hover solo con mouse: en el celu el toque no deja la tarjeta levantada. */
+  @media (hover: hover) {
+    .carta .menu-add-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .carta-cat:not(.active):hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  .carta-cat {
+    transition: transform var(--t-hover) var(--ease);
+  }
+
+  @keyframes carta-pique {
+    0%, 60%, 100% { transform: translateY(0); }
+    70% { transform: translateY(-6px); }
+    80% { transform: translateY(0); }
+    88% { transform: translateY(-2px); }
+  }
+
+  @keyframes carta-entra {
+    from { opacity: 0.4; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+}
