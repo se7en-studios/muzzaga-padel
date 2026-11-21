@@ -83,7 +83,9 @@ export default function ReportHero({
         <span className="rp-versus-title">¿Mejor o peor que antes?</span>
 
         {notStarted ? (
-          <p className="rp-verdict-text">Este período todavía no empezó.</p>
+          <p className="rp-verdict-text">
+            Cuando arranque, acá lo vas a comparar con {prevLabel}.
+          </p>
         ) : change == null ? (
           <>
             {p.cobrado > 0 && (
