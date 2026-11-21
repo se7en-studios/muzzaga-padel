@@ -418,15 +418,15 @@ export default function ClientesView({
                           <span className="cc-last-dot" aria-hidden />
                           {formatRelativeDays(c.lastDate, today)}
                         </span>
-                        {c.lastDate && (
-                          <small className="cc-sub">
-                            el {formatDate(c.lastDate)}
-                          </small>
-                        )}
                         {inactive && (
                           <span className="cc-chip" data-tier="inactivo">
                             Inactivo
                           </span>
+                        )}
+                        {c.lastDate && (
+                          <small className="cc-sub">
+                            el {formatDate(c.lastDate)}
+                          </small>
                         )}
                       </td>
                       <td
