@@ -236,7 +236,7 @@
 }
 
 /* El arqueo es el paso final del día: lleva el borde de marca arriba. */
-.admin-root .admin-caja .admin-cash-grid > .admin-settings-card:last-child {
+.admin-root .admin-caja .admin-cash-grid > .admin-caja-arqueo {
   border-top: 4px solid var(--brand, #e8722a);
 }
 
@@ -258,25 +258,52 @@
 }
 
 .admin-root .admin-caja .admin-expense-form .admin-segmented {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
 }
 
+/* Categorías como fichas: borde y color propios; la elegida, llena. */
 .admin-root .admin-caja .admin-expense-form .admin-segmented button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 40px;
-  padding-inline: 8px;
+  flex: 1 1 auto;
+  min-height: 42px;
+  padding-inline: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-weight: 600;
   white-space: nowrap;
 }
 
-.admin-root .admin-caja .admin-expense-form .admin-segmented button svg,
-.admin-root .admin-caja-cat svg {
+.admin-root .admin-caja .admin-expense-form .admin-segmented button:hover:not([aria-pressed="true"]) {
+  border-color: var(--cat);
+  background: var(--cat-soft);
+}
+
+.admin-root .admin-caja .admin-expense-form .admin-segmented button svg {
   flex-shrink: 0;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
+  color: var(--cat);
+}
+
+.admin-root .admin-caja .admin-expense-form .admin-segmented button[aria-pressed="true"] {
+  border-color: var(--cat);
+  background: var(--cat);
+  color: #ffffff;
+  box-shadow: 0 6px 14px -8px var(--cat);
+}
+
+.admin-root .admin-caja .admin-expense-form .admin-segmented button[aria-pressed="true"] svg {
+  color: #ffffff;
 }
 
 .admin-root .admin-caja-expense-submit {
@@ -327,38 +354,101 @@
   letter-spacing: 0;
 }
 
-/* ---------- Lista de egresos ---------- */
+/* ---------- Egresos: renglones de ticket ---------- */
+/* Cada categoría tiene su color: el chip del formulario, el ícono del
+   renglón y el total comparten la misma pista. */
+.admin-root .admin-caja [data-cat] {
+  --cat: #6b635a;
+  --cat-soft: #f1ede4;
+}
+.admin-root .admin-caja [data-cat="hielo"] { --cat: #0369a1; --cat-soft: #e3f2fb; }
+.admin-root .admin-caja [data-cat="limpieza"] { --cat: #7c3aed; --cat-soft: #f1eafe; }
+.admin-root .admin-caja [data-cat="mantenimiento"] { --cat: #b45309; --cat-soft: #fdf0dc; }
+
+.admin-root .admin-caja-receipt {
+  position: relative;
+  margin-top: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: #fffdf8;
+  box-shadow: 0 10px 22px -18px rgba(27, 27, 25, 0.55);
+}
+
+/* Bordecito de arriba como papel cortado del rollo. */
+.admin-root .admin-caja-receipt::before {
+  content: "";
+  display: block;
+  height: 6px;
+  border-radius: 12px 12px 0 0;
+  background:
+    linear-gradient(135deg, transparent 75%, rgba(27, 27, 25, 0.06) 75%) 0 0 / 10px 6px,
+    linear-gradient(90deg, #2350d6, #2350d6);
+  background-size: 10px 6px, 100% 3px;
+  background-repeat: repeat-x, no-repeat;
+}
+
+.admin-root .admin-caja .admin-caja-receipt .admin-expense-list {
+  margin: 0;
+  padding: 4px 16px;
+  list-style: none;
+}
+
 .admin-root .admin-caja .admin-expense-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--border-strong);
+}
+
+.admin-root .admin-caja .admin-expense-row:last-child {
+  border-bottom: none;
+}
+
+.admin-root .admin-caja-cat-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--cat-soft);
+  color: var(--cat);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cat) 22%, transparent);
 }
 
 .admin-root .admin-caja .admin-expense-main {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 1px;
   flex: 1;
   min-width: 0;
 }
 
 .admin-root .admin-caja .admin-expense-concept {
-  font-size: 15px;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.admin-root .admin-caja .admin-expense-meta {
+  font-size: 13px;
+  color: var(--text-muted);
   overflow-wrap: anywhere;
 }
 
 .admin-root .admin-caja .admin-expense-side {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
 /* Un egreso no es una alarma: va en negro con su signo menos. */
 .admin-root .admin-caja .admin-expense-side strong {
   font-family: var(--cc-money-font);
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--text);
   font-variant-numeric: tabular-nums;
@@ -367,10 +457,10 @@
 .admin-root .admin-caja .admin-expense-side .admin-icon-btn-ghost {
   display: inline-grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
@@ -381,62 +471,128 @@
   color: #b91c1c;
 }
 
-.admin-root .admin-caja-cat {
-  display: inline-flex;
+/* El total del ticket, después del corte con muescas. */
+.admin-root .admin-caja-receipt-total {
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  padding: 3px 9px 3px 7px;
-  border-radius: 999px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px 14px;
+  border-top: 2px dashed var(--border-strong);
+  border-radius: 0 0 12px 12px;
   background: var(--surface-muted);
-  border: 1px solid var(--border);
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
 }
 
-.admin-root .admin-caja-cat[data-cat="hielo"] svg { color: #0284c7; }
-.admin-root .admin-caja-cat[data-cat="limpieza"] svg { color: #7c3aed; }
-.admin-root .admin-caja-cat[data-cat="mantenimiento"] svg { color: #b45309; }
+.admin-root .admin-caja-receipt-total::before,
+.admin-root .admin-caja-receipt-total::after {
+  content: "";
+  position: absolute;
+  top: -11px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.admin-root .admin-caja-receipt-total::before {
+  left: -11px;
+  clip-path: inset(0 0 0 50%);
+}
+
+.admin-root .admin-caja-receipt-total::after {
+  right: -11px;
+  clip-path: inset(0 50% 0 0);
+}
+
+.admin-root .admin-caja-receipt-total > span {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.admin-root .admin-caja-receipt-total small {
+  font-family: var(--font-inter, Inter), sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-caja-receipt-total strong {
+  font-family: var(--cc-money-font);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------- Contador de billetes ---------- */
 .admin-root .admin-caja .admin-bill-calc-wrap {
   margin-top: 10px;
 }
 
-.admin-root .admin-caja .admin-bill-calc-wrap > .btn {
+.admin-root .admin-dashboard-layout .admin-caja .admin-bill-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 38px;
+  gap: 8px;
+  min-height: 40px;
+  padding-inline: 12px 14px;
+  border-style: dashed;
+  font-weight: 600;
 }
 
-.admin-root .admin-caja .admin-bill-calc {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-  padding: 12px;
-  border: 1px dashed var(--border-strong);
-  border-radius: 12px;
+.admin-root .admin-dashboard-layout .admin-caja .admin-bill-toggle[aria-expanded="true"] {
+  border-style: solid;
   background: var(--surface-muted);
 }
 
-/* Cada fila es un billete: el valor en una franja de color, la cantidad
-   y lo que suma ese fajo. */
+.admin-root .admin-caja .admin-bill-toggle svg {
+  flex-shrink: 0;
+  color: var(--cc-green);
+}
+
+.admin-root .admin-caja .admin-bill-calc {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-bill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+/* Cada billete: el billete dibujado, el - / cantidad / + y lo que suma. */
 .admin-root .admin-caja .admin-bill-field {
   --bill: #6b7280;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 74px minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-items: center;
-  column-gap: 8px;
-  padding: 6px 8px 6px 6px;
+  column-gap: 10px;
+  row-gap: 3px;
+  padding: 8px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface);
+}
+
+.admin-root .admin-caja .admin-bill-field.has-qty {
+  border-color: color-mix(in srgb, var(--bill) 40%, var(--border));
+  box-shadow: inset 3px 0 0 var(--bill);
 }
 
 .admin-root .admin-caja .admin-bill-field[data-denom="20000"] { --bill: #b45309; }
@@ -447,27 +603,89 @@
 .admin-root .admin-caja .admin-bill-field[data-denom="200"] { --bill: #7c3aed; }
 .admin-root .admin-caja .admin-bill-field[data-denom="100"] { --bill: #be185d; }
 
+/* El billete: marco claro, rayado y el "retrato" ovalado a la derecha. */
 .admin-root .admin-caja .admin-bill-note {
   grid-row: 1 / 3;
-  min-width: 64px;
-  padding: 8px 6px;
+  display: flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 14px 0 6px;
   border-radius: 6px;
   background:
+    radial-gradient(ellipse 6px 10px at 90% 50%, rgba(255, 255, 255, 0.28) 0 99%, transparent 100%),
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 7px),
     var(--bill);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.32),
+    0 2px 5px -1px rgba(0, 0, 0, 0.25);
   color: #ffffff;
   font-family: var(--cc-money-font);
-  font-size: 17px;
-  font-weight: 700;
-  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
-.admin-root .admin-dashboard-layout .admin-caja .admin-bill-field input[type="number"] {
+.admin-root .admin-bill-stepper {
+  display: grid;
+  grid-template-columns: 40px minmax(40px, 1fr) 40px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.admin-root .admin-bill-stepper:focus-within {
+  border-color: var(--court, #2350d6);
+}
+
+.admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper button {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--surface-muted);
+  color: var(--text);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper button:last-child {
+  background: var(--bill);
+  color: #ffffff;
+}
+
+.admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper button:disabled {
+  color: var(--text-muted);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper input[type="number"] {
   width: 100%;
-  min-height: 36px;
-  padding: 4px 8px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 4px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  text-align: center;
+  font-family: var(--cc-money-font);
+  font-size: 21px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.admin-root .admin-caja .admin-bill-stepper input::-webkit-outer-spin-button,
+.admin-root .admin-caja .admin-bill-stepper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .admin-root .admin-caja .admin-bill-sub {
@@ -478,73 +696,170 @@
   font-variant-numeric: tabular-nums;
 }
 
+.admin-root .admin-caja .admin-bill-field.has-qty .admin-bill-sub {
+  color: var(--cc-green);
+}
+
 .admin-root .admin-caja .admin-bill-calc-foot {
-  grid-column: 1 / -1;
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-strong);
 }
 
-.admin-root .admin-caja .admin-bill-calc-foot .admin-link-danger {
-  min-height: 36px;
-}
-
-/* ---------- Marcador del arqueo: esperado vs contado ---------- */
-.admin-root .admin-caja .admin-caja-score {
-  display: block;
-  margin: 14px 0;
-  padding: 0;
-  overflow: hidden;
-  border-radius: 12px;
-}
-
-.admin-root .admin-caja-score-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin: 0;
-  background: var(--surface);
-  border-bottom: 1px solid var(--tone-border);
-}
-
-.admin-root .admin-caja-score-row > div {
-  padding: 10px 14px;
-}
-
-.admin-root .admin-caja-score-row > div + div {
-  border-left: 1px solid var(--tone-border);
-}
-
-.admin-root .admin-caja-score-row dt {
-  font-size: 12px;
+.admin-root .admin-bill-total {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
-.admin-root .admin-caja-score-row dd {
-  margin: 2px 0 0;
+.admin-root .admin-bill-total strong {
   font-family: var(--cc-money-font);
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
-.admin-root .admin-caja-score-result {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 4px 12px;
-  padding: 12px 14px;
-  font-weight: 600;
+.admin-root .admin-caja .admin-bill-calc-foot .admin-link-danger {
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: transparent;
 }
 
-.admin-root .admin-caja-score-result strong {
-  font-family: var(--cc-money-font);
-  font-size: 26px;
+/* ---------- Marcador del arqueo ---------- */
+/* Tablero oscuro tipo marcador de cancha: esperado contra contado con
+   números en amarillo pelota, y abajo el veredicto grande en el color
+   del resultado (verde cuadra, ámbar chico, rojo grande). */
+.admin-root .admin-caja .admin-caja-score {
+  display: block;
+  margin: 16px 0;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 14px;
+  background: var(--night, #1b1b19);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(27, 27, 25, 0.9),
+    0 16px 30px -18px rgba(0, 0, 0, 0.7);
+}
+
+.admin-root .admin-caja-score-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  background:
+    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1.5px) 0 0 / 6px 6px,
+    transparent;
+}
+
+.admin-root .admin-caja-score-row > div {
+  min-width: 0;
+  padding: 8px 12px 10px;
+  border-radius: 10px;
+  background: #0d0d0c;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.admin-root .admin-caja-score-row dt {
+  font-size: 11.5px;
   font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a8a294;
+}
+
+.admin-root .admin-caja-score-row dd {
+  margin: 2px 0 0;
+  font-family: var(--cc-money-font);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: #e9f56a;
+  text-shadow: 0 0 12px rgba(215, 240, 58, 0.35);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.admin-root .admin-caja .admin-caja-score-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 16px 16px;
+  background: #15803d;
+  color: #ffffff;
+  text-align: center;
+}
+
+.admin-root .admin-caja .admin-caja-score[data-tone="ok"] .admin-caja-score-result {
+  background:
+    radial-gradient(220px 90px at 50% 0, rgba(255, 255, 255, 0.18), transparent 70%),
+    #15803d;
+}
+
+.admin-root .admin-caja .admin-caja-score[data-tone="minor"] .admin-caja-score-result {
+  background:
+    radial-gradient(220px 90px at 50% 0, rgba(255, 255, 255, 0.16), transparent 70%),
+    #b45309;
+}
+
+.admin-root .admin-caja .admin-caja-score[data-tone="major"] .admin-caja-score-result {
+  background:
+    radial-gradient(220px 90px at 50% 0, rgba(255, 255, 255, 0.14), transparent 70%),
+    #b91c1c;
+}
+
+.admin-root .admin-caja .admin-caja-score-verdict {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 12px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.admin-root .admin-caja-score-check {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--cc-ball);
+  color: #14532d;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.admin-root .admin-caja-score-amount {
+  text-transform: none;
+}
+
+.admin-root .admin-caja-score-note {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .admin-root .admin-caja-close-btn {
@@ -742,22 +1057,46 @@
   }
 
   .admin-root .admin-caja .admin-expense-form .admin-segmented {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .admin-root .admin-caja .admin-expense-form .admin-segmented button,
-  .admin-root .admin-caja .admin-bill-calc-wrap > .btn {
+  .admin-root .admin-dashboard-layout .admin-caja .admin-bill-toggle,
+  .admin-root .admin-caja .admin-bill-calc-foot .admin-link-danger {
     min-height: 44px;
   }
 
-  .admin-root .admin-caja .admin-expense-row {
-    align-items: flex-start;
+  .admin-root .admin-dashboard-layout .admin-caja .admin-bill-toggle {
+    width: 100%;
+    justify-content: center;
   }
 
-  .admin-root .admin-caja .admin-expense-main {
+  .admin-root .admin-caja .admin-caja-receipt .admin-expense-list {
+    padding-inline: 12px;
+  }
+
+  .admin-root .admin-caja .admin-expense-row {
+    gap: 10px;
+  }
+
+  .admin-root .admin-caja-cat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  /* Monto arriba y el tachito abajo: le deja más ancho al detalle. */
+  .admin-root .admin-caja .admin-expense-side {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    align-items: flex-end;
+    gap: 0;
+    margin: -4px -8px -10px 0;
+  }
+
+  .admin-root .admin-caja .admin-expense-side strong {
+    padding-right: 8px;
+    font-size: 20px;
   }
 
   .admin-root .admin-caja .admin-expense-side .admin-icon-btn-ghost {
@@ -765,12 +1104,78 @@
     height: 44px;
   }
 
-  .admin-root .admin-caja .admin-bill-calc {
-    grid-template-columns: 1fr;
+  .admin-root .admin-caja-receipt-total {
+    padding-inline: 12px;
   }
 
-  .admin-root .admin-dashboard-layout .admin-caja .admin-bill-field input[type="number"] {
+  .admin-root .admin-caja-receipt-total strong {
+    font-size: 28px;
+  }
+
+  /* Billetes en el celu: un renglón por billete, con el +/- grande. */
+  .admin-root .admin-caja .admin-bill-calc {
+    padding: 8px;
+  }
+
+  .admin-root .admin-bill-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .admin-root .admin-caja .admin-bill-field {
+    grid-template-columns: 70px auto minmax(0, 1fr);
+    grid-template-rows: auto;
+    column-gap: 8px;
+  }
+
+  .admin-root .admin-caja .admin-bill-note {
+    grid-row: auto;
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .admin-root .admin-bill-stepper {
+    grid-template-columns: 44px 52px 44px;
+  }
+
+  .admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper button,
+  .admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper input[type="number"] {
     min-height: 44px;
+  }
+
+  .admin-root .admin-caja .admin-bill-sub {
+    text-align: right;
+    font-size: 13px;
+  }
+
+  .admin-root .admin-caja-score-row {
+    padding: 10px;
+  }
+
+  .admin-root .admin-caja-score-row > div {
+    padding-inline: 8px;
+  }
+
+  .admin-root .admin-caja-score-row dd {
+    font-size: 25px;
+  }
+
+  .admin-root .admin-caja .admin-caja-score-verdict {
+    font-size: 38px;
+  }
+
+  /* "Cerrar caja" queda a mano, pegado arriba de la barra de abajo,
+     mientras se ve la tarjeta del arqueo. */
+  .admin-root .admin-caja-close-bar {
+    position: sticky;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 3;
+    margin: 0 -10px;
+    padding: 10px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
 
   .admin-root .admin-caja .admin-closed-banner-actions {
@@ -780,6 +1185,53 @@
   .admin-root .admin-caja .admin-closed-banner-actions .btn {
     flex: 1;
     justify-content: center;
+  }
+}
+
+/* ---------- Caja: movimiento (solo transform/opacity) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-caja .admin-caja-score {
+    animation: cajaScoreIn 0.22s ease-out;
+  }
+
+  .admin-root .admin-caja .admin-caja-score-check {
+    animation: cajaBallPop 0.32s ease-out;
+  }
+
+  .admin-root .admin-caja .admin-caja-receipt .admin-expense-row {
+    animation: cajaLineIn 0.2s ease-out;
+  }
+
+  .admin-root .admin-caja .admin-bill-field.has-qty .admin-bill-note {
+    animation: cajaBillBump 0.22s ease-out;
+  }
+
+  .admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper button {
+    transition: transform 0.08s ease;
+  }
+
+  .admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper button:active:not(:disabled) {
+    transform: scale(0.9);
+  }
+
+  @keyframes cajaScoreIn {
+    from { opacity: 0; transform: translateY(6px); }
+  }
+
+  @keyframes cajaBallPop {
+    0% { transform: scale(0.4) rotate(-40deg); }
+    70% { transform: scale(1.15) rotate(6deg); }
+    100% { transform: none; }
+  }
+
+  @keyframes cajaLineIn {
+    from { opacity: 0; transform: translateY(-4px); }
+  }
+
+  @keyframes cajaBillBump {
+    0% { transform: translateY(0); }
+    40% { transform: translateY(-3px); }
+    100% { transform: none; }
   }
 }
 

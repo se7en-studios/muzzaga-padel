@@ -61,7 +61,7 @@ export function BentoPhotoCard({
         src={src}
         alt={alt}
         fill
-        sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 30vw"
+        sizes="(max-width: 640px) 86vw, (max-width: 1024px) 46vw, 600px"
         className="photo-bento-img"
       />
       <div className="photo-bento-overlay" />
@@ -74,25 +74,8 @@ export function BentoPhotoCard({
             {badge}
           </span>
         )}
-        <h3
-          style={{
-            fontSize: 20,
-            fontWeight: 700,
-            color: "#fff",
-            marginBottom: 4,
-          }}
-        >
-          {title}
-        </h3>
-        <p
-          style={{
-            fontSize: 13,
-            color: "rgba(255,255,255,0.8)",
-            lineHeight: 1.4,
-          }}
-        >
-          {children}
-        </p>
+        <h3 className="photo-bento-title">{title}</h3>
+        <p className="photo-bento-text">{children}</p>
       </div>
     </div>
   );
