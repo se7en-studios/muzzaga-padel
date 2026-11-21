@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import {
   ChefHat,
+  ChevronRight,
   MessageCircle,
   Minus,
   Plus,
@@ -291,6 +292,7 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
             headingRefs.current[variant] = el;
           }}
         >
+          <span className="carta-pelota" aria-hidden="true" />
           {title}
           {!sent && count > 0 && <span className="menu-cart-head-count">{plural(count, "producto", "productos")}</span>}
         </h2>
@@ -533,9 +535,18 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
               {count}
             </strong>
           </span>
-          <span className="menu-cart-bar-label">Ver mi pedido</span>
-          <span className="sr-only">{plural(count, "producto", "productos")}</span>
-          <strong className="menu-cart-bar-total">{formatARS(total)} →</strong>
+          {/* Debajo del título, cuántos son y adónde va: con el QR de la mesa
+              se confirma de un vistazo que sale para ahí. */}
+          <span className="menu-cart-bar-label">
+            Ver mi pedido
+            <small className="menu-cart-bar-sub">
+              {plural(count, "producto", "productos")} · {deliverTo}
+            </small>
+          </span>
+          <strong className="menu-cart-bar-total">{formatARS(total)}</strong>
+          <span className="menu-cart-bar-arrow" aria-hidden="true">
+            <ChevronRight size={22} strokeWidth={2.5} />
+          </span>
         </button>
         </Portal>
       )}

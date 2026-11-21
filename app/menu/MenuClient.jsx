@@ -7,6 +7,7 @@ import { MENU_CATEGORIES } from "../../data/menu";
 import { CLUB_INFO } from "../../data/club";
 import { productIcon } from "../../lib/productIcon";
 import ScrollRow from "../../components/ScrollRow";
+import Mascota from "../../components/Mascota";
 import CantinaCart, { QtyStepper } from "../../components/CantinaCart";
 import {
   MAX_ORDER_QTY,
@@ -16,7 +17,18 @@ import {
   orderTotal,
   parseStoredCart,
 } from "../../lib/cantinaOrder";
-import { MapPin, ShoppingCart, Pizza, CupSoda, Beer, Candy, ShoppingBag } from "lucide-react";
+import {
+  MapPin,
+  MessageCircle,
+  Plus,
+  Search,
+  ShoppingCart,
+  Pizza,
+  CupSoda,
+  Beer,
+  Candy,
+  ShoppingBag,
+} from "lucide-react";
 
 // El pedido queda en el navegador: si se recarga la página no se pierde.
 const CART_KEY = "muzzaga-pedido";
@@ -125,69 +137,137 @@ export default function MenuClient({ items }) {
     );
   };
 
-  return (
-    <div className="container" style={{ paddingBottom: 60 }}>
-      {/* BANNER DE ENTREGA EN CANCHA / MESA SI VIENE POR QR */}
-      {activeLocation && (
-        <div
-          style={{
-            background: "linear-gradient(90deg, rgba(232, 114, 42, 0.15) 0%, rgba(232, 114, 42, 0.05) 100%)",
-            border: "1px solid var(--color-accent-orange-border, #f2cbb4)",
-            borderRadius: "var(--radius-lg, 12px)",
-            padding: "12px 18px",
-            marginBottom: 20,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 10,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <MapPin size={20} className="icono-marca" aria-hidden="true" />
-            <div>
-              <div style={{ fontSize: 11, textTransform: "uppercase", fontWeight: 700, color: "var(--color-accent-orange-text)" }}>
-                Entrega directa activada
-              </div>
-              <strong style={{ fontSize: 15, color: "var(--color-ink)" }}>
-                {activeLocation}
-              </strong>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setActiveLocation(null)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--color-muted)",
-              fontSize: 12,
-              cursor: "pointer",
-              textDecoration: "underline",
-              minHeight: 44,
-              padding: "0 12px",
-              display: "inline-flex",
-              alignItems: "center",
-            }}
-          >
-            Quitar ubicación
-          </button>
-        </div>
-      )}
+  // Cuántos productos hay en cada categoría: el número va en su pestaña.
+  const catCounts = useMemo(() => {
+    const counts = { all: items.length };
+    for (const item of items) counts[item.category] = (counts[item.category] || 0) + 1;
+    return counts;
+  }, [items]);
 
-      {/* HEADER DE LA CARTA */}
-      <div className="section-header-row" style={{ marginBottom: 24 }}>
-        <div>
-          <span className="badge-linear badge-amber" style={{ marginBottom: 8 }}>
-            Carta de la cantina · Tercer tiempo
-          </span>
-          <h1 className="section-title">Menú de la cantina</h1>
-          <p className="section-desc">
-            Pizzas a la piedra, tostados, sándwiches abundantes, cervezas heladas
-            y kiosco con vista directa a las canchas. Sumá lo que quieras con el
-            carrito y encargalo: la cocina lo empieza cuando está pagado.
-          </p>
+  // La lista va agrupada por categoría (en el orden de las pestañas), con un
+  // título de pizarra en cada grupo: se recorre la carta como en el bar.
+  const groups = useMemo(() => {
+    const cats = MENU_CATEGORIES.filter((c) => c.id !== "all");
+    const known = new Set(cats.map((c) => c.id));
+    const out = cats.map((c) => ({ ...c, items: filteredItems.filter((i) => i.category === c.id) }));
+    const rest = filteredItems.filter((i) => !known.has(i.category));
+    if (rest.length) out.push({ id: "otros", label: "Otros", items: rest });
+    return out.filter((g) => g.items.length > 0);
+  }, [filteredItems]);
+
+  // Las pestañas quedan pegadas arriba: si se cambia de categoría con la
+  // carta ya scrolleada, la lista vuelve a arrancar justo debajo de ellas.
+  const filtrosRef = useRef(null);
+  const listaRef = useRef(null);
+  const pickCat = (id) => {
+    setSelectedCat(id);
+    requestAnimationFrame(() => {
+      const bar = filtrosRef.current?.getBoundingClientRect();
+      const list = listaRef.current?.getBoundingClientRect();
+      if (bar && list && list.top < bar.bottom) {
+        window.scrollBy({ top: list.top - bar.bottom - 8 });
+      }
+    });
+  };
+
+  const renderItem = (item) => {
+    const qty = cart[item.id] || 0;
+    return (
+      <li key={item.id} className={`carta-item${qty > 0 ? " is-en-pedido" : ""}`}>
+        <span className="carta-item-icon" aria-hidden="true">
+          {productIcon(item.name, item.category)}
+        </span>
+        <div className="carta-item-info">
+          <strong className="carta-item-name">{item.name}</strong>
+          {item.tag && (
+            <span
+              className={`carta-item-tag ${
+                item.tag.includes("Sin TACC")
+                  ? "is-sintacc"
+                  : item.tag.includes("Vegana")
+                  ? "is-vegana"
+                  : ""
+              }`}
+            >
+              {item.tag}
+            </span>
+          )}
         </div>
+
+        <span className="carta-item-price">
+          ${item.price.toLocaleString("es-AR")}
+        </span>
+        {/* Ancho fijo: al agregar, "Agregar" pasa a "− 1 +" sin correr el
+            precio ni hacer crecer la tarjeta. */}
+        <span className="menu-item-control">
+          {qty > 0 ? (
+            <QtyStepper
+              name={item.name}
+              qty={qty}
+              onChange={(q) => {
+                setQty(item.id, q);
+                if (q <= 0) setRefocusAdd(item.id);
+              }}
+            />
+          ) : (
+            <button
+              type="button"
+              className="menu-add-btn"
+              ref={(el) => {
+                addRefs.current[item.id] = el;
+              }}
+              onClick={() => setQty(item.id, 1)}
+              aria-label={`Agregar ${item.name} al pedido`}
+            >
+              <Plus size={18} strokeWidth={2.5} aria-hidden="true" />
+              <span className="menu-add-btn-text">Agregar</span>
+            </button>
+          )}
+        </span>
+      </li>
+    );
+  };
+
+  return (
+    <div className="container carta">
+      {/* PIZARRA DE ENTRADA: la carta arranca como el pizarrón del bar. */}
+      <header className="carta-pizarra">
+        <div className="carta-pizarra-texto">
+          <p className="carta-pizarra-kicker">
+            <span className="carta-pelota" aria-hidden="true" />
+            Cantina · Tercer tiempo
+          </p>
+          <h1 className="carta-titulo">Menú de la cantina</h1>
+          <p className="carta-pizarra-desc">
+            Pizzas a la piedra, tostados, birra helada y kiosco con vista a las
+            canchas. La cocina arranca tu pedido cuando está pagado.
+          </p>
+          <ol className="carta-pasos" aria-label="Cómo pedir">
+            <li><b>1</b> Elegí</li>
+            <li><b>2</b> Agregá</li>
+            <li><b>3</b> Mandá el pedido</li>
+          </ol>
+        </div>
+        <Mascota pose="pizza-cerveza" className="carta-pizarra-mascota" priority />
+
+        {/* Si llegó por el QR de una mesa o cancha: un papelito pinchado en
+            la pizarra con dónde se entrega. */}
+        {activeLocation && (
+          <div className="carta-ubicacion">
+            <MapPin size={20} aria-hidden="true" />
+            <div className="carta-ubicacion-texto">
+              <span>Te lo llevamos a</span>
+              <strong>{activeLocation}</strong>
+            </div>
+            <button
+              type="button"
+              className="carta-ubicacion-quitar"
+              onClick={() => setActiveLocation(null)}
+            >
+              Quitar ubicación
+            </button>
+          </div>
+        )}
         <div className="menu-header-actions">
           {/* En celu el pedido vive en una hoja: este botón la abre siempre,
               también vacía. En compu el pedido ya está a la vista al costado. */}
@@ -203,175 +283,112 @@ export default function MenuClient({ items }) {
           <button
             type="button"
             onClick={handleGeneralOrder}
-            className="btn btn-secondary-whatsapp"
-            style={{ gap: 8, height: 42, cursor: "pointer" }}
+            className="btn btn-secondary-whatsapp carta-consulta"
           >
-            Consultas por WhatsApp →
+            <MessageCircle size={18} aria-hidden="true" />
+            Consultas<span className="carta-consulta-extra">&nbsp;por WhatsApp</span>
           </button>
         </div>
-      </div>
+      </header>
 
       <div className="menu-layout">
-      <div className="menu-main">
+        <div className="menu-main">
+          {/* BUSCADOR */}
+          <label className="carta-buscar">
+            <Search size={18} aria-hidden="true" />
+            <input
+              type="search"
+              placeholder="Buscar: pizza, Corona, sin TACC…"
+              aria-label="Buscar en la carta"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
 
-      {/* BUSCADOR Y FILTROS */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 14,
-          marginBottom: 28,
-        }}
-      >
-        <div style={{ maxWidth: 440 }}>
-          <input
-            type="search"
-            placeholder="Buscar: pizza, Corona, sin TACC…"
-            aria-label="Buscar en la carta"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              background: "var(--color-surface-card)",
-              border: "1px solid var(--color-hairline-strong)",
-              borderRadius: "var(--radius-pill)",
-              color: "var(--color-ink)",
-              fontSize: 14,
-              outline: "none",
-            }}
-          />
-        </div>
-
-        {/* CHIPS DE CATEGORÍA */}
-        <ScrollRow className="menu-category-tabs" role="group" aria-label="Categorías de la carta">
-          {MENU_CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              className={`booking-court-tab${selectedCat === cat.id ? " active" : ""}`}
-              onClick={() => setSelectedCat(cat.id)}
-              style={{ whiteSpace: "nowrap" }}
-            >
-              <CategoryIcon id={cat.id} />
-              {cat.label}
-            </button>
-          ))}
-        </ScrollRow>
-      </div>
-
-      {/* LISTA DE PRODUCTOS */}
-      {filteredItems.length === 0 ? (
-        <div
-          className="booking-empty"
-          style={{ padding: "40px 20px", textAlign: "center" }}
-        >
-          No encontramos productos que coincidan con tu búsqueda. Probá con otro término o categoría.
-        </div>
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fill, minmax(min(300px, 100%), 1fr))",
-            gap: 12,
-          }}
-        >
-          {filteredItems.map((item) => {
-            const qty = cart[item.id] || 0;
-            return (
-            <div key={item.id} className="carta-item">
-              <span className="carta-item-icon" aria-hidden="true">
-                {productIcon(item.name, item.category)}
-              </span>
-              <div className="carta-item-info">
-                <strong className="carta-item-name">{item.name}</strong>
-                {item.tag && (
-                  <span
-                    className={`badge-linear ${
-                      item.tag.includes("Sin TACC")
-                        ? "badge-emerald"
-                        : item.tag.includes("Vegana")
-                        ? "badge-indigo"
-                        : "badge-amber"
-                    }`}
-                    style={{ fontSize: 10.5, padding: "2px 8px" }}
-                  >
-                    {item.tag}
+          {/* PESTAÑAS DE CATEGORÍA: pegadas arriba para saltar sin volver. */}
+          <div className="carta-filtros" ref={filtrosRef}>
+            <ScrollRow className="menu-category-tabs" role="group" aria-label="Categorías de la carta">
+              {MENU_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`carta-cat${selectedCat === cat.id ? " active" : ""}`}
+                  aria-pressed={selectedCat === cat.id}
+                  onClick={() => pickCat(cat.id)}
+                >
+                  {cat.id === "all" ? (
+                    <span className="carta-pelota" aria-hidden="true" />
+                  ) : (
+                    <CategoryIcon id={cat.id} />
+                  )}
+                  {cat.label}
+                  <span className="carta-cat-n" aria-hidden="true">
+                    {catCounts[cat.id] || 0}
                   </span>
-                )}
+                </button>
+              ))}
+            </ScrollRow>
+          </div>
+
+          {/* LISTA DE PRODUCTOS */}
+          <div ref={listaRef}>
+            {filteredItems.length === 0 ? (
+              <div className="carta-vacia">
+                <p>
+                  No encontramos productos que coincidan con tu búsqueda. Probá
+                  con otro término o categoría.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedCat("all");
+                  }}
+                >
+                  Ver toda la carta
+                </button>
               </div>
-
-              <span className="carta-item-price">
-                ${item.price.toLocaleString("es-AR")}
-              </span>
-              {/* Ancho fijo: al agregar, el "+" pasa a "− 1 +" sin correr el
-                  precio ni hacer crecer la tarjeta. */}
-              <span className="menu-item-control">
-                {qty > 0 ? (
-                  <QtyStepper
-                    name={item.name}
-                    qty={qty}
-                    onChange={(q) => {
-                      setQty(item.id, q);
-                      if (q <= 0) setRefocusAdd(item.id);
-                    }}
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    className="menu-add-btn"
-                    ref={(el) => {
-                      addRefs.current[item.id] = el;
-                    }}
-                    onClick={() => setQty(item.id, 1)}
-                    aria-label={`Agregar ${item.name} al pedido`}
-                    title="Agregar al pedido"
-                  >
-                    <ShoppingCart size={20} aria-hidden="true" />
-                  </button>
-                )}
-              </span>
-            </div>
-            );
-          })}
+            ) : (
+              groups.map((group) => (
+                <section
+                  key={group.id}
+                  className="carta-grupo"
+                  aria-labelledby={selectedCat === "all" ? `carta-grupo-${group.id}` : undefined}
+                  aria-label={selectedCat === "all" ? undefined : group.label}
+                >
+                  {selectedCat === "all" && (
+                    <h2 id={`carta-grupo-${group.id}`} className="carta-grupo-titulo">
+                      <CategoryIcon id={group.id} />
+                      {group.label}
+                      <span className="carta-grupo-n">{group.items.length}</span>
+                    </h2>
+                  )}
+                  <ul className="carta-lista">{group.items.map(renderItem)}</ul>
+                </section>
+              ))
+            )}
+          </div>
         </div>
-      )}
+
+        <CantinaCart
+          lines={lines}
+          count={cartCount}
+          total={orderTotal(lines)}
+          onQty={setQty}
+          onClear={() => setCart({})}
+          initialDelivery={initialDelivery}
+          open={cartOpen}
+          onOpen={() => setCartOpen(true)}
+          onClose={() => setCartOpen(false)}
+        />
       </div>
 
-      <CantinaCart
-        lines={lines}
-        count={cartCount}
-        total={orderTotal(lines)}
-        onQty={setQty}
-        onClear={() => setCart({})}
-        initialDelivery={initialDelivery}
-        open={cartOpen}
-        onOpen={() => setCartOpen(true)}
-        onClose={() => setCartOpen(false)}
-      />
-      </div>
-
-      {/* FOOTER CALL TO ACTION */}
-      <div
-        style={{
-          marginTop: 48,
-          padding: "28px 24px",
-          background: "var(--color-surface-card)",
-          border: "1px solid var(--color-hairline-strong)",
-          borderRadius: "var(--radius-xl)",
-          textAlign: "center",
-          maxWidth: 640,
-          margin: "48px auto 0",
-        }}
-      >
-        <h3 style={{ fontSize: 18, color: "var(--color-ink)", marginBottom: 8 }}>
-          ¿Venís a jugar?
-        </h3>
-        <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 18 }}>
-          Reservá tu turno de 90 minutos y asegurate el mejor tercer tiempo en Catriel.
-        </p>
-        <Link href="/#turnos" className="btn btn-linear-primary" style={{ padding: "10px 24px" }}>
+      {/* CIERRE: invitación a jugar, en la cancha azul. */}
+      <div className="carta-cierre">
+        <h2>¿Venís a jugar?</h2>
+        <p>Reservá tu turno de 90 minutos y asegurate el mejor tercer tiempo en Catriel.</p>
+        <Link href="/#turnos" className="btn carta-cierre-btn">
           Reservar cancha →
         </Link>
       </div>

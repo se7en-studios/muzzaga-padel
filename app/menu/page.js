@@ -27,7 +27,7 @@ export default async function MenuPage() {
       <main className="page-main">
         <PageCrumbs items={[{ label: "Menú de la cantina" }]} />
 
-        <Suspense fallback={<div className="container" style={{ padding: 40, textAlign: "center" }}>Cargando carta de cantina…</div>}>
+        <Suspense fallback={<div className="container carta-cargando">Cargando carta de cantina…</div>}>
           <MenuClient items={items} />
         </Suspense>
       </main>
