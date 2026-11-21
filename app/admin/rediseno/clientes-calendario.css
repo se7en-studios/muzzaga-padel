@@ -1396,390 +1396,6 @@
   border-color: #fca5a5;
 }
 
-/* ==========================================================================
-   CALENDARIO DEL MES
-   ========================================================================== */
-.admin-root .cc-cal-card {
-  padding: 20px 22px 18px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--surface);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.admin-root .cc-cal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px 20px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.admin-root .cc-cal-nav {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.admin-root .cc-cal-month {
-  min-width: 230px;
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  text-align: center;
-  text-transform: uppercase;
-  color: var(--text);
-}
-
-.admin-root .cc-cal-month span {
-  color: var(--cc-court);
-}
-
-.admin-root .cc-cal-arrow {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border: 1.5px solid var(--border-strong);
-  border-radius: 50%;
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
-}
-
-.admin-root .cc-cal-arrow:hover {
-  border-color: var(--cc-court);
-  background: var(--cc-court);
-  color: #ffffff;
-}
-
-.admin-root .cc-cal-today {
-  height: 36px;
-  padding: 0 14px;
-  border: 1.5px solid var(--brand, #e8722a);
-  border-radius: 999px;
-  background: #fff6ef;
-  color: #9a3412;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.admin-root .cc-cal-today:hover {
-  background: var(--brand, #e8722a);
-  color: #ffffff;
-}
-
-.admin-root .cc-cal-facts {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.admin-root .cc-cal-facts li {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 32px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: var(--surface-muted);
-  border: 1px solid #efeadf;
-  font-size: 13.5px;
-  color: var(--text-secondary);
-}
-
-.admin-root .cc-cal-facts li[data-kind="best"] {
-  background: #fff4ec;
-  border-color: #f8d3bb;
-  color: #7c2d12;
-}
-
-.admin-root .cc-cal-facts li[data-kind="best"] svg {
-  color: #ea580c;
-}
-
-.admin-root .cc-cal-facts li[data-kind="weekday"] {
-  background: var(--cc-court-tint);
-  border-color: #cdd8f7;
-  color: #14204a;
-}
-
-.admin-root .cc-cal-facts li.cc-cal-hint {
-  background: none;
-  border: none;
-  padding-inline: 4px;
-  color: var(--text-muted);
-}
-
-/* ---------- Grilla del mes ---------- */
-.admin-root .cc-heatmap {
-  gap: 8px;
-}
-
-.admin-root .cc-weekday {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 0 4px 4px;
-}
-
-.admin-root .cc-weekday-name {
-  font-size: 12.5px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.admin-root .cc-weekday[data-weekend] .cc-weekday-name {
-  color: #c2410c;
-}
-
-/* Promedio de ocupación de ese día de la semana, alineado con su columna. */
-.admin-root .cc-weekday-avg {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.admin-root .cc-weekday-track {
-  flex: 1;
-  max-width: 90px;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--cc-court-tint);
-  overflow: hidden;
-}
-
-.admin-root .cc-weekday-track > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--cc-court);
-}
-
-.admin-root .cc-weekday-avg small {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Nivel 3 un poco más oscuro que en padel.css: con texto blanco chico el
-   celeste anterior no llegaba a contraste AA. */
-.admin-root .cc-cal [data-heat="3"] {
-  --heat-bg: #3f63d8;
-}
-
-/* Las líneas de la cancha (padel.css) más suaves: la red pasaba justo por
-   arriba del porcentaje. */
-.admin-root .cc-heat-cell[data-heat="3"]::before,
-.admin-root .cc-heat-cell[data-heat="4"]::before {
-  opacity: 0.55;
-}
-
-.admin-root .cc-heat-cell {
-  justify-content: flex-start;
-  gap: 2px;
-  min-height: 98px;
-  padding: 10px 12px 14px;
-  border-radius: 12px;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.15s ease;
-}
-
-.admin-root .cc-heat-cell[data-heat="0"] {
-  background: var(--surface);
-}
-
-.admin-root .cc-heat-cell.is-past[data-heat="0"] {
-  background: var(--surface-muted);
-}
-
-.admin-root .cc-heat-top {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.admin-root .cc-heat-cell .admin-heat-day {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.admin-root .cc-heat-cell.is-past[data-heat="0"] .admin-heat-day {
-  color: var(--text-muted);
-}
-
-.admin-root .cc-heat-cell .admin-heat-pct {
-  margin-top: auto;
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.admin-root .cc-heat-cell[data-heat="0"] .admin-heat-pct {
-  font-size: 20px;
-  color: #b8b2a5;
-}
-
-.admin-root .cc-heat-cell .admin-heat-meta {
-  font-size: 12.5px;
-  font-weight: 600;
-  opacity: 0.92;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.admin-root .cc-heat-cell .admin-heat-closed {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: auto;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-
-/* Barra de ocupación abajo: azul en los días tranquilos, amarillo pelota
-   cuando el día ya es cancha llena. */
-.admin-root .cc-heat-bar {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 6px;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(20, 32, 74, 0.1);
-  overflow: hidden;
-}
-
-.admin-root .cc-heat-bar > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--cc-court);
-}
-
-.admin-root .cc-heat-cell[data-heat="3"] .cc-heat-bar,
-.admin-root .cc-heat-cell[data-heat="4"] .cc-heat-bar {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.admin-root .cc-heat-cell[data-heat="3"] .cc-heat-bar > span,
-.admin-root .cc-heat-cell[data-heat="4"] .cc-heat-bar > span {
-  background: #d7f03a;
-}
-
-.admin-root .cc-heat-today {
-  display: inline-flex;
-  align-items: center;
-  height: 18px;
-  padding: 0 7px;
-  border-radius: 999px;
-  background: var(--brand, #e8722a);
-  color: #ffffff;
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-shadow: none;
-}
-
-/* Hoy: borde naranja de marca (la pelotita de la esquina viene de padel.css). */
-.admin-root .cc-heat-cell.is-today {
-  border-color: var(--brand, #e8722a);
-  box-shadow: 0 0 0 2px var(--brand, #e8722a);
-}
-
-.admin-root .cc-heat-cell:hover:not(:disabled) {
-  border-color: var(--cc-court);
-  box-shadow: 0 0 0 1px var(--cc-court), 0 10px 18px -12px rgba(13, 31, 92, 0.6);
-}
-
-.admin-root .cc-heat-cell.is-today:hover:not(:disabled) {
-  box-shadow: 0 0 0 2px var(--brand, #e8722a), 0 10px 18px -12px rgba(13, 31, 92, 0.6);
-}
-
-.admin-root .cc-heat-cell:disabled {
-  opacity: 0.85;
-}
-
-/* ---------- Leyenda ---------- */
-.admin-root .cc-legend {
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
-  font-size: 13px;
-}
-
-.admin-root .cc-legend-scale {
-  display: inline-flex;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-
-.admin-root .cc-legend-scale .cc-legend-swatch {
-  width: 26px;
-  height: 14px;
-  border: none;
-  border-radius: 0;
-}
-
-.admin-root .cc-legend > .cc-legend-swatch {
-  width: 18px;
-  height: 14px;
-  border-radius: 4px;
-}
-
-.admin-root .cc-legend-sep {
-  width: 1px;
-  height: 16px;
-  margin: 0 6px;
-  background: var(--border-strong);
-}
-
-/* La tira de ritmo semanal es del celu; en la compu va en los encabezados. */
-.admin-root .cc-week-rhythm {
-  display: none;
-}
-
-/* ==========================================================================
-   PANTALLAS GRANDES (1920): más aire en la grilla del mes
-   ========================================================================== */
-@media (min-width: 1700px) {
-  .admin-root .cc-heat-cell {
-    min-height: 112px;
-    padding: 12px 14px 16px;
-  }
-
-  .admin-root .cc-heat-cell .admin-heat-pct {
-    font-size: 32px;
-  }
-
-  .admin-root .cc-heat-cell .admin-heat-meta {
-    font-size: 13.5px;
-  }
-}
-
 /* Tablet y compus chicas: el marcador baja a una grilla que se acomoda. */
 @media (min-width: 768px) and (max-width: 1180px) {
   .admin-root .cc-board {
@@ -2247,31 +1863,699 @@
   .admin-root .cc-drawer-stats dd.is-big {
     font-size: 30px;
   }
+}
 
-  /* ---------- Calendario en el celu ---------- */
+/* ==========================================================================
+   MOVIMIENTO (solo si la persona no pidió reducirlo)
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-drawer.cc-drawer {
+    animation: ccDrawerIn 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  @keyframes ccDrawerIn {
+    from {
+      transform: translateX(28px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  .admin-root .cc-board-tile:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Las barritas del marcador se llenan de izquierda a derecha al entrar. */
+  .admin-root .cc-board-share > span {
+    transform-origin: left center;
+    animation: ccShareGrow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @keyframes ccShareGrow {
+    from { transform: scaleX(0); }
+    to { transform: none; }
+  }
+
+  /* El tablero de la ficha aparece un toque después del encabezado. */
+  .admin-root .cc-drawer-stats > div {
+    animation: ccStatIn 0.35s ease-out both;
+  }
+
+  .admin-root .cc-drawer-stats > div:nth-child(2) { animation-delay: 0.04s; }
+  .admin-root .cc-drawer-stats > div:nth-child(3) { animation-delay: 0.08s; }
+  .admin-root .cc-drawer-stats > div:nth-child(4) { animation-delay: 0.12s; }
+
+  @keyframes ccStatIn {
+    from { transform: translateY(6px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+
+  .admin-root .cc-contact .cc-wa-sm {
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  }
+
+  .admin-root .cc-contact .cc-wa-sm:active {
+    transform: scale(0.96);
+  }
+
+  /* La pelotita del segmento elegido pica una vez al cambiar. */
+  .admin-root .cc-board-tile[aria-pressed="true"]::after {
+    animation: ccBallBounce 0.5s ease-out;
+  }
+
+  @keyframes ccBallBounce {
+    0% { transform: translateY(-10px) scale(0.8); }
+    55% { transform: translateY(0) scale(1.05, 0.9); }
+    75% { transform: translateY(-3px); }
+    100% { transform: none; }
+  }
+}
+
+/* ==========================================================================
+   CALENDARIO DEL MES
+   Arriba el cartel en cancha con el mes grande; abajo cada día es una
+   "entrada" de cancha: número grande, ocupación pintada (más azul, más
+   lleno), barra, y el talón con turnos, plata y puntitos de cobro.
+   ========================================================================== */
+.admin-root .cc-cal-card {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 18px 36px -30px rgba(13, 31, 92, 0.5);
+}
+
+/* ---------- El cartel en cancha ---------- */
+.admin-root .cc-cal-head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 24px 20px;
+  border-bottom: 1px solid var(--cc-court-deep);
+  background-color: var(--cc-court);
+  background-image:
+    var(--cc-court-lines),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.25), rgba(11, 26, 77, 0.6)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: 100% 100%, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  color: #ffffff;
+}
+
+.admin-root .cc-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.admin-root .cc-cal-month {
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 3px 0 rgba(8, 20, 60, 0.35);
+}
+
+.admin-root .cc-cal-month span {
+  color: #d7f03a;
+}
+
+.admin-root .cc-cal-arrow {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  background: rgba(11, 22, 56, 0.35);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Solo con mouse: en el celu el hover queda pegado después del toque. */
+@media (hover: hover) {
+  .admin-root .cc-cal-arrow:hover {
+    border-color: #ffffff;
+    background: #ffffff;
+    color: var(--cc-court-deep);
+  }
+}
+
+.admin-root .cc-cal-arrow:focus-visible,
+.admin-root .cc-cal-today:focus-visible {
+  outline: 3px solid #d7f03a;
+  outline-offset: 2px;
+}
+
+/* "Hoy": la pelotita te trae de vuelta al mes en curso. */
+.admin-root .cc-cal-today {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  margin-left: auto;
+  padding: 0 18px 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--cc-court-deep);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 14px -8px rgba(8, 20, 60, 0.8);
+  transition: background-color 0.15s ease;
+}
+
+.admin-root .cc-cal-today .cc-ball {
+  width: 14px;
+  height: 14px;
+}
+
+.admin-root .cc-cal-today:hover {
+  background: #f4ff8a;
+}
+
+.admin-root .cc-cal-facts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root .cc-cal-facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 4px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(11, 22, 56, 0.45);
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.admin-root .cc-cal-facts li strong {
+  color: #ffffff;
+}
+
+.admin-root .cc-cal-facts li[data-kind="best"] svg {
+  color: #ffb07a;
+}
+
+.admin-root .cc-cal-facts li.cc-cal-hint {
+  padding-inline: 4px;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ---------- Cuerpo: la grilla ---------- */
+.admin-root .cc-cal-body {
+  padding: 16px 20px 20px;
+}
+
+.admin-root .cc-heatmap {
+  gap: 8px;
+}
+
+.admin-root .cc-weekday {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0 4px 6px;
+}
+
+.admin-root .cc-weekday-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.admin-root .cc-weekday[data-weekend] .cc-weekday-name {
+  color: #c2410c;
+}
+
+/* Promedio de ocupación de ese día de la semana, alineado con su columna. */
+.admin-root .cc-weekday-avg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-root .cc-weekday-track {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--cc-court-tint);
+  overflow: hidden;
+}
+
+.admin-root .cc-weekday-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cc-court);
+}
+
+.admin-root .cc-weekday[data-best] .cc-weekday-track > span {
+  background: var(--brand, #e8722a);
+}
+
+.admin-root .cc-weekday-avg small {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nivel 3 un poco más oscuro que en padel.css: con texto blanco chico el
+   celeste anterior no llegaba a contraste AA. */
+.admin-root .cc-cal [data-heat="3"] {
+  --heat-bg: #3f63d8;
+}
+
+/* ---------- Cada día, una entrada de cancha ---------- */
+.admin-root .cc-heat-cell {
+  --tk-edge: var(--border);
+  --tk-ink: #14204a;
+  --tk-soft: rgba(20, 32, 74, 0.62);
+  --tk-ring: 0 0 #0000;
+  --tk-wk: 0 0 #0000;
+  justify-content: flex-start;
+  gap: 0;
+  min-height: 122px;
+  padding: 10px 12px 0;
+  border-color: var(--tk-edge);
+  border-radius: 14px;
+  color: var(--tk-ink);
+  box-shadow: var(--tk-wk), var(--tk-ring);
+  transition: box-shadow 0.18s ease, border-color 0.15s ease, filter 0.2s ease;
+}
+
+.admin-root .cc-heat-cell[data-heat="0"] {
+  background: var(--surface);
+}
+
+.admin-root .cc-heat-cell[data-heat="3"],
+.admin-root .cc-heat-cell[data-heat="4"] {
+  --tk-edge: #1c42b8;
+  --tk-ink: #ffffff;
+  --tk-soft: rgba(255, 255, 255, 0.85);
+}
+
+/* Lleno: el césped de verdad, como el mapa de horarios de Números del mes. */
+.admin-root .cc-heat-cell[data-heat="4"] {
+  background-color: var(--cc-court);
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.15), rgba(11, 26, 77, 0.5)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 200px 200px;
+}
+
+/* Las líneas de la cancha (padel.css) más suaves: la red pasaba justo por
+   arriba del porcentaje. */
+.admin-root .cc-heat-cell[data-heat="3"]::before,
+.admin-root .cc-heat-cell[data-heat="4"]::before {
+  opacity: 0.5;
+}
+
+/* Fin de semana: un filete naranja arriba, apenas. */
+.admin-root .cc-heat-cell[data-weekend] {
+  --tk-wk: inset 0 3px 0 #f3a46c;
+}
+
+.admin-root .cc-heat-cell[data-weekend][data-heat="0"] {
+  background: #fffaf4;
+}
+
+/* Lo que ya pasó, un toque apagado: lo que viene es lo que se mira. */
+.admin-root .cc-heat-cell.is-past {
+  filter: saturate(0.7);
+}
+
+.admin-root .cc-heat-cell.is-past[data-heat="0"] {
+  background: var(--surface-muted);
+}
+
+.admin-root .cc-heat-cell.is-past .admin-heat-day {
+  opacity: 0.72;
+}
+
+.admin-root .cc-heat-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.admin-root .cc-heat-cell .admin-heat-day {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Puntitos de cobro, arriba a la derecha. */
+.admin-root .cc-tk-dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.admin-root .cc-tk-dots i,
+.admin-root .cc-legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dot);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
+}
+
+.admin-root [data-pay="ok"] {
+  --dot: #16a34a;
+}
+
+.admin-root [data-pay="owe"] {
+  --dot: var(--brand, #e8722a);
+}
+
+.admin-root [data-pay="alert"] {
+  --dot: #dc2626;
+}
+
+.admin-root .cc-heat-cell .admin-heat-pct {
+  margin-top: auto;
+  padding-top: 6px;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Día sin turnos: el talón baja solo, con "Libre" o "Sin turnos". */
+.admin-root .cc-tk-stub[data-empty] {
+  margin-top: auto;
+  color: var(--text-muted);
+}
+
+/* Barra de ocupación: azul en los días tranquilos, amarillo pelota cuando
+   el día ya es cancha llena. */
+.admin-root .cc-heat-bar {
+  display: block;
+  width: 100%;
+  height: 5px;
+  margin: 6px 0 8px;
+  border-radius: 999px;
+  background: rgba(20, 32, 74, 0.1);
+  overflow: hidden;
+}
+
+.admin-root .cc-heat-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cc-court);
+}
+
+.admin-root .cc-heat-cell[data-heat="3"] .cc-heat-bar,
+.admin-root .cc-heat-cell[data-heat="4"] .cc-heat-bar {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.admin-root .cc-heat-cell[data-heat="3"] .cc-heat-bar > span,
+.admin-root .cc-heat-cell[data-heat="4"] .cc-heat-bar > span {
+  background: #d7f03a;
+}
+
+/* El talón: línea troquelada con las dos muescas de la entrada. */
+.admin-root .cc-tk-stub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: calc(100% + 24px);
+  margin: 0 -12px;
+  padding: 7px 12px 8px;
+  border-top: 1.5px dashed rgba(20, 32, 74, 0.2);
+  background: rgba(20, 32, 74, 0.035);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--tk-soft);
+}
+
+.admin-root .cc-tk-stub::before,
+.admin-root .cc-tk-stub::after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--tk-edge);
+}
+
+.admin-root .cc-tk-stub::before {
+  left: -7px;
+}
+
+.admin-root .cc-tk-stub::after {
+  right: -7px;
+}
+
+.admin-root .cc-tk-stub strong {
+  font-weight: 800;
+  color: var(--tk-ink);
+}
+
+.admin-root .cc-tk-money {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #15803d;
+}
+
+.admin-root .cc-heat-cell[data-heat="3"] .cc-tk-stub,
+.admin-root .cc-heat-cell[data-heat="4"] .cc-tk-stub {
+  border-top-color: rgba(255, 255, 255, 0.4);
+  background: rgba(8, 20, 60, 0.28);
+}
+
+.admin-root .cc-heat-cell[data-heat="3"] .cc-tk-money,
+.admin-root .cc-heat-cell[data-heat="4"] .cc-tk-money {
+  color: #9cf5b9;
+}
+
+.admin-root .cc-heat-cell[data-heat="0"] .cc-tk-stub strong {
+  color: var(--text-muted);
+}
+
+/* Cerrado: rayado (viene del mapa), candado abajo. */
+.admin-root .cc-heat-cell[data-heat="closed"] {
+  --tk-ink: var(--text-muted);
+  padding-bottom: 12px;
+  filter: none;
+  opacity: 1;
+}
+
+.admin-root .cc-heat-cell .admin-heat-closed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Hoy: pelotita en la etiqueta y aro de pelota alrededor. */
+.admin-root .cc-heat-cell.is-today::after {
+  content: none;
+}
+
+.admin-root .cc-heat-today {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 8px 0 4px;
+  border-radius: 999px;
+  background: #0b1638;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+.admin-root .cc-heat-today::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cc-ball);
+}
+
+.admin-root .cc-heat-cell.is-today {
+  --tk-edge: #0b1638;
+  border-color: #0b1638;
+  --tk-ring: 0 0 0 2px #0b1638, 0 0 0 6px rgba(215, 240, 58, 0.55);
+}
+
+.admin-root .cc-heat-cell:hover:not(:disabled) {
+  border-color: var(--cc-court);
+  filter: none;
+  --tk-ring: 0 0 0 1px var(--cc-court), 0 12px 20px -12px rgba(13, 31, 92, 0.65);
+}
+
+.admin-root .cc-heat-cell.is-today:hover:not(:disabled) {
+  border-color: #0b1638;
+  --tk-ring: 0 0 0 2px #0b1638, 0 0 0 6px rgba(215, 240, 58, 0.55), 0 12px 20px -12px rgba(13, 31, 92, 0.65);
+}
+
+/* ---------- Leyenda ---------- */
+.admin-root .cc-legend {
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.admin-root .cc-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-root .cc-legend-dot {
+  box-shadow: none;
+}
+
+.admin-root .cc-legend-scale {
+  display: inline-flex;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.admin-root .cc-legend-scale .cc-legend-swatch {
+  width: 26px;
+  height: 14px;
+  border: none;
+  border-radius: 0;
+}
+
+.admin-root .cc-legend-scale .cc-legend-swatch[data-heat="4"] {
+  background: var(--cc-court) url("/img/fondo/textura-cesped.jpg") center / 80px 80px;
+}
+
+.admin-root .cc-legend-item > .cc-legend-swatch {
+  width: 18px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+/* El detalle día por día es del celu. */
+.admin-root .cc-day-details {
+  display: none;
+}
+
+/* Pantallas grandes (1920): más aire en las entradas. */
+@media (min-width: 1700px) {
+  .admin-root .cc-heat-cell {
+    min-height: 134px;
+    padding: 12px 14px 0;
+  }
+
+  .admin-root .cc-heat-cell .admin-heat-day {
+    font-size: 36px;
+  }
+
+  .admin-root .cc-heat-cell .admin-heat-pct {
+    font-size: 30px;
+  }
+
+  .admin-root .cc-tk-stub {
+    width: calc(100% + 28px);
+    margin: 0 -14px;
+    padding-inline: 14px;
+    font-size: 13.5px;
+  }
+}
+
+/* Tablet y compus chicas: el talón se aprieta. */
+@media (min-width: 768px) and (max-width: 1180px) {
+  .admin-root .cc-heat-cell {
+    padding: 8px 9px 0;
+    min-height: 112px;
+  }
+
+  .admin-root .cc-tk-stub {
+    width: calc(100% + 18px);
+    margin: 0 -9px;
+    padding-inline: 9px;
+    font-size: 11.5px;
+  }
+
+  .admin-root .cc-tk-stub > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-root .cc-cal-facts li.cc-cal-hint {
+    display: none;
+  }
+}
+
+/* ---------- Calendario en el celu ----------
+   La misma grilla de 7 columnas, compacta: número, % y color. El detalle
+   con turnos y plata queda en "Ver día por día". */
+@media (max-width: 767px) {
   .admin-root .cc-cal-card {
-    padding: 14px 12px;
     border-radius: 16px;
   }
 
-  /* Grilla de una columna con minmax(0, 1fr): así la tira de datos que se
-     desliza no estira la tarjeta más allá de la pantalla. */
   .admin-root .cc-cal-head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    margin-bottom: 12px;
-    padding-bottom: 12px;
+    gap: 12px;
+    padding: 14px 12px 14px;
   }
 
   .admin-root .cc-cal-nav {
-    justify-content: space-between;
-    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .admin-root .cc-cal-month {
     flex: 1;
-    min-width: 0;
-    font-size: 26px;
+    font-size: 30px;
+    text-align: center;
   }
 
   .admin-root .cc-cal-arrow {
@@ -2279,16 +2563,31 @@
     height: 44px;
   }
 
+  /* A lo ancho debajo del mes, pero liviano: el protagonista es el mes. */
   .admin-root .cc-cal-today {
     order: 4;
     width: 100%;
-    height: 44px;
+    justify-content: center;
+    margin-left: 0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(11, 22, 56, 0.45);
+    color: #ffffff;
+    box-shadow: none;
+  }
+
+  .admin-root .cc-cal-today:hover {
+    background: rgba(11, 22, 56, 0.6);
+  }
+
+  .admin-root .cc-cal-nav {
+    flex-wrap: wrap;
   }
 
   /* Los datos del mes en una tira que se desliza, para no ocupar tres
      renglones antes de llegar a los días. */
   .admin-root .cc-cal-facts {
     flex-wrap: nowrap;
+    width: calc(100% + 24px);
     margin-inline: -12px;
     padding: 0 12px 2px;
     overflow-x: auto;
@@ -2305,64 +2604,179 @@
     white-space: nowrap;
   }
 
-  .admin-root .cc-cal-facts li.cc-cal-hint {
-    display: none; /* en el celu se entiende solo: cada día tiene su flechita */
+  .admin-root .cc-cal-body {
+    padding: 12px 10px 14px;
   }
 
-  /* Ritmo de la semana: siete barritas verticales, la más alta en naranja. */
-  .admin-root .cc-week-rhythm {
+  /* insights.css esconde el mapa en el celu: acá vuelve, compacto. */
+  .admin-root .cc-heatmap {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 6px;
-    margin-bottom: 12px;
-    padding: 10px 10px 8px;
-    border-radius: 12px;
-    background: var(--surface-muted);
-  }
-
-  .admin-root .cc-week-rhythm::before {
-    content: "Ocupación promedio por día";
-    grid-column: 1 / -1;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
-
-  .admin-root .cc-week-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     gap: 4px;
   }
 
-  .admin-root .cc-week-bar {
-    display: flex;
-    align-items: flex-end;
+  .admin-root .cc-weekday {
+    align-items: center;
+    gap: 4px;
+    padding: 0 0 4px;
+  }
+
+  .admin-root .cc-weekday-name {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  .admin-root .cc-weekday-avg {
     width: 100%;
-    max-width: 26px;
-    height: 44px;
-    border-radius: 6px;
-    background: var(--cc-court-tint);
-    overflow: hidden;
+    padding-inline: 4px;
   }
 
-  .admin-root .cc-week-bar > span {
-    display: block;
-    width: 100%;
-    background: var(--cc-court);
-    border-radius: 6px 6px 0 0;
+  .admin-root .cc-weekday-track {
+    height: 4px;
   }
 
-  .admin-root .cc-week-col[data-best] .cc-week-bar > span {
-    background: var(--brand, #e8722a);
+  .admin-root .cc-weekday-avg small {
+    display: none;
   }
 
-  .admin-root .cc-week-col small {
-    font-size: 12px;
+  .admin-root .cc-heatmap .admin-skeleton {
+    height: 58px !important;
+  }
+
+  .admin-root .cc-heat-cell {
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: 58px;
+    padding: 6px 2px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .admin-root .cc-heat-cell[data-weekend] {
+    --tk-wk: inset 0 2px 0 #f3a46c;
+  }
+
+  /* Estático: así los puntitos y la pelotita se ubican contra la celda. */
+  .admin-root .cc-heat-top {
+    position: static;
+    justify-content: center;
+  }
+
+  .admin-root .cc-heat-cell .admin-heat-day {
+    font-size: 21px;
+  }
+
+  .admin-root .cc-heat-cell .admin-heat-pct {
+    margin-top: 0;
+    padding-top: 0;
+    font-family: inherit;
+    font-size: 11px;
     font-weight: 700;
-    color: var(--text-muted);
+    letter-spacing: -0.01em;
+  }
+
+  .admin-root .cc-heat-bar,
+  .admin-root .cc-tk-stub {
+    display: none;
+  }
+
+  .admin-root .cc-heat-cell .admin-heat-closed {
+    margin-top: 0;
+  }
+
+  .admin-root .cc-heat-cell .admin-heat-closed > span {
+    display: none;
+  }
+
+  /* Puntitos y pelotita chiquitos, en una fila abajo: arriba no entran
+     sin pisar el número. */
+  .admin-root .cc-heat-cell {
+    padding-bottom: 11px;
+  }
+
+  .admin-root .cc-tk-dots {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    gap: 2px;
+  }
+
+  .admin-root .cc-tk-dots i {
+    width: 5px;
+    height: 5px;
+    box-shadow: none;
+  }
+
+  .admin-root .cc-heat-cell .cc-heat-today {
+    position: absolute;
+    bottom: 3px;
+    left: 4px;
+    height: auto;
+    padding: 0;
+    background: none;
+    font-size: 0;
+  }
+
+  .admin-root .cc-heat-cell .cc-heat-today::before {
+    width: 8px;
+    height: 8px;
+    box-shadow: 0 0 0 1px rgba(11, 22, 56, 0.6);
+  }
+
+  .admin-root .cc-heat-cell.is-today {
+    --tk-ring: 0 0 0 2px #0b1638, 0 0 0 4px rgba(215, 240, 58, 0.7);
+  }
+
+  .admin-root .cc-legend {
+    display: flex;
+    gap: 8px 14px;
+    margin-top: 14px;
+    padding-top: 12px;
+    font-size: 12.5px;
+  }
+
+  .admin-root .cc-legend-scale .cc-legend-swatch {
+    width: 18px;
+  }
+
+  /* El detalle, plegado debajo. */
+  .admin-root .cc-day-details {
+    display: block;
+    margin-top: 14px;
+  }
+
+  .admin-root .cc-day-details > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: var(--surface-muted);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .admin-root .cc-day-details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .admin-root .cc-day-details[open] > summary {
+    margin-bottom: 10px;
+  }
+
+  .admin-root .cc-day-details[open] .cc-day-details-icon {
+    transform: rotate(90deg);
+  }
+
+  .admin-root .cc-day-details > summary:focus-visible {
+    outline: 3px solid rgba(35, 80, 214, 0.45);
+    outline-offset: 2px;
   }
 
   .admin-root .cc-day-list {
@@ -2388,8 +2802,8 @@
   }
 
   .admin-root .cc-day-list .cc-day.is-today {
-    border-color: var(--brand, #e8722a);
-    box-shadow: 0 0 0 1px var(--brand, #e8722a);
+    border-color: #0b1638;
+    box-shadow: 0 0 0 1px #0b1638, 0 0 0 4px rgba(215, 240, 58, 0.6);
   }
 
   .admin-root .cc-day-list .cc-day:disabled {
@@ -2523,75 +2937,32 @@
   }
 }
 
-/* ==========================================================================
-   MOVIMIENTO (solo si la persona no pidió reducirlo)
-   ========================================================================== */
 @media (prefers-reduced-motion: no-preference) {
-  .admin-root .admin-drawer.cc-drawer {
-    animation: ccDrawerIn 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  @keyframes ccDrawerIn {
-    from {
-      transform: translateX(28px);
-      opacity: 0;
-    }
-    to {
-      transform: none;
-      opacity: 1;
-    }
-  }
-
-  .admin-root .cc-board-tile:hover {
-    transform: translateY(-2px);
+  .admin-root .cc-heat-cell {
+    transition: box-shadow 0.18s ease, border-color 0.15s ease, filter 0.2s ease, transform 0.15s ease;
   }
 
   .admin-root .cc-heat-cell:hover:not(:disabled) {
     transform: translateY(-2px);
   }
 
-  /* Las barritas del marcador se llenan de izquierda a derecha al entrar. */
-  .admin-root .cc-board-share > span {
+  .admin-root .cc-heat-cell:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* Las barras se llenan de izquierda a derecha al cambiar de mes. */
+  .admin-root .cc-heat-bar > span,
+  .admin-root .cc-weekday-track > span {
     transform-origin: left center;
     animation: ccShareGrow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  @keyframes ccShareGrow {
-    from { transform: scaleX(0); }
-    to { transform: none; }
+  /* La pelotita de hoy pica una vez. */
+  .admin-root .cc-heat-cell .cc-heat-today::before {
+    animation: ccBallBounce 0.6s ease-out 0.2s both;
   }
 
-  /* El tablero de la ficha aparece un toque después del encabezado. */
-  .admin-root .cc-drawer-stats > div {
-    animation: ccStatIn 0.35s ease-out both;
-  }
-
-  .admin-root .cc-drawer-stats > div:nth-child(2) { animation-delay: 0.04s; }
-  .admin-root .cc-drawer-stats > div:nth-child(3) { animation-delay: 0.08s; }
-  .admin-root .cc-drawer-stats > div:nth-child(4) { animation-delay: 0.12s; }
-
-  @keyframes ccStatIn {
-    from { transform: translateY(6px); opacity: 0; }
-    to { transform: none; opacity: 1; }
-  }
-
-  .admin-root .cc-contact .cc-wa-sm {
-    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
-  }
-
-  .admin-root .cc-contact .cc-wa-sm:active {
-    transform: scale(0.96);
-  }
-
-  /* La pelotita del segmento elegido pica una vez al cambiar. */
-  .admin-root .cc-board-tile[aria-pressed="true"]::after {
-    animation: ccBallBounce 0.5s ease-out;
-  }
-
-  @keyframes ccBallBounce {
-    0% { transform: translateY(-10px) scale(0.8); }
-    55% { transform: translateY(0) scale(1.05, 0.9); }
-    75% { transform: translateY(-3px); }
-    100% { transform: none; }
+  .admin-root .cc-day-details-icon {
+    transition: transform 0.2s ease;
   }
 }

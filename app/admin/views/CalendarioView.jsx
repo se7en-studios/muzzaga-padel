@@ -14,6 +14,7 @@ import { adminGetMonthStats } from "../actions";
 import { todayInClub } from "../../../lib/booking";
 import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
 import { Skeleton } from "../ui/states";
+import { zzDemoMonth } from "./zzCalendarioDemo"; // zz demo TEMPORAL
 
 const MONTH_NAMES = [
   "Enero",
@@ -43,6 +44,28 @@ function heatLevel(pct) {
 
 const WEEKDAYS_LONG = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos"];
 
+/**
+ * Puntitos de cobro de un día (solo presentación): verde si entró plata,
+ * naranja si queda algo por cobrar, rojo si hay turnos marcados "pagado"
+ * sin el cobro cargado. Lo pendiente de días que todavía no llegaron no se
+ * marca: esos turnos se pagan cuando se juegan.
+ */
+function payDots(d, todayIso) {
+  if (d.closed) return [];
+  const dots = [];
+  if (d.cobrado > 0) dots.push("ok");
+  if (d.porCobrar > 0 && d.date <= todayIso) dots.push("owe");
+  if (d.pagadosSinCobro > 0) dots.push("alert");
+  return dots;
+}
+
+const DOT_TEXT = {
+  ok: "hubo cobros",
+  owe: "falta cobrar",
+  alert: "pagados sin cobro cargado",
+};
+const dotsText = (dots) => (dots.length ? ` · ${dots.map((k) => DOT_TEXT[k]).join(", ")}` : "");
+
 const shortK = (n) => (n >= 1000 ? `$${Math.round(n / 1000)}k` : formatARS(n));
 
 export default function CalendarioView({ onSelectDate, onExpiredSession }) {
@@ -55,7 +78,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    adminGetMonthStats(year, month).then((res) => {
+    (typeof window !== "undefined" && window.location.search.includes("demo") ? Promise.resolve(zzDemoMonth(year, month, todayIso)) : adminGetMonthStats(year, month)).then((res) => { // zz demo TEMPORAL
       if (cancelled) return;
       setLoading(false);
       if (res.ok) setMonthStats(res);
@@ -163,6 +186,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
       )}
 
       <section className="cc-cal-card" aria-label="Ocupación del mes">
+        {/* Cartel en cancha: el mes grande, flechas y lo que hay que saber. */}
         <header className="cc-cal-head">
           <div className="cc-cal-nav">
             <button
@@ -171,7 +195,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
               onClick={() => changeMonth(-1)}
               aria-label="Mes anterior"
             >
-              <ChevronLeft size={20} strokeWidth={2} aria-hidden />
+              <ChevronLeft size={22} strokeWidth={2.25} aria-hidden />
             </button>
             <h2 className="cc-cal-month" aria-live="polite">
               {MONTH_NAMES[month - 1]} <span>{year}</span>
@@ -182,18 +206,20 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
               onClick={() => changeMonth(1)}
               aria-label="Mes siguiente"
             >
-              <ChevronRight size={20} strokeWidth={2} aria-hidden />
+              <ChevronRight size={22} strokeWidth={2.25} aria-hidden />
             </button>
             {!isCurrentMonth && (
               <button
                 type="button"
                 className="cc-cal-today"
+                aria-label="Volver al mes de hoy"
                 onClick={() => {
                   setYear(Number(todayIso.slice(0, 4)));
                   setMonth(Number(todayIso.slice(5, 7)));
                 }}
               >
-                Volver a hoy
+                <span className="cc-ball" aria-hidden />
+                Hoy
               </button>
             )}
           </div>
@@ -233,8 +259,9 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
           )}
         </header>
 
-        <div className={loading && monthStats ? "admin-content-loading" : ""}>
-          {/* Compu / tablet: el mes como mapa de ocupación */}
+        <div className={`cc-cal-body${loading && monthStats ? " admin-content-loading" : ""}`}>
+          {/* El mes como mapa de ocupación: cada día es una entrada de cancha.
+              En el celu es la misma grilla, compacta. */}
           <div
             className="admin-heatmap cc-heatmap"
             role="grid"
@@ -246,6 +273,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
                 className="admin-heatmap-weekday cc-weekday"
                 role="columnheader"
                 data-weekend={i >= 5 || undefined}
+                data-best={(hasAvg && i === bestWeekday && weekdayAvg[i] > 0) || undefined}
               >
                 <span className="cc-weekday-name">{w}</span>
                 {hasAvg && weekdayAvg[i] != null && (
@@ -266,125 +294,152 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
             ))}
             {!monthStats &&
               Array.from({ length: 30 }, (_, i) => (
-                <Skeleton key={`sk-${i}`} height={96} radius={12} />
+                <Skeleton key={`sk-${i}`} height={112} radius={14} />
               ))}
-            {days.map((d) => (
-              <button
-                key={d.date}
-                type="button"
-                role="gridcell"
-                className={`admin-heat-cell cc-heat-cell${d.date === todayIso ? " is-today" : ""}${d.date < todayIso ? " is-past" : ""}`}
-                data-heat={d.closed ? "closed" : heatLevel(d.ocupacionPct)}
-                disabled={d.closed}
-                title={describe(d)}
-                aria-label={`${formatDate(d.date, "long")}: ${describe(d)}`}
-                onClick={() => onSelectDate(d.date)}
-              >
-                <span className="cc-heat-top">
-                  <span className="admin-heat-day">{d.day}</span>
-                  {d.date === todayIso && <span className="cc-heat-today">Hoy</span>}
-                </span>
-                {d.closed ? (
-                  <span className="admin-heat-closed">
-                    <Lock size={13} strokeWidth={2} aria-hidden /> Cerrado
-                  </span>
-                ) : (
-                  <>
-                    <span className="admin-heat-pct">
-                      {d.turnos > 0 ? formatPct(d.ocupacionPct) : "—"}
-                    </span>
-                    {(d.turnos > 0 || d.cobrado > 0) && (
-                      <span className="admin-heat-meta">
-                        {plural(d.turnos, "turno", "turnos")} · {shortK(d.cobrado)}
-                      </span>
-                    )}
-                    {d.turnos > 0 && (
-                      <span className="cc-heat-bar" aria-hidden>
-                        <span style={{ width: pctWidth(d) }} />
-                      </span>
-                    )}
-                  </>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Celu: ritmo de la semana arriba y la lista de días */}
-          {hasAvg && (
-            <div className="cc-week-rhythm" aria-label="Ocupación promedio por día de la semana">
-              {WEEKDAYS.map((w, i) => (
-                <span key={w} className="cc-week-col" data-best={i === bestWeekday || undefined}>
-                  <span className="cc-week-bar" aria-hidden>
-                    <span style={{ height: `${Math.max(4, Math.min(100, weekdayAvg[i] || 0))}%` }} />
-                  </span>
-                  <small>{w.slice(0, 2)}</small>
-                </span>
-              ))}
-            </div>
-          )}
-          <ul className="admin-calendar-list cc-day-list">
-            {days.map((d) => (
-              <li key={d.date}>
+            {days.map((d) => {
+              const dots = payDots(d, todayIso);
+              const isToday = d.date === todayIso;
+              return (
                 <button
+                  key={d.date}
                   type="button"
-                  className={`cc-day${d.date === todayIso ? " is-today" : ""}${d.date < todayIso ? " is-past" : ""}`}
+                  role="gridcell"
+                  className={`admin-heat-cell cc-heat-cell${isToday ? " is-today" : ""}${d.date < todayIso ? " is-past" : ""}`}
                   data-heat={d.closed ? "closed" : heatLevel(d.ocupacionPct)}
                   data-weekend={weekdayOf(d) >= 5 || undefined}
                   disabled={d.closed}
-                  aria-label={`${formatDate(d.date, "long")}: ${describe(d)}`}
+                  title={describe(d) + dotsText(dots)}
+                  aria-label={`${formatDate(d.date, "long")}: ${describe(d)}${dotsText(dots)}`}
                   onClick={() => onSelectDate(d.date)}
                 >
-                  <span className="cc-day-tile" aria-hidden>
-                    <small>{WEEKDAYS[weekdayOf(d)]}</small>
-                    <strong>{d.day}</strong>
-                  </span>
-                  <span className="cc-day-body" aria-hidden>
-                    <span className="cc-day-top">
-                      <strong>
-                        {d.closed
-                          ? "Cerrado"
-                          : d.turnos > 0
-                            ? formatPct(d.ocupacionPct)
-                            : "Sin turnos"}
-                      </strong>
-                      {d.date === todayIso && <span className="cc-heat-today">Hoy</span>}
-                      <span className="cc-day-meta">
-                        {d.closed
-                          ? d.closedReason
-                          : d.turnos > 0
-                            ? `${plural(d.turnos, "turno", "turnos")} · ${shortK(d.cobrado)}`
-                            : ""}
-                      </span>
-                    </span>
-                    {!d.closed && (
-                      <span className="cc-day-bar">
-                        <span style={{ width: pctWidth(d) }} />
+                  <span className="cc-heat-top">
+                    <span className="admin-heat-day">{d.day}</span>
+                    {isToday && <span className="cc-heat-today">Hoy</span>}
+                    {dots.length > 0 && (
+                      <span className="cc-tk-dots" aria-hidden>
+                        {dots.map((k) => (
+                          <i key={k} data-pay={k} />
+                        ))}
                       </span>
                     )}
                   </span>
-                  {!d.closed && (
-                    <ChevronRight className="cc-day-go" size={18} strokeWidth={2} aria-hidden />
+                  {d.closed ? (
+                    <span className="admin-heat-closed">
+                      <Lock size={13} strokeWidth={2} aria-hidden />
+                      <span>Cerrado</span>
+                    </span>
+                  ) : (
+                    <>
+                      {d.turnos > 0 && (
+                        <>
+                          <span className="admin-heat-pct">{formatPct(d.ocupacionPct)}</span>
+                          <span className="cc-heat-bar" aria-hidden>
+                            <span style={{ width: pctWidth(d) }} />
+                          </span>
+                        </>
+                      )}
+                      <span className="cc-tk-stub" data-empty={d.turnos > 0 ? undefined : true} aria-hidden>
+                        {d.turnos > 0 ? (
+                          <span>
+                            <strong>{d.turnos}</strong> {d.turnos === 1 ? "turno" : "turnos"}
+                          </span>
+                        ) : (
+                          <span>{d.date < todayIso ? "Sin turnos" : "Libre"}</span>
+                        )}
+                        {d.cobrado > 0 && <span className="cc-tk-money">{shortK(d.cobrado)}</span>}
+                      </span>
+                    </>
                   )}
                 </button>
-              </li>
-            ))}
-          </ul>
+              );
+            })}
+          </div>
 
           <div className="admin-heat-legend cc-legend" aria-hidden>
-            <span>Menos ocupado</span>
-            <span className="cc-legend-scale">
-              {[0, 1, 2, 3, 4].map((l) => (
-                <span key={l} className="admin-heat-swatch cc-legend-swatch" data-heat={l} />
-              ))}
+            <span className="cc-legend-item">
+              Libre
+              <span className="cc-legend-scale">
+                {[0, 1, 2, 3, 4].map((l) => (
+                  <span key={l} className="admin-heat-swatch cc-legend-swatch" data-heat={l} />
+                ))}
+              </span>
+              Cancha llena
             </span>
-            <span>Casi lleno</span>
-            <span className="cc-legend-sep" />
-            <span className="admin-heat-swatch cc-legend-swatch" data-heat="closed" />
-            <span>Cerrado</span>
-            <span className="cc-legend-sep" />
-            <span className="cc-ball" />
-            <span>Hoy</span>
+            <span className="cc-legend-item">
+              <span className="admin-heat-swatch cc-legend-swatch" data-heat="closed" />
+              Cerrado
+            </span>
+            <span className="cc-legend-item">
+              <span className="cc-ball" />
+              Hoy
+            </span>
+            <span className="cc-legend-item">
+              <i className="cc-legend-dot" data-pay="ok" /> Cobrado
+            </span>
+            <span className="cc-legend-item">
+              <i className="cc-legend-dot" data-pay="owe" /> Falta cobrar
+            </span>
+            <span className="cc-legend-item">
+              <i className="cc-legend-dot" data-pay="alert" /> Pagado sin cobro cargado
+            </span>
           </div>
+
+          {/* Celu: el detalle día por día, a mano pero plegado. */}
+          {monthStats && (
+            <details className="cc-day-details">
+              <summary>
+                <span>Ver día por día</span>
+                <ChevronRight className="cc-day-details-icon" size={18} strokeWidth={2} aria-hidden />
+              </summary>
+              <ul className="admin-calendar-list cc-day-list">
+                {days.map((d) => (
+                  <li key={d.date}>
+                    <button
+                      type="button"
+                      className={`cc-day${d.date === todayIso ? " is-today" : ""}${d.date < todayIso ? " is-past" : ""}`}
+                      data-heat={d.closed ? "closed" : heatLevel(d.ocupacionPct)}
+                      data-weekend={weekdayOf(d) >= 5 || undefined}
+                      disabled={d.closed}
+                      aria-label={`${formatDate(d.date, "long")}: ${describe(d)}${dotsText(payDots(d, todayIso))}`}
+                      onClick={() => onSelectDate(d.date)}
+                    >
+                      <span className="cc-day-tile" aria-hidden>
+                        <small>{WEEKDAYS[weekdayOf(d)]}</small>
+                        <strong>{d.day}</strong>
+                      </span>
+                      <span className="cc-day-body" aria-hidden>
+                        <span className="cc-day-top">
+                          <strong>
+                            {d.closed
+                              ? "Cerrado"
+                              : d.turnos > 0
+                                ? formatPct(d.ocupacionPct)
+                                : "Sin turnos"}
+                          </strong>
+                          {d.date === todayIso && <span className="cc-heat-today">Hoy</span>}
+                          <span className="cc-day-meta">
+                            {d.closed
+                              ? d.closedReason
+                              : d.turnos > 0
+                                ? `${plural(d.turnos, "turno", "turnos")} · ${shortK(d.cobrado)}`
+                                : ""}
+                          </span>
+                        </span>
+                        {!d.closed && (
+                          <span className="cc-day-bar">
+                            <span style={{ width: pctWidth(d) }} />
+                          </span>
+                        )}
+                      </span>
+                      {!d.closed && (
+                        <ChevronRight className="cc-day-go" size={18} strokeWidth={2} aria-hidden />
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </div>
       </section>
     </div>

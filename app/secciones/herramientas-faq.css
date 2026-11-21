@@ -412,36 +412,94 @@
 
 /* ==========================================================================
    PREGUNTAS FRECUENTES: la pregunta abierta sale a la cancha
-   Numeradas para ubicarse al leer; la abierta se pinta de cancha azul (se
-   ve de lejos cuál está abierta) y la respuesta queda en letra más grande.
+   Cada pregunta lleva arriba su número y su tema (letra chica de marcador)
+   y abajo la pregunta en grande. La abierta se pinta de cancha azul (se ve
+   de lejos cuál está abierta). Al abrir, la respuesta se despliega con la
+   fila de la grilla (0fr → 1fr) y el texto entra con opacidad/desplazamiento.
+   Compu: encabezado y cierre a la izquierda, preguntas a la derecha.
    ========================================================================== */
+.faq-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+#faq .faq-list {
+  max-width: none;
+  gap: 10px;
+}
+
+#faq .faq-card {
+  border-radius: 16px;
+  border-color: var(--color-hairline-strong);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+
+.faq-q {
+  margin: 0;
+  font: inherit;
+}
+
 .faq-question-btn {
-  min-height: 60px;
-  padding: 16px 18px;
-  gap: 12px;
+  min-height: 64px;
+  padding: 14px 16px 14px 18px;
+  gap: 14px;
   transition: background-color var(--t-hover) var(--ease);
 }
 
-.faq-num {
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 3px;
+.faq-question-main {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Renglón chico: número de marcador + tema. */
+.faq-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-jetbrains-mono), monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.faq-num {
   color: var(--color-accent-orange-text);
 }
 
-.faq-question-text {
-  flex: 1 1 auto;
-  font-size: 16px;
-  line-height: 1.35;
+.faq-tema {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-muted);
 }
 
-.faq-card.active {
+.faq-tema::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.faq-question-text {
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.faq-card.active,
+#faq .faq-card.active {
   border-color: var(--hf-cancha-borde);
-  box-shadow: 0 10px 24px -14px rgba(13, 31, 92, 0.6);
+  box-shadow: 0 14px 28px -18px rgba(13, 31, 92, 0.65);
 }
 
 /* La franja de la pregunta abierta: césped azul con la línea de fondo
@@ -466,17 +524,22 @@
   color: #d7f03a;
 }
 
-.faq-answer-content {
-  padding: 0 18px 18px 46px;
+.faq-card.active .faq-tema {
+  color: rgba(255, 255, 255, 0.78);
 }
 
-.faq-answer-wrap.open .faq-answer-content {
-  padding-top: 16px;
+/* Sin padding en la caja que se pliega (si no, quedaba una franja a la
+   vista con la respuesta cerrada); el aire lo pone el párrafo. */
+#faq .faq-answer-content {
+  padding: 0;
 }
 
-.faq-answer-content p {
+#faq .faq-answer-content p {
+  margin: 0;
+  padding: 16px 20px 20px;
   font-size: 15px;
   line-height: 1.65;
+  color: var(--color-body);
 }
 
 .faq-question-btn:focus-visible {
@@ -485,23 +548,105 @@
   border-radius: 14px;
 }
 
-/* En el celu la respuesta usa todo el ancho: con la sangría del número
-   quedaban renglones de cuatro palabras. */
-@media (max-width: 640px) {
-  .faq-question-btn {
-    padding: 14px 14px 14px 16px;
-  }
-
-  .faq-answer-content {
-    padding: 0 16px 16px;
+@media (hover: hover) {
+  #faq .faq-card:not(.active) .faq-question-btn:hover {
+    background-color: var(--color-hairline-soft);
   }
 }
 
-/* Encabezado: el botón de WhatsApp bajó al cierre; en el celu, sin la
-   mascota, el costado quedaba vacío y sumaba un hueco. */
 @media (max-width: 640px) {
+  .faq-question-btn {
+    min-height: 60px;
+    padding: 13px 14px 13px 16px;
+    gap: 12px;
+  }
+
+  .faq-question-text {
+    font-size: 16px;
+  }
+
+  #faq .faq-answer-content p {
+    padding: 14px 16px 18px;
+  }
+
+  /* Encabezado: sin la mascota, el costado quedaba vacío y sumaba un hueco. */
   #faq .header-aside {
     display: none;
+  }
+}
+
+/* Compu: dos columnas. Encabezado arriba a la izquierda, el cierre debajo
+   y las preguntas ocupando la derecha. */
+@media (min-width: 1024px) {
+  .faq-layout {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 56px;
+  }
+
+  .faq-layout > .section-header-row {
+    grid-column: 1;
+    grid-row: 1;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .faq-layout > .faq-list {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+  }
+
+  .faq-layout > .faq-cierre {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+    margin-top: 0;
+  }
+
+  .faq-question-text {
+    font-size: 18px;
+  }
+
+  #faq .faq-answer-content p {
+    padding: 16px 24px 22px;
+    font-size: 15.5px;
+  }
+}
+
+/* Movimiento: la fila se abre (grid-template-rows) y el texto entra con
+   opacidad y desplazamiento, un poquito después. */
+@media (prefers-reduced-motion: no-preference) {
+  #faq .faq-answer-wrap {
+    transition: grid-template-rows 0.42s cubic-bezier(0.22, 0.8, 0.24, 1);
+  }
+
+  #faq .faq-answer-content {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.3s ease;
+  }
+
+  #faq .faq-answer-wrap.open .faq-answer-content {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.35s ease 0.1s,
+      transform 0.45s cubic-bezier(0.22, 0.8, 0.24, 1) 0.06s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #faq .faq-answer-content {
+    opacity: 1;
+    transform: none;
+  }
+
+  #faq .faq-answer-wrap:not(.open) .faq-answer-content {
+    visibility: hidden;
   }
 }
 
@@ -604,7 +749,8 @@
   margin-right: 70px;
 }
 
-@media (max-width: 640px) {
+/* Celu y columna angosta de la compu: el botón abajo, a lo ancho. */
+@media (max-width: 640px), (min-width: 1024px) {
   .faq-cierre {
     flex-direction: column;
     align-items: stretch;
@@ -623,6 +769,16 @@
   .faq-cierre-btn {
     margin-right: 0;
     justify-content: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .faq-cierre {
+    padding: 24px 24px 22px;
+  }
+
+  .faq-cierre-titulo {
+    font-size: 34px;
   }
 }
 

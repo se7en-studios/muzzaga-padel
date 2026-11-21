@@ -13,7 +13,10 @@ export default function FaqSection() {
 
   return (
     <section id="faq" className="section-turnos">
-      <div className="container">
+      <div className="container faq-layout">
+        {/* Celu: encabezado → preguntas → cierre, uno abajo del otro. En la
+            compu el encabezado y el cierre van a la izquierda y las
+            preguntas a la derecha (grilla en herramientas-faq.css). */}
         <div className="section-header-row">
           <div>
             <span
@@ -42,21 +45,35 @@ export default function FaqSection() {
         <div className="faq-list">
           {FAQS.map((faq, idx) => {
             const isOpen = openIndex === idx;
+            const num = String(idx + 1).padStart(2, "0");
             return (
               <div key={idx} className={`faq-card${isOpen ? " active" : ""}`}>
-                <button
-                  type="button"
-                  className="faq-question-btn"
-                  onClick={() => toggleFaq(idx)}
-                  aria-expanded={isOpen}
+                <h3 className="faq-q">
+                  <button
+                    type="button"
+                    id={`faq-q-${num}`}
+                    className="faq-question-btn"
+                    onClick={() => toggleFaq(idx)}
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-a-${num}`}
+                  >
+                    <span className="faq-question-main">
+                      <span className="faq-eyebrow">
+                        <span className="faq-num">{num}</span>
+                        {faq.tema && <span className="faq-tema">{faq.tema}</span>}
+                      </span>
+                      <span className="faq-question-text">{faq.q}</span>
+                    </span>
+                    <span className="faq-icon" aria-hidden="true">{isOpen ? "−" : "+"}</span>
+                  </button>
+                </h3>
+                <div
+                  id={`faq-a-${num}`}
+                  role="region"
+                  aria-labelledby={`faq-q-${num}`}
+                  className={`faq-answer-wrap${isOpen ? " open" : ""}`}
+                  inert={!isOpen}
                 >
-                  <span className="faq-num" aria-hidden="true">
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <span className="faq-question-text">{faq.q}</span>
-                  <span className="faq-icon" aria-hidden="true">{isOpen ? "−" : "+"}</span>
-                </button>
-                <div className={`faq-answer-wrap${isOpen ? " open" : ""}`}>
                   <div className="faq-answer-content">
                     <p>{faq.a}</p>
                   </div>
