@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import Mascota from "./Mascota";
+import BeelupTutorial from "./BeelupTutorial";
 import { beelupStreamInfo, youtubeEmbedUrl } from "../lib/beelup";
 
 // Si no hay stream (o se cae), queda el loop de las canchas: el mismo video
@@ -359,6 +360,7 @@ function BeelupCartel({ href }) {
           </svg>
         </a>
         <p className="bl-url">Se abre beelup.com · elegí Muzzaga Pádel, tu cancha y el horario</p>
+        <BeelupTutorial href={href} />
       </div>
     </div>
   );
