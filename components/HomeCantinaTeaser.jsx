@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Beer, Candy, CupSoda, Pizza, ScanQrCode, ShoppingBag } from "lucide-react";
+import { Beer, Candy, CupSoda, Pizza, ShoppingBag, Smartphone } from "lucide-react";
 import { BentoPhotoCard } from "./PhotoCard";
 import Mascota from "./Mascota";
 import { productIcon } from "../lib/productIcon";
@@ -136,10 +136,10 @@ export default function HomeCantinaTeaser({ photos, featured }) {
                   pedido sale con esa entrega ya puesta. */}
               <div className="tc-pizarra-pie">
                 <p className="tc-pizarra-qr">
-                  <ScanQrCode size={22} strokeWidth={2} aria-hidden="true" />
+                  <Smartphone size={22} strokeWidth={2} aria-hidden="true" />
                   <span>
-                    <strong>¿Ya estás en el club?</strong> Escaneá el QR de tu
-                    mesa y pedí desde el celu.
+                    <strong>¿Ya estás en el club?</strong> Hacé tu pedido
+                    desde el celu con la carta online.
                   </span>
                 </p>
                 <Link href="/menu" className="tc-pizarra-cta">
