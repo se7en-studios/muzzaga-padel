@@ -1745,77 +1745,6 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   FLOTANTES: la barra "reservar" al centro y el ayudante en el margen
-   derecho (antes los dos iban en bottom/right 24px y se pisaban).
-   -------------------------------------------------------------------------- */
-.floating-live-pill {
-  right: auto;
-  left: 50%;
-  translate: -50% 0;
-}
-
-/* El ayudante vive en el margen lateral: el contenido mide 1152 px, así que
-   desde 1400 px de ancho sobran 124 px a cada lado y no pisa nada.
-   Más angosto, o con la barra inferior (celu y tablet), no se muestra. */
-.mascot-float {
-  display: none;
-}
-
-@media (min-width: 1400px) and (min-height: 600px) {
-  .mascot-float {
-    position: fixed;
-    right: 12px;
-    bottom: 20px;
-    z-index: 90;
-    width: 104px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    text-decoration: none;
-    opacity: 0;
-    transform: translateY(12px);
-    pointer-events: none;
-    transition:
-      opacity var(--t-estado) var(--ease),
-      transform var(--t-estado) var(--ease);
-  }
-
-  .mascot-float.is-visible {
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-  }
-}
-
-.mascot-float-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 28px;
-  padding: 4px 11px;
-  border-radius: 999px;
-  background: #1b1b19;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.4);
-}
-
-.mascot-float .mascota {
-  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.3));
-  transform-origin: center bottom;
-  transition: transform var(--t-estado) var(--ease);
-}
-
-@media (hover: hover) {
-  .mascot-float:hover .mascota {
-    transform: rotate(-3deg);
-  }
-}
-
-/* --------------------------------------------------------------------------
    "VER MÁS" al pie de sección (reemplaza los botones duplicados arriba/abajo)
    -------------------------------------------------------------------------- */
 .section-more {
@@ -2902,46 +2831,11 @@ html:has(#turnos) body {
 }
 
 /* ==========================================================================
-   CELU EN HORIZONTAL (poco alto): la barra de arriba y la de abajo juntas
-   tapaban casi la mitad de los 390 px. Las dos van más finas, la de abajo
-   sin nombres (los íconos se entienden solos) y la pastilla de "turnos
-   libres hoy" no aparece, porque quedaba escondida detrás de la barra.
+   CELU EN HORIZONTAL (poco alto). Las barras de arriba y de abajo y la
+   pastilla flotante se ajustan en components/Header.css, BottomNav.css y
+   Flotantes.css.
    ========================================================================== */
 @media (orientation: landscape) and (max-height: 500px) {
-  :root {
-    --bottom-pill-h: 48px;
-    --bottom-pill-gap: 6px;
-  }
-
-  .app-top-nav {
-    padding-top: 6px;
-  }
-
-  .nav-inner {
-    height: 50px;
-  }
-
-  .mobile-bottom-bar {
-    max-width: 340px;
-  }
-
-  .mobile-bottom-bar .bottom-bar-label {
-    display: none;
-  }
-
-  .mobile-bottom-bar .bottom-bar-icon,
-  .mobile-bottom-bar.is-compact:not(:has(:focus-visible)) .bottom-bar-icon {
-    transform: none;
-  }
-
-  .mobile-bottom-bar .bottom-bar-item::before {
-    inset: 4px 6px;
-  }
-
-  .floating-live-pill {
-    display: none;
-  }
-
   /* El video de las cámaras entra entero en la pantalla. */
   .camaras-grid:not(.is-double) {
     max-width: calc((100svh - 130px) * 16 / 9);

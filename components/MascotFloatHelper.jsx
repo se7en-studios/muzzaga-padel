@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import Mascota from "./Mascota";
 import { CLUB_INFO } from "../data/club";
+import "./Flotantes.css";
 
 const WHATSAPP_URL = `https://wa.me/${CLUB_INFO.phoneRaw}?text=${encodeURIComponent(
   "¡Hola Muzzaga! Quería hacer una consulta.",
@@ -15,7 +16,7 @@ const WHATSAPP_URL = `https://wa.me/${CLUB_INFO.phoneRaw}?text=${encodeURICompon
  * que repetían la barra inferior y el header.
  *
  * Solo aparece donde entra en el margen lateral sin pisar contenido (ver
- * .mascot-float en landing.css) y recién después del hero, para no competir
+ * .mascot-float en Flotantes.css) y recién después del hero, para no competir
  * con la mascota grande. En celu y tablet no está: ahí está la barra
  * inferior, que ya tiene WhatsApp.
  */

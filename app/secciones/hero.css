@@ -69,95 +69,245 @@
 }
 
 /* ==========================================================================
-   2. LAS CIFRAS DEL HERO VAN SOBRE UNA CANCHA VISTA DE ARRIBA
-   El mismo azul con césped de las tarjetas de turnos. Cada cifra cae en un
-   cuadro de la cancha: en celu son los cuatro cuadros de saque (red al
-   medio, de costado a costado); en PC la cancha se acuesta y la red queda
-   vertical entre la 2.ª y la 3.ª cifra. El hero es siempre de noche, así que
-   esto no cambia con el modo oscuro.
+   2. LAS CIFRAS DEL HERO SON EL MARCADOR DEL CLUB
+   Como el tablero de una transmisión de pádel: el nombre en blanco sobre la
+   cancha azul (con su césped y sus líneas) y el "tanteador" en una placa
+   oscura con la cifra en verde pelota. La pelotita al lado del primer
+   renglón es la del saque. En celu son cuatro renglones; en PC, dos
+   columnas con la red punteada al medio. El hero es siempre de noche, así
+   que no cambia con el modo oscuro.
    ========================================================================== */
 .hero-night .hero-stats {
   --linea-cancha: rgba(255, 255, 255, 0.62);
-  margin-top: 36px;
+  --linea-fina: rgba(255, 255, 255, 0.26);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin-top: 26px;
   padding: 7px;
   border: 1px solid #16349a;
-  border-top: 1px solid #16349a;
-  border-radius: 12px;
+  border-radius: 14px;
   background-color: #2350d6;
   background-image:
-    linear-gradient(180deg, rgba(11, 26, 77, 0.28), rgba(11, 26, 77, 0.58)),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.2), rgba(11, 26, 77, 0.56)),
     url("/img/fondo/textura-cesped.jpg");
   background-size: auto, 200px 200px;
   box-shadow:
-    0 18px 36px -18px rgba(5, 14, 46, 0.9),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 22px 40px -20px rgba(5, 14, 46, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
-/* El velo oscuro de antes ya no hace falta (el azul da el contraste): el
-   mismo pseudo pasa a ser el perímetro blanco de la cancha. */
+/* El velo de 5.1 (landing.css) pasa a ser el perímetro blanco. */
 .hero-night .hero-stats::before {
   inset: 7px;
   z-index: 0;
   border: 2px solid var(--linea-cancha);
-  border-radius: 2px;
+  border-radius: 3px;
   background: none;
   -webkit-mask-image: none;
   mask-image: none;
 }
 
+/* Cada cifra es un renglón del tablero: nombre a la izquierda, placa a la
+   derecha. Se apaga el subgrid de landing.css (era para 4 columnas). */
 .hero-night .hero-stat,
-.hero-night .hero-stat:first-child {
+.hero-night .hero-stat:first-child,
+.hero-night .hero-stat:nth-child(n) {
   position: relative;
   z-index: 1;
-  padding: 16px 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 46px;
+  padding: 6px 10px 6px 16px;
   border: 0;
+  background: none;
+}
+
+/* Líneas finas entre renglones (las de saque). */
+.hero-night .hero-stat + .hero-stat {
+  border-top: 1px solid var(--linea-fina);
 }
 
 .hero-night .hero-stat dt {
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.hero-night .hero-stat dd {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: #fff;
-  font-size: clamp(32px, 3.4vw, 46px);
-  text-shadow: 0 2px 6px rgba(5, 14, 46, 0.55);
+  text-shadow: 0 1px 3px rgba(5, 14, 46, 0.6);
 }
 
-/* El naranja sobre azul no llega a 3:1: el acento pasa al verde pelota. */
+/* La placa del tanteador: dos mitades (como los números que se dan vuelta)
+   y la cifra en verde pelota, con un brillo de LED. */
+.hero-night .hero-stat dd,
 .hero-night .hero-stat:nth-child(odd) dd {
+  position: relative;
+  flex-shrink: 0;
+  min-width: 2.3em;
+  margin: 0;
+  padding: 0.16em 0.32em 0.1em;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #141c3f 0 50%, #0a1131 50% 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 3px 0 rgba(5, 14, 46, 0.55),
+    0 8px 14px -8px rgba(5, 14, 46, 0.9);
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
   color: #d7f03a;
+  text-shadow: 0 0 12px rgba(215, 240, 58, 0.4);
+  font-variant-numeric: tabular-nums;
 }
 
+/* La rayita del medio de la placa. */
+.hero-night .hero-stat dd::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* La palabra ("Todo el año") va en blanco y un poco más chica: entra en
+   la placa sin ensanchar el tablero. */
 .hero-night .hero-stat dd.hero-stat-word {
-  font-size: clamp(22px, 2.1vw, 28px);
+  font-size: 19px;
+  line-height: 1.2;
+  padding: 0.28em 0.5em 0.22em;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: none;
 }
 
-/* PC: fondo | saque ‖ red ‖ saque | fondo */
+/* La pelota del saque, entre el nombre y el tanteador del primer renglón. */
+.hero-night .hero-stat:first-child dd::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 9px);
+  width: 11px;
+  height: 11px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 2px 3px rgba(5, 14, 46, 0.6);
+}
+
+/* La red: entre el 2.º y el 3.º renglón, punteada, con un poste en cada
+   punta apoyado en el perímetro. */
+.hero-night .hero-stat:nth-child(3) {
+  border-top: 0;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.85) 0 3px, transparent 3px 7px)
+    left top / 100% 3px no-repeat;
+}
+
+.hero-night .hero-stat:nth-child(3)::before,
+.hero-night .hero-stat:nth-child(3)::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.hero-night .hero-stat:nth-child(3)::before {
+  left: -4px;
+}
+
+.hero-night .hero-stat:nth-child(3)::after {
+  right: -4px;
+}
+
+@media (max-width: 380px) {
+  .hero-night .hero-stat dt {
+    font-size: 14.5px;
+  }
+}
+
+/* PC: dos columnas, la red vertical entre las dos. */
 @media (min-width: 901px) {
-  /* El precio flotante se mete sobre el borde de la cancha: la mascota y
-     sus tarjetas van arriba (antes la cancha transparente no tapaba nada). */
+  /* Que el marcador entre entero en una pantalla de 900 px de alto: el
+     hero termina en el borde de abajo (antes se pasaba 78 px) y el texto
+     arranca un poco más arriba. */
+  .hero-night {
+    min-height: min(100svh, 920px);
+    padding-top: calc(48px + var(--hero-bajo-header));
+    padding-bottom: 28px;
+  }
+
+  .hero-night .live-weather-radar-bar {
+    margin-bottom: 20px;
+  }
+
+  .hero-night .hero-night-title {
+    margin-bottom: 18px;
+  }
+
+  .hero-night .hero-night-lede {
+    margin-bottom: 24px;
+  }
+
+  .hero-night .hero-night-ctas {
+    margin-bottom: 18px;
+  }
+
+  /* El precio flotante se mete sobre el borde del tablero. */
   .hero-night .hero-night-visual {
     z-index: 2;
   }
 
-  .hero-night .hero-stat:nth-child(2),
-  .hero-night .hero-stat:nth-child(4) {
-    border-left: 2px solid var(--linea-cancha);
+  .hero-night .hero-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 24px;
+    max-width: 680px;
   }
 
-  /* La red: punteada y más gruesa, como la de las tarjetas de turnos. */
-  .hero-night .hero-stat:nth-child(3) {
-    background: repeating-linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.85) 0 3px,
-        transparent 3px 7px
-      )
+  .hero-night .hero-stat,
+  .hero-night .hero-stat:first-child,
+  .hero-night .hero-stat:nth-child(n) {
+    min-height: 58px;
+    padding: 8px 14px 8px 20px;
+    border-top: 0;
+  }
+
+  .hero-night .hero-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--linea-fina);
+  }
+
+  .hero-night .hero-stat:nth-child(even) {
+    padding-left: 22px;
+    background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0 3px, transparent 3px 7px)
       left top / 3px 100% no-repeat;
   }
 
-  /* Postes de la red, arriba y abajo, apoyados en el perímetro. */
+  .hero-night .hero-stat:nth-child(3) {
+    background: none;
+  }
+
   .hero-night .hero-stat:nth-child(3)::before,
   .hero-night .hero-stat:nth-child(3)::after {
+    content: none;
+  }
+
+  /* Postes arriba y abajo de la red. */
+  .hero-night .hero-stat:nth-child(2)::before,
+  .hero-night .hero-stat:nth-child(4)::after {
     content: "";
     position: absolute;
     left: -3px;
@@ -168,89 +318,27 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   }
 
-  .hero-night .hero-stat:nth-child(3)::before {
+  .hero-night .hero-stat:nth-child(2)::before {
     top: -4px;
   }
 
-  .hero-night .hero-stat:nth-child(3)::after {
+  .hero-night .hero-stat:nth-child(4)::after {
     bottom: -4px;
   }
-}
 
-/* Celu y tablet: dos cuadros arriba, red, dos abajo. */
-@media (max-width: 900px) {
-  .hero-night .hero-stats {
-    gap: 0;
-    margin-top: 26px;
+  .hero-night .hero-stat dt {
+    font-size: 16px;
+    letter-spacing: 0.02em;
   }
 
-  .hero-night .hero-stat,
-  .hero-night .hero-stat:first-child {
-    padding: 14px 14px 12px;
-  }
-
-  /* Línea central de saque */
-  .hero-night .hero-stat:nth-child(even) {
-    border-left: 2px solid var(--linea-cancha);
-  }
-
-  /* La red, de lado a lado entre la fila de arriba y la de abajo. */
-  .hero-night .hero-stat:nth-child(n + 3) {
-    padding-top: 14px;
-    background: repeating-linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.85) 0 3px,
-        transparent 3px 7px
-      )
-      left top / 100% 3px no-repeat;
-  }
-
-  .hero-night .hero-stat:nth-child(3)::before,
-  .hero-night .hero-stat:nth-child(4)::after {
-    content: "";
-    position: absolute;
-    top: -3px;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  }
-
-  .hero-night .hero-stat:nth-child(3)::before {
-    left: -4px;
-  }
-
-  .hero-night .hero-stat:nth-child(4)::after {
-    right: -4px;
-  }
-
-  .hero-night .hero-stat dd {
-    font-size: clamp(30px, 8.6vw, 40px);
+  .hero-night .hero-stat dd,
+  .hero-night .hero-stat:nth-child(odd) dd {
+    font-size: 32px;
   }
 
   .hero-night .hero-stat dd.hero-stat-word {
-    font-size: clamp(20px, 5.6vw, 26px);
+    font-size: 21px;
   }
-}
-
-/* Una pelota quieta en el último cuadro: detalle, no información. */
-.hero-night .hero-stat:nth-child(4) {
-  padding-right: 34px;
-}
-
-.hero-night .hero-stat:nth-child(4) > dd::after {
-  content: "";
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
-  box-shadow:
-    0 3px 4px rgba(5, 14, 46, 0.55),
-    inset -1px -2px 2px rgba(0, 0, 0, 0.18);
 }
 
 /* ==========================================================================
@@ -330,5 +418,154 @@
   100% {
     opacity: 1;
     transform: translateX(16px);
+  }
+}
+
+/* ==========================================================================
+   4. TÍTULO: RITMO Y ENTRADA
+   Cada renglón sube desde una "ranura" (clip-path + transform: nada de
+   layout), uno atrás del otro. El recorte final deja lugar arriba para el
+   pique de la pelota del punto y para los acentos.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-night .hero-line {
+    animation: heroLineaSube 0.8s cubic-bezier(0.2, 0.75, 0.15, 1) both;
+  }
+
+  .hero-night .hero-line:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+
+  .hero-night .hero-line:nth-child(2) {
+    animation-delay: 0.16s;
+  }
+
+  .hero-night .hero-line:nth-child(3) {
+    animation-delay: 0.28s;
+  }
+}
+
+/* El recorte acompaña al movimiento en sentido contrario: la ventana queda
+   quieta en la pantalla y el texto aparece desde su base. */
+@keyframes heroLineaSube {
+  from {
+    transform: translateY(105%);
+    clip-path: inset(-105% -0.6em 105% -0.3em);
+  }
+  to {
+    transform: none;
+    clip-path: inset(-1.6em -0.6em -0.3em -0.3em);
+  }
+}
+
+/* Celu: el título ocupa todo el ancho (antes quedaba a dos tercios) y más
+   apretado, como un cartel. */
+@media (max-width: 768px) {
+  .hero-night .hero-night-title {
+    /* El renglón más largo ("Canchas de pádel") mide ~6,9em: a 12,9vw
+       entra justo en una línea de 360 a 768 px. */
+    font-size: clamp(2.5rem, 12.9vw, 3.6rem);
+    line-height: 0.9;
+    letter-spacing: -0.005em;
+    margin-bottom: 16px;
+  }
+
+  .hero-night .hero-kicker {
+    margin-bottom: 12px;
+    letter-spacing: 0.14em;
+  }
+
+  /* El estado del club como píldora alineada con el texto, no una barra de
+     lado a lado. */
+  .hero-night .live-weather-radar-bar {
+    width: auto;
+    align-self: flex-start;
+    margin-bottom: 18px;
+  }
+}
+
+/* ==========================================================================
+   5. PRÓXIMO TURNO LIBRE, PEGADO AL BOTÓN (CELU)
+   La tarjeta flotante de turnos en vivo queda lejos en el celu (debajo del
+   marcador): acá va el mismo dato en un renglón debajo de "Reservar turno".
+   En PC sigue la tarjeta al lado de la mascota.
+   ========================================================================== */
+.hero-next-slot {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hero-night .hero-night-visual .hero-live {
+    display: none;
+  }
+
+  .hero-night .hero-night-ctas {
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .hero-next-slot {
+    display: inline-flex;
+    align-self: center;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    min-height: 36px;
+    padding: 4px 6px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+  }
+
+  .hero-next-slot-ball {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+    box-shadow: 0 0 0 3px rgba(215, 240, 58, 0.18);
+  }
+
+  .hero-next-slot.is-busy .hero-next-slot-ball {
+    background: #ffb07a;
+    box-shadow: 0 0 0 3px rgba(232, 114, 42, 0.2);
+  }
+
+  .hero-next-slot.is-loading .hero-next-slot-text {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .hero-next-slot-arrow {
+    color: #d7f03a;
+    transition: transform var(--t-hover) var(--ease);
+  }
+
+  .hero-next-slot:active .hero-next-slot-arrow {
+    transform: translateX(3px);
+  }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: no-preference) {
+  /* Con turnos libres la pelotita late (solo escala y opacidad). */
+  .hero-next-slot.is-free .hero-next-slot-ball {
+    animation: hintPelotaLate 2.2s var(--ease) infinite;
+  }
+}
+
+@keyframes hintPelotaLate {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.8;
   }
 }
