@@ -27,6 +27,8 @@
 #cantina .cf-precio {
   display: inline-grid;
   justify-items: end;
+  /* Crece hacia la izquierda: a la derecha está el borde del renglón. */
+  transform-origin: 100% 50%;
 }
 
 #cantina .cf-precio > span {

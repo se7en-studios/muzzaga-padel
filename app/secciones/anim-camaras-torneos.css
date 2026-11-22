@@ -72,6 +72,8 @@
 /* Torneos: caracteres del marcador de paletas y la cuenta regresiva. */
 .tn-flip {
   display: inline-block;
+  /* Un espacio solo en un inline-block se colapsaría ("en12días"). */
+  white-space: pre;
 }
 
 .tn-cuenta {
