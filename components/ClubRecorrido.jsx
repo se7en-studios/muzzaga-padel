@@ -308,12 +308,15 @@ export default function ClubRecorrido() {
             <span key={step} className="club-tour-kick">
               {stop.kick}
             </span>
-            <ol className="club-tour-dots" aria-hidden="true">
-              {STOPS.map((s, i) => (
-                <li key={s.title} className={i === step ? "on" : ""} />
-              ))}
-            </ol>
+            <a className="club-tour-link" href="/recorrido">
+              Recorrer el club →
+            </a>
           </div>
+          <ol className="club-tour-dots" aria-hidden="true">
+            {STOPS.map((s, i) => (
+              <li key={s.title} className={i === step ? "on" : ""} />
+            ))}
+          </ol>
           <div key={step} className="club-tour-card-body">
             <h2 className="club-tour-title">{stop.title}</h2>
             <p className="club-tour-text">{stop.text}</p>
@@ -329,9 +332,6 @@ export default function ClubRecorrido() {
               rel="noopener noreferrer"
             >
               <WhatsAppLogo color="currentColor" /> WhatsApp
-            </a>
-            <a className="club-tour-link" href="/recorrido">
-              Recorrer el club →
             </a>
           </div>
         </div>

@@ -215,7 +215,7 @@
   z-index: 2;
   left: var(--ct-edge);
   bottom: clamp(20px, 6vh, 64px);
-  width: min(452px, calc(100% - 32px));
+  width: min(410px, calc(100% - 32px));
   overflow: hidden;
   border-radius: 18px;
   border: 1px solid var(--ct-glass-edge);
@@ -233,11 +233,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 9px 18px 8px;
+  min-height: 40px;
+  padding: 0 14px 0 18px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(11, 26, 77, 0.25)),
     var(--ct-blue) url(/img/fondo/textura-cesped.jpg) center / 260px 260px;
-  border-bottom: 2px solid var(--ct-line);
 }
 
 .club-tour-kick {
@@ -266,29 +266,27 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
+/* progreso: la línea blanca de la cancha, en tramos; el actual, amarillo pelota */
 .club-tour-dots {
-  flex: none;
   display: flex;
-  gap: 4px;
+  gap: 3px;
   margin: 0;
   padding: 0;
   list-style: none;
+  background: var(--ct-blue-deep);
 }
 
 .club-tour-dots li {
   position: relative;
-  width: 14px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.32);
-  overflow: hidden;
+  flex: 1;
+  height: 3px;
+  background: var(--ct-line);
 }
 
 .club-tour-dots li::after {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
   background: #d7f03a;
   opacity: 0;
 }
@@ -325,7 +323,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
+  gap: 8px;
   padding: 14px 18px 16px;
 }
 
@@ -340,20 +338,25 @@
   border-color: var(--ct-orange);
 }
 
+/* "Recorrer el club →" va en la cabecera: alto de toque completo (40 px de la
+   cabecera) sin sumarle un renglón a la tarjeta */
 .club-tour-link {
+  flex: none;
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  align-self: stretch;
+  padding: 0 4px;
   color: #fff;
   font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   text-decoration: underline;
-  text-decoration-color: rgba(215, 240, 58, 0.8);
+  text-decoration-color: rgba(215, 240, 58, 0.85);
   text-decoration-thickness: 2px;
-  text-underline-offset: 5px;
+  text-underline-offset: 4px;
+  text-shadow: 0 1px 2px rgba(5, 12, 36, 0.5);
   white-space: nowrap;
 }
 
@@ -363,7 +366,7 @@
 
 .club-tour-link:focus-visible {
   outline: 2px solid #fff;
-  outline-offset: 2px;
+  outline-offset: -2px;
   border-radius: 4px;
 }
 
@@ -419,10 +422,12 @@
     border-radius: 16px;
   }
   .club-tour-card-head {
-    padding: 7px 14px 6px;
+    gap: 8px;
+    padding: 0 10px 0 14px;
   }
   .club-tour-kick {
     font-size: 0.82rem;
+    letter-spacing: 0.12em;
   }
   .club-tour-card-body {
     padding: 10px 14px 0;
@@ -436,20 +441,21 @@
     line-height: 1.4;
   }
   /* los dos botones y el enlace en un renglón; si no entra, el enlace baja */
+  /* los dos botones mitad y mitad */
   .club-tour-actions {
-    gap: 2px 6px;
-    padding: 10px 12px 10px 14px;
+    flex-wrap: nowrap;
+    padding: 10px 14px 12px;
   }
   .club-tour-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
     padding: 0 10px;
-    font-size: 0.78rem;
-    gap: 5px;
+    font-size: 0.82rem;
+    gap: 6px;
   }
   .club-tour-link {
-    margin-left: 2px;
     font-size: 0.84rem;
-    letter-spacing: 0.01em;
-    text-underline-offset: 4px;
+    letter-spacing: 0.04em;
   }
   .club-tour-scroll {
     display: none;
