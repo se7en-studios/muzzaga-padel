@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLightbox } from "./LightboxProvider";
@@ -7,6 +8,7 @@ import { CLUB_INFO } from "../data/club";
 import Mascota from "./Mascota";
 import { formatARS } from "../lib/format";
 import { tournamentDateText } from "../lib/tournament";
+import { useVista } from "../lib/useVista";
 
 // Fotos y textos: Configuración → Sitio web → Torneos en el inicio.
 const FEATURED_SLOTS = [
@@ -47,6 +49,30 @@ function medalla(caption = "") {
 }
 const PUESTO = { oro: "1°", plata: "2°", bronce: "3°" };
 
+/** Caracteres sueltos para el marcador de paletas (cada uno da la vuelta). */
+function Paletas({ texto }) {
+  return [...texto].map((ch, i) => (
+    <span key={i} className="tn-flip" style={{ "--i": i }}>
+      {ch}
+    </span>
+  ));
+}
+
+/** Días que faltan para el torneo (en el navegador: la página está cacheada). */
+function useCuenta(iso) {
+  const [txt, setTxt] = useState("");
+  useEffect(() => {
+    if (!iso) return;
+    const [y, m, d] = iso.split("-").map(Number);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const dias = Math.round((new Date(y, m - 1, d) - hoy) / 86400000);
+    if (dias < 0 || dias > 99) return;
+    setTxt(dias === 0 ? "hoy" : dias === 1 ? "mañana" : `en ${dias} días`);
+  }, [iso]);
+  return txt;
+}
+
 /** Llave decorativa: cuartos → semis → final → copa. Solo adorno (compu). */
 function Llave() {
   return (
@@ -81,6 +107,15 @@ export default function HomeTorneosTeaser({ photos, tournament }) {
     : "";
   const day = iso ? iso.slice(8, 10) : "";
   const month = iso ? MESES[Number(iso.slice(5, 7)) - 1] : "";
+  const cuenta = useCuenta(tournament ? iso : "");
+  const sectionRef = useRef(null);
+  const aficheRef = useRef(null);
+  const honorRef = useRef(null);
+  const podioRef = useRef(null);
+  useVista(sectionRef, 0);
+  useVista(aficheRef, 0.45);
+  useVista(honorRef, 0.9);
+  useVista(podioRef, 0.35);
   const parejas = tournament
     ? tournament.categories.reduce((n, c) => n + (c.pairs || 0), 0)
     : 0;
@@ -90,6 +125,7 @@ export default function HomeTorneosTeaser({ photos, tournament }) {
       id="torneos"
       className="section-turnos"
       style={{ background: "var(--bg-surface)" }}
+      ref={sectionRef}
     >
       <div className="container">
         <div className="section-header-row tn-cabecera">
@@ -120,6 +156,7 @@ export default function HomeTorneosTeaser({ photos, tournament }) {
         <article
           className={`tn-afiche tc-cartel ${tournament ? "is-abierto" : "is-pronto"}`}
           aria-labelledby="tn-afiche-titulo"
+          ref={aficheRef}
         >
           <span className="tn-afiche-fondo" aria-hidden="true">
             Torneo
@@ -129,12 +166,24 @@ export default function HomeTorneosTeaser({ photos, tournament }) {
           <p className="tn-afiche-kicker">
             <i aria-hidden="true" />
             {tournament ? "Inscripción abierta" : "Próximo torneo"}
+            {/* Cuenta regresiva solo con fecha real; aparece al final de la
+                línea (no corre nada de lugar). */}
+            {cuenta && (
+              <span className="tn-cuenta">
+                <span aria-hidden="true">
+                  · <Paletas texto={cuenta} />
+                </span>
+                <span className="sr-only">, {cuenta}</span>
+              </span>
+            )}
           </p>
 
           <div className="tn-afiche-main">
             <div className="tn-led" aria-hidden="true">
               <span className="tn-led-label">Fecha</span>
-              <strong className="tn-led-num">{day || "¿?"}</strong>
+              <strong className="tn-led-num">
+                <Paletas texto={day || "¿?"} />
+              </strong>
               <span className="tn-led-mes">{day ? month : "Pronto"}</span>
             </div>
             <div className="tn-afiche-cabeza">
@@ -195,7 +244,7 @@ export default function HomeTorneosTeaser({ photos, tournament }) {
 
         {/* CUADRO DE HONOR: tira que se desliza en el celu; cada ganador con
             su medalla y el marco del color del puesto (según la leyenda). */}
-        <div className="tn-honor-cabeza">
+        <div className="tn-honor-cabeza" ref={honorRef}>
           <h3 className="tn-honor">
             <span className="tn-honor-copa" aria-hidden="true">
               🏆
@@ -209,13 +258,18 @@ export default function HomeTorneosTeaser({ photos, tournament }) {
         </div>
 
         {featured.length > 0 && (
-          <ul className="tn-podio" aria-label="Fotos de ganadores y jugadores">
-            {featured.map((photo) => {
+          <ul
+            className="tn-podio"
+            aria-label="Fotos de ganadores y jugadores"
+            ref={podioRef}
+          >
+            {featured.map((photo, i) => {
               const medal = medalla(photo.caption);
               return (
                 <li
                   key={photo.id}
                   className={`tn-foto${medal ? ` is-${medal}` : ""}`}
+                  style={{ "--i": i }}
                 >
                   <button
                     type="button"

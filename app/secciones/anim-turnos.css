@@ -1,2 +1,473 @@
 /* Animaciones de la sección (turnos). Solo transform/opacity, dentro de
-   prefers-reduced-motion: no-preference. */
+   prefers-reduced-motion: no-preference.
+
+   Momentos (con la lógica en components/BookingCalendar.jsx):
+   1. Marcador del encabezado: cuando se ve, la pelota pica y el tablero da
+      vuelta como las fichas de un marcador de transmisión.
+   2. Tira de días: una pelota viaja picando por debajo hasta el día elegido,
+      sobre una línea de cal.
+   3. Grilla: al cambiar de día o de cancha, las canchas entran picando fila
+      por fila (cascada corta, con aplaste al tocar el piso).
+   4. Turno elegido (compu): la pelota cruza la red y la cancha acusa el golpe
+      con un anillo de impacto. En el celu el cajón tapa la grilla, así que
+      ahí no se anima nada detrás del fondo desenfocado.
+   5. Cajón "Confirmar tu turno": entra como un saque (la pelota del cartel
+      se tira para arriba), el resumen baja como una ficha y el precio es un
+      tanteador que da vuelta cifra por cifra cuando cambia la franja.
+   ========================================================================== */
+
+/* ---- Tira de días: pelota + línea de cal debajo del día elegido ---------- */
+/* Quieta (y sin transición) si el celu pide reducir movimiento. Hasta que el
+   JS la ubica no se ve: sin JS queda la pelota de siempre en el día. */
+.booking-dates {
+  position: relative;
+}
+
+.booking-dias-indicador {
+  position: absolute;
+  left: 0;
+  bottom: 2px;
+  width: 30px;
+  height: 14px;
+  margin-left: -15px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(var(--x, 0px));
+}
+
+.booking-dias-indicador[data-listo] {
+  opacity: 1;
+}
+
+/* La línea de cal (fondo de la tira, no se anima). */
+.booking-dias-indicador::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: #2350d6;
+  opacity: 0.55;
+}
+
+.booking-dias-pelota {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--turnos-costura), var(--turnos-pelota);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  transform-origin: 50% 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .booking-dias-indicador::before {
+    background: #e4fb5a;
+    opacity: 0.4;
+  }
+}
+
+/* La pelota ya vive debajo de la tira: la del día elegido sobra. */
+.booking-dates[data-indicador] .booking-date-btn.active::after {
+  display: none;
+}
+
+/* La tira de días no le pone el giro de carrusel al indicador. */
+.booking-dates > .booking-dias-indicador {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ---- 1. Marcador del encabezado ------------------------------------- */
+  /* Antes picaba al cargar la página, fuera de pantalla: ahora espera a
+     que se vea (clase puesta por un IntersectionObserver). */
+  #turnos .price-tag::before {
+    animation: none;
+  }
+
+  #turnos.turnos-marcador-vivo .price-tag::before {
+    animation: turnosPique 900ms cubic-bezier(0.3, 0.6, 0.4, 1) 120ms both;
+  }
+
+  #turnos .price-tag {
+    perspective: 500px;
+  }
+
+  #turnos.turnos-marcador-vivo .price-tag-main,
+  #turnos.turnos-marcador-vivo .price-tag-sub {
+    transform-origin: 50% 50%;
+    animation: turnosFichaRefresca 620ms cubic-bezier(0.3, 0.7, 0.3, 1) 260ms;
+  }
+
+  #turnos.turnos-marcador-vivo .price-tag-sub {
+    animation-delay: 380ms;
+  }
+
+  /* El punto "en vivo" no late cuando la sección no está en pantalla. */
+  #turnos.turnos-fuera .section-header-row .badge-linear::after {
+    animation-play-state: paused;
+  }
+
+  /* ---- 2. Tira de días ------------------------------------------------- */
+  .booking-dias-indicador[data-listo] {
+    transition: transform 420ms cubic-bezier(0.45, 0, 0.25, 1);
+  }
+
+  /* Cada día nuevo vuelve a montar la pelota: pica dos veces mientras viaja
+     y se aplasta al caer. */
+  .booking-dias-indicador[data-listo] .booking-dias-pelota {
+    animation: turnosPelotaViaja 560ms linear both;
+  }
+
+  /* ---- 3. Grilla en cascada -------------------------------------------- */
+  .booking-matrix-container.is-cascada .booking-matrix-row > * {
+    --col: 0;
+    transform-origin: 50% 100%;
+    animation: turnosPicaFila 520ms cubic-bezier(0.3, 0.7, 0.4, 1)
+      calc(min(var(--fila, 0), 9) * 45ms + var(--col) * 40ms) both;
+  }
+
+  .booking-matrix-container.is-cascada .booking-matrix-row > :nth-child(2) {
+    --col: 1;
+  }
+
+  .booking-matrix-container.is-cascada .booking-matrix-row > :nth-child(3) {
+    --col: 2;
+  }
+
+  .booking-matrix-container.is-cascada .booking-matrix-row > :nth-child(n + 4) {
+    --col: 3;
+  }
+
+  /* ---- Filtro de canchas: la pelota de la pestaña cae al elegirla. ----- */
+  .booking-court-tab.active::before {
+    animation: turnosPique 520ms cubic-bezier(0.3, 0.6, 0.4, 1) both;
+  }
+
+  /* ---- Día cerrado: la pelota cae en la cancha vacía. ------------------ */
+  .booking-empty-closed::before {
+    animation: turnosPique 800ms cubic-bezier(0.3, 0.6, 0.4, 1) both;
+  }
+
+  /* ---- 5. Cajón "Confirmar tu turno" ----------------------------------- */
+  .booking-slot-summary-card {
+    transform-origin: 50% 0;
+    animation: turnosFichaBaja 520ms cubic-bezier(0.25, 0.8, 0.3, 1.1) 140ms both;
+  }
+
+  .booking-badge-3d {
+    transform-origin: 50% 100%;
+    animation: turnosSaquePelota 760ms cubic-bezier(0.3, 0.6, 0.4, 1) 200ms both;
+  }
+
+  .summary-price-tag {
+    perspective: 300px;
+  }
+
+  .summary-price-tag .tanteo-ficha {
+    display: inline-block;
+    backface-visibility: hidden;
+    animation: turnosTanteo 460ms cubic-bezier(0.3, 0.7, 0.3, 1.25)
+      calc(260ms + var(--i, 0) * 45ms) both;
+  }
+
+  .booking-summary-hours {
+    transform-origin: 0 50%;
+    animation: turnosHoraCambia 380ms cubic-bezier(0.3, 0.7, 0.3, 1) 180ms both;
+  }
+}
+
+/* Celu y tablet: el cajón sube como un saque (llega y se asienta). */
+@media (prefers-reduced-motion: no-preference) and (max-width: 768px) {
+  .booking-drawer-backdrop .booking-form {
+    transform-origin: 50% 100%;
+    animation: turnosSaqueHoja 460ms cubic-bezier(0.2, 0.85, 0.3, 1) both;
+  }
+
+  /* El turno elegido queda detrás del fondo desenfocado: animar ahí solo
+     obliga a recalcular el desenfoque en celus humildes. */
+  .booking-matrix-row .booking-slot.selected::after {
+    animation: none;
+  }
+}
+
+/* Compu: el formulario aparece al lado de la grilla. Entra desde abajo; la
+   pelota elegida cruza la red y la cancha acusa el golpe. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 769px) {
+  .booking-drawer-backdrop .booking-form {
+    animation: turnosFormEntra 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+
+  /* La pseudo-pelota ocupa todo el ancho de la cancha (alto de una pelota)
+     y la pelota se dibuja de fondo: así el translate en % se mide contra la
+     cancha y la pelota arranca del otro lado de la red en cualquier ancho. */
+  .booking-matrix-container .booking-matrix-row .booking-slot.selected::after {
+    left: 0;
+    width: 100%;
+    height: 14px;
+    margin-top: -7px;
+    border-radius: 0;
+    box-shadow: none;
+    background:
+      radial-gradient(circle 7px at 50% 50%, #f6ff9e 0, #d7f03a 3.5px, #a6c219 6.2px, rgba(0, 0, 0, 0.25) 6.6px, transparent 7px)
+      38% 0 / 14px 14px no-repeat;
+    transform-origin: 38% 100%;
+    animation: turnosCruzaRed 620ms cubic-bezier(0.35, 0.1, 0.4, 1) both;
+  }
+
+  /* Anillo de impacto donde pica. */
+  .booking-matrix-container .booking-matrix-row .booking-slot.selected::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 38%;
+    width: 34px;
+    height: 34px;
+    margin: -17px 0 0 -10px;
+    border-radius: 50%;
+    border: 2px solid rgba(228, 251, 90, 0.95);
+    pointer-events: none;
+    opacity: 0;
+    animation: turnosImpacto 460ms cubic-bezier(0.2, 0.7, 0.3, 1) 420ms both;
+  }
+
+  /* La cancha acusa el golpe (sin relleno: arranca y termina en 1). */
+  .booking-matrix-container .booking-matrix-row > .booking-slot.selected {
+    animation: turnosGolpe 360ms ease-out 400ms;
+  }
+
+  .booking-matrix-container.is-cascada .booking-matrix-row > .booking-slot.selected {
+    animation:
+      turnosPicaFila 520ms cubic-bezier(0.3, 0.7, 0.4, 1)
+        calc(min(var(--fila, 0), 9) * 45ms + var(--col) * 40ms) both,
+      turnosGolpe 360ms ease-out 400ms;
+  }
+
+  .booking-matrix-row .booking-slot.selected .slot-badge {
+    animation: turnosBadgePop 360ms cubic-bezier(0.3, 1.5, 0.5, 1) 440ms both;
+  }
+}
+
+/* ==========================================================================
+   KEYFRAMES (propiedades sueltas translate/scale/rotate: no pisan los
+   transform de hover que ya tienen los elementos).
+   ========================================================================== */
+@keyframes turnosFichaRefresca {
+  0% {
+    rotate: x 0deg;
+  }
+  40% {
+    rotate: x 88deg;
+    opacity: 0.4;
+  }
+  100% {
+    rotate: x 0deg;
+    opacity: 1;
+  }
+}
+
+@keyframes turnosPelotaViaja {
+  0% {
+    translate: 0 0;
+    scale: 1;
+  }
+  10% {
+    scale: 1.25 0.75;
+  }
+  35% {
+    translate: 0 -15px;
+    scale: 0.95 1.05;
+  }
+  62% {
+    translate: 0 0;
+    scale: 1.3 0.7;
+  }
+  80% {
+    translate: 0 -6px;
+    scale: 1;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes turnosPicaFila {
+  0% {
+    opacity: 0;
+    translate: 0 -16px;
+    scale: 0.96 1.03;
+  }
+  /* Sin opacidad al final: lo ocupado y lo pasado conservan su gris. */
+  50% {
+    translate: 0 0;
+    scale: 1.02 0.95;
+  }
+  78% {
+    translate: 0 -3px;
+    scale: 1;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes turnosCruzaRed {
+  0% {
+    opacity: 0;
+    translate: 34% 0;
+    scale: 0.7;
+  }
+  12% {
+    opacity: 1;
+  }
+  40% {
+    translate: 16% -24px;
+    scale: 0.9;
+  }
+  68% {
+    translate: 0 0;
+    scale: 1.35 0.65;
+  }
+  84% {
+    translate: 0 -7px;
+    scale: 1;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes turnosImpacto {
+  0% {
+    opacity: 0.95;
+    scale: 0.3;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.9;
+  }
+}
+
+@keyframes turnosGolpe {
+  0% {
+    scale: 1;
+  }
+  35% {
+    scale: 0.975;
+  }
+  70% {
+    scale: 1.012;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+@keyframes turnosBadgePop {
+  0% {
+    scale: 0.6;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+@keyframes turnosSaqueHoja {
+  0% {
+    translate: 0 100%;
+  }
+  72% {
+    translate: 0 0;
+    scale: 1 1;
+  }
+  86% {
+    scale: 1 0.988;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes turnosFormEntra {
+  0% {
+    opacity: 0;
+    translate: 0 22px;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes turnosFichaBaja {
+  0% {
+    opacity: 0;
+    rotate: x -70deg;
+  }
+  100% {
+    opacity: 1;
+    rotate: x 0deg;
+  }
+}
+
+@keyframes turnosSaquePelota {
+  0% {
+    translate: 0 0;
+    scale: 1;
+  }
+  12% {
+    translate: 0 0;
+    scale: 1.2 0.8;
+  }
+  45% {
+    translate: 0 -22px;
+    scale: 0.95 1.05;
+    rotate: 200deg;
+  }
+  75% {
+    translate: 0 0;
+    scale: 1.2 0.82;
+    rotate: 360deg;
+  }
+  88% {
+    translate: 0 -4px;
+    scale: 1;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+    rotate: 360deg;
+  }
+}
+
+@keyframes turnosTanteo {
+  0% {
+    opacity: 0;
+    rotate: x -95deg;
+  }
+  100% {
+    opacity: 1;
+    rotate: x 0deg;
+  }
+}
+
+@keyframes turnosHoraCambia {
+  0% {
+    opacity: 0;
+    rotate: x 80deg;
+  }
+  100% {
+    opacity: 1;
+    rotate: x 0deg;
+  }
+}

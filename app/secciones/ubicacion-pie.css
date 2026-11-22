@@ -586,24 +586,22 @@
 }
 
 /* ==========================================================================
-   PIE: la pelota pica sobre la última "A" del nombre gigante
-   Cierre con algo de pádel: cuando las letras terminan de subir, cae una
-   pelota, da dos piques y queda apoyada. Va adentro de la última letra, así
-   que sube con ella. Solo transform (liviano para celus viejos).
+   PIE: la pelota que recorre el nombre gigante
+   Cierre con algo de pádel: cuando las letras terminan de subir, entra una
+   pelota, pica de letra en letra y queda apoyada sobre la última "A". Va en
+   la fila de letras (no adentro de una letra, que tiene sombra con filter):
+   su lugar de descanso se mide en em contra el borde derecho de la fila.
+   El recorrido está en anim-faq-ubicacion.css.
    ========================================================================== */
-.footer-wordmark-letter:last-child {
-  position: relative;
-}
-
 .footer-wordmark-ball {
   position: absolute;
-  /* Apoyada en la punta plana de la A: la caja de la letra arranca un poco
-     arriba del dibujo, por eso el 0.11em. */
-  left: 60%;
+  /* Apoyada en la punta plana de la A (60 % de su ancho): la caja de la
+     letra arranca un poco arriba del dibujo, por eso el 0.11em. */
+  right: 0.225em;
   bottom: calc(100% - 0.11em);
   width: clamp(22px, 0.15em, 52px);
   height: clamp(22px, 0.15em, 52px);
-  translate: -50% 0;
+  translate: 50% 0;
   border-radius: 50%;
   background:
     radial-gradient(circle at -18% 50%, transparent 52%, rgba(255, 255, 255, 0.9) 54%, transparent 60%),
@@ -614,46 +612,8 @@
   transform-origin: 50% 100%;
 }
 
-/* Hasta que el nombre entra en pantalla la letra está corrida hacia abajo:
-   la pelota se esconde para no asomar sola. */
+/* Hasta que el nombre entra en pantalla las letras están corridas hacia
+   abajo: la pelota se esconde para no asomar sola. */
 .footer-wordmark:not(.is-in) .footer-wordmark-ball {
   opacity: 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .footer-wordmark.is-in .footer-wordmark-ball {
-    animation: piquePelota 1.3s linear calc(1.1s + var(--d)) both;
-  }
-}
-
-/* Caída, aplastada al tocar, dos piques cada vez más chicos. */
-@keyframes piquePelota {
-  0% {
-    transform: translateY(-320%);
-    opacity: 0;
-    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-  }
-  8% {
-    opacity: 1;
-  }
-  38% {
-    transform: translateY(0) scale(1.18, 0.82);
-    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
-  }
-  58% {
-    transform: translateY(-110%);
-    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-  }
-  74% {
-    transform: translateY(0) scale(1.1, 0.9);
-    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
-  }
-  86% {
-    transform: translateY(-35%);
-    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
 }

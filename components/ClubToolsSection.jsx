@@ -83,7 +83,13 @@ function ToolPreview({ tool }) {
     return (
       <span className="tool-prev tool-prev-pizarra">
         <svg viewBox="0 0 120 64" width="120" height="64" fill="none">
+          {/* La tiza se "dibuja" detrás de la pelota: el recorte crece con
+              transform (ver anim-cantina-herramientas.css). */}
+          <clipPath id="hl-jugada-tiza">
+            <rect className="hl-tiza-rev" x="0" y="0" width="120" height="64" />
+          </clipPath>
           <path
+            clipPath="url(#hl-jugada-tiza)"
             className="tool-prev-trazo"
             d="M14 54 C 40 6, 84 4, 104 22"
             stroke="#fff"
@@ -92,6 +98,7 @@ function ToolPreview({ tool }) {
             strokeLinecap="round"
           />
           <path
+            className="hl-flecha"
             d="M98 14 L105 22 L95 25"
             stroke="#fff"
             strokeWidth="2"
@@ -99,6 +106,7 @@ function ToolPreview({ tool }) {
             strokeLinejoin="round"
           />
           <circle
+            className="hl-jugador hl-jugador-1"
             cx="14"
             cy="54"
             r="6"
@@ -107,6 +115,7 @@ function ToolPreview({ tool }) {
             strokeWidth="1.5"
           />
           <circle
+            className="hl-jugador hl-jugador-2"
             cx="62"
             cy="50"
             r="6"
@@ -173,6 +182,80 @@ export default function ClubToolsSection() {
     return () => {
       track.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  // Micro-demo de cada herramienta (la calculadora divide, el nivel sube, la
+  // jugada se dibuja, el americano rota). Corre cuando la tarjeta entra en
+  // pantalla (o al frente del carrusel del celu) y otra vez al pasar el
+  // mouse. Solo clases en el DOM, sin estado: no re-renderiza nada.
+  // - hl-listo: la tarjeta todavía no se vio; la vista previa espera en su
+  //   pose inicial (que también es una pose completa, nada oculto).
+  // - hl-demo: corriendo. Al terminar se saca y queda la pose de reposo, que
+  //   es la misma del final de la animación.
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || typeof IntersectionObserver === "undefined") return;
+    if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches)
+      return;
+    const cards = [...track.children];
+    const timers = new Map();
+    const vistas = new WeakSet();
+
+    const escena = (card) => card.querySelector(".hl-cancha");
+
+    const correr = (card, demora = 0) => {
+      const el = escena(card);
+      if (!el) return;
+      clearTimeout(timers.get(card));
+      el.classList.remove("hl-listo", "hl-demo");
+      el.style.setProperty("--hl-d", `${demora}ms`);
+      void el.offsetWidth; // reinicia las animaciones
+      el.classList.add("hl-demo");
+      timers.set(
+        card,
+        setTimeout(() => el.classList.remove("hl-demo"), 2600 + demora),
+      );
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        let n = 0;
+        entries.forEach((e) => {
+          const card = e.target;
+          const primera = !vistas.has(card);
+          vistas.add(card);
+          if (e.intersectionRatio >= 0.55) {
+            // Ya estaba a la vista al montar: se queda quieta.
+            if (primera || !escena(card)?.classList.contains("hl-listo"))
+              return;
+            correr(card, n++ * 160);
+          } else if (primera || !e.isIntersecting) {
+            clearTimeout(timers.get(card));
+            escena(card)?.classList.remove("hl-demo");
+            escena(card)?.classList.add("hl-listo");
+          }
+        });
+      },
+      { threshold: [0, 0.55] },
+    );
+    cards.forEach((c) => io.observe(c));
+
+    // Con mouse: se repite al entrar a la tarjeta.
+    const onEnter = (e) => {
+      if (e.pointerType !== "mouse") return;
+      if (escena(e.currentTarget)?.classList.contains("hl-demo")) return;
+      correr(e.currentTarget);
+    };
+    cards.forEach((c) => c.addEventListener("pointerenter", onEnter));
+
+    return () => {
+      io.disconnect();
+      cards.forEach((c) => {
+        c.removeEventListener("pointerenter", onEnter);
+        escena(c)?.classList.remove("hl-listo", "hl-demo");
+      });
+      timers.forEach(clearTimeout);
     };
   }, []);
 

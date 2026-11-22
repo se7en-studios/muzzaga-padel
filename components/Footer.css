@@ -474,6 +474,15 @@
   font-size: clamp(84px, 24vw, 260px);
 }
 
+/* La fila de letras (FooterWordmark): mide lo mismo que la palabra, así la
+   pelota que la recorre se ubica en em contra su borde derecho. */
+.footer-wordmark-fila {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: inherit;
+}
+
 /* --------------------------------------------------------------------------
    Movimiento (solo transform/opacity y solo si se acepta)
    -------------------------------------------------------------------------- */
@@ -483,11 +492,64 @@
     animation: pieEnVivo 2.4s ease-in-out infinite;
   }
 
+  /* Fuera de pantalla el loop queda en pausa (la clase la pone
+     FooterWordmark con un IntersectionObserver; sin JS sigue latiendo). */
+  .pie-sitio:not(.pie-en-pantalla) .pie-titulo::before {
+    animation-play-state: paused;
+  }
+
+  /* Contactos: al pasar el mouse, el logo del botón da un pique. */
+  @media (hover: hover) {
+    .pie-accion:hover svg {
+      animation: piePique 0.5s cubic-bezier(0.3, 0, 0.4, 1);
+    }
+  }
+
   @media (hover: hover) {
     .pie-placa:hover .pie-mascota {
       transform: rotate(-4deg) translateY(-2px);
       transition: transform 0.3s var(--ease);
     }
+  }
+}
+
+/* La red se tiende de poste a poste cuando el final entra en pantalla
+   (atado al scroll; sin soporte queda tendida de entrada). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .pie-red {
+      animation: pieRedTiende linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 35%;
+    }
+  }
+}
+
+@keyframes pieRedTiende {
+  from {
+    opacity: 0.2;
+    transform: scaleX(0.04);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* El ícono del botón da un pique: sube, cae aplastado y se acomoda. */
+@keyframes piePique {
+  0%,
+  100% {
+    transform: none;
+  }
+  35% {
+    transform: translateY(-5px);
+  }
+  65% {
+    transform: translateY(0) scale(1.15, 0.85);
+  }
+  82% {
+    transform: translateY(-1.5px);
   }
 }
 

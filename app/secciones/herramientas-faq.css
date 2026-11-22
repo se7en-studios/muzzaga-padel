@@ -442,106 +442,8 @@
   color: #d7f03a;
 }
 
-/* Animaciones de la vista previa: se repiten cuando la tarjeta queda al
-   frente del carrusel (celu) o con el mouse encima (PC). El estado final
-   es el de reposo, así que sin JS o sin animación se ve completa. */
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes hf-pop {
-    from {
-      opacity: 0;
-      transform: scale(0.4);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
-  @keyframes hf-escala {
-    from {
-      transform: translateX(-70px);
-    }
-    to {
-      transform: none;
-    }
-  }
-
-  @keyframes hf-rebote {
-    0%,
-    100% {
-      transform: none;
-    }
-    50% {
-      transform: translate(-4px, 3px);
-    }
-  }
-
-  @keyframes hf-fila {
-    from {
-      opacity: 0;
-      transform: translateX(10px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
-  .tool-prev-pelota {
-    transform-box: fill-box;
-    transform-origin: center;
-  }
-
-  @media (max-width: 640px) {
-    .hl-card.is-active .tool-prev-balls i {
-      animation: hf-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    }
-
-    .hl-card.is-active .tool-prev-marca {
-      animation: hf-escala 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-
-    .hl-card.is-active .tool-prev-pelota {
-      animation: hf-rebote 0.6s ease-in-out 2;
-    }
-
-    .hl-card.is-active .tool-prev-americano > span {
-      animation: hf-fila 0.35s ease-out both;
-    }
-  }
-
-  @media (hover: hover) {
-    .hl-card:hover .tool-prev-balls i {
-      animation: hf-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    }
-
-    .hl-card:hover .tool-prev-marca {
-      animation: hf-escala 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-
-    .hl-card:hover .tool-prev-pelota {
-      animation: hf-rebote 0.6s ease-in-out 2;
-    }
-
-    .hl-card:hover .tool-prev-americano > span {
-      animation: hf-fila 0.35s ease-out both;
-    }
-  }
-
-  .tool-prev-balls i:nth-child(2),
-  .tool-prev-americano > span:nth-child(2) {
-    animation-delay: 70ms !important;
-  }
-
-  .tool-prev-balls i:nth-child(3),
-  .tool-prev-americano > span:nth-child(3) {
-    animation-delay: 140ms !important;
-  }
-
-  .tool-prev-balls i:nth-child(4) {
-    animation-delay: 210ms !important;
-  }
-}
+/* Las animaciones de la vista previa (micro-demo de cada herramienta) están
+   en anim-cantina-herramientas.css. */
 
 /* --- Indicador del carrusel (solo celu) -------------------------------- */
 .tools-dots {
@@ -637,8 +539,8 @@
    PREGUNTAS FRECUENTES: la pregunta abierta sale a la cancha
    Cada pregunta lleva arriba su número y su tema (letra chica de marcador)
    y abajo la pregunta en grande. La abierta se pinta de cancha azul (se ve
-   de lejos cuál está abierta). Al abrir, la respuesta se despliega con la
-   fila de la grilla (0fr → 1fr) y el texto entra con opacidad/desplazamiento.
+   de lejos cuál está abierta). Al abrir, la respuesta aparece de una (sin
+   animar el alto) y el texto baja con opacidad/desplazamiento.
    Compu: encabezado y cierre a la izquierda, preguntas a la derecha.
    ========================================================================== */
 .faq-layout {
@@ -838,13 +740,11 @@
   }
 }
 
-/* Movimiento: la fila se abre (grid-template-rows) y el texto entra con
-   opacidad y desplazamiento, un poquito después. */
+/* Movimiento: la fila se abre de una (no se anima el alto, que obliga a
+   recalcular la página en cada cuadro) y el texto baja con opacidad y
+   desplazamiento. El resto (pelota que pica, línea que se tiende) está en
+   anim-faq-ubicacion.css. */
 @media (prefers-reduced-motion: no-preference) {
-  #faq .faq-answer-wrap {
-    transition: grid-template-rows 0.42s cubic-bezier(0.22, 0.8, 0.24, 1);
-  }
-
   #faq .faq-answer-content {
     opacity: 0;
     transform: translateY(-8px);

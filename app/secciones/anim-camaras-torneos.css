@@ -1,2 +1,502 @@
 /* Animaciones de la sección (camaras-torneos). Solo transform/opacity, dentro de
-   prefers-reduced-motion: no-preference. */
+   prefers-reduced-motion: no-preference.
+
+   Las que arrancan al verse usan las clases de lib/useVista.js:
+   av-listo (puesta por JS: recién ahí se esconde lo que va a entrar),
+   av-go (ya se vio) y av-fuera (fuera de pantalla: loops en pausa). */
+
+/* ---------- Piezas nuevas en reposo (sin movimiento se ven así) ---------- */
+
+/* Cabezal de la línea de tiempo del celular de Beelup: queda donde termina
+   la barra (42 %). Ocupa todo el ancho del track para que translateX en %
+   sea relativo a la barra. */
+.bl-scr-cabezal {
+  position: absolute;
+  inset: 0;
+  transform: translateX(42%);
+  pointer-events: none;
+}
+
+.bl-scr-cabezal i {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(246, 162, 28, 0.55);
+}
+
+.bl-scr-mark--punto {
+  background: var(--bl-hi);
+}
+
+/* La jugada que cruza la pantalla: solo existe mientras corre la repetición. */
+.bl-scr-jugada {
+  inset: 0;
+  pointer-events: none;
+}
+
+.bl-scr-pelota {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.bl-scr-pelota i {
+  position: absolute;
+  left: 0;
+  top: 64%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+/* Marca del pique en el césped. */
+.bl-scr-pique {
+  left: 74%;
+  top: 64%;
+  width: 28px;
+  height: 10px;
+  margin: -5px 0 0 -14px;
+  border: 2px solid #d7f03a;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+/* Torneos: caracteres del marcador de paletas y la cuenta regresiva. */
+.tn-flip {
+  display: inline-block;
+}
+
+.tn-cuenta {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #fff;
+}
+
+.tn-honor-copa {
+  position: relative;
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Nada que gire fuera de pantalla: el punto rojo, la repetición, el brillo
+     del oro y la copa de la llave se pausan. */
+  .av-fuera,
+  .av-fuera *,
+  .av-fuera *::before,
+  .av-fuera *::after {
+    animation-play-state: paused !important;
+  }
+
+  /* ====================================================================
+     BEELUP · la repetición en el celular (loop de 7 s mientras se ve)
+     Tocan play → la pelota cruza en globo, pica en el punto marcado de la
+     línea de tiempo, salta el cartel "Punto del partido" y la burbuja; al
+     final se rebobina.
+     ==================================================================== */
+  .bl-phone-wrap.av-listo:not(.av-go) .bl-bubble {
+    opacity: 0;
+  }
+
+  .bl-phone-wrap.av-go .bl-scr-fill {
+    animation: blRepeBarra 7s linear infinite;
+  }
+
+  .bl-phone-wrap.av-go .bl-scr-cabezal {
+    animation: blRepeCabezal 7s linear infinite;
+  }
+
+  .bl-phone-wrap.av-go .bl-scr-play {
+    animation: blRepePlay 7s ease infinite;
+  }
+
+  .bl-phone-wrap.av-go .bl-scr-pelota {
+    animation: blRepePelotaX 7s linear infinite;
+  }
+
+  .bl-phone-wrap.av-go .bl-scr-pelota i {
+    animation: blRepePelotaY 7s infinite;
+  }
+
+  .bl-phone-wrap.av-go .bl-scr-pique {
+    animation: blRepePique 7s ease-out infinite;
+  }
+
+  .bl-phone-wrap.av-go .bl-scr-mark--punto {
+    animation: blRepeMarca 7s ease infinite;
+  }
+
+  .bl-phone-wrap.av-go .bl-scr-moment {
+    transform-origin: 0 100%;
+    animation: blRepeCartel 7s ease infinite;
+  }
+
+  /* La burbuja sale con rebote cuando pica la pelota (una vez) y después
+     da un saltito en cada repetición. */
+  .bl-phone-wrap.av-go .bl-bubble {
+    transform-origin: 100% 100%;
+    animation:
+      blBurbuja 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 3.75s both,
+      blBurbujaSalto 7s ease-in-out 7s infinite;
+  }
+
+  @keyframes blRepeBarra {
+    0%, 8% { transform: scaleX(0.05); }
+    54% { transform: scaleX(0.48); }
+    90% { transform: scaleX(0.64); }
+    100% { transform: scaleX(0.05); }
+  }
+
+  @keyframes blRepeCabezal {
+    0%, 8% { transform: translateX(5%); }
+    54% { transform: translateX(48%); }
+    90% { transform: translateX(64%); }
+    100% { transform: translateX(5%); }
+  }
+
+  @keyframes blRepePlay {
+    0% { transform: scale(1); opacity: 1; }
+    5% { transform: scale(0.84); opacity: 1; }
+    10% { transform: scale(1.25); opacity: 0; }
+    88% { transform: scale(0.6); opacity: 0; }
+    95%, 100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes blRepePelotaX {
+    0%, 11% { transform: translateX(16%); opacity: 0; }
+    13% { transform: translateX(17.5%); opacity: 1; }
+    54% { transform: translateX(74%); }
+    68% { transform: translateX(86%); opacity: 1; }
+    72%, 100% { transform: translateX(88%); opacity: 0; }
+  }
+
+  /* Globo: sube frenando, cae acelerando, pica y rebota bajito. */
+  @keyframes blRepePelotaY {
+    0%, 13% { transform: translateY(0); animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1); }
+    33% { transform: translateY(-58px); animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4); }
+    54% { transform: translateY(0) scale(1.15, 0.8); animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1); }
+    61% { transform: translateY(-16px); animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4); }
+    68%, 100% { transform: translateY(0); }
+  }
+
+  @keyframes blRepePique {
+    0%, 53% { transform: scale(0.3); opacity: 0; }
+    55% { transform: scale(0.7); opacity: 1; }
+    66%, 100% { transform: scale(1.9); opacity: 0; }
+  }
+
+  @keyframes blRepeMarca {
+    0%, 52% { transform: scale(1); }
+    56% { transform: scale(2); }
+    60%, 88% { transform: scale(1.35); }
+    96%, 100% { transform: scale(1); }
+  }
+
+  @keyframes blRepeCartel {
+    0%, 52% { transform: translateY(6px) scale(0.6); opacity: 0; }
+    57% { transform: scale(1.1); opacity: 1; }
+    61%, 90% { transform: none; opacity: 1; }
+    95%, 100% { transform: translateY(6px) scale(0.6); opacity: 0; }
+  }
+
+  @keyframes blBurbuja {
+    from { transform: translate(-18px, 26px) scale(0.3); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+
+  @keyframes blBurbujaSalto {
+    0%, 52% { transform: none; }
+    56% { transform: translateY(-9px) scale(1.06); }
+    60% { transform: none; }
+    63% { transform: translateY(-3px); }
+    66%, 100% { transform: none; }
+  }
+
+  /* ====================================================================
+     BEELUP · el buscador se completa solo (una vez, al verse)
+     ==================================================================== */
+  .bl-search.av-listo:not(.av-go) .bl-tipeo > span {
+    opacity: 0;
+  }
+
+  .bl-search.av-go .bl-tipeo > span {
+    animation: blLetra 90ms linear both;
+    animation-delay: calc(var(--d) + var(--c) * 45ms);
+  }
+
+  /* El campo que se está completando se marca en naranja. */
+  .bl-search.av-listo li::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border: 2px solid var(--bl);
+    border-radius: 11px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .bl-search.av-go li::before {
+    animation: blFoco var(--t) ease var(--d) both;
+  }
+
+  @keyframes blLetra {
+    from { opacity: 0; }
+  }
+
+  @keyframes blFoco {
+    0% { opacity: 0; transform: scale(1.04); }
+    15%, 80% { opacity: 1; transform: none; }
+    100% { opacity: 0; }
+  }
+
+  /* Completo el buscador, el botón "se aprieta" y le cruza un brillo. */
+  .bl-btn {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .bl-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transform: translateX(-160%) skewX(-16deg);
+    pointer-events: none;
+  }
+
+  .bl-search.av-go + .bl-btn {
+    animation: blAprieta 0.55s ease var(--fin) both;
+  }
+
+  .bl-search.av-go + .bl-btn::after {
+    animation: blBrillo 0.9s ease-in-out calc(var(--fin) + 0.3s) both;
+  }
+
+  .bl-btn svg {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .bl-btn:hover svg,
+  .bl-btn:focus-visible svg {
+    transform: translateX(3px) scale(1.12);
+  }
+
+  @keyframes blAprieta {
+    0%, 100% { transform: none; }
+    35% { transform: scale(0.94); }
+    70% { transform: scale(1.04); }
+  }
+
+  @keyframes blBrillo {
+    from { transform: translateX(-160%) skewX(-16deg); }
+    to { transform: translateX(320%) skewX(-16deg); }
+  }
+
+  /* ====================================================================
+     BEELUP · tutorial: el campo del paso se completa letra por letra y la
+     barrita de progreso se llena.
+     ==================================================================== */
+  .bt-slide.is-act .is-foco .bl-tipeo > span {
+    animation: blLetra 90ms linear both;
+    animation-delay: calc(320ms + var(--c) * 55ms);
+  }
+
+  .bt-progreso span {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bt-progreso span.is-on {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .bt-progreso span::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--bl, #f6a21c);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .bt-progreso span.is-on::after {
+    transform: none;
+  }
+
+  /* ====================================================================
+     TORNEOS · afiche: la fecha da vuelta como un marcador de paletas, la
+     pelota cae y pica en la esquina, y "Fecha a confirmar" se estampa.
+     ==================================================================== */
+  .tn-afiche.av-listo:not(.av-go) :is(.tn-flip, .tn-led-mes, .tn-sello, .tn-afiche-pelota) {
+    opacity: 0;
+  }
+
+  .tn-afiche.av-go .tn-flip {
+    backface-visibility: hidden;
+    animation: tnPaleta 0.9s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+    animation-delay: calc(0.15s + var(--i) * 0.14s);
+  }
+
+  .tn-afiche.av-go .tn-cuenta .tn-flip {
+    animation-duration: 0.7s;
+    animation-delay: calc(0.6s + var(--i) * 0.05s);
+  }
+
+  .tn-afiche.av-go .tn-led-mes {
+    animation: tnSube 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s both;
+  }
+
+  .tn-afiche.av-go .tn-sello {
+    animation: tnSello 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.7s both;
+  }
+
+  .tn-afiche.av-go .tn-afiche-pelota {
+    animation: tnPelotaCae 1.1s linear 0.1s both;
+  }
+
+  @keyframes tnPaleta {
+    0% { transform: perspective(200px) rotateX(-450deg); opacity: 0; }
+    15% { opacity: 1; }
+    100% { transform: perspective(200px) rotateX(0); opacity: 1; }
+  }
+
+  @keyframes tnSube {
+    from { transform: translateY(8px); opacity: 0; }
+  }
+
+  @keyframes tnSello {
+    0% { transform: scale(1.9) rotate(-14deg); opacity: 0; }
+    65% { transform: scale(0.94) rotate(-2deg); opacity: 1; }
+    100% { transform: rotate(-3deg); opacity: 1; }
+  }
+
+  @keyframes tnPelotaCae {
+    0% { transform: translate(-30px, -110px) rotate(-120deg); opacity: 0; animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+    10% { opacity: 1; }
+    50% { transform: none; animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1); }
+    68% { transform: translateY(-18px) rotate(20deg); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+    84% { transform: none; animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1); }
+    92% { transform: translateY(-5px); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+    100% { transform: none; opacity: 1; }
+  }
+
+  /* ====================================================================
+     TORNEOS · cuadro de honor: la copa salta y brilla al pasar, y las
+     medallas caen colgadas de la cinta y se hamacan.
+     ==================================================================== */
+  .tn-honor-copa::before,
+  .tn-honor-copa::after {
+    content: "✦";
+    position: absolute;
+    font-size: 11px;
+    line-height: 1;
+    color: #f5c542;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tn-honor-copa::before {
+    top: -6px;
+    right: -7px;
+  }
+
+  .tn-honor-copa::after {
+    bottom: 0;
+    left: -8px;
+    font-size: 8px;
+  }
+
+  .tn-honor-cabeza.av-go .tn-honor-copa {
+    animation: tnCopaSalta 0.8s cubic-bezier(0.3, 1.4, 0.5, 1) 0.1s both;
+  }
+
+  .tn-honor-cabeza.av-go .tn-honor-copa::before {
+    animation: tnChispa 0.9s ease 0.35s both;
+  }
+
+  .tn-honor-cabeza.av-go .tn-honor-copa::after {
+    animation: tnChispa 0.9s ease 0.55s both;
+  }
+
+  @media (hover: hover) {
+    .tn-honor:hover .tn-honor-copa::before {
+      animation: tnChispaOtra 0.9s ease both;
+    }
+
+    .tn-honor:hover .tn-honor-copa::after {
+      animation: tnChispaOtra 0.9s ease 0.2s both;
+    }
+  }
+
+  @keyframes tnCopaSalta {
+    0%, 100% { transform: none; }
+    35% { transform: translateY(-7px) rotate(-14deg) scale(1.18); }
+    65% { transform: rotate(8deg); }
+  }
+
+  @keyframes tnChispa {
+    0% { transform: scale(0.2) rotate(0); opacity: 0; }
+    45% { transform: scale(1.3) rotate(90deg); opacity: 1; }
+    100% { transform: scale(0.3) rotate(180deg); opacity: 0; }
+  }
+
+  @keyframes tnChispaOtra {
+    0% { transform: scale(0.2) rotate(0); opacity: 0; }
+    45% { transform: scale(1.3) rotate(90deg); opacity: 1; }
+    100% { transform: scale(0.3) rotate(180deg); opacity: 0; }
+  }
+
+  .tn-podio.av-listo:not(.av-go) .tn-medalla {
+    opacity: 0;
+  }
+
+  .tn-podio.av-go .tn-medalla {
+    /* Gira desde la punta de la cinta, como colgada. */
+    transform-origin: 50% -13px;
+    animation: tnMedalla 1.2s linear both;
+    animation-delay: calc(var(--tn-med, 0.2s) + var(--i) * 0.15s);
+  }
+
+  @keyframes tnMedalla {
+    0% { transform: translateY(-80px); opacity: 0; animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+    12% { opacity: 1; }
+    32% { transform: none; animation-timing-function: ease-out; }
+    44% { transform: translateY(-6px) rotate(16deg); animation-timing-function: ease-in-out; }
+    60% { transform: rotate(-10deg); animation-timing-function: ease-in-out; }
+    76% { transform: rotate(5deg); animation-timing-function: ease-in-out; }
+    90% { transform: rotate(-2deg); }
+    100% { transform: none; opacity: 1; }
+  }
+
+  /* Compu: las cinco fotos suben como un podio y después caen las medallas. */
+  @media (min-width: 1024px) {
+    .tn-podio {
+      --tn-med: 0.55s;
+    }
+
+    .tn-podio.av-listo:not(.av-go) .tn-foto {
+      opacity: 0;
+    }
+
+    .tn-podio.av-go .tn-foto {
+      animation: tnFotoSube 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      animation-delay: calc(var(--i) * 0.1s);
+    }
+
+    @keyframes tnFotoSube {
+      from { transform: translateY(40px); opacity: 0; }
+    }
+  }
+}
