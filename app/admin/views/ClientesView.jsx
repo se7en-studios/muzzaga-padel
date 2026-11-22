@@ -36,7 +36,6 @@ import { WhatsAppMiniIcon } from "../adminHelpers";
 import ClientDrawer, { avatarTone, initials } from "./clientes/ClientDrawer";
 import StaffPinModal from "../ui/StaffPinModal";
 import { adminDeleteClient } from "../actions";
-import { zzClients } from "../zz-demo-data"; // ZZDEMO
 
 const SEARCH_DEBOUNCE_MS = 250;
 const ICON = { size: 16, strokeWidth: 1.75, "aria-hidden": true };
@@ -105,7 +104,6 @@ export default function ClientesView({
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteText, setInviteText] = useState(DEFAULT_INVITE);
   const [invited, setInvited] = useState(() => new Set());
-  clients = zzClients(clients); // ZZDEMO
   const today = todayInClub();
   const list = clients || [];
 

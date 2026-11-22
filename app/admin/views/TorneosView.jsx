@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { DollarSign, Plus, Trophy, Users, X } from "lucide-react";
 import { EmptyState } from "../ui/states";
 import { Bone, TorneosSkeleton } from "./Esqueletos";
-import { zzRun, zzTournaments } from "../zz-demo-data"; // ZZDEMO
 import { formatARS } from "../../../lib/format";
 import { todayInClub } from "../../../lib/booking";
 import { CATEGORY_PRESETS, isByeMatch } from "../../../lib/tournament";
@@ -77,7 +76,7 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
 
   async function reload() {
     setLoading(true);
-    const res = await zzRun(() => adminGetTournaments(), () => ({ ok: true, tournaments: zzTournaments() })); // ZZDEMO
+    const res = await adminGetTournaments();
     setLoading(false);
     if (res?.ok) {
       setTournaments(res.tournaments || []);
@@ -585,7 +584,10 @@ export function TournamentCard({ t, onOpen }) {
                 )}
               </span>
             </span>
-            <span className="tn-paybar" aria-hidden>
+            <span
+              className={`tn-paybar${players.length ? "" : " is-empty"}`}
+              aria-hidden
+            >
               <span style={{ width: `${paidPct}%` }} />
             </span>
           </span>

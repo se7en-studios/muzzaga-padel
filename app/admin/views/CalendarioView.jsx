@@ -13,7 +13,7 @@ import {
 import { adminGetMonthStats } from "../actions";
 import { todayInClub } from "../../../lib/booking";
 import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
-import { Skeleton } from "../ui/states";
+import { EmptyState, Skeleton } from "../ui/states";
 
 const MONTH_NAMES = [
   "Enero",
@@ -128,6 +128,11 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
 
   return (
     <div className="cc-cal" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Mientras llega el primer mes: el marcador en su lugar. */}
+      {!monthStats && loading && (
+        <Skeleton height="var(--cc-kpi-skel-h, 138px)" radius={18} />
+      )}
+
       {/* 3 KPI CARDS KRAVIO MENSUAL */}
       {monthStats && (
         <div className="admin-kpis-3">
@@ -292,6 +297,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
               <div key={`blank-${i}`} className="cc-heat-blank" aria-hidden />
             ))}
             {!monthStats &&
+              loading &&
               Array.from({ length: 30 }, (_, i) => (
                 <Skeleton key={`sk-${i}`} height={112} radius={14} />
               ))}
@@ -353,6 +359,19 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
               );
             })}
           </div>
+
+          {/* No llegó el mes (sin conexión o la base no respondió): en vez
+              de esqueletos para siempre, un cartel claro. Las flechas
+              siguen andando para probar con otro mes. */}
+          {!monthStats && !loading && (
+            <div className="cc-cal-empty" role="status">
+              <EmptyState
+                mascot="enredado-grip"
+                title="No se pudo cargar el mes"
+                text="Revisá la conexión y probá de nuevo cambiando de mes con las flechas."
+              />
+            </div>
+          )}
 
           <div className="admin-heat-legend cc-legend" aria-hidden>
             <span className="cc-legend-item">

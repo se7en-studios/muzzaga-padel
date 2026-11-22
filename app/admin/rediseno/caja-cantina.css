@@ -1070,6 +1070,9 @@
   .admin-root .admin-dashboard-layout .admin-caja .admin-bill-toggle {
     width: 100%;
     justify-content: center;
+    padding-inline: 10px;
+    font-size: 14px;
+    text-wrap: balance;
   }
 
   .admin-root .admin-caja .admin-caja-receipt .admin-expense-list {
@@ -1324,6 +1327,11 @@
   flex: 1 1 260px;
   margin: 0;
   font-size: 13.5px;
+}
+
+.admin-root .admin-cantina .admin-web-orders.is-quiet > .admin-web-orders-skel {
+  flex: 1 1 260px;
+  max-width: 420px;
 }
 
 .admin-root .admin-cantina .admin-web-orders.is-quiet > .admin-order-history {

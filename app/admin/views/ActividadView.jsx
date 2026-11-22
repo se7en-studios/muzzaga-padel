@@ -16,7 +16,6 @@ import {
 import { adminGetAuditLog } from "../actions";
 import { EmptyState } from "../ui/states";
 import { ActividadSkeleton } from "./Esqueletos";
-import { zzRun, zzLogs } from "../zz-demo-data"; // ZZDEMO
 import {
   formatDate,
   formatTime,
@@ -159,7 +158,7 @@ export default function ActividadView({ onExpiredSession }) {
   async function load(nextLimit = limit) {
     setLoading(true);
     setError("");
-    const res = await zzRun(() => adminGetAuditLog(nextLimit), () => ({ ok: true, logs: zzLogs() })); // ZZDEMO
+    const res = await adminGetAuditLog(nextLimit);
     setLoading(false);
     if (res?.ok) setLogs(res.logs || []);
     else if (!onExpiredSession?.(res)) {

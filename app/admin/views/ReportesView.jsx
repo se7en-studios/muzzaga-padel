@@ -20,7 +20,6 @@ import { trendPct } from "../../../lib/metrics";
 import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
 import { EmptyState } from "../ui/states";
 import { ReportesSkeleton } from "./Esqueletos";
-import { zzRun, zzReport } from "../zz-demo-data"; // ZZDEMO
 import DailyChart from "./reportes/DailyChart";
 import Highlights from "./reportes/Highlights";
 import OccupancyHeat from "./reportes/OccupancyHeat";
@@ -129,7 +128,7 @@ export default function ReportesView({ onExpiredSession }) {
     let cancelled = false;
     setLoading(true);
     setError("");
-    zzRun(() => adminGetReport(period.from, period.to), () => zzReport(period.from, period.to)).then((res) => { // ZZDEMO
+    adminGetReport(period.from, period.to).then((res) => {
       if (cancelled) return;
       setLoading(false);
       if (res.ok) setReport(res);
