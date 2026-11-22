@@ -796,12 +796,18 @@ export default function BookingCalendar({
                         key={selectedPricing.total}
                         className="summary-price-tag"
                       >
+                        {/* El lector de pantalla lee el precio entero, no
+                            cifra por cifra. */}
+                        <span className="sr-only">
+                          ${selectedPricing.total.toLocaleString("es-AR")}
+                        </span>
                         {[...`$${selectedPricing.total.toLocaleString("es-AR")}`].map(
                           (ch, i) => (
                             <span
                               key={i}
                               className="tanteo-ficha"
                               style={{ "--i": i }}
+                              aria-hidden="true"
                             >
                               {ch}
                             </span>
