@@ -503,10 +503,9 @@
 
 .admin-root .admin-dashboard-layout #cfg-sitio .admin-site-caption-label {
   flex-basis: 100%;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.2;
   color: var(--text-muted);
 }
 
