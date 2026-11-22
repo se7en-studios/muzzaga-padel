@@ -68,6 +68,7 @@ const HOME_SECTION_TAB = {
   top: "turnos",
   turnos: "turnos",
   "canchas-abiertas": "turnos",
+  camaras: "ubicacion",
   instalaciones: "ubicacion",
   recorrido: "ubicacion",
   ubicacion: "ubicacion",
