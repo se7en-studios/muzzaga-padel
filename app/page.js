@@ -37,6 +37,10 @@ import "./secciones/torneos-cantina.css";
 import "./secciones/herramientas-faq.css";
 import "./secciones/ubicacion-pie.css";
 import "./secciones/movimiento.css";
+import "./secciones/anim-turnos.css";
+import "./secciones/anim-camaras-torneos.css";
+import "./secciones/anim-cantina-herramientas.css";
+import "./secciones/anim-faq-ubicacion.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";
