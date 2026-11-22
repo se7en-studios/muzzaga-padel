@@ -80,7 +80,10 @@
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
+  letter-spacing: 0.04em;
   color: #fff;
+  /* En el celu puede pasar por encima de la pelota de la esquina. */
+  text-shadow: 0 1px 3px rgba(11, 26, 77, 0.95);
 }
 
 .tn-honor-copa {
