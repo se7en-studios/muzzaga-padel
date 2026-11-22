@@ -4,6 +4,7 @@ import { BentoPhotoCard } from "./PhotoCard";
 import Mascota from "./Mascota";
 import { productIcon } from "../lib/productIcon";
 import { MENU_CATEGORIES } from "../lib/cantinaMenu";
+import CantinaFx, { PrecioTiza } from "./CantinaFx";
 
 // Los mismos íconos de categoría que la carta (/menu).
 const CATEGORY_ICONS = {
@@ -24,6 +25,9 @@ function byCategory(items) {
 /** `featured`: los destacados de la carta, ya recortados para el inicio. */
 export default function HomeCantinaTeaser({ photos, featured }) {
   const groups = byCategory(featured);
+  // Orden de cada renglón de la pizarra (rótulos y productos), para que se
+  // "escriban" de a uno (ver CantinaFx).
+  let renglon = 0;
 
   return (
     <section
@@ -31,6 +35,7 @@ export default function HomeCantinaTeaser({ photos, featured }) {
       className="section-bento"
       style={{ background: "var(--bg-surface)" }}
     >
+      <CantinaFx />
       <div className="container">
         <div className="section-header-row" style={{ alignItems: "center" }}>
           <div>
@@ -99,6 +104,16 @@ export default function HomeCantinaTeaser({ photos, featured }) {
                 <span className="menu-board-title">
                   <span className="tc-pizarra-pelota" aria-hidden="true" />
                   Lo más pedido
+                  {/* La pinta se llena cuando se escribe la pizarra. */}
+                  <span className="cf-pinta" aria-hidden="true">
+                    <span className="cf-pinta-vaso">
+                      <i className="cf-pinta-birra" />
+                      <i className="cf-pinta-espuma" />
+                      <i className="cf-burbuja" />
+                      <i className="cf-burbuja" />
+                      <i className="cf-burbuja" />
+                    </span>
+                  </span>
                 </span>
                 <span className="menu-board-note">Precios actualizados</span>
               </div>
@@ -107,13 +122,22 @@ export default function HomeCantinaTeaser({ photos, featured }) {
                 const Icon = CATEGORY_ICONS[g.id];
                 return (
                   <div key={g.id} className="tc-pizarra-grupo">
-                    <h3 className="tc-pizarra-cat">
+                    <h3
+                      className="tc-pizarra-cat"
+                      style={{ "--cf-i": renglon++ }}
+                    >
                       {Icon && <Icon size={15} strokeWidth={2.25} aria-hidden="true" />}
                       {g.label}
                     </h3>
                     <ul className="menu-board-list">
-                      {g.items.map((item) => (
-                        <li key={item.id} className="menu-board-item">
+                      {g.items.map((item) => {
+                        const orden = renglon++;
+                        return (
+                        <li
+                          key={item.id}
+                          className="menu-board-item"
+                          style={{ "--cf-i": orden }}
+                        >
                           <span className="tc-pizarra-icono" aria-hidden="true">
                             {productIcon(item.name, item.category)}
                           </span>
@@ -122,11 +146,10 @@ export default function HomeCantinaTeaser({ photos, featured }) {
                             {item.tag && <span className="menu-board-tag">{item.tag}</span>}
                           </span>
                           <span className="menu-board-dots" aria-hidden="true" />
-                          <span className="menu-board-price">
-                            ${item.price.toLocaleString("es-AR")}
-                          </span>
+                          <PrecioTiza value={item.price} orden={orden} />
                         </li>
-                      ))}
+                        );
+                      })}
                     </ul>
                   </div>
                 );

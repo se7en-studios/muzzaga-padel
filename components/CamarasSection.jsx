@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import Mascota from "./Mascota";
-import BeelupTutorial from "./BeelupTutorial";
+import BeelupTutorial, { Tipeo } from "./BeelupTutorial";
 import { beelupStreamInfo, youtubeEmbedUrl } from "../lib/beelup";
+import { useVista } from "../lib/useVista";
 
 // Si no hay stream (o se cae), queda el loop de las canchas: el mismo video
 // liviano del hero.
@@ -267,6 +268,17 @@ export const BEELUP_DEFAULT_URL = "https://beelup.com/";
 // Las canchas como se llaman en Beelup (así figuran en su buscador).
 const BEELUP_CANCHAS = ["El Tano", "La Vasca"];
 
+// El buscador "se completa solo" al verse: cada campo se tipea letra por
+// letra (ms por letra y pausa entre campos). Las letras van en spans para
+// que el texto ocupe su lugar desde el principio (sin saltos de diseño).
+const TIPEO_MS = 45;
+const TIPEO_PAUSA = 260;
+const BUSQUEDA = [
+  { label: "Club", valor: "Muzzaga Pádel" },
+  { label: "Cancha", valor: BEELUP_CANCHAS.join(" · ") },
+  { label: "Cuándo", valor: "Día y horario" },
+];
+
 /**
  * Tarjeta de Beelup debajo de la tele: el buscador de Beelup dibujado con
  * los pasos ya completos (club, cancha, día) para que se entienda cómo
@@ -274,10 +286,23 @@ const BEELUP_CANCHAS = ["El Tano", "La Vasca"];
  * encima del video que en el celu lo tapaba entero.
  */
 function BeelupCartel({ href }) {
+  const phoneRef = useRef(null);
+  const searchRef = useRef(null);
+  useVista(phoneRef, 0.5);
+  useVista(searchRef, 0.6);
+  let t = 200;
+  const pasos = BUSQUEDA.map((c) => {
+    const dur = [...c.valor].length * TIPEO_MS;
+    const paso = { ...c, d: t, dur };
+    t += dur + TIPEO_PAUSA;
+    return paso;
+  });
   return (
     <div className="bl-card">
-      {/* El celular con la repetición: lo que el jugador va a encontrar. */}
-      <div className="bl-phone-wrap" aria-hidden="true">
+      {/* El celular con la repetición: lo que el jugador va a encontrar. Al
+          verse, la "repetición" corre: la pelota cruza, pica en el punto
+          marcado y sale la burbuja. */}
+      <div className="bl-phone-wrap" aria-hidden="true" ref={phoneRef}>
         <div className="bl-phone">
           <div className="bl-screen">
             <div className="bl-scr-top">
@@ -287,6 +312,12 @@ function BeelupCartel({ href }) {
               </span>
               <span className="bl-scr-tag">EL TANO · 20:00</span>
             </div>
+            <span className="bl-scr-jugada">
+              <span className="bl-scr-pelota">
+                <i />
+              </span>
+              <span className="bl-scr-pique" />
+            </span>
             <span className="bl-scr-play">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
                 <path d="M7 4.5v15l13-7.5z" />
@@ -297,8 +328,11 @@ function BeelupCartel({ href }) {
               <span className="bl-scr-track">
                 <span className="bl-scr-fill" />
                 <span className="bl-scr-mark" style={{ left: "22%" }} />
-                <span className="bl-scr-mark" style={{ left: "48%" }} />
+                <span className="bl-scr-mark bl-scr-mark--punto" style={{ left: "48%" }} />
                 <span className="bl-scr-mark" style={{ left: "71%" }} />
+                <span className="bl-scr-cabezal">
+                  <i />
+                </span>
               </span>
               <span className="bl-scr-times">
                 <span>41:12</span>
@@ -310,7 +344,7 @@ function BeelupCartel({ href }) {
         <span className="bl-bubble">¡Mirá este punto! 🎾</span>
       </div>
 
-      <div className="bl-copy">
+      <div className="bl-copy" style={{ "--fin": `${t}ms` }}>
         <div className="bl-head">
           <span className="bl-logo">
             <img src={BEELUP_ICON} alt="" width={34} height={36} />
@@ -333,19 +367,22 @@ function BeelupCartel({ href }) {
           <li>⭐ Tus mejores puntos</li>
           <li>📲 Para compartir</li>
         </ul>
-        <ol className="bl-search" aria-label="Cómo encontrar tu video en Beelup">
-          <li>
-            <small>Club</small>
-            <b>Muzzaga Pádel</b>
-          </li>
-          <li>
-            <small>Cancha</small>
-            <b>{BEELUP_CANCHAS.join(" · ")}</b>
-          </li>
-          <li>
-            <small>Cuándo</small>
-            <b>Día y horario</b>
-          </li>
+        <ol
+          className="bl-search"
+          aria-label="Cómo encontrar tu video en Beelup"
+          ref={searchRef}
+        >
+          {pasos.map((p) => (
+            <li
+              key={p.label}
+              style={{ "--d": `${p.d}ms`, "--t": `${p.dur + 200}ms` }}
+            >
+              <small>{p.label}</small>
+              <b>
+                <Tipeo texto={p.valor} />
+              </b>
+            </li>
+          ))}
         </ol>
         <a
           className="bl-btn"
@@ -373,6 +410,9 @@ function BeelupCartel({ href }) {
  * el loop de las canchas.
  */
 export default function CamarasSection({ courts = [], beelupUrl: beelupUrlConfig = "" }) {
+  // Solo para pausar los loops (punto rojo, repetición) fuera de pantalla.
+  const sectionRef = useRef(null);
+  useVista(sectionRef, 0);
   const beelupUrl = beelupUrlConfig || BEELUP_DEFAULT_URL;
   const autoplay = useAutoplayAllowed();
   const [debug, setDebug] = useState(false);
@@ -405,7 +445,7 @@ export default function CamarasSection({ courts = [], beelupUrl: beelupUrlConfig
   );
 
   return (
-    <section id="camaras" className="section-turnos">
+    <section id="camaras" className="section-turnos" ref={sectionRef}>
       <div className="container">
         <div className="section-header-row">
           <div>

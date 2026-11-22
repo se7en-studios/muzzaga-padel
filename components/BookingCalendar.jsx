@@ -88,6 +88,43 @@ export default function BookingCalendar({
   const [confirmed, setConfirmed] = useState(null); // { bookingCode, whatsappUrl }
   const [isRemembered, setIsRemembered] = useState(false);
   const formRef = useRef(null);
+  // Animaciones (app/secciones/anim-turnos.css): la grilla entra "picando"
+  // fila por fila solo cuando la persona cambia de día o de cancha (no al
+  // cargar la página, ahí ya está el giro atado al scroll).
+  const [cascada, setCascada] = useState(false);
+  // Pelota que viaja por debajo de la tira de días hasta el día elegido.
+  const indicadorRef = useRef(null);
+  const raizRef = useRef(null);
+
+  // Marcador del encabezado: la pelota pica y el tablero "da vuelta" recién
+  // cuando se ve (antes picaba al cargar, fuera de pantalla). Y el punto "en
+  // vivo" se pausa cuando la sección no está a la vista.
+  useEffect(() => {
+    const sec = raizRef.current?.closest("#turnos");
+    if (!sec || typeof IntersectionObserver === "undefined") return undefined;
+    const vista = new IntersectionObserver(([e]) => {
+      sec.classList.toggle("turnos-fuera", !e.isIntersecting);
+    });
+    vista.observe(sec);
+    const marcador = sec.querySelector(".price-tag");
+    let entrada = null;
+    if (marcador) {
+      entrada = new IntersectionObserver(
+        ([e]) => {
+          if (!e.isIntersecting) return;
+          sec.classList.add("turnos-marcador-vivo");
+          entrada.disconnect();
+        },
+        { threshold: 0.9 },
+      );
+      entrada.observe(marcador);
+    }
+    return () => {
+      vista.disconnect();
+      entrada?.disconnect();
+    };
+  }, []);
+
 
   // Autocompletar datos del jugador frecuente guardados localmente
   useEffect(() => {
@@ -223,6 +260,34 @@ export default function BookingCalendar({
     [days, schedule, blockedDates],
   );
   const activeDay = daysView.find((d) => d.iso === activeDate);
+
+  // Ubica la pelota de la tira de días debajo del día elegido. Solo
+  // transform: el CSS hace el viaje (transición) y el pique (animación).
+  useEffect(() => {
+    const ind = indicadorRef.current;
+    const row = ind?.parentElement;
+    if (!row) return undefined;
+    let frame = 0;
+    const place = () => {
+      const btn = row.querySelector(".booking-date-btn.active");
+      if (!btn) return;
+      ind.style.setProperty("--x", `${btn.offsetLeft + btn.offsetWidth / 2}px`);
+      if (!ind.hasAttribute("data-listo")) {
+        // La primera vez se ubica sin viajar desde la izquierda.
+        frame = requestAnimationFrame(() => {
+          ind.setAttribute("data-listo", "");
+          row.setAttribute("data-indicador", "");
+        });
+      }
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(row);
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+    };
+  }, [activeDate, daysView]);
 
   // Si "hoy" ya no tiene turnos libres (de noche todos figuran "Finalizado",
   // o está cerrado/agotado) y la persona todavía no eligió un día, se salta
@@ -395,7 +460,7 @@ export default function BookingCalendar({
   }
 
   return (
-    <div className="booking-calendar" id="reservar">
+    <div className="booking-calendar" id="reservar" ref={raizRef}>
       <ScrollRow
         className="booking-dates"
         role="group"
@@ -409,6 +474,7 @@ export default function BookingCalendar({
             onClick={() => {
               userChoseDay.current = true;
               setAutoNotice(null);
+              if (day.iso !== activeDate) setCascada(true);
               setActiveDate(day.iso);
               setSelected(null);
               setConfirmed(null);
@@ -432,13 +498,19 @@ export default function BookingCalendar({
             {day.closed && <span className="sr-only">, cerrado</span>}
           </button>
         ))}
+        <span className="booking-dias-indicador" ref={indicadorRef} aria-hidden="true">
+          <span key={activeDate} className="booking-dias-pelota" />
+        </span>
       </ScrollRow>
 
       <ScrollRow className="booking-court-tabs">
         <button
           type="button"
           className={`booking-court-tab${courtFilter === "all" ? " active" : ""}`}
-          onClick={() => setCourtFilter("all")}
+          onClick={() => {
+            if (courtFilter !== "all") setCascada(true);
+            setCourtFilter("all");
+          }}
           aria-pressed={courtFilter === "all"}
         >
           Todas<span className="booking-court-wide"> las canchas</span>
@@ -448,7 +520,10 @@ export default function BookingCalendar({
             key={court.id}
             type="button"
             className={`booking-court-tab${courtFilter === court.id ? " active" : ""}`}
-            onClick={() => setCourtFilter(court.id)}
+            onClick={() => {
+              if (courtFilter !== court.id) setCascada(true);
+              setCourtFilter(court.id);
+            }}
             aria-pressed={courtFilter === court.id}
           >
             {court.name}
@@ -530,7 +605,8 @@ export default function BookingCalendar({
 
         {!activeDay?.closed && !loadError && visibleSlots && (
           <div
-            className="booking-matrix-container"
+            key={courtFilter}
+            className={`booking-matrix-container${cascada ? " is-cascada" : ""}`}
             style={{
               "--court-columns": courtFilter === "all" ? courts.length : 1,
             }}
@@ -569,7 +645,7 @@ export default function BookingCalendar({
             )}
             {[...new Set(visibleSlots.map((s) => s.start))]
               .filter((time) => showPast || !pastTimes.has(time))
-              .map((time) => {
+              .map((time, fila) => {
               const rowEnd = visibleSlots.find((s) => s.start === time)?.end;
               const rowCourts =
                 courtFilter === "all"
@@ -577,7 +653,11 @@ export default function BookingCalendar({
                   : courts.filter((c) => c.id === courtFilter);
 
               return (
-                <div key={time} className="booking-matrix-row">
+                <div
+                  key={time}
+                  className="booking-matrix-row"
+                  style={{ "--fila": fila }}
+                >
                   <div className="booking-matrix-time-col">
                     <strong>{time}</strong>
                     <span>{rowEnd ? `a ${rowEnd}` : "hs"}</span>
@@ -700,14 +780,40 @@ export default function BookingCalendar({
                       <span className="summary-label">Día y horario</span>
                       <strong>
                         {activeDay?.dayName} {activeDay?.dayNumber} {activeDay?.monthName}
-                        <span className="booking-summary-hours">
+                        <span
+                          key={selected.start}
+                          className="booking-summary-hours"
+                        >
                           {selected.start} a {selected.end} hs
                         </span>
                       </strong>
                     </div>
                     <div className="booking-summary-price">
                       <span className="summary-label">Total del turno</span>
-                      <strong className="summary-price-tag">${selectedPricing.total.toLocaleString("es-AR")}</strong>
+                      {/* Tanteador: cada cifra da vuelta como una ficha del
+                          marcador cuando cambia el precio (pico/valle). */}
+                      <strong
+                        key={selectedPricing.total}
+                        className="summary-price-tag"
+                      >
+                        {/* El lector de pantalla lee el precio entero, no
+                            cifra por cifra. */}
+                        <span className="sr-only">
+                          ${selectedPricing.total.toLocaleString("es-AR")}
+                        </span>
+                        {[...`$${selectedPricing.total.toLocaleString("es-AR")}`].map(
+                          (ch, i) => (
+                            <span
+                              key={i}
+                              className="tanteo-ficha"
+                              style={{ "--i": i }}
+                              aria-hidden="true"
+                            >
+                              {ch}
+                            </span>
+                          ),
+                        )}
+                      </strong>
                       <span className="summary-price-sub">${selectedPricing.perPlayer.toLocaleString("es-AR")} c/u (4p)</span>
                     </div>
                   </div>

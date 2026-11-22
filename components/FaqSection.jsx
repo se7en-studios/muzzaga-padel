@@ -1,18 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FAQS } from "../data/faq";
 import Mascota from "./Mascota";
 
 export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState(0);
+  const sectionRef = useRef(null);
+
+  // Movimiento (anim-faq-ubicacion.css): "faq-fx" arma los estados de
+  // entrada solo si corre este JS y se acepta movimiento; "faq-in" cuando
+  // las preguntas llegan a pantalla; el cierre recibe "is-in" al entrar e
+  // "is-visible" mientras se ve (su pelota pica en loop solo entonces).
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || !("IntersectionObserver" in window)) return undefined;
+    if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches)
+      return undefined;
+    const lista = section.querySelector(".faq-list");
+    const cierre = section.querySelector(".faq-cierre");
+    section.classList.add("faq-fx");
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.target === lista && e.isIntersecting) section.classList.add("faq-in");
+          if (e.target === cierre) {
+            if (e.isIntersecting) cierre.classList.add("is-in");
+            cierre.classList.toggle("is-visible", e.isIntersecting);
+          }
+        }
+      },
+      { threshold: 0.2 },
+    );
+    if (lista) io.observe(lista);
+    if (cierre) io.observe(cierre);
+    return () => {
+      io.disconnect();
+      section.classList.remove("faq-fx", "faq-in");
+    };
+  }, []);
 
   const toggleFaq = (idx) => {
     setOpenIndex(openIndex === idx ? null : idx);
   };
 
   return (
-    <section id="faq" className="section-turnos">
+    <section id="faq" className="section-turnos" ref={sectionRef}>
       <div className="container faq-layout">
         {/* Celu: encabezado → preguntas → cierre, uno abajo del otro. En la
             compu el encabezado y el cierre van a la izquierda y las

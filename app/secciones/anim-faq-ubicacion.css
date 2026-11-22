@@ -1,0 +1,644 @@
+/* Animaciones de la sección (faq-ubicacion). Solo transform/opacity, dentro de
+   prefers-reduced-motion: no-preference.
+
+   Los estados de entrada se arman con clases que pone JS (si no corre, todo
+   queda visible y quieto):
+   - FAQ (FaqSection): .faq-fx en la sección, .faq-in cuando las preguntas
+     llegan a pantalla; el cierre lleva .is-in al entrar e .is-visible
+     mientras se ve.
+   - Mapa (MapaRuta): .mr-fx / .mr-in en .location-map-pane.
+   - Tablero de horarios (HorarioSemana): .hs-fx / .hs-in / .hs-visible.
+   - Pie (FooterWordmark): .is-in en el nombre gigante. */
+
+/* ==========================================================================
+   PREGUNTAS FRECUENTES
+   ========================================================================== */
+
+/* La línea de cancha al pie de cada respuesta (punteada como la red). */
+#faq .faq-answer-content {
+  position: relative;
+}
+
+#faq .faq-answer-content::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 8px;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--hf-cancha) 0 10px, transparent 10px 16px);
+  opacity: 0.35;
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  #faq .faq-answer-content::before {
+    left: 16px;
+    right: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #faq .faq-answer-content::before {
+    left: 24px;
+    right: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* La pelota (+) da un pique al abrir: sube girando, cae aplastada y se
+     acomoda dada vuelta (el "−"). Termina donde la deja landing.css. */
+  #faq.faq-fx.faq-in .faq-card.active .faq-icon {
+    animation: faqPique 0.7s linear;
+  }
+
+  /* Con el mouse encima de la abierta, que no vuelva a la inclinación del
+     hover de las cerradas (saltaba al terminar el pique). */
+  @media (hover: hover) {
+    #faq .faq-card.active .faq-question-btn:hover .faq-icon {
+      transform: rotate(180deg) scale(1.06);
+    }
+  }
+
+  /* El número da vuelta como la ficha de un marcador. */
+  #faq.faq-fx.faq-in .faq-card.active .faq-num {
+    animation: faqMarcador 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) 0.05s backwards;
+  }
+
+  /* La línea de la respuesta se tiende de izquierda a derecha. */
+  #faq .faq-answer-wrap:not(.open) .faq-answer-content::before {
+    transform: scaleX(0);
+  }
+
+  #faq .faq-answer-wrap.open .faq-answer-content::before {
+    transition: transform 0.6s cubic-bezier(0.22, 0.8, 0.24, 1) 0.12s;
+  }
+
+  /* Cierre "Preguntale al club": la pelota grande entra picando por la
+     esquina y, mientras la tarjeta se ve, cada tanto da un pique. Usa
+     translate/rotate/scale sueltos para no pisar el giro del hover. */
+  #faq.faq-fx .faq-cierre:not(.is-in) .faq-cierre-pelota {
+    opacity: 0;
+  }
+
+  #faq.faq-fx .faq-cierre.is-in .faq-cierre-pelota {
+    animation: faqPelotaEntra 1s linear 0.15s backwards;
+  }
+
+  #faq.faq-fx .faq-cierre.is-in.is-visible .faq-cierre-pelota {
+    animation:
+      faqPelotaEntra 1s linear 0.15s backwards,
+      faqPelotaDribla 4.8s linear 2.6s infinite;
+  }
+}
+
+@keyframes faqPique {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1);
+  }
+  30% {
+    transform: translateY(-9px) rotate(110deg) scale(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  52% {
+    transform: translateY(0) rotate(180deg) scale(1.22, 0.78);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  70% {
+    transform: translateY(-3px) rotate(180deg) scale(0.96, 1.04);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  84% {
+    transform: translateY(0) rotate(180deg) scale(1.06, 0.94);
+  }
+  100% {
+    transform: translateY(0) rotate(180deg) scale(1);
+  }
+}
+
+@keyframes faqMarcador {
+  from {
+    opacity: 0;
+    transform: perspective(80px) rotateX(-90deg);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(80px) rotateX(0deg);
+  }
+}
+
+@keyframes faqPelotaEntra {
+  0% {
+    opacity: 0;
+    translate: 90px -90px;
+    rotate: 200deg;
+    scale: 1;
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  10% {
+    opacity: 1;
+  }
+  40% {
+    translate: 0 0;
+    rotate: 0deg;
+    scale: 1.1 0.9;
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  60% {
+    translate: 0 -14px;
+    scale: 1;
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  78% {
+    translate: 0 0;
+    scale: 1.05 0.95;
+  }
+  88% {
+    translate: 0 -3px;
+    scale: 1;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    rotate: 0deg;
+    scale: 1;
+  }
+}
+
+@keyframes faqPelotaDribla {
+  0%,
+  72% {
+    translate: 0 0;
+    scale: 1;
+    animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1);
+  }
+  80% {
+    translate: 0 -16px;
+    scale: 0.97 1.03;
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  87% {
+    translate: 0 0;
+    scale: 1.08 0.92;
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  93% {
+    translate: 0 -4px;
+    scale: 1;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* ==========================================================================
+   UBICACIÓN: la ruta, el pin que cae y el tablero que se enciende
+   ========================================================================== */
+
+/* La ruta punteada (MapaRuta): puntos naranjas con borde blanco, quietos y
+   ocultos; solo existen como animación. */
+.mapa-ruta {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mapa-ruta i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--color-accent-orange, #e8722a);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(5, 14, 48, 0.4);
+  opacity: 0;
+}
+
+/* El anillo del impacto, donde apoya la punta del pin. */
+.mapa-pin::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -20px;
+  top: -7px;
+  width: 40px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Armado (JS): el pin espera arriba, sin la caída atada al scroll. */
+  .section-ubicacion .location-map-pane.mr-fx .mapa-pin-gota,
+  .section-ubicacion .location-map-pane.mr-fx .mapa-pin-cartel,
+  .section-ubicacion .location-map-pane.mr-fx .mapa-pin-sombra {
+    animation: none;
+  }
+
+  .section-ubicacion .location-map-pane.mr-fx:not(.mr-in) .mapa-pin-gota,
+  .section-ubicacion .location-map-pane.mr-fx:not(.mr-in) .mapa-pin-cartel,
+  .section-ubicacion .location-map-pane.mr-fx:not(.mr-in) .mapa-pin-sombra {
+    opacity: 0;
+  }
+
+  /* 1. La ruta se dibuja punto por punto hacia el club y se borra sola
+        detrás (es un recorrido ilustrativo, no el camino real). */
+  .location-map-pane.mr-in .mapa-ruta i {
+    animation: mrPunto 2.6s cubic-bezier(0.3, 0.7, 0.4, 1) calc(0.15s + var(--i) * 60ms) both;
+  }
+
+  /* 2. Cae el pin, pica dos veces con su sombra y se ve el impacto. */
+  .section-ubicacion .location-map-pane.mr-in .mapa-pin-gota {
+    animation: mrPinCae 1s linear 0.7s backwards;
+    animation-timeline: auto;
+  }
+
+  .section-ubicacion .location-map-pane.mr-in .mapa-pin-sombra {
+    animation: mrSombra 1s linear 0.7s backwards;
+    animation-timeline: auto;
+  }
+
+  .location-map-pane.mr-in .mapa-pin::after {
+    animation: mrOnda 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) 1.15s;
+  }
+
+  /* 3. Aparece el cartel con el nombre. */
+  .section-ubicacion .location-map-pane.mr-in .mapa-pin-cartel {
+    transform-origin: 50% 130%;
+    animation: mrCartel 0.55s cubic-bezier(0.3, 1.3, 0.5, 1) 1.3s backwards;
+    animation-timeline: auto;
+  }
+
+  /* Al pasar el mouse por el mapa, el pin se levanta un poco. */
+  @media (hover: hover) {
+    .mapa-pin-gota {
+      transition: translate 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .mapa-abrir:hover .mapa-pin-gota {
+      translate: 0 -6px;
+    }
+
+    .section-ubicacion .location-btn-llegar svg {
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .section-ubicacion .location-btn-llegar:hover svg {
+      transform: translateX(3px) rotate(8deg);
+    }
+  }
+}
+
+@keyframes mrPunto {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  8% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+  14% {
+    transform: scale(1);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+/* La gota está rotada (-45°): la caída va en "translate", que se aplica en
+   el plano de la pantalla, y el aplastado se endereza con rotate(45deg)
+   … rotate(-45deg) dentro de "transform". Al aplastarse desde el centro la
+   punta subiría, así que baja unos píxeles para seguir tocando el piso. */
+@keyframes mrPinCae {
+  0% {
+    opacity: 0;
+    translate: 0 -150px;
+    transform: rotate(45deg) scale(0.9, 1.1) rotate(-45deg);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  12% {
+    opacity: 1;
+  }
+  45% {
+    translate: 0 6px;
+    transform: rotate(45deg) scale(1.2, 0.78) rotate(-45deg);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  68% {
+    translate: 0 -20px;
+    transform: rotate(45deg) scale(0.96, 1.05) rotate(-45deg);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  82% {
+    translate: 0 3px;
+    transform: rotate(45deg) scale(1.08, 0.9) rotate(-45deg);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  92% {
+    translate: 0 -3px;
+    transform: rotate(45deg) scale(1) rotate(-45deg);
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    transform: rotate(45deg) scale(1) rotate(-45deg);
+  }
+}
+
+@keyframes mrSombra {
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.3, 1);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  68% {
+    opacity: 0.55;
+    transform: scale(0.75);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  82% {
+    opacity: 1;
+    transform: scale(1.12, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mrOnda {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+@keyframes mrCartel {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Tablero de horarios: las luces se prenden en fila ------------------ */
+
+/* El brillo del día de hoy: un aro naranja de LED (solo con JS y
+   movimiento; sin eso queda el borde naranja de siempre). */
+.horario-tablero.hs-fx .horario-dia.is-today::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 11px;
+  border: 2px solid #ffb07a;
+  box-shadow: 0 0 14px 1px rgba(232, 114, 42, 0.6);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Apagado hasta que el tablero llega a pantalla. */
+  .horario-tablero.hs-fx:not(.hs-in) .horario-dia::after {
+    opacity: 0.12;
+  }
+
+  .horario-tablero.hs-fx:not(.hs-in) .horario-horas,
+  .horario-tablero.hs-fx:not(.hs-in) .horario-lista strong {
+    opacity: 0.18;
+  }
+
+  /* 1. Barrido: cada lucecita se prende de lunes a domingo. */
+  .horario-tablero.hs-in .horario-dia::after {
+    animation: hsLed 0.5s linear calc(0.1s + var(--n, 0) * 80ms) backwards;
+  }
+
+  .horario-tablero.hs-in .horario-dia:nth-child(2) { --n: 1; }
+  .horario-tablero.hs-in .horario-dia:nth-child(3) { --n: 2; }
+  .horario-tablero.hs-in .horario-dia:nth-child(4) { --n: 3; }
+  .horario-tablero.hs-in .horario-dia:nth-child(5) { --n: 4; }
+  .horario-tablero.hs-in .horario-dia:nth-child(6) { --n: 5; }
+  .horario-tablero.hs-in .horario-dia:nth-child(7) { --n: 6; }
+
+  /* 2. La hora se enciende como un reloj de LED. */
+  .horario-tablero.hs-in .horario-horas,
+  .horario-tablero.hs-in .horario-lista strong {
+    animation: hsEnciende 0.7s linear 0.65s backwards;
+  }
+
+  /* 3. Hoy: la casilla salta, su aro se prende y queda latiendo mientras
+        el tablero está en pantalla. */
+  .horario-tablero.hs-in .horario-dia.is-today {
+    animation: hsHoyPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s backwards;
+  }
+
+  .horario-tablero.hs-in .horario-dia.is-today::before {
+    animation: hsEnciende 0.8s linear 0.85s both;
+  }
+
+  .horario-tablero.hs-in.hs-visible .horario-dia.is-today::before {
+    animation:
+      hsEnciende 0.8s linear 0.85s both,
+      hsHoyLate 2.6s ease-in-out 1.65s infinite;
+  }
+}
+
+@keyframes hsLed {
+  0% {
+    opacity: 0.12;
+    transform: scaleX(0.3);
+  }
+  35% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.35;
+  }
+  70%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hsEnciende {
+  0% {
+    opacity: 0.18;
+  }
+  30% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.3;
+  }
+  65%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes hsHoyPop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes hsHoyLate {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ==========================================================================
+   PIE: la pelota recorre MUZZAGA picando de letra en letra
+   Cuando las letras terminaron de subir, la pelota entra por la izquierda,
+   pica sobre cada letra (que se hunde un poco con el golpe) y se queda
+   sobre la última A. El avance (translate) y el pique (transform) van en
+   dos animaciones con su propio ritmo: avance parejo, pique con gravedad.
+   Las distancias son los centros de cada letra medidos en em (Barlow
+   Condensed 800 itálica) respecto del lugar final de la pelota.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .footer-wordmark.is-in .footer-wordmark-ball {
+    animation:
+      fwAvance 2s linear 1.3s both,
+      fwPique 2s linear 1.3s both;
+  }
+
+  /* Cada letra se hunde cuando la toca la pelota (la primera a 1.54 s,
+     después cada 0.2 s: --d es 80 ms por letra). */
+  .footer-wordmark.is-in .footer-wordmark-letter {
+    animation:
+      barridoLetras 1.6s cubic-bezier(0.4, 0, 0.2, 1) calc(1s + var(--d)) both,
+      fwGolpe 0.34s ease-out calc(1.54s + var(--d) * 2.5);
+  }
+}
+
+@keyframes fwAvance {
+  0% {
+    translate: calc(50% - 3.31em) 0;
+  }
+  12% {
+    translate: calc(50% - 2.807em) 0;
+  }
+  22% {
+    translate: calc(50% - 2.294em) 0;
+  }
+  32% {
+    translate: calc(50% - 1.848em) 0;
+  }
+  42% {
+    translate: calc(50% - 1.432em) 0;
+  }
+  52% {
+    translate: calc(50% - 0.972em) 0;
+  }
+  62% {
+    translate: calc(50% - 0.486em) 0;
+  }
+  72%,
+  100% {
+    translate: 50% 0;
+  }
+}
+
+/* Subida: frena arriba; bajada: acelera; al tocar, se aplasta. */
+@keyframes fwPique {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.26em);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  5% {
+    opacity: 1;
+  }
+  12%,
+  22%,
+  32%,
+  42%,
+  52%,
+  62% {
+    transform: translateY(0) scale(1.22, 0.78);
+    animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1);
+  }
+  17%,
+  27%,
+  37%,
+  47%,
+  57%,
+  67% {
+    transform: translateY(-0.16em) scale(0.95, 1.05);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  72% {
+    transform: translateY(0) scale(1.25, 0.75);
+    animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1);
+  }
+  78% {
+    transform: translateY(-0.07em) scale(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  84% {
+    transform: translateY(0) scale(1.1, 0.9);
+    animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1);
+  }
+  88% {
+    transform: translateY(-0.02em) scale(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  92% {
+    transform: translateY(0) scale(1.03, 0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fwGolpe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(4%);
+  }
+}

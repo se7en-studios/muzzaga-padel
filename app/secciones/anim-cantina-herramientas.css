@@ -1,0 +1,729 @@
+/* Animaciones de la sección (cantina-herramientas). Solo transform/opacity, dentro de
+   prefers-reduced-motion: no-preference.
+
+   CANTINA (prefijo cf-, clases que pone components/CantinaFx.jsx en #cantina)
+   - La pizarra "Lo más pedido" se escribe renglón por renglón: cada renglón
+     entra con una pasada de tiza, el ícono hace pop y el precio cuenta como
+     un marcador de LED hasta el valor real.
+   - La pinta del título se llena (scaleY), le sale la espuma y suben
+     burbujas (tres veces, no queda en loop).
+   - Las dos fotos caen sobre la mesa como polaroids y se "revelan".
+   - La pelota del título (loop de torneos-cantina.css) se pausa fuera de
+     pantalla.
+
+   HERRAMIENTAS (prefijo hl-, clases que pone ClubToolsSection en .hl-cancha)
+   Cada tarjeta muestra una micro-demo de lo que hace al entrar en pantalla
+   (y otra vez al pasar el mouse): la cuenta se divide en cuatro pelotas, la
+   pelota del nivel sube picando por la escala, la víbora se dibuja con tiza
+   y pega en la reja, y el americano da vuelta sus rondas como fichas de
+   marcador con la luz de "en juego" rotando. La pose de reposo es el final
+   de cada animación: sin JS o con "reducir movimiento" se ve completa. */
+
+/* ==========================================================================
+   CANTINA · piezas estáticas
+   ========================================================================== */
+
+/* Precio: una copia invisible del valor final fija el ancho mientras cuenta. */
+#cantina .cf-precio {
+  display: inline-grid;
+  justify-items: end;
+  /* Crece hacia la izquierda: a la derecha está el borde del renglón. */
+  transform-origin: 100% 50%;
+}
+
+#cantina .cf-precio > span {
+  grid-area: 1 / 1;
+}
+
+#cantina .cf-precio-molde {
+  visibility: hidden;
+}
+
+/* Pinta de cerveza dibujada con tiza, al lado de "Lo más pedido". */
+.cf-pinta {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 25px;
+  height: 26px;
+  transform-origin: 40% 100%;
+}
+
+.cf-pinta-vaso {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 18px;
+  height: 25px;
+  border: 2px solid rgba(244, 241, 230, 0.88);
+  border-top: 0;
+  border-radius: 1px 1px 5px 5px;
+  overflow: hidden;
+}
+
+/* La manija. */
+.cf-pinta::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 8px;
+  width: 8px;
+  height: 11px;
+  border: 2px solid rgba(244, 241, 230, 0.88);
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+}
+
+.cf-pinta i {
+  position: absolute;
+  display: block;
+}
+
+.cf-pinta-birra {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 80%;
+  background: linear-gradient(#f9c64e, #e8902a);
+  transform-origin: 50% 100%;
+}
+
+.cf-pinta-espuma {
+  left: -2px;
+  right: -2px;
+  top: 1px;
+  height: 6px;
+  border-radius: 3px;
+  background: #fffbea;
+  transform-origin: 50% 100%;
+}
+
+.cf-burbuja {
+  bottom: 3px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+}
+
+.cf-burbuja:nth-of-type(3) {
+  left: 3px;
+}
+
+.cf-burbuja:nth-of-type(4) {
+  left: 8px;
+}
+
+.cf-burbuja:nth-of-type(5) {
+  left: 12px;
+}
+
+@media (max-width: 640px) {
+  .cf-pinta {
+    width: 22px;
+    height: 23px;
+  }
+
+  .cf-pinta-vaso {
+    width: 16px;
+    height: 22px;
+  }
+
+  .cf-pinta::after {
+    top: 7px;
+    width: 7px;
+    height: 10px;
+  }
+}
+
+/* ==========================================================================
+   CANTINA · movimiento
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  /* La pelota del título solo pica con la sección a la vista. */
+  #cantina.cf-on:not(.cf-visible) .tc-pizarra-pelota {
+    animation-play-state: paused;
+  }
+
+  /* --- Pizarra que se escribe ------------------------------------------- */
+  #cantina.cf-on .tc-pizarra .menu-board-item {
+    position: relative;
+    overflow: clip;
+  }
+
+  #cantina.cf-armada .tc-pizarra-cat,
+  #cantina.cf-armada .tc-pizarra .menu-board-item {
+    opacity: 0;
+  }
+
+  #cantina.cf-armada .cf-pinta-birra {
+    transform: scaleY(0);
+  }
+
+  #cantina.cf-armada .cf-pinta-espuma {
+    opacity: 0;
+  }
+
+  #cantina.cf-escribe .tc-pizarra-cat,
+  #cantina.cf-escribe .tc-pizarra .menu-board-item {
+    animation: cf-renglon 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    animation-delay: calc(var(--cf-i, 0) * 90ms + 120ms);
+  }
+
+  /* La pasada de tiza: una franja clara que cruza el renglón. */
+  #cantina.cf-escribe .tc-pizarra .menu-board-item::after {
+    content: "";
+    position: absolute;
+    top: 22%;
+    bottom: 22%;
+    left: 0;
+    width: 40%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(244, 241, 230, 0.16) 70%, rgba(244, 241, 230, 0.5));
+    pointer-events: none;
+    animation: cf-tiza 0.6s ease-in-out both;
+    animation-delay: calc(var(--cf-i, 0) * 90ms + 120ms);
+  }
+
+  #cantina.cf-escribe .tc-pizarra-icono {
+    animation: cf-icono 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: calc(var(--cf-i, 0) * 90ms + 220ms);
+  }
+
+  /* El precio prende como un LED y, cuando termina de contar, hace pop. */
+  #cantina.cf-escribe .tc-pizarra .cf-precio {
+    animation:
+      cf-led 0.32s linear both,
+      cf-precio-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay:
+      calc(var(--cf-i, 0) * 90ms + 180ms),
+      calc(var(--cf-i, 0) * 90ms + 930ms);
+  }
+
+  /* --- La pinta se llena ------------------------------------------------- */
+  #cantina.cf-escribe .cf-pinta-birra {
+    animation: cf-llena 1.1s cubic-bezier(0.3, 0.6, 0.3, 1) 0.35s both;
+  }
+
+  #cantina.cf-escribe .cf-pinta-espuma {
+    animation: cf-espuma 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.3s both;
+  }
+
+  #cantina.cf-escribe .cf-burbuja {
+    animation: cf-burbuja 1.1s ease-in 1.2s 3 both;
+  }
+
+  #cantina.cf-escribe .cf-burbuja:nth-of-type(4) {
+    animation-delay: 1.55s;
+  }
+
+  #cantina.cf-escribe .cf-burbuja:nth-of-type(5) {
+    animation-delay: 1.85s;
+  }
+
+  /* --- Fotos: polaroids que caen sobre la mesa y se revelan -------------- */
+  #cantina.cf-fotos .photo-bento-card {
+    transform-origin: 50% 85%;
+    animation: cf-polaroid 0.85s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+
+  #cantina.cf-fotos .photo-bento-card:nth-child(2) {
+    --cf-giro: 5deg;
+    animation-delay: 0.16s;
+  }
+
+  #cantina.cf-fotos .photo-bento-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #f4efe1;
+    pointer-events: none;
+    animation: cf-revela 1.2s ease-out both;
+    animation-delay: inherit;
+  }
+
+  /* --- Microinteracciones (mouse) ---------------------------------------- */
+  @media (hover: hover) {
+    #cantina .cf-pinta,
+    #cantina .tc-pizarra-icono,
+    #cantina .tc-pizarra .cf-precio {
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ¡Salud! La pinta brinda al pasar por la pizarra. */
+    #cantina .tc-pizarra:hover .cf-pinta {
+      transform: rotate(-14deg);
+    }
+
+    #cantina .tc-pizarra .menu-board-item:hover .tc-pizarra-icono {
+      transform: rotate(-12deg) scale(1.12);
+    }
+
+    #cantina .tc-pizarra .menu-board-item:hover .cf-precio {
+      transform: scale(1.1);
+    }
+  }
+}
+
+@keyframes cf-renglon {
+  from {
+    opacity: 0;
+    translate: -12px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes cf-tiza {
+  0% {
+    opacity: 0;
+    translate: -100% 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 250% 0;
+  }
+}
+
+@keyframes cf-icono {
+  from {
+    opacity: 0;
+    scale: 0.3;
+    rotate: -25deg;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+    rotate: 0deg;
+  }
+}
+
+@keyframes cf-led {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.35;
+  }
+  55% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes cf-precio-pop {
+  0%,
+  100% {
+    scale: 1;
+  }
+  45% {
+    scale: 1.18;
+  }
+}
+
+@keyframes cf-llena {
+  0% {
+    transform: scaleY(0);
+  }
+  70% {
+    transform: scaleY(1.04);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes cf-espuma {
+  from {
+    opacity: 0;
+    transform: scale(0.3, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cf-burbuja {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    translate: 1px -13px;
+  }
+}
+
+@keyframes cf-polaroid {
+  0% {
+    opacity: 0;
+    translate: 0 40px;
+    rotate: var(--cf-giro, -6deg);
+    scale: 0.9;
+  }
+  55% {
+    opacity: 1;
+    translate: 0 -4px;
+    rotate: calc(var(--cf-giro, -6deg) * -0.3);
+    scale: 1.01;
+  }
+  80% {
+    rotate: calc(var(--cf-giro, -6deg) * 0.1);
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    rotate: 0deg;
+    scale: 1;
+  }
+}
+
+@keyframes cf-revela {
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   HERRAMIENTAS · micro-demos de la vista previa
+   ========================================================================== */
+.tool-prev-balls i:nth-child(1) {
+  --hl-dx: 46.5px;
+}
+
+.tool-prev-balls i:nth-child(2) {
+  --hl-dx: 15.5px;
+}
+
+.tool-prev-balls i:nth-child(3) {
+  --hl-dx: -15.5px;
+}
+
+.tool-prev-balls i:nth-child(4) {
+  --hl-dx: -46.5px;
+}
+
+/* Anillo de "¡ese es tu nivel!" (quieto, invisible). */
+.tool-prev-marca::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 2px solid #d7f03a;
+  opacity: 0;
+}
+
+.tool-prev-pizarra .hl-tiza-rev,
+.tool-prev-pizarra .hl-jugador,
+.tool-prev-pizarra .tool-prev-pelota {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.tool-prev-pizarra .hl-tiza-rev {
+  transform-origin: 0 50%;
+}
+
+.tool-prev-americano {
+  perspective: 300px;
+}
+
+.tool-prev-americano > span {
+  position: relative;
+  transform-origin: 50% 0;
+}
+
+.tool-prev-americano > span:nth-child(2) {
+  --hl-k: 1;
+}
+
+.tool-prev-americano > span:nth-child(3) {
+  --hl-k: 2;
+}
+
+/* La luz de "en juego" que va rotando por las rondas. */
+.tool-prev-americano > span::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 6px;
+  border: 1.5px solid #d7f03a;
+  background: rgba(215, 240, 58, 0.2);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* --- Pose inicial (la tarjeta todavía no se vio) ----------------------- */
+  .hl-listo .hl-pelota {
+    rotate: -150deg;
+  }
+
+  .hl-listo .tool-prev-balls i {
+    translate: var(--hl-dx) 0;
+    scale: 1.35;
+  }
+
+  .hl-listo .tool-prev-marca {
+    translate: -76px 0;
+  }
+
+  .hl-listo .hl-tiza-rev {
+    scale: 0 1;
+  }
+
+  .hl-listo .hl-flecha {
+    opacity: 0;
+  }
+
+  .hl-listo .tool-prev-pelota {
+    translate: -90px 32px;
+  }
+
+  .hl-listo .hl-jugador-2 {
+    translate: -12px 3px;
+  }
+
+  .hl-listo .tool-prev-americano > span {
+    opacity: 0.35;
+    rotate: x 75deg;
+  }
+
+  /* --- La demo ----------------------------------------------------------- */
+  .hl-demo .hl-pelota {
+    animation: hl-pelota-gira 1.1s cubic-bezier(0.2, 0.8, 0.3, 1) var(--hl-d, 0ms) both;
+  }
+
+  /* Dividir: la cuenta (una pelota grande) se parte en cuatro cuartos. */
+  .hl-demo .tool-prev-balls i {
+    animation: hl-divide 1s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+    animation-delay: calc(var(--hl-d, 0ms) + 200ms);
+  }
+
+  /* Nivel: la pelota sube picando por la escala hasta tu categoría. */
+  .hl-demo .tool-prev-marca {
+    animation: hl-sube 1.3s linear both;
+    animation-delay: calc(var(--hl-d, 0ms) + 200ms);
+  }
+
+  .hl-demo .tool-prev-marca::after {
+    animation: hl-onda 0.6s ease-out both;
+    animation-delay: calc(var(--hl-d, 0ms) + 1.15s);
+  }
+
+  /* Pizarra: golpe, la víbora se dibuja con tiza y pega en la reja. */
+  .hl-demo .hl-jugador-1 {
+    animation: hl-golpe 0.35s ease-out both;
+    animation-delay: calc(var(--hl-d, 0ms) + 150ms);
+  }
+
+  .hl-demo .hl-jugador-2 {
+    animation: hl-cubre 0.9s ease-in-out both;
+    animation-delay: calc(var(--hl-d, 0ms) + 300ms);
+  }
+
+  .hl-demo .tool-prev-pelota {
+    animation: hl-vibora 1.25s linear both;
+    animation-delay: calc(var(--hl-d, 0ms) + 300ms);
+  }
+
+  .hl-demo .hl-tiza-rev {
+    animation: hl-tiza 0.94s linear both;
+    animation-delay: calc(var(--hl-d, 0ms) + 300ms);
+  }
+
+  .hl-demo .hl-flecha {
+    animation: hl-aparece 0.3s ease-out both;
+    animation-delay: calc(var(--hl-d, 0ms) + 1.1s);
+  }
+
+  /* Americano: las rondas dan vuelta como fichas y la luz va rotando. */
+  .hl-demo .tool-prev-americano > span {
+    animation: hl-ficha 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+    animation-delay: calc(var(--hl-d, 0ms) + 150ms + var(--hl-k, 0) * 110ms);
+  }
+
+  .hl-demo .tool-prev-americano > span::after {
+    animation: hl-en-juego 0.55s ease-in-out both;
+    animation-delay: calc(var(--hl-d, 0ms) + 750ms + var(--hl-k, 0) * 380ms);
+  }
+}
+
+@keyframes hl-pelota-gira {
+  from {
+    rotate: -150deg;
+  }
+  to {
+    rotate: 0deg;
+  }
+}
+
+@keyframes hl-divide {
+  0%,
+  20% {
+    translate: var(--hl-dx) 0;
+    scale: 1.35;
+  }
+  28% {
+    translate: var(--hl-dx) 0;
+    scale: 1.5 1.15;
+  }
+  62% {
+    translate: 0 -10px;
+    scale: 1;
+  }
+  80% {
+    translate: 0 0;
+    scale: 1.14 0.84;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes hl-sube {
+  0% {
+    translate: -76px 0;
+    animation-timing-function: ease-out;
+  }
+  12% {
+    translate: -63px -11px;
+    animation-timing-function: ease-in;
+  }
+  24% {
+    translate: -50px 0;
+    animation-timing-function: ease-out;
+  }
+  36% {
+    translate: -37px -10px;
+    animation-timing-function: ease-in;
+  }
+  48% {
+    translate: -24px 0;
+    animation-timing-function: ease-out;
+  }
+  60% {
+    translate: -12px -8px;
+    animation-timing-function: ease-in;
+  }
+  72% {
+    translate: 0 0;
+    scale: 1.25 0.8;
+  }
+  84% {
+    translate: 0 -3px;
+    scale: 1;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes hl-onda {
+  from {
+    opacity: 1;
+    scale: 0.6;
+  }
+  to {
+    opacity: 0;
+    scale: 1.9;
+  }
+}
+
+@keyframes hl-golpe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  40% {
+    scale: 1.35;
+  }
+}
+
+@keyframes hl-cubre {
+  from {
+    translate: -12px 3px;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+/* La curva de la víbora (los puntos de la Bézier del trazo) y el golpe en
+   la reja al final, que la aplasta contra el vidrio. */
+@keyframes hl-vibora {
+  0% { translate: -90px 32px; }
+  9.38% { translate: -79.5px 16.1px; }
+  18.75% { translate: -67.8px 4.2px; }
+  28.12% { translate: -55.4px -4px; }
+  37.5% { translate: -42.8px -8.8px; }
+  46.88% { translate: -30.4px -10.4px; }
+  56.25% { translate: -18.8px -9.3px; }
+  65.62% { translate: -8.5px -5.8px; }
+  75% { translate: 0 0; scale: 1; }
+  82% { translate: 2px 1px; scale: 0.7 1.25; }
+  90% { translate: -1px 0; scale: 1.05 0.95; }
+  100% { translate: 0 0; scale: 1; }
+}
+
+@keyframes hl-tiza {
+  from {
+    scale: 0 1;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+
+@keyframes hl-aparece {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hl-ficha {
+  from {
+    opacity: 0.35;
+    rotate: x 75deg;
+  }
+  to {
+    opacity: 1;
+    rotate: x 0deg;
+  }
+}
+
+@keyframes hl-en-juego {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  30%,
+  70% {
+    opacity: 1;
+  }
+}

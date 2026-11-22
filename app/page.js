@@ -25,6 +25,7 @@ import HeroMascot from "../components/HeroMascot";
 import HeroTablero from "../components/HeroTablero";
 import HeroRally from "../components/HeroRally";
 import HorarioSemana from "../components/HorarioSemana";
+import MapaRuta from "../components/MapaRuta";
 import { WhatsAppLogo, WazeLogo } from "../components/BrandLogos";
 import "./landing.css";
 import "./fondo-cancha.css";
@@ -37,6 +38,10 @@ import "./secciones/torneos-cantina.css";
 import "./secciones/herramientas-faq.css";
 import "./secciones/ubicacion-pie.css";
 import "./secciones/movimiento.css";
+import "./secciones/anim-turnos.css";
+import "./secciones/anim-camaras-torneos.css";
+import "./secciones/anim-cantina-herramientas.css";
+import "./secciones/anim-faq-ubicacion.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";
@@ -348,6 +353,7 @@ export default async function Home() {
                 className="mapa-abrir"
                 aria-label="Ver la ubicación del club en Google Maps"
               >
+                <MapaRuta />
                 <span className="mapa-pin" aria-hidden="true">
                   <span className="mapa-pin-cartel">Muzzaga Pádel</span>
                   <span className="mapa-pin-gota" />

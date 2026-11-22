@@ -49,6 +49,22 @@ const PASOS = [
   },
 ];
 
+/** Texto (también lo usa el buscador de la tarjeta) que se escribe letra por letra (el lector de pantalla lee el entero). */
+export function Tipeo({ texto }) {
+  return (
+    <>
+      <span className="bl-tipeo" aria-hidden="true">
+        {[...texto].map((ch, i) => (
+          <span key={i} style={{ "--c": i }}>
+            {ch}
+          </span>
+        ))}
+      </span>
+      <span className="sr-only">{texto}</span>
+    </>
+  );
+}
+
 function Pantallita({ foco, paso }) {
   if (foco === "abrir") {
     return (
@@ -80,7 +96,8 @@ function Pantallita({ foco, paso }) {
               className={`bt-campo${activo ? " is-foco" : ""}${lleno ? "" : " is-vacio"}`}
             >
               <small>{c.label}</small>
-              <b>{lleno ? c.valor : "Elegí…"}</b>
+              {/* El campo del paso se "elige" letra por letra al llegar. */}
+              <b>{activo ? <Tipeo texto={c.valor} /> : lleno ? c.valor : "Elegí…"}</b>
               {activo ? <span className="bt-dedo">👆</span> : null}
             </span>
           );

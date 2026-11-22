@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { nowInClubTimezone, isoWeekday } from "../lib/booking";
 import LiveWeatherRadar from "./LiveWeatherRadar";
 
@@ -55,6 +55,30 @@ export default function HorarioSemana({ schedule, blockedDates = [] }) {
     return () => clearInterval(id);
   }, [blockedDates]);
 
+  // Movimiento (anim-faq-ubicacion.css): al llegar a pantalla las luces de
+  // los días se encienden en fila y la de hoy queda latiendo, solo mientras
+  // el tablero se ve. Las clases las pone este JS: sin él, todo prendido.
+  const tableroRef = useRef(null);
+  useEffect(() => {
+    const el = tableroRef.current;
+    if (!el || !("IntersectionObserver" in window)) return undefined;
+    if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches)
+      return undefined;
+    el.classList.add("hs-fx");
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) el.classList.add("hs-in");
+        el.classList.toggle("hs-visible", entry.isIntersecting);
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      el.classList.remove("hs-fx", "hs-in", "hs-visible");
+    };
+  }, []);
+
   const lista = grupos(schedule);
   const abiertos = lista.filter((g) => g.dia?.open);
   const cerrados = lista.filter((g) => !g.dia?.open);
@@ -62,7 +86,7 @@ export default function HorarioSemana({ schedule, blockedDates = [] }) {
   const unico = new Set(abiertos.map((g) => clave(g.dia))).size === 1;
 
   return (
-    <div className="horario-tablero">
+    <div className="horario-tablero" ref={tableroRef}>
       <div className="horario-cabecera">
         <span className="horario-titulo">Horarios</span>
         {hoy && (
