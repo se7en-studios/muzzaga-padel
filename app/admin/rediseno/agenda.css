@@ -45,8 +45,8 @@
 }
 
 .admin-root .admin-agenda .admin-daystrip-scroll {
-  gap: 4px;
-  padding: 5px;
+  gap: 5px;
+  padding: 6px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface);
@@ -133,19 +133,22 @@
 }
 
 /* Cantidad de turnos del día, como globito. */
+/* Colgado de la esquina, afuera del nombre del día: adentro tapaba "LUN". */
 .admin-root .admin-agenda .admin-daychip-count {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  top: -4px;
+  right: -3px;
+  z-index: 1;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
   border-radius: 999px;
   background: var(--court);
+  box-shadow: 0 0 0 2px var(--surface);
   color: #ffffff;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  line-height: 18px;
+  line-height: 17px;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -904,17 +907,37 @@
   outline-offset: -3px;
 }
 
-.admin-root .admin-agenda .admin-closed-day {
-  padding: 40px 20px;
+/* Día cerrado y semana vacía: la cancha dibujada de fondo con Muzzaguito
+   en el medio, como un cartel del club y no como un aviso de error. */
+.admin-root .admin-agenda :is(.admin-closed-day, .admin-week-empty) {
+  padding: 12px 20px 8px;
   border: 1px dashed var(--border-strong);
   border-radius: 16px;
   background-color: var(--surface);
   background-image: var(--court-lines-soft);
   background-size: 100% 100%;
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+}
+
+.admin-root .admin-agenda :is(.admin-closed-day, .admin-week-empty) .admin-empty {
+  padding: 16px 0 20px;
+}
+
+/* El texto encima de las líneas de la cancha: un velo claro detrás. */
+.admin-root .admin-agenda :is(.admin-closed-day, .admin-week-empty) .admin-empty > :is(strong, p) {
+  padding: 0 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+.admin-root .admin-agenda :is(.admin-closed-day, .admin-week-empty) .admin-empty p {
+  max-width: 380px;
+}
+
+/* Carga inicial: el marcador, el título y la grilla, en su lugar. */
+.admin-root .admin-agenda .admin-agenda-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 /* En pantallas grandes (1920) hay aire: filas un poco más altas y horarios
@@ -1062,18 +1085,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.admin-root .admin-agenda .admin-week-empty {
-  padding: 28px 20px;
-  border: 1px dashed var(--border-strong);
-  border-radius: 16px;
-  background-color: var(--surface);
-  background-image: var(--court-lines-soft);
-  background-size: 100% 100%;
-  color: var(--text-secondary);
-  font-size: 15px;
-  font-weight: 600;
-  text-align: center;
-}
 
 /* Fila con la cantidad de turnos de cada día, en números de marcador. */
 .admin-root .admin-weekchart .admin-weekchart-turnos {
@@ -1119,6 +1130,17 @@
   .admin-root .admin-agenda .admin-daychip {
     flex: 0 0 58px;
     scroll-snap-align: start;
+  }
+
+  /* "Hoy" y actualizar, angostos: si no, la tira quedaba con tres días. */
+  .admin-root .admin-agenda .admin-daystrip-actions {
+    gap: 6px;
+  }
+
+  .admin-root .admin-agenda .admin-daystrip-actions .btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 11px;
   }
 
   /* Marcador compacto: los tres números en una fila y el próximo turno
@@ -1686,8 +1708,8 @@
     display: none;
   }
 
-  .admin-root .admin-agenda .admin-closed-day {
-    font-size: 20px;
+  .admin-root .admin-agenda :is(.admin-closed-day, .admin-week-empty) {
+    padding-inline: 12px;
   }
 }
 
@@ -1748,6 +1770,17 @@
       opacity: 0.55;
     }
   }
+}
+
+/* Las siete columnas parejas aunque el monto de arriba sea más ancho que la
+   barra: con 1fr a secas, en el celu "Hoy" quedaba de 10 px y fuera de la
+   tarjeta. */
+.admin-root .admin-weekchart .admin-weekchart-bars {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.admin-root .admin-weekchart .admin-weekchart-labels {
+  grid-template-columns: 44px repeat(7, minmax(0, 1fr));
 }
 
 /* Gráfico semanal en el celu: siete montos no entran arriba de las barras;

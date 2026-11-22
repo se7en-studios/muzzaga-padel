@@ -2966,3 +2966,145 @@
     transition: transform 0.2s ease;
   }
 }
+
+/* ---------- Clientes: esqueleto de carga (ver views/Esqueletos.jsx) ---------- */
+.admin-root .sk-cc-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-root .sk-cc-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 146px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.admin-root .sk-cc-tile.sk-court {
+  border-color: transparent;
+}
+
+.admin-root .sk-cc-roster {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.admin-root .sk-cc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-root .sk-cc-search {
+  width: min(460px, 100%) !important;
+}
+
+.admin-root .sk-cc-rowline {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) 140px 120px 130px 120px;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+  padding: 12px 16px;
+}
+
+.admin-root .sk-cc-rowline + .sk-cc-rowline {
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 767px) {
+  .admin-root .sk-cc-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .admin-root .sk-cc-tile {
+    min-height: 0;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .admin-root .sk-cc-tile:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .admin-root .sk-cc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .admin-root .sk-cc-rowline {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 68px;
+  }
+
+  .admin-root .sk-cc .sk-cc-cell {
+    display: none;
+  }
+
+  .admin-root .sk-cc .sk-cc-cell.sk-cc-contact {
+    display: inline-block;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50%;
+  }
+}
+
+/* ==========================================================================
+   CALENDARIO · pasada final
+   ========================================================================== */
+/* Los tres números del mes alineados arriba: con "space-between" el que
+   tenía el texto de abajo en dos renglones quedaba más alto que el vecino. */
+.admin-root .cc-cal .admin-kpis-3 > .admin-kravio-kpi-card {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+/* No llegó el mes: el cartel ocupa el lugar de la grilla (sin encabezados
+   de días ni leyenda que no explican nada). */
+.admin-root .cc-cal-body:has(.cc-cal-empty) :is(.cc-heatmap, .cc-legend) {
+  display: none;
+}
+
+.admin-root .cc-cal-empty {
+  margin: 4px 0 8px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  background-color: var(--surface);
+  background-image: var(--court-lines-soft);
+  background-size: 100% 100%;
+}
+
+.admin-root .cc-cal-empty .admin-empty > :is(strong, p) {
+  padding: 0 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+/* En la ficha del celu el renglón del teléfono ya dice "Sin teléfono": el
+   segundo aviso a la derecha se partía en dos renglones y repetía lo mismo. */
+@media (max-width: 767px) {
+  .admin-root .cc-contact .cc-no-phone {
+    display: none;
+  }
+}
+
+/* El marcador en carga mide lo mismo que el de verdad (en el celu son dos
+   filas). */
+@media (max-width: 767px) {
+  .admin-root .cc-cal {
+    --cc-kpi-skel-h: 300px;
+  }
+}

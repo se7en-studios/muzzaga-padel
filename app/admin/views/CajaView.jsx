@@ -825,13 +825,18 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                           </span>
                         </td>
                         <td data-label="Cerró">
-                          {h.closedBy || "—"}
-                          {h.closedAt && (
-                            <span className="admin-cell-sub">
-                              {" "}
-                              {formatTime(h.closedAt)}
-                            </span>
-                          )}
+                          {/* Un solo bloque: en el celu la fila es
+                              etiqueta | valor y quien cerró quedaba lejos
+                              de la hora. */}
+                          <span>
+                            {h.closedBy || "—"}
+                            {h.closedAt && (
+                              <span className="admin-cell-sub">
+                                {" "}
+                                {formatTime(h.closedAt)}
+                              </span>
+                            )}
+                          </span>
                         </td>
                       </tr>
                     );

@@ -30,7 +30,8 @@ import {
   generateClientsCsv,
   isInactiveClient,
 } from "../../../lib/clientsExport";
-import { EmptyState, SkeletonRows } from "../ui/states";
+import { EmptyState } from "../ui/states";
+import { ClientesSkeleton } from "./Esqueletos";
 import { WhatsAppMiniIcon } from "../adminHelpers";
 import ClientDrawer, { avatarTone, initials } from "./clientes/ClientDrawer";
 import StaffPinModal from "../ui/StaffPinModal";
@@ -169,7 +170,7 @@ export default function ClientesView({
     )}`;
 
   if (!clients) {
-    return <SkeletonRows count={8} height={52} />;
+    return <ClientesSkeleton />;
   }
 
   const maxCount = Math.max(1, ...list.map((c) => c.count || 0));

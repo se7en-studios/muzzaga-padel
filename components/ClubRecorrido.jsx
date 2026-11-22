@@ -86,6 +86,7 @@ export default function ClubRecorrido() {
   const sectionRef = useRef(null);
   const sceneRef = useRef(null);
   const frameRef = useRef(null);
+  const poiRef = useRef(null);
   const [load, setLoad] = useState(false);
   const [ready, setReady] = useState(false);
   const [step, setStep] = useState(0);
@@ -230,6 +231,18 @@ export default function ClubRecorrido() {
     };
   }, [post]);
 
+  // En el celu la tira de zonas no entra entera: la zona activa se centra (solo la tira, no la página).
+  useEffect(() => {
+    const nav = poiRef.current;
+    const btn = nav?.children[poi];
+    if (!btn || nav.scrollWidth <= nav.clientWidth) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    nav.scrollTo({
+      left: btn.offsetLeft - (nav.clientWidth - btn.offsetWidth) / 2,
+      behavior: reduce ? "auto" : "smooth",
+    });
+  }, [poi]);
+
   // Tocar un punto de interés: scroll suave hasta ese tramo, la cámara lo sigue.
   const goTo = (p) => {
     const el = sectionRef.current;
@@ -251,6 +264,7 @@ export default function ClubRecorrido() {
       ref={sectionRef}
       id="recorrido"
       className="club-tour"
+      data-load={load || undefined}
       aria-label="Recorrido 3D del club"
       style={{ "--stops": STOPS.length }}
     >
@@ -267,9 +281,14 @@ export default function ClubRecorrido() {
             />
           )}
         </div>
-        {!ready && <div className="club-tour-loading">Armando la maqueta…</div>}
+        {!ready && (
+          <div className="club-tour-loading">
+            <span className="club-tour-loading-ball" aria-hidden="true" />
+            Armando la maqueta…
+          </div>
+        )}
 
-        <nav className="club-tour-poi" aria-label="Zonas del club">
+        <nav ref={poiRef} className="club-tour-poi" aria-label="Zonas del club">
           {POIS.map((item, i) => (
             <button
               key={item.label}
@@ -285,8 +304,20 @@ export default function ClubRecorrido() {
         </nav>
 
         <div className="club-tour-card" role="status" aria-live="polite">
+          <div className="club-tour-card-head">
+            <span key={step} className="club-tour-kick">
+              {stop.kick}
+            </span>
+            <a className="club-tour-link" href="/recorrido">
+              Recorrer el club →
+            </a>
+          </div>
+          <ol className="club-tour-dots" aria-hidden="true">
+            {STOPS.map((s, i) => (
+              <li key={s.title} className={i === step ? "on" : ""} />
+            ))}
+          </ol>
           <div key={step} className="club-tour-card-body">
-            <span className="club-tour-kick">{stop.kick}</span>
             <h2 className="club-tour-title">{stop.title}</h2>
             <p className="club-tour-text">{stop.text}</p>
           </div>
@@ -302,15 +333,7 @@ export default function ClubRecorrido() {
             >
               <WhatsAppLogo color="currentColor" /> WhatsApp
             </a>
-            <a className="club-tour-link" href="/recorrido">
-              Recorrer el club →
-            </a>
           </div>
-          <ol className="club-tour-dots" aria-hidden="true">
-            {STOPS.map((s, i) => (
-              <li key={s.title} className={i === step ? "on" : ""} />
-            ))}
-          </ol>
         </div>
 
         <span

@@ -14,7 +14,8 @@ import {
   Wallet,
 } from "lucide-react";
 import { adminGetAuditLog } from "../actions";
-import { EmptyState, SkeletonRows } from "../ui/states";
+import { EmptyState } from "../ui/states";
+import { ActividadSkeleton } from "./Esqueletos";
 import {
   formatDate,
   formatTime,
@@ -361,9 +362,9 @@ export default function ActividadView({ onExpiredSession }) {
       )}
 
       {!logs ? (
-        <SkeletonRows count={6} height={56} />
+        <ActividadSkeleton />
       ) : filtered.length === 0 ? (
-        <div className="admin-settings-card">
+        <div className="admin-settings-card admin-act-empty">
           <EmptyState
             icon={History}
             mascot="descanso-mate"

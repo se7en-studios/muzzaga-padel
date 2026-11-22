@@ -102,18 +102,6 @@
   color: #fff;
 }
 
-/* El carrusel de fotos: marco negro como la estructura de la cancha. */
-#instalaciones .fc-frame {
-  border-color: rgba(255, 255, 255, 0.22);
-  box-shadow: 0 40px 90px -40px rgba(4, 10, 32, 0.9);
-}
-
-#instalaciones .fc-stage {
-  background: var(--cancha-vidrio);
-  border-top-color: var(--cancha-vidrio-borde);
-  backdrop-filter: blur(8px);
-}
-
 /* Ficha técnica: un vidrio oscuro apoyado sobre la cancha. */
 #instalaciones .spec-panel {
   background: var(--cancha-vidrio);
@@ -162,27 +150,6 @@
 #instalaciones .spec-tag {
   color: #fff;
   background: rgba(255, 255, 255, 0.14);
-}
-
-/* El panel de las pastillas (Torneos, Living, Cantina…) es el mismo vidrio
-   desenfocado que la ficha técnica, no un negro sólido. Los degradés de
-   arriba y abajo eran negros: en el vidrio se cambian por una máscara que
-   desvanece la lista. */
-#instalaciones .fc-nav {
-  background: var(--cancha-vidrio);
-  backdrop-filter: blur(12px);
-}
-
-#instalaciones .fc-nav-fade {
-  display: none;
-}
-
-/* align-self: las pastillas van en absoluto y en celu la lista medía 0 de
-   alto, así que la máscara la tapaba entera: se estira al alto del panel. */
-#instalaciones .fc-nav-track {
-  align-self: stretch;
-  height: auto;
-  mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%);
 }
 
 @media (max-width: 768px) {
@@ -569,29 +536,6 @@
 }
 
 /* --------------------------------------------------------------------------
-   INSTALACIONES: fotos con marco y etiqueta naranja
-   -------------------------------------------------------------------------- */
-.fc-stage-card {
-  border-color: var(--color-accent-orange);
-  /* Oscuro, no naranja: es lo que se ve mientras carga la foto. */
-  background: #1b1b19;
-  box-shadow: 0 24px 50px -20px rgba(232, 114, 42, 0.45);
-}
-
-/* Las de atrás (inactivas) con el marco más apagado, para que mande la del frente. */
-.fc-stage-card:not(.is-active) {
-  border-color: rgba(232, 114, 42, 0.45);
-  box-shadow: none;
-}
-
-.fc-stage-tag {
-  background: var(--color-accent-orange);
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 6px 16px -6px rgba(232, 114, 42, 0.7);
-}
-
-/* --------------------------------------------------------------------------
    SIN CORTES ENTRE SECCIONES
    Las secciones con fondo propio (Torneos, Cantina, Herramientas) cortaban en
    línea recta contra el negro de la página. Ahora el fondo entra y sale con
@@ -613,34 +557,10 @@
    BIBLIOTECA DE ÍCONOS 3D EN SU LUGAR
    -------------------------------------------------------------------------- */
 /* Los chicos con una sombra más corta: la de 6 px los ensuciaba. */
-.fc-pill-3d,
 .booking-badge-3d,
 .booking-input-3d,
 .booking-note-3d {
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
-}
-
-/* Carrusel de Instalaciones: el ícono de la pastilla activa a pleno, el
-   resto apagado como estaba el ícono de línea. */
-.fc-pill-3d {
-  width: 30px;
-  height: 30px;
-  margin: -6px 0;
-  transition: opacity var(--t-hover) var(--ease), transform var(--t-hover) var(--ease);
-}
-
-.fc-pill:not(.active) .fc-pill-3d {
-  opacity: 0.55;
-  filter: saturate(0.4) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
-}
-
-.fc-pill:hover .fc-pill-3d {
-  opacity: 1;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
-}
-
-.fc-pill.active .fc-pill-3d {
-  transform: scale(1.12) rotate(-6deg);
 }
 
 /* Ubicación: el ícono suelto, sin la cajita de color. */

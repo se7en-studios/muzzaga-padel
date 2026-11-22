@@ -1,7 +1,6 @@
 import Image from "next/image";
 import SiteHeader from "../components/SiteHeader";
 import LiveWeatherRadar from "../components/LiveWeatherRadar";
-import TodayFlashSlots from "../components/TodayFlashSlots";
 import BookingCalendar from "../components/BookingCalendar";
 import HomeCantinaTeaser from "../components/HomeCantinaTeaser";
 // Secciones lejos de la primera pantalla: mismo HTML, pero su JS (y motion,
@@ -23,12 +22,15 @@ import ScrollProgress from "../components/ScrollProgress";
 import MotionFx from "../components/MotionFx";
 import StatCounter from "../components/StatCounter";
 import HeroMascot from "../components/HeroMascot";
-import HeroLiveSlots from "../components/HeroLiveSlots";
+import HeroTablero from "../components/HeroTablero";
+import HeroRally from "../components/HeroRally";
 import HorarioSemana from "../components/HorarioSemana";
 import { WhatsAppLogo, WazeLogo } from "../components/BrandLogos";
 import "./landing.css";
 import "./fondo-cancha.css";
+import "../components/ClubRecorrido.css"; // acá y no en el componente (diferido): el HTML del servidor llega con estilos
 import "./secciones/hero.css";
+import "./secciones/hero-v2.css";
 import "./secciones/turnos.css";
 import "./secciones/camaras-instalaciones.css";
 import "./secciones/torneos-cantina.css";
@@ -161,8 +163,6 @@ export default async function Home() {
                   <path d="M12 5v14M5 12l7 7 7-7" />
                 </svg>
               </a>
-              {/* Solo en el celu: el próximo turno libre, pegado al botón. */}
-              <HeroLiveSlots variant="hint" />
             </div>
 
             <ul className="hero-trust">
@@ -171,21 +171,23 @@ export default async function Home() {
             </ul>
           </div>
 
-          {/* Sin aria-hidden en el contenedor: los turnos en vivo son un botón.
-              La mascota es decorativa (alt vacío) y el precio ya está en Reservas. */}
-          <div className="hero-night-visual">
-            <div className="hero-mascot-ring" aria-hidden="true" />
+          {/* Los turnos libres de cada cancha, en vivo: tocar un horario
+              lo deja elegido en la grilla de reservas. */}
+          <div className="hero-v2-board">
+            <HeroTablero
+              precio={ars(Math.min(valle.court, twoPrices ? pico.court : valle.court))}
+              precioSub={
+                twoPrices
+                  ? `turno ${config.slotDurationMin} min · ${ars(pico.court)} desde las ${picoDesde}`
+                  : `el turno de ${config.slotDurationMin} min · ${ars(perPlayer(valle))} c/u`
+              }
+            />
+          </div>
+
+          {/* La mascota se asoma detrás del tablero y pisa la cinta. */}
+          <div className="hero-night-visual" aria-hidden="true">
+            <div className="hero-mascot-ring" />
             <HeroMascot src="/img/mascotas/muzzaguito-lentes-hero.webp" width={720} height={657} />
-            <div className="hero-float-card hero-float-price" aria-hidden="true">
-              <span className="hero-float-label">{twoPrices ? "Turno desde" : "Turno"} · {config.slotDurationMin} min</span>
-              <strong>{ars(Math.min(valle.court, twoPrices ? pico.court : valle.court))}</strong>
-              <span className="hero-float-sub">
-                {twoPrices
-                  ? `${ars(pico.court)} desde las ${picoDesde}`
-                  : `${ars(perPlayer(valle))} c/u si son 4`}
-              </span>
-            </div>
-            <HeroLiveSlots />
           </div>
 
           <dl className="hero-stats">
@@ -208,6 +210,7 @@ export default async function Home() {
           </dl>
         </div>
 
+        <HeroRally />
       </section>
 
       <div className="ticker" aria-hidden="true">
@@ -225,8 +228,9 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* WIDGET DISPONIBILIDAD INMEDIATA (HOY / MAÑANA) */}
-      <TodayFlashSlots />
+      {/* Los turnos libres de hoy y mañana ya están en el tablero del hero
+          (HeroTablero): la franja "Próximos turnos libres" que iba acá los
+          repetía. */}
 
       {/* 2. RESERVÁ TU TURNO */}
       <section id="turnos" className="section-turnos">

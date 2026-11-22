@@ -1,0 +1,528 @@
+/* ==========================================================================
+   "ASÍ ES MUZZAGA" — RECORRIDO 3D POR SCROLL
+   La maqueta del club va detrás (iframe) y la cámara sigue el scroll. Encima:
+   la tira de zonas (arriba) y una tarjeta tipo tablero de marcador (abajo),
+   de vidrio para que la maqueta se siga viendo.
+   Se importa desde app/page.js (no desde el componente, que carga diferido):
+   así el HTML del servidor ya llega con la altura y los estilos correctos.
+   ========================================================================== */
+.club-tour {
+  --ct-blue: #2350d6;
+  --ct-blue-deep: #0b1a4d;
+  --ct-orange: #e8722a;
+  --ct-ball: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  --ct-line: rgba(255, 255, 255, 0.92);
+  --ct-glass: rgba(9, 14, 34, 0.56);
+  --ct-glass-edge: rgba(255, 255, 255, 0.16);
+  --ct-edge: clamp(16px, 4vw, 56px);
+  position: relative;
+  height: calc(var(--stops) * 100svh);
+}
+
+.club-tour-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* La maqueta (foto + 3D + viñeta). Cuando el borde de arriba o el de abajo de la sección está
+   en pantalla, ClubRecorrido pone data-fade y sube --fade-top / --fade-bottom: la maqueta se funde
+   con la página en vez de cortarse en recto. Fija en pantalla no lleva máscara (nada que recortar). */
+.club-tour-scene {
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  position: absolute;
+  inset: 0;
+  /* foto de la maqueta: se ve al instante mientras carga la 3D */
+  background: #141826 url(/recorrido/poster-noche.jpg) center / cover no-repeat;
+}
+
+.club-tour-scene[data-fade] {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgb(0 0 0 / 0.35) calc(var(--fade-top) * 0.4),
+    rgb(0 0 0 / 0.8) calc(var(--fade-top) * 0.75),
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    rgb(0 0 0 / 0.8) calc(100% - var(--fade-bottom) * 0.75),
+    rgb(0 0 0 / 0.35) calc(100% - var(--fade-bottom) * 0.4),
+    transparent 100%
+  );
+}
+
+/* viñeta de cine */
+.club-tour-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(8, 10, 22, 0.42));
+}
+
+.club-tour-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+}
+
+.club-tour-frame.is-ready {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Cargando: pastilla de vidrio en el medio, sobre la foto de la maqueta
+   -------------------------------------------------------------------------- */
+.club-tour-loading {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ct-glass-edge);
+  background: rgba(9, 14, 34, 0.72);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 14px 30px -16px rgba(0, 0, 0, 0.7);
+}
+
+.club-tour-loading-ball {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ct-ball);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   Tira de zonas: chips de 44 px; la activa es un pedacito de cancha
+   (azul con césped y línea blanca) con la pelota amarilla.
+   -------------------------------------------------------------------------- */
+.club-tour-poi {
+  position: absolute;
+  z-index: 2;
+  top: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  max-width: calc(100% - 24px);
+  padding: 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border-radius: 999px;
+  border: 1px solid var(--ct-glass-edge);
+  background: var(--ct-glass);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  box-shadow: 0 10px 28px -16px rgba(0, 0, 0, 0.7);
+  scrollbar-width: none;
+}
+
+.club-tour-poi::-webkit-scrollbar {
+  display: none;
+}
+
+.club-tour-poi button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.club-tour-poi button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.club-tour-poi button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+.club-tour-poi button.on {
+  color: #fff;
+  background: var(--ct-blue) url(/img/fondo/textura-cesped.jpg) center / 200px 200px;
+  box-shadow:
+    inset 0 0 0 1.5px var(--ct-line),
+    0 4px 14px -6px rgba(35, 80, 214, 0.9);
+  text-shadow: 0 1px 2px rgba(5, 12, 36, 0.55);
+}
+
+/* punto: aro blanco apagado; en la zona activa, la pelota */
+.club-tour-poi-dot {
+  position: relative;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.5);
+}
+
+.club-tour-poi button.on .club-tour-poi-dot {
+  width: 11px;
+  height: 11px;
+  background: var(--ct-ball);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.club-tour-poi-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #d7f03a;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Tarjeta tipo marcador: cabecera de cancha (azul, césped, línea blanca)
+   con la etapa y el progreso; abajo vidrio con título, texto y botones.
+   -------------------------------------------------------------------------- */
+.club-tour-card {
+  position: absolute;
+  z-index: 2;
+  left: var(--ct-edge);
+  bottom: clamp(20px, 6vh, 64px);
+  width: min(410px, calc(100% - 32px));
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--ct-glass-edge);
+  background: var(--ct-glass);
+  backdrop-filter: blur(14px) saturate(1.35);
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
+  color: #fff;
+  box-shadow:
+    0 24px 50px -24px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.club-tour-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 14px 0 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(11, 26, 77, 0.25)),
+    var(--ct-blue) url(/img/fondo/textura-cesped.jpg) center / 260px 260px;
+}
+
+.club-tour-kick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(5, 12, 36, 0.5);
+}
+
+/* la pelota del marcador */
+.club-tour-kick::before {
+  content: "";
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ct-ball);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* progreso: la línea blanca de la cancha, en tramos; el actual, amarillo pelota */
+.club-tour-dots {
+  display: flex;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--ct-blue-deep);
+}
+
+.club-tour-dots li {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  background: var(--ct-line);
+}
+
+.club-tour-dots li::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #d7f03a;
+  opacity: 0;
+}
+
+.club-tour-dots li.on::after {
+  opacity: 1;
+}
+
+.club-tour-card-body {
+  padding: 14px 18px 0;
+}
+
+.club-tour-title {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 3.2vw, 2.4rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #fff;
+  text-wrap: balance;
+}
+
+.club-tour-text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.club-tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px 16px;
+}
+
+.club-tour-actions .btn {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+}
+
+.club-tour-actions .btn-orange-primary {
+  background: var(--ct-orange);
+  border-color: var(--ct-orange);
+}
+
+/* "Recorrer el club →" va en la cabecera: alto de toque completo (40 px de la
+   cabecera) sin sumarle un renglón a la tarjeta */
+.club-tour-link {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  padding: 0 4px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-color: rgba(215, 240, 58, 0.85);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  text-shadow: 0 1px 2px rgba(5, 12, 36, 0.5);
+  white-space: nowrap;
+}
+
+.club-tour-link:hover {
+  text-decoration-color: #fff;
+}
+
+.club-tour-link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+/* "Scrolleá ↓" (compu): pastilla de vidrio abajo a la derecha */
+.club-tour-scroll {
+  position: absolute;
+  z-index: 2;
+  right: var(--ct-edge);
+  bottom: clamp(20px, 6vh, 64px);
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--ct-glass-edge);
+  background: var(--ct-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.club-tour-scroll[data-hide="true"] {
+  opacity: 0;
+}
+
+/* Celus humildes (modo liviano de la maqueta): sin desenfoque de fondo, que
+   recalcularlo sobre la 3D en cada cuadro cuesta; el vidrio pasa a tinte. */
+.club-tour[data-load="lite"] :is(.club-tour-card, .club-tour-poi, .club-tour-scroll) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background-color: rgba(9, 14, 34, 0.8);
+}
+
+/* --------------------------------------------------------------------------
+   Celular: tarjeta compacta para que la maqueta respire
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .club-tour-poi {
+    top: 76px;
+  }
+  .club-tour-poi button {
+    padding: 0 14px 0 12px;
+    font-size: 0.95rem;
+  }
+
+  .club-tour-card {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: 80px; /* deja lugar a la barra flotante de abajo */
+    border-radius: 16px;
+  }
+  .club-tour-card-head {
+    gap: 8px;
+    padding: 0 10px 0 14px;
+  }
+  .club-tour-kick {
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+  }
+  .club-tour-card-body {
+    padding: 10px 14px 0;
+  }
+  .club-tour-title {
+    margin-bottom: 4px;
+    font-size: 1.5rem;
+  }
+  .club-tour-text {
+    font-size: 0.84rem;
+    line-height: 1.4;
+  }
+  /* los dos botones y el enlace en un renglón; si no entra, el enlace baja */
+  /* los dos botones mitad y mitad */
+  .club-tour-actions {
+    flex-wrap: nowrap;
+    padding: 10px 14px 12px;
+  }
+  .club-tour-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 0.82rem;
+    gap: 6px;
+  }
+  .club-tour-link {
+    font-size: 0.84rem;
+    letter-spacing: 0.04em;
+  }
+  .club-tour-scroll {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Movimiento (solo transform/opacity, y solo si el usuario no pidió menos)
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .club-tour-frame {
+    transition: opacity 0.6s ease;
+  }
+  .club-tour-scroll {
+    transition: opacity 0.4s ease;
+  }
+  .club-tour-dots li::after {
+    transition: opacity 0.3s ease;
+  }
+
+  .club-tour-loading-ball {
+    animation: club-tour-bote 0.9s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+  }
+
+  .club-tour-poi button.on .club-tour-poi-dot::after {
+    animation: club-tour-pulse 1.8s ease-out infinite;
+  }
+
+  .club-tour-kick,
+  .club-tour-card-body {
+    animation: club-tour-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .club-tour-btn {
+    transition: transform 0.2s ease;
+  }
+  .club-tour-btn:hover {
+    transform: translateY(-2px);
+  }
+  .club-tour-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+@keyframes club-tour-bote {
+  from {
+    transform: translateY(-3px);
+  }
+  to {
+    transform: translateY(3px) scale(1.06, 0.94);
+  }
+}
+
+@keyframes club-tour-pulse {
+  from {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes club-tour-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

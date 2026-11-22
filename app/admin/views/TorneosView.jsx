@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DollarSign, Plus, Trophy, Users, X } from "lucide-react";
-import { EmptyState, SkeletonRows } from "../ui/states";
+import { EmptyState } from "../ui/states";
+import { Bone, TorneosSkeleton } from "./Esqueletos";
 import { formatARS } from "../../../lib/format";
 import { todayInClub } from "../../../lib/booking";
 import { CATEGORY_PRESETS, isByeMatch } from "../../../lib/tournament";
@@ -235,7 +236,13 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
           color="#ea580c"
           title="Torneos activos"
           value={metrics.active}
-          sub={tournaments ? `${tournaments.length} en total` : "Cargando..."}
+          sub={
+            tournaments ? (
+              `${tournaments.length} en total`
+            ) : (
+              <Bone w={84} h={11} className="is-light" />
+            )
+          }
         />
         <Kpi
           icon={Users}
@@ -445,7 +452,7 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
       )}
 
       {!tournaments ? (
-        <SkeletonRows count={3} height={110} />
+        <TorneosSkeleton />
       ) : tournaments.length === 0 ? (
         showCreate ? null : (
           <div className="tn-empty-poster">
@@ -577,7 +584,10 @@ export function TournamentCard({ t, onOpen }) {
                 )}
               </span>
             </span>
-            <span className="tn-paybar" aria-hidden>
+            <span
+              className={`tn-paybar${players.length ? "" : " is-empty"}`}
+              aria-hidden
+            >
               <span style={{ width: `${paidPct}%` }} />
             </span>
           </span>

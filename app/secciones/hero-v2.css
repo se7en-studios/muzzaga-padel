@@ -1,0 +1,882 @@
+/* Hero, segunda versión: tablero de turnos en vivo, pelota que abre la
+   página y salida con zoom al bajar. Se carga después de hero.css. */
+
+/* ==========================================================================
+   1. ACOMODO: el tablero ocupa la columna derecha (donde estaban el precio y
+   la tarjeta de turnos) y la mascota se asoma por detrás, parada en la
+   cinta. En el celu el tablero va justo debajo del botón.
+   ========================================================================== */
+.hero-v2-board {
+  grid-area: board;
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+}
+
+/* El renglón "Próximo libre" del celu ya no hace falta: el tablero, que
+   viene justo debajo, dice lo mismo con más detalle. */
+.hero-night .hero-next-slot {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  .hero-night-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-areas:
+      "copy board"
+      "stats visual";
+    column-gap: clamp(32px, 4vw, 64px);
+  }
+
+  .hero-v2-board {
+    align-self: center;
+    justify-self: end;
+    width: min(100%, 452px);
+    margin-top: 12px;
+  }
+
+  /* La mascota: más chica que antes y detrás del tablero, como si lo
+     sostuviera desde abajo. Ocupa la fila de las cifras sin agrandarla. */
+  .hero-night .hero-night-visual {
+    align-self: stretch;
+    height: auto;
+    min-height: 120px;
+    margin-bottom: 0;
+    z-index: 2;
+  }
+
+  .hero-night .hero-night-visual .hero-mascot-tilt {
+    position: absolute;
+    right: clamp(0px, 3vw, 48px);
+    bottom: -112px;
+  }
+
+  .hero-night .hero-mascot {
+    width: clamp(250px, 21vw, 320px);
+  }
+
+  .hero-night .hero-mascot-ring {
+    top: auto;
+    bottom: -150px;
+    left: auto;
+    right: clamp(-40px, 0vw, 0px);
+    translate: none;
+    width: 380px;
+  }
+
+  .hero-night .hero-night-visual::after {
+    left: auto;
+    right: clamp(40px, 7vw, 110px);
+    translate: none;
+    width: 200px;
+    bottom: -104px;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-night-grid {
+    grid-template-areas:
+      "copy"
+      "board"
+      "stats"
+      "visual";
+  }
+
+  .hero-v2-board {
+    margin-top: 6px;
+  }
+
+  .hero-night .hero-night-ctas {
+    margin-bottom: 14px;
+  }
+}
+
+/* ==========================================================================
+   2. TABLERO DE TURNOS (HeroTablero)
+   La cancha azul con césped, el perímetro blanco y la red punteada entre
+   las dos canchas, como el marcador de abajo. Cada horario es una placa de
+   tanteador; el más cercano, una pelota.
+   ========================================================================== */
+.htab {
+  --linea: rgba(255, 255, 255, 0.62);
+  position: relative;
+  isolation: isolate;
+  border: 1px solid #16349a;
+  border-radius: 18px;
+  background-color: #2350d6;
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.12), rgba(11, 26, 77, 0.62)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 200px 200px;
+  box-shadow:
+    0 30px 60px -24px rgba(3, 9, 32, 0.95),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+/* Perímetro de la cancha. */
+.htab::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  z-index: -1;
+  border: 2px solid var(--linea);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.htab-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px 12px;
+}
+
+.htab-head-txt {
+  min-width: 0;
+}
+
+.htab-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.htab-vivo {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.htab-vivo.is-on {
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+}
+
+.htab-vivo.is-on::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(215, 240, 58, 0.7);
+  opacity: 0;
+}
+
+.htab-dia {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 3.2vw, 44px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(5, 14, 46, 0.55);
+}
+
+/* El precio en una placa de tanteador. */
+.htab-precio {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 8px 11px 7px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #141c3f 0 50%, #0a1131 50% 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.13),
+    0 3px 0 rgba(5, 14, 46, 0.55);
+  text-align: right;
+}
+
+.htab-precio strong {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  color: #d7f03a;
+  text-shadow: 0 0 12px rgba(215, 240, 58, 0.35);
+  font-variant-numeric: tabular-nums;
+}
+
+.htab-precio span {
+  max-width: 190px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Las dos canchas, con la red entre medio. */
+.htab-cancha {
+  padding: 0 14px;
+}
+
+.htab-fila {
+  position: relative;
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 12px 8px;
+}
+
+.htab-fila + .htab-fila {
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.85) 0 3px, transparent 3px 7px)
+    left top / 100% 2px no-repeat;
+}
+
+/* Postes de la red, apoyados en el perímetro. */
+.htab-fila + .htab-fila::before,
+.htab-fila + .htab-fila::after {
+  content: "";
+  position: absolute;
+  top: -3.5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.htab-fila + .htab-fila::before {
+  left: -10px;
+}
+
+.htab-fila + .htab-fila::after {
+  right: -10px;
+}
+
+.htab-nombre {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.htab-num {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 30px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #141c3f 0 50%, #0a1131 50% 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.13);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  color: #d7f03a;
+}
+
+.htab-nombre-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.htab-nombre-txt b {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(5, 14, 46, 0.6);
+}
+
+.htab-nombre-txt small {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.htab-horas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.htab-horas > li {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 76px;
+}
+
+.htab-hora {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #17204a 0 50%, #0c1436 50% 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 3px 0 rgba(5, 14, 46, 0.6);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    transform var(--t-hover, 0.18s) var(--ease, ease),
+    opacity var(--t-hover, 0.18s) var(--ease, ease);
+}
+
+/* La rayita del medio de la placa. */
+.htab-hora::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.htab-hora:hover,
+.htab-hora:focus-visible {
+  transform: translateY(-2px);
+}
+
+.htab-hora:focus-visible {
+  outline: 3px solid #d7f03a;
+  outline-offset: 2px;
+}
+
+.htab-hora:active {
+  transform: translateY(1px);
+}
+
+/* El horario más cercano es la pelota: verde pelota con texto oscuro. */
+.htab-hora.is-primero {
+  background: radial-gradient(circle at 30% 20%, #f4ff8a 0, #d7f03a 55%, #b5d21f 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    0 3px 0 #6f8211,
+    0 8px 18px -6px rgba(215, 240, 58, 0.55);
+  color: #0b1a4d;
+}
+
+.htab-hora.is-primero::before {
+  background: rgba(11, 26, 77, 0.18);
+}
+
+.htab-hora.is-skel {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.htab-lleno {
+  flex: 1 1 auto;
+  max-width: none !important;
+  padding: 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.htab-mas {
+  flex: 0 0 auto !important;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.htab-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 4px 14px 0;
+  padding: 4px 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.htab-pie-txt {
+  padding-top: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.htab-pie-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 0 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #d7f03a;
+  cursor: pointer;
+}
+
+.htab-pie-link span {
+  transition: transform var(--t-hover, 0.18s) var(--ease, ease);
+}
+
+.htab-pie-link:hover span,
+.htab-pie-link:focus-visible span {
+  transform: translateX(4px);
+}
+
+@media (max-width: 420px) {
+  .htab-head {
+    padding: 18px 18px 10px;
+  }
+
+  .htab-cancha {
+    padding: 0 10px;
+  }
+
+  .htab-fila {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 8px;
+    padding: 11px 6px;
+  }
+
+  .htab-num {
+    width: 22px;
+    height: 28px;
+    font-size: 17px;
+  }
+
+  .htab-nombre {
+    gap: 7px;
+  }
+
+  .htab-nombre-txt b {
+    font-size: 15.5px;
+  }
+
+  .htab-hora {
+    font-size: 17px;
+  }
+
+  .htab-horas {
+    gap: 5px;
+  }
+
+  .htab-precio strong {
+    font-size: 22px;
+  }
+
+  .htab-precio span {
+    max-width: 118px;
+  }
+
+  .htab-kicker-extra {
+    display: none;
+  }
+
+  .htab-pie {
+    margin: 4px 10px 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .htab-vivo.is-on::after {
+    animation: htabLate 2s var(--ease, ease-out) infinite;
+  }
+
+  .htab-hora.is-skel {
+    animation: htabEspera 1.2s ease-in-out infinite alternate;
+  }
+
+  .htab-hora.is-primero {
+    animation: htabPrimero 0.6s cubic-bezier(0.3, 1.4, 0.5, 1) 0.2s both;
+  }
+}
+
+@keyframes htabLate {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes htabEspera {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 0.55;
+  }
+}
+
+@keyframes htabPrimero {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   3. LA PELOTA QUE ABRE LA PÁGINA (HeroRally)
+   ========================================================================== */
+.hero-rally {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rally-x {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  animation: rallyX var(--dur) linear calc(var(--k) * 38ms) both;
+}
+
+.rally-y {
+  display: block;
+  will-change: transform;
+  animation: rallyY var(--dur) linear calc(var(--k) * 38ms) both;
+}
+
+.rally-pelota {
+  position: relative;
+  display: block;
+  width: var(--tam);
+  height: var(--tam);
+  translate: -50% -50%;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.45),
+    0 0 18px rgba(215, 240, 58, 0.45);
+  animation: rallyGira var(--dur) linear both;
+}
+
+/* La costura, para que se vea girar. */
+.rally-pelota::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  bottom: 8%;
+  left: -62%;
+  width: 100%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+}
+
+.rally-estela .rally-pelota {
+  box-shadow: none;
+  animation: rallyEstela var(--dur) linear calc(var(--k) * 38ms) both;
+}
+
+.rally-estela .rally-pelota::after {
+  content: none;
+}
+
+/* Marca del pique en el piso y el destello al caer en el punto. */
+.rally-pique,
+.rally-golpe {
+  position: absolute;
+  width: 54px;
+  height: 18px;
+  margin: -9px 0 0 -27px;
+  border-radius: 50%;
+  border: 2px solid rgba(215, 240, 58, 0.8);
+  opacity: 0;
+}
+
+.rally-pique {
+  left: var(--xp);
+  top: calc(var(--yp) + var(--tam) / 2);
+  animation: rallyMarca 0.55s ease-out calc(var(--dur) * 0.5) forwards;
+}
+
+.rally-golpe {
+  left: var(--tx);
+  top: var(--ty);
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-width: 3px;
+  animation: rallyMarca 0.6s ease-out var(--dur) forwards;
+}
+
+@keyframes rallyX {
+  from {
+    transform: translateX(var(--x0));
+  }
+  to {
+    transform: translateX(var(--tx));
+  }
+}
+
+/* Cae acelerando hasta el piso, sube frenando y vuelve a caer en el punto. */
+@keyframes rallyY {
+  0% {
+    transform: translateY(var(--y0));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.95, 0.55);
+  }
+  50% {
+    transform: translateY(var(--yp));
+    animation-timing-function: cubic-bezier(0.05, 0.45, 0.5, 1);
+  }
+  76% {
+    transform: translateY(var(--yc));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.95, 0.55);
+  }
+  100% {
+    transform: translateY(var(--ty));
+  }
+}
+
+/* Gira, se aplasta en el pique y llega del tamaño del punto. */
+@keyframes rallyGira {
+  0% {
+    rotate: 0deg;
+    scale: 1;
+    opacity: 1;
+  }
+  47% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.28 0.72;
+  }
+  54% {
+    scale: 1;
+  }
+  98% {
+    opacity: 1;
+  }
+  100% {
+    rotate: 900deg;
+    scale: var(--fin);
+    opacity: 0;
+  }
+}
+
+@keyframes rallyEstela {
+  0% {
+    scale: calc(1 - var(--k) * 0.16);
+    opacity: 0;
+  }
+  10% {
+    opacity: calc(0.42 - var(--k) * 0.1);
+  }
+  85% {
+    opacity: calc(0.3 - var(--k) * 0.07);
+  }
+  100% {
+    scale: var(--fin);
+    opacity: 0;
+  }
+}
+
+@keyframes rallyMarca {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+/* Mientras vuela, el punto del título espera apagado; cuando la pelota
+   llega, se prende aplastándose (el renglón no se toca: tiene su propia
+   animación de entrada y reemplazarla la reiniciaba). */
+.hero-night.is-rally .hero-ball-dot {
+  animation: none;
+  opacity: 0;
+}
+
+.hero-night.is-rally-ok .hero-ball-dot {
+  animation: none;
+}
+
+.hero-night.is-rally-cae .hero-ball-dot {
+  animation: puntoAterriza 0.55s cubic-bezier(0.3, 0, 0.5, 1) both;
+}
+
+@keyframes puntoAterriza {
+  0% {
+    transform: scale(1.4, 0.65);
+  }
+  40% {
+    transform: translateY(-0.24em) scale(0.94, 1.06);
+  }
+  70% {
+    transform: scale(1.08, 0.92);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   4. AL BAJAR: la cámara se acerca y el texto se va
+   El video crece apenas y el texto sube y se apaga mientras el hero se va
+   de la pantalla. Solo transform y opacidad, atado al scroll (sin JS).
+   ========================================================================== */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-night .hero-night-photo {
+      animation: heroCamara linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100svh;
+    }
+
+    .hero-night .hero-night-copy {
+      animation: heroTextoSeVa linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 90svh;
+    }
+
+    .hero-v2-board {
+      animation: heroTableroSube linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100svh;
+    }
+  }
+}
+
+@keyframes heroCamara {
+  to {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes heroTextoSeVa {
+  to {
+    transform: translateY(-70px);
+    opacity: 0.25;
+  }
+}
+
+@keyframes heroTableroSube {
+  to {
+    transform: translateY(-36px);
+  }
+}
+
+/* En el celu el tablero está más abajo: que no se apague el texto antes de
+   leerlo. */
+@supports (animation-timeline: scroll()) {
+  @media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+    .hero-night .hero-night-copy {
+      animation-range: 0 120svh;
+    }
+
+    .hero-v2-board {
+      animation: none;
+    }
+  }
+}
+
+/* ==========================================================================
+   5. CELU: EL MARCADOR DE CIFRAS, MÁS CHICO
+   Con el tablero de turnos justo arriba, dos tableros iguales de alto
+   completo se repetían. Las cifras pasan a una grilla de 2 × 2 (la red
+   punteada entre las dos filas), con el número arriba y el nombre abajo.
+   ========================================================================== */
+@media (max-width: 900px) {
+  .hero-night .hero-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 14px;
+  }
+
+  .hero-night .hero-stat,
+  .hero-night .hero-stat:first-child,
+  .hero-night .hero-stat:nth-child(n) {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 7px;
+    min-height: 0;
+    padding: 12px 12px 11px 14px;
+  }
+
+  .hero-night .hero-stat + .hero-stat {
+    border-top: 0;
+  }
+
+  .hero-night .hero-stat:nth-child(even) {
+    border-left: 1px solid var(--linea-fina);
+  }
+
+  .hero-night .hero-stat:nth-child(4) {
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.85) 0 3px, transparent 3px 7px)
+      left top / 100% 3px no-repeat;
+  }
+
+  .hero-night .hero-stat:nth-child(3)::after {
+    content: none;
+  }
+
+  .hero-night .hero-stat:nth-child(4)::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    right: -4px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .hero-night .hero-stat:first-child dd::after {
+    content: none;
+  }
+
+  .hero-night .hero-stat dt {
+    font-size: 12.5px;
+    letter-spacing: 0.05em;
+  }
+
+  .hero-night .hero-stat dd,
+  .hero-night .hero-stat:nth-child(odd) dd {
+    align-self: flex-start;
+    margin: 0;
+    font-size: 23px;
+  }
+
+  .hero-night .hero-stat dd.hero-stat-word {
+    font-size: 15px;
+  }
+}

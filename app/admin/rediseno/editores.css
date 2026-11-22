@@ -831,3 +831,23 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* ---------- Carta: esqueleto de carga (views/Esqueletos.jsx) ---------- */
+.admin-root .sk-carta {
+  gap: 12px;
+}
+
+.admin-root .sk-carta-head {
+  padding-bottom: 6px;
+}
+
+.admin-root .sk-carta-row {
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.admin-root .sk-carta-row .sk-grow-soft {
+  flex: 0 1 auto;
+}

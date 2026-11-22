@@ -18,7 +18,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { EmptyState, SkeletonRows } from "../ui/states";
+import { EmptyState, Skeleton, SkeletonRows } from "../ui/states";
 import { productIcon } from "../../../lib/productIcon";
 import {
   formatARS,
@@ -696,7 +696,10 @@ export default function CantinaView({ onExpiredSession, onToast }) {
           )}
         </h2>
         {!orders ? (
-          <SkeletonRows count={2} />
+          // Mientras carga es el mismo renglón tranquilo que sin pedidos.
+          <span className="admin-web-orders-skel" aria-busy="true" aria-label="Cargando pedidos">
+            <Skeleton height={14} />
+          </span>
         ) : openOrders.length === 0 ? (
           <p className="admin-field-hint">
             {closedOrders.length
@@ -908,16 +911,42 @@ export default function CantinaView({ onExpiredSession, onToast }) {
             </h3>
           )}
           {!menu ? (
-            <SkeletonRows count={4} />
+            // Tarjetas fantasma con la forma de los productos.
+            <div className="admin-product-grid" aria-busy="true" aria-label="Cargando la carta">
+              {Array.from({ length: 8 }, (_, i) => (
+                <Skeleton key={i} height={164} radius={16} />
+              ))}
+            </div>
           ) : filteredItems.length === 0 ? (
-            <EmptyState
-              icon={Search}
-              title={`No hay productos con “${query}”`}
-              action={{
-                label: "Limpiar búsqueda",
-                onClick: () => setQuery(""),
-              }}
-            />
+            query ? (
+              <EmptyState
+                icon={Search}
+                title={`No hay productos con “${query}”`}
+                action={{
+                  label: "Limpiar búsqueda",
+                  onClick: () => setQuery(""),
+                }}
+              />
+            ) : menuItems.length === 0 ? (
+              <EmptyState
+                mascot="pizza-good-vibes"
+                title="La carta está vacía"
+                text="Cargá productos y precios para empezar a vender en el mostrador."
+                action={{
+                  label: "Ir a Carta y precios",
+                  onClick: () => setTab("carta"),
+                }}
+              />
+            ) : (
+              <EmptyState
+                icon={Search}
+                title="No hay productos en esta categoría"
+                action={{
+                  label: "Ver todos",
+                  onClick: () => setSelectedCat("all"),
+                }}
+              />
+            )
           ) : (
             <div className="admin-product-grid">
               {filteredItems.map((item) => (
