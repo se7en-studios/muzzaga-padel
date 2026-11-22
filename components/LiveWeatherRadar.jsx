@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { clubStatusLine, getClubStatus } from "../data/horarios";
+import "./Extras.css";
 
 /**
  * Estado del club en el hero, calculado del horario de Configuración (y los
@@ -28,14 +29,28 @@ export default function LiveWeatherRadar({ schedule, blockedDates }) {
     ? getClubStatus(now, { ...(schedule ? { schedule } : {}), blockedDates: blockedDates || [] })
     : null;
 
+  // "Abierto ahora · cierra a las 00:30": la primera parte va resaltada.
+  const line = status ? clubStatusLine(status) : "Abierto ahora · cierra a las 00:30";
+  const [estado, ...detalle] = line.split(" · ");
+  const dotState = status?.isOpen
+    ? status.state === "cierra-pronto"
+      ? " is-open is-soon"
+      : " is-open"
+    : "";
+
   return (
     <div
       className={`live-weather-radar-bar${ready ? " is-ready" : ""}`}
       aria-hidden={ready ? undefined : true}
     >
       <div className="radar-status-item">
-        <span className={`pulse-dot radar-dot${status?.isOpen ? " is-open" : ""}`} />
-        <span>{status ? clubStatusLine(status) : "Abierto ahora · cierra a las 00:30"}</span>
+        <span className={`pulse-dot radar-dot${dotState}`} />
+        <span className="radar-texto">
+          <strong className="radar-estado">{estado}</strong>
+          {detalle.length > 0 && (
+            <span className="radar-detalle"> · {detalle.join(" · ")}</span>
+          )}
+        </span>
       </div>
     </div>
   );

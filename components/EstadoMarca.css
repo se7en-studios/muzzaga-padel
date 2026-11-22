@@ -1,0 +1,379 @@
+/* ==========================================================================
+   PÁGINAS DE ESTADO (404, error) · components/EstadoMarca.jsx
+   Una cancha vista desde arriba (el azul con su textura y las líneas
+   blancas), la mascota jugando adentro y, en el 404, el código en grande con
+   la pelota haciendo de cero. Al lado (abajo en el celu) el título y las
+   salidas. La cancha es siempre azul; el texto usa los tokens del tema.
+   ========================================================================== */
+.estado-marca {
+  --estado-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --estado-azul: #2350d6;
+  --estado-pelota: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  --estado-naranja: #e8722a;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-content: center;
+  gap: 28px;
+  width: 100%;
+  max-width: 1120px;
+  min-height: 72vh;
+  margin: 0 auto;
+  padding: 92px 16px 56px;
+}
+
+/* --- La cancha ---------------------------------------------------------- */
+.estado-cancha {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 16 / 11;
+  border-radius: 22px;
+  background-color: var(--estado-azul);
+  background-image:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.15), rgba(11, 26, 77, 0.55)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, auto, 200px 200px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 22px 44px -18px rgba(11, 26, 77, 0.6);
+  isolation: isolate;
+}
+
+.estado-cancha-lineas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 2;
+  z-index: 0;
+}
+
+.estado-cancha-lineas * {
+  vector-effect: non-scaling-stroke;
+}
+
+/* La red: punteada y un poco más gruesa, como se ve desde arriba. */
+.estado-cancha-lineas .estado-cancha-red {
+  stroke: rgba(255, 255, 255, 0.6);
+  stroke-width: 4;
+  stroke-dasharray: 2 4;
+}
+
+/* "4 ● 4": el cero es la pelota. Va en el lado izquierdo de la cancha. */
+.estado-cancha-codigo {
+  position: absolute;
+  left: 6%;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.04em;
+  margin: 0;
+  transform: translateY(-50%);
+  font-family: var(--estado-display);
+  font-weight: 800;
+  font-size: clamp(68px, 21vw, 116px);
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 6px 18px rgba(11, 26, 77, 0.55);
+}
+
+.estado-cancha-pelota {
+  position: relative;
+  display: block;
+  width: 0.56em;
+  height: 0.56em;
+  border-radius: 50%;
+  background: var(--estado-pelota);
+  box-shadow:
+    inset -0.04em -0.05em 0.08em rgba(70, 90, 0, 0.35),
+    0 0.08em 0.16em rgba(11, 26, 77, 0.45);
+}
+
+/* La costura de la pelota. */
+.estado-cancha-pelota::before {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  border: 0.03em solid transparent;
+  border-left-color: rgba(255, 255, 255, 0.7);
+  border-right-color: rgba(255, 255, 255, 0.7);
+  transform: rotate(-30deg);
+}
+
+/* Sin código (página de error): la pelota sola, picando en la otra mitad. */
+.estado-cancha-pelota-sola {
+  position: absolute;
+  left: 24%;
+  top: 38%;
+  z-index: 1;
+  font-size: 72px;
+}
+
+/* El cartel del juez de línea, del otro lado de la línea de fondo. */
+.estado-cancha-out {
+  position: absolute;
+  top: -12px;
+  left: 22px;
+  z-index: 2;
+  padding: 4px 10px 3px;
+  border-radius: 6px;
+  background: var(--estado-naranja);
+  color: #1b1b19;
+  font-family: var(--estado-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  transform: rotate(-6deg);
+}
+
+.estado-marca-mascota {
+  position: absolute;
+  right: 3%;
+  bottom: 7%;
+  z-index: 1;
+  width: clamp(120px, 38vw, 220px);
+  height: auto;
+  filter: drop-shadow(0 14px 16px rgba(11, 26, 77, 0.5));
+}
+
+/* --- El texto y las salidas -------------------------------------------- */
+.estado-marca-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+}
+
+.estado-marca-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-accent-orange-text);
+}
+
+.estado-marca-kicker::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--estado-pelota);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.estado-marca-title {
+  margin: 0;
+  font-family: var(--estado-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(2.6rem, 11vw, 4.4rem);
+  line-height: 0.92;
+  letter-spacing: -0.005em;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
+.estado-marca-text {
+  max-width: 42ch;
+  margin: 14px 0 24px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.estado-marca-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.estado-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 24px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--t-hover) var(--ease),
+    background-color var(--t-hover) var(--ease),
+    border-color var(--t-hover) var(--ease);
+}
+
+.estado-btn:focus-visible {
+  outline: 3px solid var(--estado-azul);
+  outline-offset: 3px;
+}
+
+.estado-btn:active {
+  transform: scale(0.98);
+}
+
+/* El mismo naranja del "Reservar turno" del hero. */
+.estado-btn-primary {
+  background: var(--estado-naranja);
+  border-color: var(--estado-naranja);
+  color: #ffffff;
+  box-shadow: 0 10px 22px -10px rgba(232, 114, 42, 0.9);
+}
+
+.estado-btn-primary:hover {
+  background: #d9631d;
+  border-color: #d9631d;
+}
+
+.estado-btn-secondary {
+  background: var(--color-surface-card);
+  border-color: var(--color-hairline-strong);
+  color: var(--color-ink);
+}
+
+.estado-btn-secondary:hover {
+  border-color: var(--color-ink);
+}
+
+.estado-btn-whatsapp {
+  background: rgba(37, 211, 102, 0.1);
+  border-color: rgba(37, 211, 102, 0.45);
+  color: #0b6b43;
+}
+
+.estado-btn-whatsapp:hover {
+  background: rgba(37, 211, 102, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  .estado-btn-whatsapp {
+    color: #4ade80;
+  }
+}
+
+/* --- Compu: cancha a la izquierda, texto a la derecha ------------------- */
+@media (min-width: 900px) {
+  .estado-marca {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 64px;
+    min-height: 74vh;
+    padding: 128px 32px 88px;
+  }
+
+  .estado-cancha {
+    max-width: 580px;
+    justify-self: end;
+  }
+
+  .estado-cancha-codigo {
+    font-size: 128px;
+  }
+
+  .estado-marca-copy {
+    align-items: flex-start;
+    justify-self: start;
+    text-align: left;
+  }
+
+  .estado-marca-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-width: none;
+  }
+
+  .estado-btn:hover {
+    transform: translateY(-1px);
+  }
+}
+
+/* --- Movimiento: la mascota entra y la pelota pica ---------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .estado-marca-mascota {
+    animation: estadoMascotaEntra var(--t-entrada) var(--ease-mascota) both;
+  }
+
+  .estado-cancha-pelota {
+    animation: estadoPelotaPica 1.6s cubic-bezier(0.45, 0, 0.55, 1) 600ms infinite;
+  }
+
+  .estado-cancha-out {
+    animation: estadoOutEntra 420ms var(--ease-mascota) 900ms both;
+  }
+
+  .estado-marca-copy > * {
+    animation: estadoSube var(--t-entrada) var(--ease) both;
+  }
+
+  .estado-marca-copy > :nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .estado-marca-copy > :nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .estado-marca-copy > :nth-child(4) {
+    animation-delay: 180ms;
+  }
+}
+
+@keyframes estadoMascotaEntra {
+  from {
+    opacity: 0;
+    transform: translateY(18px) rotate(-8deg) scale(0.85);
+  }
+}
+
+@keyframes estadoPelotaPica {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  8% {
+    transform: translateY(0) scale(1.08, 0.92);
+  }
+  45% {
+    transform: translateY(-18%) scale(0.97, 1.03);
+  }
+}
+
+@keyframes estadoOutEntra {
+  from {
+    opacity: 0;
+    transform: rotate(-6deg) scale(0.6);
+  }
+}
+
+@keyframes estadoSube {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}

@@ -1,0 +1,143 @@
+/* Rediseño del admin: login. Carga después del resto de rediseno/, así que
+   pisa brand.css y base.css con la misma especificidad. Todo bajo
+   .admin-root.
+
+   La ficha del club como la entrada a la cancha: arriba de la contraseña,
+   una franja de césped azul con las líneas blancas (la red), y el campo de
+   la contraseña grande, como un cartel, para escribir cómodo en el celu. */
+
+/* ---------- La red: franja de cancha debajo del título ---------- */
+.admin-root .admin-login-header {
+  position: relative;
+  margin-bottom: 22px;
+}
+
+.admin-root .admin-login-header::after {
+  content: "";
+  display: block;
+  height: 20px;
+  margin: 20px -40px 0;
+  background:
+    /* Red punteada al medio, líneas de saque y perímetro. */
+    linear-gradient(90deg, transparent calc(50% - 1.5px), rgba(255, 255, 255, 0.9) calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+    linear-gradient(90deg, transparent 22%, rgba(255, 255, 255, 0.55) 22% calc(22% + 2px), transparent calc(22% + 2px) calc(78% - 2px), rgba(255, 255, 255, 0.55) calc(78% - 2px) 78%, transparent 78%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0 2px, transparent 2px calc(100% - 2px), rgba(255, 255, 255, 0.7) calc(100% - 2px)),
+    url("/img/fondo/textura-cesped.jpg") center / 240px auto,
+    #2350d6;
+  background-blend-mode: normal, normal, normal, multiply, normal;
+  box-shadow: inset 0 -3px 6px -3px rgba(0, 0, 0, 0.35);
+}
+
+/* Pelotita sobre la red: el acento amarillo del panel. */
+.admin-root .admin-login-header::before {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: calc(50% + 34px);
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Contraseña grande ---------- */
+.admin-root .admin-login-wrapper .admin-login-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Candado dibujado a la izquierda del campo (fondo SVG: no cambia el
+   formulario). */
+.admin-root .admin-login-wrapper input.admin-login-input.admin-input-field {
+  height: 62px;
+  padding: 0 16px 0 52px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%231c42b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='11' width='16' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E")
+      17px 50% / 22px 22px no-repeat,
+    #ffffff;
+  font-size: 17px;
+}
+
+/* Con algo escrito, los puntos se ven grandes y separados (se cuentan). */
+.admin-root .admin-login-wrapper input.admin-login-input.admin-input-field:not(:placeholder-shown) {
+  font-size: 24px;
+  letter-spacing: 0.22em;
+}
+
+.admin-root .admin-login-wrapper .admin-login-submit {
+  height: 60px;
+  margin-top: 20px;
+}
+
+/* La flecha del botón con la pelotita al lado: "a jugar". */
+.admin-root .admin-login-wrapper .admin-login-submit > span[aria-hidden] {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  color: #1b1b19;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admin-root .admin-login-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-login-wrapper .admin-login-submit > span[aria-hidden] {
+    transition: transform 0.18s ease;
+  }
+
+  .admin-root .admin-login-wrapper .admin-login-submit:hover:not(:disabled) > span[aria-hidden] {
+    transform: translateX(4px) rotate(90deg);
+  }
+
+  .admin-root .admin-login-header::before {
+    animation: adminLoginBall 0.6s cubic-bezier(0.3, 0, 0.4, 1) 0.25s both;
+  }
+
+  @keyframes adminLoginBall {
+    0% { opacity: 0; transform: translateY(-26px); }
+    55% { opacity: 1; transform: translateY(0) scale(1.12, 0.88); }
+    75% { transform: translateY(-6px); }
+    100% { transform: translateY(0); }
+  }
+}
+
+/* ---------- Celu ---------- */
+@media (max-width: 767px) {
+  /* La foto de abajo cortaba seco contra el césped repetido: una banda
+     azul oscura funde las dos. */
+  .admin-root .admin-login-wrapper {
+    background:
+      linear-gradient(180deg, rgba(5, 12, 36, 0.7) 0%, rgba(5, 12, 36, 0.35) 45%, transparent 75%),
+      linear-gradient(180deg, rgba(11, 26, 77, 0) 0, rgba(11, 26, 77, 0.92) 45%, rgba(11, 26, 77, 0.92) 55%, rgba(11, 26, 77, 0) 100%)
+        0 calc(100% - 300px) / 100% 160px no-repeat,
+      url("/img/admin/login-cancha.webp") 78% 100% / auto 380px no-repeat,
+      url("/img/fondo/textura-cesped.jpg") 0 0 / 360px 360px repeat,
+      #0b1a4d;
+  }
+
+  .admin-root .admin-login-header::after {
+    margin-inline: -24px;
+  }
+
+  .admin-root .admin-login-title {
+    font-size: 44px;
+  }
+
+  .admin-root .admin-login-back {
+    display: flex;
+    justify-content: center;
+  }
+}

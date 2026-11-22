@@ -1,4 +1,5 @@
 import Link from "next/link";
+import "./Extras.css";
 
 /**
  * "Volver al inicio / Herramientas / Test de nivel" de las páginas internas.
@@ -13,7 +14,10 @@ export default function PageCrumbs({ items }) {
     <div className="container">
       <nav className="page-crumbs" aria-label="Estás en">
         <Link className="page-crumbs-back" href="/">
-          <span aria-hidden="true">←</span> Inicio
+          <span className="page-crumbs-flecha" aria-hidden="true">
+            ←
+          </span>
+          Inicio
         </Link>
         <ol>
           {items.map((item, i) => {

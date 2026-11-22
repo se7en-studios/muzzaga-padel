@@ -407,7 +407,9 @@ export default function ActividadView({ onExpiredSession }) {
                       <time className="admin-activity-time admin-act-time">
                         {l.timestamp ? formatTime(l.timestamp) : "—"}
                       </time>
-                      <span className="admin-act-dot" aria-hidden />
+                      <span className="admin-act-dot" aria-hidden>
+                        <AreaIcon size={13} strokeWidth={2.2} />
+                      </span>
                       <div className="admin-activity-body admin-act-card">
                         <span
                           className="admin-act-avatar"

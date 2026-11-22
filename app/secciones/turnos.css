@@ -487,194 +487,406 @@
     color: #fbbf24;
   }
 }
+/* ==========================================================================
+   GRILLA EN COMPU: PRECIO A LA DERECHA DE CADA CANCHA
+   En pantallas anchas cada turno libre era una cancha enorme con dos
+   palabras a la izquierda. Del otro lado de la red va el precio de esa
+   franja y "Reservar →", así se lee como un botón. En celu no entra.
+   ========================================================================== */
+.booking-slot .slot-price {
+  display: none;
+}
+
+@media (min-width: 641px) {
+  .booking-matrix-row .booking-slot:not(:disabled) {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    align-content: center;
+    column-gap: 16px;
+    row-gap: 6px;
+    padding: 14px 20px;
+  }
+
+  .booking-matrix-row .booking-slot:not(:disabled) .slot-meta {
+    grid-column: 1;
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .booking-matrix-row .booking-slot:not(:disabled) .slot-badge {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .booking-matrix-row .booking-slot .slot-price {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    text-align: right;
+  }
+
+  .booking-matrix-row .booking-slot .slot-price strong {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+  }
+
+  .booking-matrix-row .booking-slot .slot-price-cta {
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #e4fb5a;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transition: transform var(--t-hover, 160ms) var(--ease, ease);
+  }
+
+  .booking-matrix-row .booking-slot.selected .slot-price-cta {
+    color: #ffffff;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .booking-matrix-row .booking-slot:not(:disabled):hover .slot-price-cta {
+      transform: translateX(4px);
+    }
+  }
+}
 
 /* ==========================================================================
    PASE DIGITAL: UNA ENTRADA DE PARTIDO
-   Arriba la cancha azul (como el turno que elegiste) con la marca, el
-   código y los datos; un corte punteado con dos muescas, como un ticket;
-   abajo lo que hay que pagar y los botones.
+   Arriba la cancha azul con lo que importa en grande (hora y pista, como
+   un marcador); un corte troquelado de verdad (las muescas dejan ver el
+   fondo); abajo el talón con la seña, los datos para transferir y los
+   botones.
    ========================================================================== */
-.digital-pass-card {
+
+/* El diálogo recibe el foco para leerse entero: sin marco naranja alrededor
+   de todo (los botones de adentro conservan su foco visible). */
+.digital-pass-modal:focus {
+  outline: none;
+}
+
+.digital-pass-modal {
+  max-width: 420px;
+  gap: 10px;
+}
+
+/* Aviso de arriba: tarjeta sólida (antes era naranja translúcido sobre el
+   fondo oscuro y el texto quedaba turbio). */
+.pass-confirm-banner {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: var(--bg-card);
+  border-left: 4px solid var(--color-accent-orange);
+  box-shadow: 0 12px 30px -16px rgba(0, 0, 0, 0.6);
+}
+
+.pass-confirm-text {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.pass-confirm-text strong {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-accent-orange);
+}
+
+/* La tarjeta es solo el contenedor que scrollea: el fondo lo ponen las
+   dos partes de la entrada, así las muescas quedan transparentes. */
+.digital-pass-card,
+.digital-pass-modal > .digital-pass-card {
   position: relative;
-  padding: 0 0 20px;
-  overflow: hidden;
+  padding: 0;
   border: 0;
   border-radius: 24px;
-  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.55);
+  background: transparent;
+  box-shadow: none;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.35));
+  scrollbar-width: none;
 }
 
-.digital-pass-card > :not(.pass-header-row):not(.pass-divider):not(.pass-details-grid) {
-  margin-left: 20px;
-  margin-right: 20px;
+.digital-pass-card::-webkit-scrollbar {
+  display: none;
 }
 
-/* Cabecera y datos sobre la cancha */
-.digital-pass-card .pass-header-row,
-.digital-pass-card .pass-details-grid {
+/* Las muescas: cada mitad recorta dos medio círculos sobre el corte. */
+.pass-ticket-top,
+.pass-ticket-stub {
+  --muesca: 13px;
+  position: relative;
+}
+
+.pass-ticket-top {
+  overflow: hidden;
+  border-radius: 24px 24px 0 0;
+  color: #ffffff;
   background-color: #2350d6;
   background-image:
-    linear-gradient(180deg, rgba(11, 26, 77, 0.25), rgba(11, 26, 77, 0.6)),
+    var(--turnos-lineas-resumen),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.15) 0%, rgba(11, 26, 77, 0.65) 100%),
     url("/img/fondo/textura-cesped.jpg");
-  background-size: auto, 220px 220px;
-  color: #ffffff;
+  background-size: 100% 100%, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  -webkit-mask:
+    radial-gradient(circle at 0 100%, #0000 var(--muesca), #000 calc(var(--muesca) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 100%, #0000 var(--muesca), #000 calc(var(--muesca) + 0.5px)) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle at 0 100%, #0000 var(--muesca), #000 calc(var(--muesca) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 100%, #0000 var(--muesca), #000 calc(var(--muesca) + 0.5px)) right / 51% 100% no-repeat;
 }
 
-.digital-pass-card .pass-header-row {
-  padding: 18px 20px 14px;
-  background-position: 0 0, 0 0;
+.pass-ticket-stub {
+  padding: 22px 20px 20px;
+  border-radius: 0 0 24px 24px;
+  background: var(--bg-card);
+  -webkit-mask:
+    radial-gradient(circle at 0 0, #0000 var(--muesca), #000 calc(var(--muesca) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 0, #0000 var(--muesca), #000 calc(var(--muesca) + 0.5px)) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle at 0 0, #0000 var(--muesca), #000 calc(var(--muesca) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 0, #0000 var(--muesca), #000 calc(var(--muesca) + 0.5px)) right / 51% 100% no-repeat;
 }
 
-.digital-pass-card .pass-details-grid {
-  position: relative;
-  margin: 0 0 18px;
-  padding: 6px 20px 22px;
-  gap: 12px 18px;
-  background-position: 0 0, 0 -52px;
-}
-
-/* La red punteada al medio, entre los datos */
-.digital-pass-card .pass-details-grid::before {
+/* La línea de troquel, de muesca a muesca. */
+.pass-ticket-stub::before {
   content: "";
   position: absolute;
-  top: 4px;
-  bottom: 18px;
-  left: 50%;
-  border-left: 2px dashed rgba(255, 255, 255, 0.35);
+  top: 0;
+  left: calc(var(--muesca) + 8px);
+  right: calc(var(--muesca) + 8px);
+  border-top: 2px dashed var(--color-hairline-strong);
+}
+
+/* Cabecera: marca y código */
+.digital-pass-card .pass-header-row {
+  gap: 12px;
+  padding: 18px 20px 14px;
+  background: none;
+}
+
+.pass-brand-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pass-logo {
+  display: block;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #ffffff;
+  padding: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 .digital-pass-card .pass-brand {
   display: block;
   font-family: var(--font-display);
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 800;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   line-height: 1;
   color: #ffffff;
+  white-space: nowrap;
 }
 
 .digital-pass-card .pass-sub-brand {
   display: block;
-  margin-top: 3px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #d7f03a;
+  color: #e4fb5a;
+}
+
+.pass-code-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex: none;
+}
+
+.pass-code-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .digital-pass-card .pass-code-badge {
   background: #ffffff;
   border: 0;
+  border-radius: 8px;
   color: #16349a;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
-  padding: 6px 12px;
+  letter-spacing: 0.08em;
+  padding: 5px 10px;
   box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.5);
 }
 
+/* La red de la cancha entre la cabecera y los datos. */
 .digital-pass-card .pass-divider {
-  display: none;
+  height: 0;
+  margin: 0 20px;
+  background: none;
+  border-top: 2px dotted rgba(255, 255, 255, 0.45);
+}
+
+/* Datos: hora y pista en grande arriba; fecha y titular abajo. */
+.digital-pass-card .pass-details-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 16px 18px;
+  margin: 0;
+  padding: 16px 20px 26px;
+  background: none;
 }
 
 .digital-pass-card .pass-details-grid .pass-label {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
 }
 
 .digital-pass-card .pass-details-grid .pass-val {
   color: #ffffff;
   font-size: 16px;
   font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-/* El horario en letra de marcador, en verde pelota */
-.digital-pass-card .pass-details-grid .pass-detail-item:nth-child(2) .pass-val {
-  font-family: var(--font-jetbrains-mono), monospace;
-  font-size: 14.5px;
+.pass-time-start {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
   white-space: nowrap;
-  color: #d7f03a;
+  color: #e4fb5a;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Abajo, sobre fondo claro: los títulos de total y seña en gris legible. */
-.digital-pass-card .pass-financial-row .pass-label {
-  color: var(--color-muted);
+.pass-time-end {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.digital-pass-card .pass-val-court {
-  color: #ffffff;
+.pass-item-court {
+  align-self: start;
+  padding-left: 16px;
+  border-left: 2px dashed rgba(255, 255, 255, 0.4);
 }
 
-/* El corte del ticket: muescas a los costados y línea punteada */
-.digital-pass-card .pass-details-grid::after {
-  content: "";
-  position: absolute;
-  left: -12px;
-  right: -12px;
-  bottom: -12px;
-  height: 24px;
-  background:
-    radial-gradient(circle at 12px 12px, var(--modal-backdrop-hole, rgba(10, 10, 12, 0.88)) 11px, transparent 12px) left / 24px 24px no-repeat,
-    radial-gradient(circle at 12px 12px, var(--modal-backdrop-hole, rgba(10, 10, 12, 0.88)) 11px, transparent 12px) right / 24px 24px no-repeat,
-    linear-gradient(90deg, transparent 22px, var(--bg-card) 22px, var(--bg-card) calc(100% - 22px), transparent calc(100% - 22px)) 0 12px / 100% 12px no-repeat;
+.digital-pass-card .pass-details-grid .pass-val-court {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
-/* Lo que se paga: el total y la seña bien marcados */
+.pass-item-name {
+  padding-left: 16px;
+}
+
+.pass-item-date .pass-val,
+.pass-item-name .pass-val {
+  font-size: 15px;
+}
+
+/* Talón: lo que se paga */
+.digital-pass-card .pass-financial-row,
+.digital-pass-card > :not(.pass-header-row):not(.pass-divider):not(.pass-details-grid) {
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .digital-pass-card .pass-financial-row {
-  border-style: dashed;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.digital-pass-card .pass-financial-row .pass-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.pass-fin-sena {
+  padding-left: 14px;
+  border-left: 1px solid var(--color-hairline-strong);
 }
 
 .digital-pass-card .pass-price-val,
 .digital-pass-card .pass-sena-val {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 34px;
   font-weight: 800;
   line-height: 1;
 }
 
-/* WhatsApp es el paso que falta: el botón grande y con brillo */
-.digital-pass-card .pass-wa-main {
-  font-size: 14.5px !important;
-  white-space: nowrap;
-  padding: 0 14px;
-  border-radius: 14px;
-  font-weight: 800;
-  box-shadow: 0 14px 28px -12px rgba(37, 211, 102, 0.8);
+.digital-pass-card .pass-price-val {
+  color: var(--color-ink);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .digital-pass-card .pass-wa-main {
-    animation: passWaPulse 2.4s ease-in-out 1s 3;
-  }
-
-  @keyframes passWaPulse {
-    50% {
-      transform: scale(1.025);
-      box-shadow: 0 18px 34px -10px rgba(37, 211, 102, 0.95);
-    }
-  }
+.digital-pass-card .pass-sena-val {
+  color: #15803d;
 }
 
-/* Los dos botones de calendario entran en el ancho del celu (antes el de
-   Apple se salía por la derecha). */
-.digital-pass-card .pass-actions-col > div[style*="grid"] {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-}
-
-.digital-pass-card .pass-actions-col > div[style*="grid"] > .btn {
-  min-width: 0;
-  padding: 0 8px;
-  gap: 6px;
-}
-
-.digital-pass-card .pass-actions-col > div[style*="grid"] > .btn svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
+.pass-fin-note {
+  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--color-muted);
 }
 
 /* La seña es lo de un jugador: se aclara debajo del monto. */
@@ -683,23 +895,243 @@
   align-items: center;
   gap: 6px;
   margin-top: 6px;
-  padding: 3px 10px;
+  padding: 3px 9px;
   border-radius: 999px;
   background: rgba(22, 163, 74, 0.1);
   color: #15803d;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
-  white-space: nowrap;
+  line-height: 1.25;
+  max-width: 100%;
 }
 
 .digital-pass-card .pass-sena-ball {
+  flex: none;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  background: var(--turnos-pelota);
+}
+
+/* Datos para transferir */
+.digital-pass-card .pass-transfer-box {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1.5px dashed var(--color-hairline-strong);
+  border-radius: 14px;
+  background: var(--color-canvas-soft);
+}
+
+.digital-pass-card .pass-transfer-header {
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.digital-pass-card .pass-bank-row + .pass-bank-row {
+  margin-top: 10px;
+}
+
+.digital-pass-card .pass-bank-row > div {
+  min-width: 0;
+}
+
+.digital-pass-card .pass-alias-code {
+  display: block;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.digital-pass-card .pass-cbu-code {
+  display: block;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* Copiar: 44 px para el dedo (antes ~28). */
+.digital-pass-card .pass-copy-btn {
+  flex: none;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pass-titular {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--color-muted);
+}
+
+.pass-transfer-empty {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--color-body);
+}
+
+/* Botones */
+.digital-pass-card .pass-actions-col {
+  gap: 8px;
+}
+
+.pass-mp-message {
+  padding: 8px 10px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.12);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--color-ink);
+}
+
+.digital-pass-card .pass-mp-btn {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 14px;
+  background: #009ee3;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 158, 227, 0.25);
+}
+
+/* WhatsApp es el paso que falta: el botón grande y con brillo */
+.digital-pass-card .pass-wa-main {
+  width: 100%;
+  min-height: 54px;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 14px 28px -12px rgba(37, 211, 102, 0.8);
+}
+
+.pass-cal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.digital-pass-card .pass-sec-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 8px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.digital-pass-card .pass-sec-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Cerrar: secundario de verdad (texto), pero con 44 px para el dedo. */
+.pass-close-btn {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 2px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--color-body);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.pass-close-btn:hover {
+  color: var(--color-ink);
+}
+
+@media (max-width: 480px) {
+  .digital-pass-card .pass-details-grid .pass-val-court {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 380px) {
+  .pass-time-start {
+    font-size: 54px;
+  }
+
+  .digital-pass-card .pass-details-grid .pass-val-court {
+    font-size: 24px;
+  }
+
+  .digital-pass-card .pass-price-val,
+  .digital-pass-card .pass-sena-val {
+    font-size: 29px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .digital-pass-card .pass-wa-main {
+    animation: passWaPulse 2.4s ease-in-out 1s 3;
+  }
+
+  /* El código entra como un sello. */
+  .digital-pass-card .pass-code-badge {
+    animation: passSello 520ms cubic-bezier(0.3, 1.4, 0.5, 1) 380ms both;
+  }
+
+  /* La hora sube apenas, después de que aparece la entrada. */
+  .pass-time-start {
+    animation: passHora 480ms cubic-bezier(0.2, 0.8, 0.3, 1) 220ms both;
+  }
+}
+
+@keyframes passWaPulse {
+  50% {
+    transform: scale(1.025);
+  }
+}
+
+@keyframes passSello {
+  from {
+    opacity: 0;
+    transform: scale(1.6) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes passHora {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
+  .digital-pass-card .pass-sena-val {
+    color: #4ade80;
+  }
+
   .digital-pass-card .pass-sena-hint {
     color: #4ade80;
     background: rgba(74, 222, 128, 0.12);

@@ -149,6 +149,9 @@ function PhotoSlot({
               onCaption(caption);
             }}
           >
+            <span className="admin-site-caption-label" aria-hidden="true">
+              Texto sobre la foto
+            </span>
             <input
               type="text"
               aria-label={`Texto sobre la foto (${slot.label})`}
@@ -269,7 +272,9 @@ function GalleryPhotos({
               </>
             ) : (
               <>
-                <ImagePlus {...ICON} />
+                <span className="admin-site-add-icon">
+                  <ImagePlus {...ICON} />
+                </span>
                 <span>Agregar fotos</span>
               </>
             )}
@@ -363,7 +368,9 @@ function GalleryTournament({
           <strong>{t.name}</strong>
           {t.categories && <span> · {t.categories}</span>}
         </span>
-        <span className="admin-field-hint">{plural(count, "foto", "fotos")}</span>
+        <span className="admin-field-hint admin-site-tournament-count">
+          {plural(count, "foto", "fotos")}
+        </span>
       </summary>
 
       <div className="admin-site-tournament-body">
@@ -796,7 +803,13 @@ export default function SitioWebSection({ onExpiredSession, onToast }) {
 
       {PHOTO_GROUPS.map((group) => (
         <div key={group.id} className="admin-site-group">
-          <h4 className="admin-site-group-title">{group.title}</h4>
+          <h4 className="admin-site-group-title">
+            {group.title}
+            <span className="admin-site-group-count">
+              <span className="sr-only"> · </span>
+              {plural(group.slots.length, "foto", "fotos")}
+            </span>
+          </h4>
           <p className="admin-field-hint">{group.hint}</p>
           <ul className={`admin-site-slots${group.slots.length === 1 ? " is-single" : ""}`}>
             {group.slots.map((slot) => (

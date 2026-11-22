@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import "./Extras.css";
 
 const BOOKED_KEY = "muzzaga_has_booked";
 const DISMISSED_KEY = "muzzaga_install_dismissed";
@@ -91,12 +93,28 @@ export default function InstallPrompt() {
 
   return (
     <div className="install-prompt" role="dialog" aria-label="Instalar la app">
+      <span className="install-prompt-icono" aria-hidden="true">
+        <Image src="/img/logo_badge.png" alt="" width={44} height={44} />
+      </span>
       <div className="install-prompt-text">
         <strong>Tené Muzzaga en tu celu</strong>
         <span>
-          {mode === "ios"
-            ? "Tocá Compartir y elegí «Agregar a inicio» para reservar más rápido."
-            : "Instalala y reservá más rápido la próxima vez."}
+          {mode === "ios" ? (
+            <>
+              Tocá Compartir{" "}
+              <svg
+                className="install-prompt-compartir"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1" />
+              </svg>{" "}
+              y elegí «Agregar a inicio» para reservar más rápido.
+            </>
+          ) : (
+            "Instalala y reservá más rápido la próxima vez."
+          )}
         </span>
       </div>
       <div className="install-prompt-actions">
