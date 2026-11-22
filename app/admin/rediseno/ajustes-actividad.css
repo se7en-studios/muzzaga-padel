@@ -2039,7 +2039,11 @@
 
   .admin-root .admin-cfg .admin-schedule-row:not(.is-closed) > .admin-toggle {
     grid-area: day;
-    grid-column: auto;
+  }
+
+  .admin-root .admin-cfg .admin-schedule-row:not(.is-closed) > input[type="time"] {
+    width: 100%;
+    min-width: 0;
   }
 
   .admin-root .admin-cfg .admin-schedule-row:not(.is-closed) > input[type="time"]:first-of-type {
@@ -2056,7 +2060,6 @@
 
   .admin-root .admin-cfg .admin-schedule-row:not(.is-closed) .admin-cfg-day-sum {
     grid-area: sum;
-    grid-column: auto;
     justify-self: end;
     align-self: center;
     font-size: 0;
