@@ -19,7 +19,7 @@ import { adminGetRangeStats } from "../actions";
 import CourtTimeline from "./agenda/CourtTimeline";
 import DayStrip from "./agenda/DayStrip";
 import WeekChart from "./agenda/WeekChart";
-import { Skeleton, SkeletonCards, SkeletonRows } from "../ui/states";
+import { EmptyState, Skeleton, SkeletonRows } from "../ui/states";
 
 const BOARD_ICON = { size: 15, strokeWidth: 1.9, "aria-hidden": true };
 
@@ -95,8 +95,11 @@ export default function AgendaView({
     return (
       <div className="admin-agenda">
         {strip}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <SkeletonCards count={3} />
+        {/* Mismo tamaño que el marcador oscuro y la grilla: sin saltos al
+            llegar los datos. */}
+        <div className="admin-agenda-skeleton" aria-busy="true" aria-label="Cargando la agenda">
+          <Skeleton height={138} radius={16} />
+          <Skeleton width={220} height={26} />
           <SkeletonRows count={7} height={64} />
         </div>
       </div>
@@ -276,8 +279,12 @@ export default function AgendaView({
           </div>
 
           {isClosed ? (
-            <div className="admin-settings-card admin-closed-day">
-              El club no abre este día.
+            <div className="admin-closed-day">
+              <EmptyState
+                mascot="descanso-mate"
+                title="El club no abre este día"
+                text="Día de descanso. Elegí otro día en la tira de arriba para ver o cargar turnos."
+              />
             </div>
           ) : (
             <CourtTimeline
@@ -330,7 +337,11 @@ function WeekSection({ weekStats }) {
       </div>
       {weekStats === false ? (
         <div className="admin-week-empty">
-          No se pudo cargar la semana. Probá actualizar en un rato.
+          <EmptyState
+            mascot="enredado-grip"
+            title="No se pudo cargar la semana"
+            text="Probá actualizar en un rato."
+          />
         </div>
       ) : !days ? (
         <div className="admin-week-loading" aria-busy="true" aria-label="Cargando la semana">
@@ -338,7 +349,11 @@ function WeekSection({ weekStats }) {
         </div>
       ) : isEmpty ? (
         <div className="admin-week-empty">
-          Todavía no hay turnos ni cobros en los últimos 7 días.
+          <EmptyState
+            mascot="pelota-padel-life"
+            title="Semana sin movimiento"
+            text="Todavía no hay turnos ni cobros en los últimos 7 días. Cuando entren, el gráfico aparece acá."
+          />
         </div>
       ) : (
         <WeekChart days={days} />

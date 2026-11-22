@@ -41,7 +41,7 @@ import {
 import { isoAddDays, todayInClub } from "../../../lib/booking";
 import { formatARS, formatDate, plural } from "../../../lib/format";
 import { beelupStreamInfo, youtubeEmbedUrl } from "../../../lib/beelup";
-import { Skeleton } from "../ui/states";
+import { AjustesSkeleton, StaffSkeleton } from "./Esqueletos";
 import StaffPinModal from "../ui/StaffPinModal";
 import { usePinGate } from "../ui/usePinGate";
 import SitioWebSection from "./SitioWebSection";
@@ -460,10 +460,7 @@ export default function ConfiguracionView({
 
   if (!form) {
     return (
-      <div className="admin-settings" aria-busy="true">
-        <Skeleton height={220} radius={12} />
-        <Skeleton height={420} radius={12} />
-      </div>
+      <AjustesSkeleton />
     );
   }
 
@@ -1305,7 +1302,7 @@ export default function ConfiguracionView({
           </p>
 
           {staff === null ? (
-            <Skeleton height={120} radius={12} />
+            <StaffSkeleton />
           ) : (
             <>
               {staff.length > 0 && (

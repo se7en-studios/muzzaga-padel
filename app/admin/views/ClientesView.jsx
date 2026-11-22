@@ -30,11 +30,13 @@ import {
   generateClientsCsv,
   isInactiveClient,
 } from "../../../lib/clientsExport";
-import { EmptyState, SkeletonRows } from "../ui/states";
+import { EmptyState } from "../ui/states";
+import { ClientesSkeleton } from "./Esqueletos";
 import { WhatsAppMiniIcon } from "../adminHelpers";
 import ClientDrawer, { avatarTone, initials } from "./clientes/ClientDrawer";
 import StaffPinModal from "../ui/StaffPinModal";
 import { adminDeleteClient } from "../actions";
+import { zzClients } from "../zz-demo-data"; // ZZDEMO
 
 const SEARCH_DEBOUNCE_MS = 250;
 const ICON = { size: 16, strokeWidth: 1.75, "aria-hidden": true };
@@ -103,6 +105,7 @@ export default function ClientesView({
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteText, setInviteText] = useState(DEFAULT_INVITE);
   const [invited, setInvited] = useState(() => new Set());
+  clients = zzClients(clients); // ZZDEMO
   const today = todayInClub();
   const list = clients || [];
 
@@ -169,7 +172,7 @@ export default function ClientesView({
     )}`;
 
   if (!clients) {
-    return <SkeletonRows count={8} height={52} />;
+    return <ClientesSkeleton />;
   }
 
   const maxCount = Math.max(1, ...list.map((c) => c.count || 0));

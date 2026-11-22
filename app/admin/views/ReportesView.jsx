@@ -18,7 +18,9 @@ import { adminGetReport } from "../actions";
 import { isoAddDays, isoWeekday, todayInClub } from "../../../lib/booking";
 import { trendPct } from "../../../lib/metrics";
 import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
-import { EmptyState, SkeletonCards, SkeletonRows } from "../ui/states";
+import { EmptyState } from "../ui/states";
+import { ReportesSkeleton } from "./Esqueletos";
+import { zzRun, zzReport } from "../zz-demo-data"; // ZZDEMO
 import DailyChart from "./reportes/DailyChart";
 import Highlights from "./reportes/Highlights";
 import OccupancyHeat from "./reportes/OccupancyHeat";
@@ -127,7 +129,7 @@ export default function ReportesView({ onExpiredSession }) {
     let cancelled = false;
     setLoading(true);
     setError("");
-    adminGetReport(period.from, period.to).then((res) => {
+    zzRun(() => adminGetReport(period.from, period.to), () => zzReport(period.from, period.to)).then((res) => { // ZZDEMO
       if (cancelled) return;
       setLoading(false);
       if (res.ok) setReport(res);
@@ -312,20 +314,18 @@ export default function ReportesView({ onExpiredSession }) {
       </div>
 
       {error && (
-        <div
-          role="alert"
-          className="admin-settings-card"
-          style={{ color: "#b91c1c" }}
-        >
-          {error}
-        </div>
+        <section className="rp-empty rp-error" role="alert">
+          <EmptyState
+            icon={BarChart3}
+            mascot="enredado-paleta"
+            title="No pudimos armar los números"
+            text={error}
+          />
+        </section>
       )}
 
       {!report && !error && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <SkeletonCards count={4} />
-          <SkeletonRows count={1} height={240} />
-        </div>
+        <ReportesSkeleton />
       )}
 
       {report && <ReportContent report={report} loading={loading} />}

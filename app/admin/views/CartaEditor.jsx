@@ -16,7 +16,8 @@ import {
   newItemId,
 } from "../../../lib/cantinaMenu";
 import { formatARS, formatTime, normalizeSearch, plural } from "../../../lib/format";
-import { EmptyState, SkeletonRows } from "../ui/states";
+import { EmptyState } from "../ui/states";
+import { CartaSkeleton } from "./Esqueletos";
 import { productIcon } from "../../../lib/productIcon";
 import { usePinGate } from "../ui/usePinGate";
 
@@ -185,7 +186,7 @@ export default function CartaEditor({
   if (!menu) {
     return (
       <section className="admin-settings-card admin-carta">
-        <SkeletonRows count={6} />
+        <CartaSkeleton />
       </section>
     );
   }

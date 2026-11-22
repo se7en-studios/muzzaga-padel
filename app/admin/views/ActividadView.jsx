@@ -14,7 +14,9 @@ import {
   Wallet,
 } from "lucide-react";
 import { adminGetAuditLog } from "../actions";
-import { EmptyState, SkeletonRows } from "../ui/states";
+import { EmptyState } from "../ui/states";
+import { ActividadSkeleton } from "./Esqueletos";
+import { zzRun, zzLogs } from "../zz-demo-data"; // ZZDEMO
 import {
   formatDate,
   formatTime,
@@ -157,7 +159,7 @@ export default function ActividadView({ onExpiredSession }) {
   async function load(nextLimit = limit) {
     setLoading(true);
     setError("");
-    const res = await adminGetAuditLog(nextLimit);
+    const res = await zzRun(() => adminGetAuditLog(nextLimit), () => ({ ok: true, logs: zzLogs() })); // ZZDEMO
     setLoading(false);
     if (res?.ok) setLogs(res.logs || []);
     else if (!onExpiredSession?.(res)) {
@@ -361,9 +363,9 @@ export default function ActividadView({ onExpiredSession }) {
       )}
 
       {!logs ? (
-        <SkeletonRows count={6} height={56} />
+        <ActividadSkeleton />
       ) : filtered.length === 0 ? (
-        <div className="admin-settings-card">
+        <div className="admin-settings-card admin-act-empty">
           <EmptyState
             icon={History}
             mascot="descanso-mate"

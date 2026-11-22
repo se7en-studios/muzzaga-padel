@@ -38,7 +38,7 @@ import {
 } from "../../../lib/siteLocation";
 import { compressImage } from "../../../lib/compressImage";
 import { plural } from "../../../lib/format";
-import { Skeleton } from "../ui/states";
+import { SitioSkeleton } from "./Esqueletos";
 import { usePinGate } from "../ui/usePinGate";
 
 const ICON = { size: 18, strokeWidth: 1.75, "aria-hidden": true };
@@ -680,7 +680,7 @@ export default function SitioWebSection({ onExpiredSession, onToast }) {
     return (
       <section id="cfg-sitio" className="admin-settings-card admin-cfg-card" aria-busy="true">
         <SiteHead />
-        <Skeleton height={260} radius={12} />
+        <SitioSkeleton />
       </section>
     );
   }

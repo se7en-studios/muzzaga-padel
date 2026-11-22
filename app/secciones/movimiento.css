@@ -47,19 +47,17 @@
       animation-range: entry 0% entry 90%;
     }
 
-    /* ---- Carruseles del celu (días, turnos libres, herramientas): las
+    /* ---- Carruseles del celu (días, turnos libres): las
        tarjetas que van entrando por el costado al deslizar crecen y se
        enderezan, como si giraran hacia vos. En compu no hay scroll de
        costado y quedan quietas. ---- */
     .booking-dates,
-    .flash-chips,
-    .tools-grid {
+    .flash-chips {
       perspective: 900px;
     }
 
     .booking-dates > *,
-    .flash-chips > *,
-    .tools-grid > * {
+    .flash-chips > * {
       animation: fxCarrusel linear both;
       animation-timeline: view(inline);
       animation-range: entry 0% entry 100%;

@@ -28,6 +28,7 @@ import HorarioSemana from "../components/HorarioSemana";
 import { WhatsAppLogo, WazeLogo } from "../components/BrandLogos";
 import "./landing.css";
 import "./fondo-cancha.css";
+import "../components/ClubRecorrido.css"; // acá y no en el componente (diferido): el HTML del servidor llega con estilos
 import "./secciones/hero.css";
 import "./secciones/turnos.css";
 import "./secciones/camaras-instalaciones.css";
