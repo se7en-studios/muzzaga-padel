@@ -569,13 +569,19 @@
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 380px) {
   .horario-dias {
     gap: 4px;
   }
 
   .horario-dia {
     font-size: 13.5px;
+  }
+
+  /* "Cerrado · abre mañana a las 14:00" en un renglón también a 360. */
+  .horario-tablero .live-weather-radar-bar {
+    padding: 8px 10px;
+    font-size: 12px;
   }
 }
 
