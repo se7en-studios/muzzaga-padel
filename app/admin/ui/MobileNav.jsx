@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { ExternalLink, LogOut, MoreHorizontal, Plus, Tv } from "lucide-react";
 import { ICON_PROPS, MOBILE_PRIMARY_IDS, NAV_ITEMS } from "../nav";
+import { useAnimatedOpen } from "./useAnimatedOpen";
 
 /**
  * Mobile (<768px): bottom nav con 4 secciones + "Más", y "Nueva Reserva"
@@ -17,7 +18,8 @@ export default function MobileNav({
   onNewBooking,
   onLogout,
 }) {
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const more = useAnimatedOpen(220);
+  const isMoreOpen = more.open;
   const primary = MOBILE_PRIMARY_IDS.map((id) =>
     NAV_ITEMS.find((n) => n.id === id),
   );
@@ -27,14 +29,14 @@ export default function MobileNav({
   useEffect(() => {
     if (!isMoreOpen) return;
     function onKey(e) {
-      if (e.key === "Escape") setIsMoreOpen(false);
+      if (e.key === "Escape") more.hide();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isMoreOpen]);
+  }, [isMoreOpen, more.hide]);
 
   function go(id) {
-    setIsMoreOpen(false);
+    if (isMoreOpen) more.hide();
     onNavigate(id);
   }
 
@@ -57,24 +59,24 @@ export default function MobileNav({
             onClick={() => go(id)}
           >
             <Icon {...ICON_PROPS} />
-            {shortLabel || label}
+            <span>{shortLabel || label}</span>
           </button>
         ))}
         <button
           type="button"
           aria-current={isSecondaryActive ? "page" : undefined}
-          aria-expanded={isMoreOpen}
-          onClick={() => setIsMoreOpen(true)}
+          aria-expanded={isMoreOpen && !more.closing}
+          onClick={isMoreOpen ? more.hide : more.show}
         >
           <MoreHorizontal {...ICON_PROPS} />
-          Más
+          <span>Más</span>
         </button>
       </nav>
 
       {isMoreOpen && (
         <div
-          className="admin-sheet-backdrop"
-          onClick={() => setIsMoreOpen(false)}
+          className={`admin-sheet-backdrop${more.closing ? " is-closing" : ""}`}
+          onClick={more.hide}
         >
           <div
             className="admin-sheet"
@@ -95,7 +97,9 @@ export default function MobileNav({
                   aria-current={view === id ? "page" : undefined}
                   onClick={() => go(id)}
                 >
-                  <Icon {...ICON_PROPS} />
+                  <span className="admin-sheet-tile-icon" aria-hidden="true">
+                    <Icon {...ICON_PROPS} />
+                  </span>
                   {label}
                 </button>
               ))}
@@ -113,7 +117,7 @@ export default function MobileNav({
                 type="button"
                 className="admin-sheet-logout"
                 onClick={() => {
-                  setIsMoreOpen(false);
+                  more.hide();
                   onLogout();
                 }}
               >

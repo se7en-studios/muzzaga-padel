@@ -368,39 +368,47 @@
 
 /* ==========================================================================
    BARRA LATERAL
-   Negra como la noche del club, con la cancha dibujada abajo. La sección
-   en la que estás es una cancha azul con su pelotita: la misma pieza que un
-   turno reservado en la agenda, así se entiende "estoy acá".
+   Negra como la noche del club, con el reflejo azul de la cancha abajo. La
+   sección en la que estás es una cancha azul con su pelotita: la misma
+   pieza que un turno reservado en la agenda, así se entiende "estoy acá".
+   Al pasar el mouse aparece la raya naranja al borde y el ícono se pinta
+   amarillo pelota.
    ========================================================================== */
 @media (min-width: 768px) {
   .admin-root .admin-sidebar {
     width: 252px;
-    background-color: #161614;
+    background-color: #151513;
     background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 200' fill='none' stroke='white' stroke-opacity='.08'%3E%3Crect x='3' y='3' width='94' height='194' rx='3' stroke-width='2'/%3E%3Cpath d='M0 100h100' stroke-width='3' stroke-dasharray='1 3'/%3E%3Cpath d='M3 31h94M3 169h94M50 31v138' stroke-width='1.5'/%3E%3C/svg%3E"),
-      radial-gradient(130% 42% at 50% 100%, rgba(35, 80, 214, 0.3), transparent 70%),
-      linear-gradient(180deg, #1d1d1a 0%, #141412 100%);
-    background-size: 160px 320px, 100% 100%, 100% 100%;
-    background-position: 50% calc(100% + 170px), 0 0, 0 0;
+      radial-gradient(150% 34% at 50% 106%, rgba(35, 80, 214, 0.36), transparent 72%),
+      radial-gradient(120% 22% at 0 0, rgba(232, 114, 42, 0.07), transparent 70%),
+      linear-gradient(180deg, #1c1c19 0%, #131311 100%);
+    background-size: 100% 100%;
+    background-position: 0 0;
     background-repeat: no-repeat;
-    border-right: 1px solid rgba(255, 255, 255, 0.04);
+    background-attachment: scroll;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
     transition: none;
   }
 
   .admin-root .admin-sidebar.collapsed {
     width: 76px;
-    background-size: 60px 120px, 100% 100%, 100% 100%;
-    background-position: 50% calc(100% + 50px), 0 0, 0 0;
+    background-size: 100% 100%;
+    background-position: 0 0;
   }
 }
 
+/* En lo oscuro el foco va en amarillo pelota: el azul no se distinguía. */
+.admin-root .admin-dashboard-layout .admin-sidebar :focus-visible {
+  outline-color: #d7f03a;
+}
+
 .admin-root .admin-sidebar-brand {
-  padding: 24px 16px 20px;
+  padding: 18px 16px 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .admin-root .admin-sidebar-logo {
-  width: 146px;
+  width: 116px;
 }
 
 .admin-root .admin-sidebar-collapse-btn {
@@ -408,12 +416,8 @@
   right: 10px;
   width: 34px;
   height: 34px;
-  border-radius: 8px;
-  color: #a8a294;
-}
-
-.admin-root .admin-sidebar.collapsed .admin-sidebar-brand {
-  padding: 16px 8px 14px;
+  border-radius: 9px;
+  color: #8f897c;
 }
 
 .admin-root .admin-sidebar-collapse-btn:hover {
@@ -421,9 +425,20 @@
   color: #ffffff;
 }
 
+.admin-root .admin-sidebar.collapsed .admin-sidebar-brand {
+  gap: 12px;
+  padding: 16px 8px 14px;
+}
+
+.admin-root .admin-sidebar.collapsed .admin-sidebar-collapse-btn {
+  width: 40px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .admin-root .admin-sidebar-nav {
-  gap: 18px;
-  padding: 18px 12px 18px;
+  gap: 16px;
+  padding: 16px 12px;
 }
 
 .admin-root .admin-sidebar-group {
@@ -435,44 +450,64 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 8px 6px;
+  padding: 0 10px 6px;
   font-family: var(--font-display);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  color: #a8a294;
+  letter-spacing: 0.18em;
+  color: #8f897c;
 }
 
 .admin-root .admin-sidebar-group-title::after {
   content: "";
   flex: 1;
   height: 0;
-  border-top: 2px dotted rgba(255, 255, 255, 0.14);
+  border-top: 2px dotted rgba(255, 255, 255, 0.12);
 }
 
 .admin-root .admin-sidebar-link {
   gap: 12px;
-  min-height: 44px;
+  min-height: 42px;
   padding: 0 12px;
   border-radius: var(--radius-control);
   border: 1px solid transparent;
-  color: #ebe7dc;
+  color: #e4dfd3;
   font-size: 15px;
   font-weight: 500;
   transition: none;
 }
 
 .admin-root .admin-sidebar-link svg {
-  color: #b5ae9f;
+  color: #9b9588;
 }
 
 .admin-root .admin-sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.055);
   color: #ffffff;
 }
 
 .admin-root .admin-sidebar-link:hover svg {
-  color: #ffffff;
+  color: #d7f03a;
+}
+
+/* La raya naranja al borde del menú, solo al pasar el mouse. */
+.admin-root .admin-sidebar-nav .admin-sidebar-link:not(.active)::before {
+  content: "";
+  display: block;
+  position: absolute;
+  left: -12px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--brand);
+  opacity: 0;
+  transform: scaleY(0.4);
+}
+
+.admin-root .admin-sidebar-nav .admin-sidebar-link:not(.active):hover::before {
+  opacity: 1;
+  transform: none;
 }
 
 .admin-root .admin-sidebar-link.active::before {
@@ -484,7 +519,7 @@
   background-color: var(--court);
   background-image:
     var(--mini-court),
-    linear-gradient(180deg, rgba(11, 26, 77, 0.12), rgba(11, 26, 77, 0.5)),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.1), rgba(11, 26, 77, 0.5)),
     var(--turf);
   background-size: 50px 26px, auto, 200px 200px;
   background-position: right 9px center, 0 0, 0 0;
@@ -493,11 +528,17 @@
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 10px 20px -12px rgba(35, 80, 214, 0.9);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -2px 0 rgba(11, 26, 77, 0.35),
+    0 10px 22px -12px rgba(35, 80, 214, 0.95);
 }
 
-.admin-root .admin-sidebar-link.active svg {
+.admin-root .admin-sidebar-link.active:hover {
+  color: #ffffff;
+}
+
+.admin-root .admin-sidebar-link.active svg,
+.admin-root .admin-sidebar-link.active:hover svg {
   color: #ffffff;
 }
 
@@ -511,14 +552,15 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45), 0 0 10px rgba(215, 240, 58, 0.5);
 }
 
+/* ---------- Achicada: solo íconos, con su cartelito al pasar ---------- */
 .admin-root .admin-sidebar.collapsed .admin-sidebar-nav {
-  padding: 14px 10px;
   gap: 12px;
+  padding: 14px 12px;
 }
 
 .admin-root .admin-sidebar.collapsed .admin-sidebar-group + .admin-sidebar-group {
   padding-top: 12px;
-  border-top: 2px dotted rgba(255, 255, 255, 0.12);
+  border-top: 2px dotted rgba(255, 255, 255, 0.1);
 }
 
 .admin-root .admin-sidebar.collapsed .admin-sidebar-link {
@@ -529,7 +571,7 @@
 
 .admin-root .admin-sidebar.collapsed .admin-sidebar-link.active {
   background-image:
-    linear-gradient(180deg, rgba(11, 26, 77, 0.12), rgba(11, 26, 77, 0.5)),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.1), rgba(11, 26, 77, 0.5)),
     var(--turf);
   background-size: auto, 200px 200px;
   background-position: 0 0, 0 0;
@@ -544,16 +586,53 @@
   height: 9px;
 }
 
+/* El cartelito va "fixed" para salir de la barra (que tiene scroll y lo
+   cortaría): sin top/left queda donde caería el ícono, y se corre a la
+   derecha del menú. */
+.admin-root .admin-sidebar-tip {
+  position: fixed;
+  z-index: 60;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--night);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-shadow: none;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 10px 24px -8px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(calc(50% + 48px));
+}
+
+.admin-root .admin-sidebar-link:is(:hover, :focus-visible) .admin-sidebar-tip {
+  opacity: 1;
+}
+
+/* ---------- Pie: TV, web y salir, sobre una franja más oscura ---------- */
 .admin-root .admin-sidebar-footer {
   gap: 2px;
   padding: 10px 12px 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.16);
 }
 
 .admin-root .admin-sidebar-footer .admin-sidebar-link {
-  min-height: 42px;
+  min-height: 40px;
   font-size: 14.5px;
   color: var(--on-night-soft);
+}
+
+.admin-root .admin-sidebar.collapsed .admin-sidebar-footer {
+  padding: 10px 12px 14px;
+}
+
+.admin-root .admin-sidebar.collapsed .admin-sidebar-footer .admin-sidebar-link {
+  min-height: 42px;
 }
 
 .admin-root .admin-sidebar-footer .admin-sidebar-logout:hover {
@@ -568,32 +647,36 @@
 /* ==========================================================================
    BARRA DE ARRIBA Y ENCABEZADO DEL PANEL
    Compu: arriba el buscador (con forma de campo, así se entiende que ahí se
-   escribe) y los avisos; abajo el marcador del día y el título grande con
-   las dos acciones a la derecha. Celu: barra negra fija con la marca.
+   escribe), el marcador del día en una sola pieza y los avisos; abajo el
+   título grande con las acciones a la derecha. Celu: barra negra fija con
+   la marca.
    ========================================================================== */
 .admin-root .admin-topbar-search {
   display: flex;
   align-items: center;
   gap: 10px;
   flex: 1 1 240px;
-  max-width: 480px;
+  max-width: 460px;
   min-width: 0;
   height: 44px;
-  padding: 0 8px 0 14px;
+  padding: 0 7px 0 14px;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
+  border-radius: 12px;
   background: var(--surface);
   color: var(--text-muted);
   font: inherit;
   font-size: 15px;
   text-align: left;
   cursor: text;
-  box-shadow: inset 0 1px 2px rgba(27, 27, 25, 0.04);
+  box-shadow:
+    inset 0 1px 2px rgba(27, 27, 25, 0.04),
+    0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .admin-root .admin-topbar-search:hover {
-  border-color: #b9b09d;
+  border-color: rgba(35, 80, 214, 0.45);
   color: var(--text-secondary);
+  box-shadow: var(--court-ring);
 }
 
 .admin-root .admin-topbar-search svg {
@@ -613,7 +696,7 @@
   height: 44px;
   min-width: 44px;
   border-color: var(--border-strong);
-  border-radius: var(--radius-control);
+  border-radius: 12px;
   background: var(--surface);
   color: var(--text-secondary);
   font-size: 15px;
@@ -632,6 +715,14 @@
   border-color: rgba(194, 65, 12, 0.45);
   background: #fff7f0;
   color: #9a3412;
+}
+
+/* Panel abierto: el botón queda "apretado" en azul cancha. */
+.admin-root .admin-top-alerts[aria-expanded="true"] {
+  border-color: var(--court);
+  background: var(--court-tint);
+  color: var(--court-deep);
+  box-shadow: var(--court-ring);
 }
 
 .admin-root .admin-bell-badge {
@@ -653,16 +744,32 @@
     align-items: center;
     justify-content: flex-start;
     gap: 10px 12px;
-    margin: 0 0 20px;
+    margin: 0 0 22px;
     padding: 0 0 16px;
     border-bottom: 1px solid var(--border);
   }
 
-  /* El marcador a la derecha, separado de Avisos/TV por una rayita. */
+  /* El marcador del día en una sola pieza: fecha, reloj y estado. */
   .admin-root .admin-topbar-scoreboard {
+    flex-wrap: nowrap;
+    gap: 10px;
+    height: 44px;
     margin: 0 0 0 auto;
-    padding-right: 14px;
-    border-right: 1px solid var(--border);
+    padding: 0 6px 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-topbar-scoreboard .admin-header-date {
+    font-size: 12.5px;
+  }
+
+  .admin-root .admin-topbar-scoreboard .admin-live-pill {
+    padding: 5px 11px 5px 9px;
+    border-radius: 8px;
   }
 
   .admin-root .admin-greeting-sub.admin-header-scoreboard {
@@ -680,6 +787,17 @@
   /* En compu el buscador ya está arriba: el botón del encabezado sobra. */
   .admin-root .admin-quick-actions .admin-palette-trigger {
     display: none;
+  }
+}
+
+/* Pantallas medianas: el buscador se achica antes que el marcador. */
+@media (min-width: 768px) and (max-width: 1180px) {
+  .admin-root .admin-topbar-search-text {
+    display: none;
+  }
+
+  .admin-root .admin-topbar-search {
+    flex: 0 0 auto;
   }
 }
 
@@ -720,16 +838,22 @@
 
 .admin-root .admin-header-clock {
   display: inline-block;
-  padding: 2px 8px 1px;
-  border-radius: 6px;
-  background: var(--night);
+  padding: 3px 9px 2px;
+  border-radius: 7px;
+  background:
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #24231f, #121210);
   color: #e4f75a;
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: 0.06em;
-  box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.08);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px rgba(215, 240, 58, 0.45);
+  box-shadow:
+    inset 0 -2px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .admin-root .admin-live-pill {
@@ -781,25 +905,54 @@
   animation: none;
 }
 
-/* Sin conexión / sin base: cartel rojo en su propio renglón. */
+/* Sin base / sin conexión: un cartelito en su propio renglón. Sin base es
+   un aviso (ámbar): se puede seguir mirando. Sin conexión es más serio (lo
+   que se cargue se pierde) y va en rojo. */
 .admin-root .admin-header-alert {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin: 12px 0 0;
-  padding: 8px 12px;
-  border: 1px solid #fecaca;
-  border-left: 4px solid #dc2626;
-  border-radius: var(--radius-control);
-  background: #fef2f2;
-  color: #991b1b;
-  font-size: 14.5px;
-  font-weight: 600;
+  padding: 5px 14px 5px 5px;
+  border: 1px solid #efd5a6;
+  border-radius: 999px;
+  background: #fffaf0;
+  color: #6b4a14;
+  font-size: 14px;
+  font-weight: 500;
   line-height: 1.35;
+  box-shadow: 0 1px 2px rgba(180, 83, 9, 0.06);
 }
 
-.admin-root .admin-header-alert svg {
+.admin-root .admin-header-alert strong {
+  font-weight: 700;
+  color: #7c3a06;
+}
+
+.admin-root .admin-header-alert-icon {
+  display: inline-grid;
+  place-items: center;
   flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fdebc8;
+  color: #b45309;
+}
+
+.admin-root .admin-header-alert[data-tone="danger"] {
+  border-color: #f5c6c6;
+  background: #fff5f5;
+  color: #7f1d1d;
+}
+
+.admin-root .admin-header-alert[data-tone="danger"] strong {
+  color: #991b1b;
+}
+
+.admin-root .admin-header-alert[data-tone="danger"] .admin-header-alert-icon {
+  background: #fde0e0;
+  color: #b91c1c;
 }
 
 .admin-root .admin-quick-actions {
@@ -883,6 +1036,8 @@
 
 /* ==========================================================================
    BUSCADOR CTRL K
+   Lo marcado es la cancha azul, igual que la sección activa del menú;
+   Enter lo abre (se avisa con la tecla al costado).
    ========================================================================== */
 .admin-root .admin-palette-backdrop {
   padding-top: 11vh;
@@ -893,7 +1048,7 @@
 .admin-root .admin-palette {
   width: min(600px, 100%);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: var(--shadow-pop);
 }
 
@@ -908,29 +1063,41 @@
 }
 
 .admin-root .admin-palette-input input {
-  min-height: 60px !important;
+  min-height: 62px !important;
   padding: 0 !important;
   font-size: 17px;
 }
 
 .admin-root .admin-palette-list {
-  padding: 6px 8px 8px;
+  padding: 4px 8px 8px;
 }
 
+/* Título de grupo con la red punteada, como en el menú. */
 .admin-root .admin-palette-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 12px 10px 6px;
   font-family: var(--font-display);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   color: var(--text-muted);
 }
 
+.admin-root .admin-palette-group::after {
+  content: "";
+  flex: 1;
+  border-top: 2px dotted var(--border-strong);
+}
+
 .admin-root .admin-palette-item {
+  position: relative;
   gap: 12px;
   min-height: 48px;
   padding: 6px 10px;
-  border-radius: var(--radius-control);
+  border: 1px solid transparent;
+  border-radius: 12px;
   font-size: 15.5px;
   font-weight: 500;
 }
@@ -942,18 +1109,25 @@
   border: 1px solid var(--border);
   border-radius: 9px;
   background: var(--surface-muted);
-  color: var(--text-secondary);
+  color: var(--court);
 }
 
 .admin-root .admin-palette-item[aria-selected="true"] {
-  background: var(--court-tint);
-  color: var(--court-night);
+  border-color: var(--court-deep);
+  background-color: var(--court);
+  background-image:
+    linear-gradient(90deg, rgba(11, 26, 77, 0.55), rgba(11, 26, 77, 0.15)),
+    var(--turf);
+  background-size: auto, 200px 200px;
+  color: #ffffff;
   font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 22px -14px rgba(35, 80, 214, 0.95);
 }
 
 .admin-root .admin-palette-item[aria-selected="true"] > svg {
-  border-color: var(--court-strong);
-  background: var(--court);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
 }
 
@@ -961,29 +1135,58 @@
 .admin-root .admin-palette-item[aria-selected="true"]::after {
   content: "↵";
   margin-left: 8px;
-  padding: 0 6px;
-  border: 1px solid rgba(35, 80, 214, 0.3);
+  padding: 0 7px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-bottom-width: 2px;
   border-radius: 6px;
-  color: var(--court-strong);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   font-size: 13px;
   line-height: 1.6;
+  text-shadow: none;
 }
 
 .admin-root .admin-palette-item small {
   font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 .admin-root .admin-palette-item[aria-selected="true"] small {
-  color: var(--court-deep);
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.admin-root .admin-palette-item:not(:has(small))[aria-selected="true"]::after {
+.admin-root .admin-palette-item:not(:has(small, .admin-palette-key))[aria-selected="true"]::after {
   margin-left: auto;
 }
 
+/* Atajo de la acción ("N" = Nueva reserva), como tecla. */
+.admin-root .admin-palette-item .admin-palette-key {
+  margin-left: auto;
+}
+
+.admin-root .admin-palette-item[aria-selected="true"] .admin-palette-key {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
 .admin-root .admin-palette-empty {
-  padding: 28px 24px;
-  font-size: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 30px 24px 26px;
+  font-size: 14.5px;
+}
+
+.admin-root .admin-palette-empty svg {
+  margin-bottom: 6px;
+  color: var(--court);
+}
+
+.admin-root .admin-palette-empty strong {
+  color: var(--text);
+  font-size: 15.5px;
 }
 
 .admin-root .admin-palette-foot {
@@ -1010,9 +1213,9 @@
 }
 
 /* ==========================================================================
-   AVISOS (Toaster)
-   Negros como el sidebar, con una franja del color del resultado: verde
-   salió bien, rojo hubo un problema.
+   AVISOS DE UN TOQUE (Toaster)
+   Negros como el menú, con una franja del color del resultado: verde salió
+   bien, rojo hubo un problema.
    ========================================================================== */
 .admin-root .admin-toaster {
   right: 24px;
@@ -1023,38 +1226,51 @@
 
 .admin-root .admin-toast {
   gap: 12px;
-  padding: 12px 10px 12px 16px;
-  border-radius: 12px;
+  padding: 10px 8px 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
   background: var(--night, #1b1b19);
   color: #ffffff;
   font-size: 15px;
   line-height: 1.35;
   box-shadow:
     inset 4px 0 0 #22c55e,
-    0 16px 36px -14px rgba(0, 0, 0, 0.55);
+    0 18px 40px -16px rgba(0, 0, 0, 0.6);
   animation: none;
 }
 
 .admin-root .admin-toast > svg:first-child {
+  box-sizing: content-box;
   flex-shrink: 0;
+  margin-left: 4px;
+  padding: 6px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.14);
   color: #4ade80;
 }
 
 .admin-root .admin-toast[data-tone="error"] {
-  background: #3a1212;
+  background: #2e1111;
+  border-color: rgba(239, 68, 68, 0.25);
   box-shadow:
     inset 4px 0 0 #ef4444,
-    0 16px 36px -14px rgba(0, 0, 0, 0.55);
+    0 18px 40px -16px rgba(0, 0, 0, 0.6);
 }
 
 .admin-root .admin-toast[data-tone="error"] > svg:first-child {
+  background: rgba(239, 68, 68, 0.18);
   color: #fca5a5;
 }
 
 .admin-root .admin-toast button {
   min-height: 36px;
   min-width: 36px;
-  border-radius: 8px;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-root .admin-toast button:hover {
+  color: #ffffff;
 }
 
 .admin-root .admin-toast .admin-toast-action {
@@ -1065,6 +1281,345 @@
 
 .admin-root .admin-toast .admin-toast-action:hover {
   background: rgba(232, 114, 42, 0.3);
+  color: #ffd2b3;
+}
+
+.admin-root .admin-toast :focus-visible {
+  outline-color: #d7f03a;
+}
+
+/* ==========================================================================
+   PANEL DE AVISOS (la campana)
+   En compu, una hoja al costado derecho; en el celu sube desde abajo. Arriba
+   la cabecera de noche con la campana; cada aviso es una tarjeta con la
+   franja y el ícono del color de su urgencia (rojo, naranja, azul).
+   ========================================================================== */
+.admin-root .admin-avisos-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  background: rgba(10, 12, 22, 0.32);
+}
+
+.admin-root .admin-avisos {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, calc(100vw - 24px));
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--bg, #f6f3ec);
+  box-shadow: var(--shadow-pop);
+}
+
+.admin-root .admin-avisos .admin-sheet-handle {
+  display: none;
+}
+
+.admin-root .admin-avisos-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 14px 18px 18px;
+  background-color: var(--night);
+  background-image:
+    radial-gradient(120% 160% at 100% 0, rgba(35, 80, 214, 0.45), transparent 60%);
+  color: #ffffff;
+}
+
+.admin-root .admin-avisos-head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-root .admin-avisos-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.admin-root .admin-avisos-head p {
+  margin: 3px 0 0;
+  color: var(--on-night-soft);
+  font-size: 13.5px;
+}
+
+.admin-root .admin-avisos-head-icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--ball);
+  color: #1b1b19;
+  box-shadow:
+    inset -2px -3px 0 rgba(0, 0, 0, 0.12),
+    0 0 18px rgba(215, 240, 58, 0.35);
+}
+
+.admin-root .admin-avisos-close {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.admin-root .admin-avisos-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.admin-root .admin-avisos-close:focus-visible {
+  outline-color: #d7f03a;
+}
+
+.admin-root .admin-avisos-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 14px 14px;
+  overscroll-behavior: contain;
+}
+
+.admin-root .admin-avisos-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 4px 8px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-avisos-group-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--aviso-color, var(--court));
+}
+
+.admin-root .admin-avisos-group-title::after {
+  content: "";
+  flex: 1;
+  border-top: 2px dotted var(--border-strong);
+}
+
+.admin-root .admin-avisos-group-title span {
+  order: 1;
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.admin-root .admin-avisos-group ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root :is(.admin-aviso, .admin-avisos-group-title)[data-tone="danger"] {
+  --aviso-color: #dc2626;
+  --aviso-tint: #fde8e8;
+  --aviso-ink: #b91c1c;
+}
+
+.admin-root :is(.admin-aviso, .admin-avisos-group-title)[data-tone="warning"] {
+  --aviso-color: var(--brand);
+  --aviso-tint: #fdeadc;
+  --aviso-ink: #c2410c;
+}
+
+.admin-root :is(.admin-aviso, .admin-avisos-group-title)[data-tone="info"] {
+  --aviso-color: var(--court);
+  --aviso-tint: #e6ecfb;
+  --aviso-ink: var(--court-strong);
+}
+
+.admin-root .admin-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow:
+    inset 4px 0 0 var(--aviso-color),
+    var(--shadow-card);
+}
+
+.admin-root .admin-aviso-icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin-left: 2px;
+  border-radius: 12px;
+  background: var(--aviso-tint);
+  color: var(--aviso-ink);
+}
+
+.admin-root .admin-aviso-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.admin-root .admin-aviso-text strong {
+  color: var(--text);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.admin-root .admin-aviso-text > span {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.admin-root .admin-aviso-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  margin: 6px 0 0 -10px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--aviso-ink);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-root .admin-aviso-go:hover {
+  background: var(--aviso-tint);
+}
+
+/* Sin avisos: la cancha tranquila con la pelotita quieta. */
+.admin-root .admin-avisos-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 44px 18px 28px;
+  text-align: center;
+}
+
+.admin-root .admin-avisos-empty-court {
+  position: relative;
+  width: 132px;
+  height: 70px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  background-color: var(--court);
+  background-image:
+    var(--mini-court),
+    linear-gradient(180deg, rgba(11, 26, 77, 0.05), rgba(11, 26, 77, 0.4)),
+    var(--turf);
+  background-size: 100% 100%, auto, 200px 200px;
+  box-shadow: 0 16px 30px -16px rgba(35, 80, 214, 0.9);
+}
+
+.admin-root .admin-avisos-empty-ball {
+  position: absolute;
+  left: 62%;
+  top: 30%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ball);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4), 0 0 12px rgba(215, 240, 58, 0.55);
+}
+
+.admin-root .admin-avisos-empty strong {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.admin-root .admin-avisos-empty p {
+  max-width: 300px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.admin-root .admin-avisos-foot {
+  margin: 0;
+  padding: 10px 18px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 767px) {
+  .admin-root .admin-avisos-backdrop {
+    background: rgba(10, 12, 22, 0.55);
+  }
+
+  .admin-root .admin-avisos {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-height: 88dvh;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .admin-root .admin-avisos .admin-sheet-handle {
+    display: block;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    margin: 0 0 0 -22px;
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .admin-root .admin-avisos-head {
+    padding: 24px 14px 16px 16px;
+  }
 }
 
 /* ==========================================================================
@@ -1595,14 +2150,36 @@
     padding: 16px 16px calc(150px + env(safe-area-inset-bottom));
   }
 
-  /* Barra de arriba negra y fija, con la marca y los avisos. */
+  /* Barra de arriba negra y fija, con la marca y los avisos. Respeta la
+     muesca del celu (safe-area) y abajo lleva la línea naranja. */
   .admin-root .admin-kravio-topbar {
     margin: -16px -16px 18px;
-    padding: 10px 16px;
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
     background-color: var(--night);
     background-image:
-      radial-gradient(120% 140% at 100% 0, rgba(35, 80, 214, 0.35), transparent 60%);
+      radial-gradient(120% 140% at 100% 0, rgba(35, 80, 214, 0.38), transparent 60%);
     border-bottom: 3px solid var(--brand);
+    box-shadow: 0 10px 24px -18px rgba(0, 0, 0, 0.7);
+  }
+
+  .admin-root .admin-topbar-brand img {
+    filter: drop-shadow(0 2px 6px rgba(232, 114, 42, 0.35));
+  }
+
+  .admin-root .admin-topbar-brand small {
+    color: #a9a397;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-root .admin-kravio-topbar .admin-top-icon-btn {
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 999px;
+  }
+
+  .admin-root .admin-kravio-topbar :focus-visible {
+    outline-color: #d7f03a;
   }
 
   .admin-root .admin-topbar-search {
@@ -1618,11 +2195,17 @@
     border-color: rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
+    box-shadow: none;
   }
 
   .admin-root .admin-kravio-topbar .admin-top-alerts:has(.admin-bell-badge) {
     border-color: rgba(232, 114, 42, 0.6);
     background: rgba(232, 114, 42, 0.18);
+  }
+
+  .admin-root .admin-kravio-topbar .admin-top-alerts[aria-expanded="true"] {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.16);
   }
 
   .admin-root .admin-bell-badge {
@@ -1651,6 +2234,8 @@
 
   .admin-root .admin-header-alert {
     display: flex;
+    padding: 8px 12px 8px 8px;
+    border-radius: 14px;
     font-size: 14px;
   }
 
@@ -1693,41 +2278,76 @@
     font-size: 13.5px;
   }
 
-  /* Navegación de abajo: la sección activa con la raya naranja arriba, como
-     una línea de la cancha. */
+  /* Navegación de abajo: la sección activa lleva su ícono sobre una
+     pastillita de cancha azul (como en el menú de la compu), con la
+     pelotita. Respeta la barra de gestos del celu (safe-area). */
   .admin-root .admin-bottom-nav {
     gap: 2px;
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-    background: var(--night);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.2);
+    background: rgba(22, 22, 20, 0.97);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.22);
   }
 
   .admin-root .admin-bottom-nav button {
     position: relative;
     gap: 4px;
-    min-height: 58px;
+    min-height: 60px;
     border-radius: 12px;
-    color: #c9c3b5;
+    color: #bdb7aa;
     font-size: 12.5px;
     font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .admin-root .admin-bottom-nav button svg {
+    box-sizing: content-box;
+    width: 22px;
+    height: 22px;
+    padding: 4px 16px;
+    border-radius: 999px;
+    color: #bdb7aa;
+  }
+
+  .admin-root .admin-bottom-nav button:active svg {
+    background: rgba(255, 255, 255, 0.08);
   }
 
   .admin-root .admin-bottom-nav button[aria-current="page"] {
-    background: rgba(232, 114, 42, 0.16);
+    background: transparent;
     color: #ffffff;
+    font-weight: 700;
   }
 
+  .admin-root .admin-bottom-nav button[aria-current="page"] svg {
+    background-color: var(--court);
+    background-image:
+      linear-gradient(180deg, rgba(11, 26, 77, 0.05), rgba(11, 26, 77, 0.45)),
+      var(--turf);
+    background-size: auto, 160px 160px;
+    color: #ffffff;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+      0 6px 14px -6px rgba(35, 80, 214, 0.9);
+  }
+
+  /* La pelotita, arriba a la derecha de la pastilla. */
   .admin-root .admin-bottom-nav button[aria-current="page"]::before {
     content: "";
     position: absolute;
-    top: 0;
+    top: 5px;
     left: 50%;
-    width: 26px;
-    height: 3px;
-    margin-left: -13px;
-    border-radius: 0 0 3px 3px;
-    background: var(--brand);
+    width: 8px;
+    height: 8px;
+    margin-left: 17px;
+    border-radius: 50%;
+    background: var(--ball);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  .admin-root .admin-bottom-nav :focus-visible {
+    outline-color: #d7f03a;
+    outline-offset: -2px;
   }
 
   .admin-root .admin-fab {
@@ -1806,7 +2426,10 @@
   }
 }
 
-/* ---------- Hoja "Más" del celu ---------- */
+/* ---------- Hoja "Más" del celu ----------
+   Fichas grandes de a tres, con el ícono en una pelotita de color: se
+   aciertan con el pulgar sin apuntar. Abajo, TV y web lado a lado, y salir
+   aparte, en rojo. */
 .admin-root .admin-sheet-backdrop {
   background: rgba(10, 12, 22, 0.55);
 }
@@ -1814,6 +2437,8 @@
 .admin-root .admin-sheet {
   padding: 8px 14px calc(14px + env(safe-area-inset-bottom));
   border-radius: 22px 22px 0 0;
+  background: var(--bg, #f6f3ec);
+  box-shadow: 0 -20px 40px -20px rgba(0, 0, 0, 0.5);
   animation: none;
 }
 
@@ -1825,7 +2450,10 @@
 }
 
 .admin-root .admin-sheet-title {
-  margin: 0 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 4px 12px;
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 800;
@@ -1834,32 +2462,55 @@
   color: var(--text);
 }
 
+.admin-root .admin-sheet-title::after {
+  content: "";
+  flex: 1;
+  border-top: 2px dotted var(--border-strong);
+}
+
 .admin-root .admin-sheet-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
 .admin-root .admin-sheet .admin-sheet-grid button {
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 78px;
-  padding: 12px 14px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 104px;
+  padding: 14px 6px 12px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface-muted);
-  font-size: 15px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  color: var(--text);
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
-  text-align: left;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.admin-root .admin-sheet .admin-sheet-grid button svg {
+.admin-root .admin-sheet .admin-sheet-grid button:active {
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-sheet-tile-icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--court-tint);
+  color: var(--court);
+}
+
+.admin-root .admin-sheet-tile-icon svg {
   width: 22px;
   height: 22px;
-  color: var(--court);
 }
 
 /* Si estás en una de estas secciones, su ficha es la cancha azul. */
@@ -1871,27 +2522,52 @@
     var(--turf);
   background-size: auto, 200px 200px;
   color: #ffffff;
+  box-shadow: 0 12px 24px -14px rgba(35, 80, 214, 0.9);
 }
 
-.admin-root .admin-sheet .admin-sheet-grid button[aria-current="page"] svg {
-  color: #ffffff;
+.admin-root .admin-sheet .admin-sheet-grid button[aria-current="page"] .admin-sheet-tile-icon {
+  background: var(--ball);
+  color: #1b1b19;
 }
 
 .admin-root .admin-sheet-foot {
-  display: flex;
-  flex-direction: column;
-  margin-top: 12px;
-  padding-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
   border-top: 1px solid var(--border);
 }
 
 .admin-root .admin-sheet .admin-sheet-foot :is(a, button) {
-  min-height: 50px;
-  font-size: 15.5px;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 8px;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
   color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-root .admin-sheet .admin-sheet-foot svg {
+  flex-shrink: 0;
+}
+
+/* Celus muy angostos: TV y web, uno abajo del otro. */
+@media (max-width: 374px) {
+  .admin-root .admin-sheet-foot {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-root .admin-sheet .admin-sheet-foot .admin-sheet-logout {
+  grid-column: 1 / -1;
+  border-color: #f5c6c6;
+  background: #fff5f5;
   color: #b91c1c;
 }
 
@@ -1903,10 +2579,13 @@
 @media (prefers-reduced-motion: no-preference) {
   .admin-root .admin-dashboard-layout .btn,
   .admin-root .admin-sidebar-link,
+  .admin-root .admin-sidebar-link svg,
   .admin-root .admin-top-icon-btn,
   .admin-root .admin-topbar-search,
   .admin-root .admin-kravio-kpi-card,
-  .admin-root .admin-palette-item {
+  .admin-root .admin-palette-item,
+  .admin-root .admin-aviso-go,
+  .admin-root .admin-bottom-nav button svg {
     transition:
       background-color 0.15s ease,
       border-color 0.15s ease,
@@ -1928,6 +2607,23 @@
     transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  /* La raya naranja crece desde el medio; el cartelito aparece suave. */
+  .admin-root .admin-sidebar-nav .admin-sidebar-link:not(.active)::before,
+  .admin-root .admin-sidebar-tip {
+    transition:
+      opacity 0.15s ease,
+      transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* La pelotita cae sobre la cancha cuando cambiás de sección. */
+  .admin-root .admin-sidebar-link.active::after {
+    animation: adminBallDrop 0.55s cubic-bezier(0.3, 0, 0.4, 1) 1;
+  }
+
+  .admin-root .admin-bottom-nav button[aria-current="page"] svg {
+    animation: adminNavPop 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   /* El saludo saluda una vez al entrar, no todo el día. */
   .admin-root .admin-wave-hand {
     animation: waveHand 1.6s ease-in-out 0.4s 1;
@@ -1941,9 +2637,35 @@
   .admin-root .admin-modal-backdrop,
   .admin-root.admin-pin-backdrop,
   .admin-root .admin-palette-backdrop,
-  .admin-root .admin-sheet-backdrop {
+  .admin-root .admin-sheet-backdrop,
+  .admin-root .admin-avisos-backdrop {
     animation: adminBaseFade 0.16s ease-out;
   }
+
+  /* Al cerrar, la hoja baja (o se va a la derecha) y el fondo se apaga. */
+  .admin-root :is(.admin-sheet-backdrop, .admin-avisos-backdrop).is-closing {
+    animation: adminBaseFadeOut 0.22s ease-in forwards;
+  }
+
+  .admin-root .admin-sheet-backdrop.is-closing .admin-sheet {
+    animation: adminBaseSheetOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+
+  .admin-root .admin-avisos {
+    animation: adminAvisosIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-root .admin-avisos-backdrop.is-closing .admin-avisos {
+    animation: adminAvisosOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+
+  .admin-root .admin-aviso {
+    animation: adminBaseRise 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .admin-root .admin-aviso:nth-child(2) { animation-delay: 0.04s; }
+  .admin-root .admin-aviso:nth-child(3) { animation-delay: 0.08s; }
+  .admin-root .admin-aviso:nth-child(n + 4) { animation-delay: 0.12s; }
 
   .admin-root .admin-modal-card,
   .admin-root .admin-pin-card,
@@ -1969,8 +2691,13 @@
 
   @media (max-width: 767px) {
     .admin-root .admin-modal-card,
-    .admin-root .admin-pin-card {
+    .admin-root .admin-pin-card,
+    .admin-root .admin-avisos {
       animation: adminBaseSheet 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .admin-root .admin-avisos-backdrop.is-closing .admin-avisos {
+      animation: adminBaseSheetOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
     }
   }
 
@@ -1988,6 +2715,33 @@
 
   @keyframes adminBaseSheet {
     from { transform: translateY(100%); }
+  }
+
+  @keyframes adminBaseFadeOut {
+    to { opacity: 0; }
+  }
+
+  @keyframes adminBaseSheetOut {
+    to { transform: translateY(100%); }
+  }
+
+  @keyframes adminAvisosIn {
+    from { opacity: 0; transform: translateX(28px); }
+  }
+
+  @keyframes adminAvisosOut {
+    to { opacity: 0; transform: translateX(28px); }
+  }
+
+  @keyframes adminBallDrop {
+    0% { opacity: 0; transform: translateY(-14px) scale(0.7); }
+    45% { opacity: 1; transform: translateY(0) scale(1.12, 0.86); }
+    70% { transform: translateY(-4px) scale(0.96, 1.04); }
+    100% { transform: none; }
+  }
+
+  @keyframes adminNavPop {
+    from { opacity: 0.4; transform: scale(0.82); }
   }
 
   @keyframes adminBaseBounce {

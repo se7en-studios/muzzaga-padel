@@ -138,7 +138,9 @@ export default function CommandPalette({
 
         {items.length === 0 ? (
           <div className="admin-palette-empty">
-            Nada coincide con “{query}”.
+            <Search size={22} strokeWidth={1.75} aria-hidden />
+            <strong>Nada coincide con “{query}”.</strong>
+            <span>Probá con el nombre o el teléfono del cliente.</span>
           </div>
         ) : (
           <ul
@@ -165,7 +167,14 @@ export default function CommandPalette({
                   >
                     <Icon {...ICON} />
                     {item.label}
-                    {item.hint && <small>{item.hint}</small>}
+                    {item.hint &&
+                      (item.group === "Acciones" ? (
+                        <kbd className="admin-kbd admin-palette-key">
+                          {item.hint}
+                        </kbd>
+                      ) : (
+                        <small>{item.hint}</small>
+                      ))}
                   </button>
                 </li>
               );
