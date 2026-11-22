@@ -139,19 +139,6 @@
   }
 }
 
-/* Pelotita que viaja por la barra de progreso de arriba, girando. */
-.scroll-progress-ball {
-  position: absolute;
-  top: -4px;
-  left: 0;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #f6ff9e 0, #d7f03a 45%, #a6c219 100%);
-  box-shadow: 0 0 8px rgba(215, 240, 58, 0.7);
-  will-change: transform;
-}
-
 @keyframes fxHeroSalida {
   to {
     translate: 0 -70px;

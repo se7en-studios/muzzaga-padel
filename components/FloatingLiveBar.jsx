@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { clubStatusLine, getClubStatus } from "../data/horarios";
+import "./Flotantes.css";
 
 /**
  * Píldora de escritorio que aparece al dejar atrás el hero. Antes decía
@@ -45,7 +46,7 @@ export default function FloatingLiveBar({ schedule, blockedDates }) {
     <aside className="floating-live-pill" aria-label="Acceso rápido a reservas">
       <div className="floating-live-inner">
         <div className="floating-live-status">
-          <span className={`pulse-dot radar-dot${status.isOpen ? " is-open" : ""}`} />
+          <span className={`floating-live-dot${status.isOpen ? " is-open" : ""}`} aria-hidden="true" />
           <span className="floating-status-txt">{clubStatusLine(status)}</span>
         </div>
 

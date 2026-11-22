@@ -1,0 +1,890 @@
+/* ==========================================================================
+   HEADER Y MENÚ DEL CELU (components/Header.jsx)
+   Va con el componente: se ve en la home, Torneos, Menú, Herramientas y las
+   páginas de error. Antes vivía repartido entre globals.css y landing.css
+   (el ajuste para celu acostado solo lo tomaba la home).
+   Todo lo que se mueve, se mueve con transform/opacity.
+   ========================================================================== */
+.app-top-nav,
+.menu-sheet {
+  --hdr-azul: #2350d6;
+  --hdr-azul-texto: #2350d6;
+}
+
+.app-top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 14px 20px 0;
+  /* La franja de aire de arriba no tapa clics: solo la barra los recibe. */
+  pointer-events: none;
+}
+
+/* La barra de vidrio. Arriba de todo deja ver lo de atrás; al bajar se
+   vuelve más opaca (una capa que aparece con opacity) y sube unos px. */
+.nav-inner {
+  position: relative;
+  pointer-events: auto;
+  isolation: isolate;
+  /* 14 + 64 = 78 px, el --hero-bajo-header de escritorio. */
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 10px 0 16px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-canvas) 74%, transparent);
+  backdrop-filter: blur(18px) saturate(1.6);
+  border: 1px solid color-mix(in srgb, var(--color-hairline-strong) 75%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 8px 24px -14px rgba(12, 24, 70, 0.3);
+}
+
+.nav-inner::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--color-canvas) 90%, transparent);
+  box-shadow: 0 16px 36px -16px rgba(12, 24, 70, 0.42);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-top-nav.is-scrolled .nav-inner {
+  transform: translateY(-8px);
+}
+
+.app-top-nav.is-scrolled .nav-inner::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nav-inner,
+  .nav-inner::before,
+  .brand-badge {
+    transition:
+      transform var(--t-estado) var(--ease),
+      opacity var(--t-estado) var(--ease);
+  }
+}
+
+/* ---------- Marca ---------- */
+.brand-group,
+.menu-sheet-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.brand-badge {
+  display: block;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.18));
+}
+
+.app-top-nav.is-scrolled .brand-badge {
+  transform: scale(0.92);
+}
+
+.brand-text,
+.menu-sheet-brand span {
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+/* ---------- Links (escritorio) ---------- */
+.nav-links-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav-link {
+  position: relative;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--t-hover) var(--ease);
+}
+
+/* La pelotita debajo del link de la sección que estás mirando. */
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 1px 3px rgba(120, 140, 10, 0.6);
+  opacity: 0;
+  transform: scale(0.3);
+}
+
+.nav-link[aria-current] {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.nav-link[aria-current]::after {
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: hover) {
+  .nav-link:hover {
+    color: var(--color-accent-orange-text);
+  }
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid var(--color-accent-orange);
+  outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nav-link::after {
+    transition:
+      transform var(--t-estado) var(--ease),
+      opacity var(--t-estado) var(--ease);
+  }
+}
+
+/* Herramientas ▾ */
+.tools-dropdown-wrapper {
+  position: relative;
+}
+
+.tools-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 0;
+  font-family: inherit;
+}
+
+.tools-caret {
+  transition: transform var(--t-estado) var(--ease);
+}
+
+.tools-trigger[aria-expanded="true"] .tools-caret {
+  transform: rotate(180deg);
+}
+
+.tools-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  width: 268px;
+  margin-left: -134px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-surface-card) 94%, transparent);
+  backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid var(--color-hairline-strong);
+  box-shadow: 0 22px 44px -18px rgba(12, 24, 70, 0.4);
+  z-index: 100;
+}
+
+/* Puente invisible sobre el hueco de 10 px: el mouse pasa del botón al
+   menú sin que se cierre. */
+.tools-dropdown-menu::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12px;
+  height: 12px;
+}
+
+.tools-dropdown-item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: background-color var(--t-hover) var(--ease);
+}
+
+.tools-dropdown-item strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.tools-dropdown-item span {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.tools-dropdown-item:hover,
+.tools-dropdown-item:focus-visible,
+.tools-dropdown-item[aria-current] {
+  background: color-mix(in srgb, var(--hdr-azul) 8%, transparent);
+}
+
+.tools-dropdown-item[aria-current] strong {
+  color: var(--hdr-azul-texto);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tools-dropdown-menu {
+    animation: hdrMenuIn var(--t-estado) var(--ease);
+  }
+}
+
+@keyframes hdrMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* ---------- Botones ---------- */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-reserve-btn,
+.header-whatsapp-btn {
+  height: 42px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+}
+
+.header-whatsapp-btn {
+  gap: 6px;
+  padding: 0 16px;
+}
+
+.header-reserve-btn {
+  box-shadow: 0 8px 20px -10px rgba(232, 114, 42, 0.9);
+}
+
+/* Hamburguesa: tres rayas, la del medio más corta. 44 px para el dedo. */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  border: 0;
+  border-radius: 50%;
+  color: var(--color-ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-menu-btn:active {
+  transform: scale(0.94);
+}
+
+.mobile-menu-btn:focus-visible {
+  outline: 2px solid var(--color-accent-orange);
+  outline-offset: 2px;
+}
+
+.mobile-menu-lines {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  width: 18px;
+}
+
+.mobile-menu-lines span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.mobile-menu-lines span:nth-child(2) {
+  width: 12px;
+}
+
+/* El header completo (logo + links + botones) necesita ~1180 px: más
+   angosto va la hamburguesa (incluye el celu acostado, 844 a 932 px). */
+@media (max-width: 1180px) {
+  .nav-links-row {
+    display: none;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-top-nav {
+    padding: 10px 12px 0;
+  }
+
+  /* 10 + 54 = 64 px: lo que el hero de la home sube por debajo del header
+     (--hero-bajo-header en landing.css). Si cambia, cambiar los dos. */
+  .nav-inner {
+    height: 54px;
+    padding: 0 5px 0 12px;
+  }
+
+  .app-top-nav.is-scrolled .nav-inner {
+    transform: translateY(-6px);
+  }
+
+  .brand-badge {
+    width: 32px;
+    height: 32px;
+  }
+
+  .header-whatsapp-btn {
+    display: none;
+  }
+
+  .header-reserve-btn {
+    height: 44px;
+    min-height: 44px;
+    padding: 0 18px;
+  }
+}
+
+/* Celu acostado: las barras van más finas. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .app-top-nav {
+    padding-top: 6px;
+  }
+
+  .nav-inner {
+    height: 50px;
+  }
+
+  .app-top-nav.is-scrolled .nav-inner {
+    transform: translateY(-3px);
+  }
+}
+
+/* ==========================================================================
+   MENÚ DEL CELU: hoja a pantalla completa
+   ========================================================================== */
+html.menu-abierto {
+  overflow: hidden;
+}
+
+.menu-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--color-canvas);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  outline: none;
+}
+
+.menu-sheet.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (min-width: 1181px) {
+  .menu-sheet {
+    display: none;
+  }
+}
+
+.menu-sheet-top {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  margin: 10px 12px 0;
+  padding: 0 6px 0 13px;
+}
+
+.menu-sheet-brand .brand-badge {
+  width: 32px;
+  height: 32px;
+}
+
+.menu-sheet-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-ink) 7%, transparent);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.menu-sheet-close:active {
+  transform: scale(0.94);
+}
+
+.menu-sheet-close:focus-visible {
+  outline: 2px solid var(--color-accent-orange);
+  outline-offset: 2px;
+}
+
+.menu-sheet-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 10px 16px calc(28px + env(safe-area-inset-bottom, 0px));
+  overscroll-behavior: contain;
+}
+
+.menu-sheet-scroll > * {
+  max-width: 560px;
+  margin-inline: auto;
+}
+
+/* --- Estado del club: un tablero sobre la cancha azul --- */
+.menu-status {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 108px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  color: #fff;
+  background:
+    linear-gradient(115deg, rgba(8, 20, 70, 0.1) 0%, rgba(8, 20, 70, 0.5) 100%),
+    url("/img/fondo/textura-cesped.jpg") center / 320px 320px,
+    #2350d6;
+  box-shadow: 0 18px 34px -20px rgba(35, 80, 214, 0.95);
+}
+
+/* Líneas de la cancha: el perímetro y la línea de saque a la derecha. */
+.menu-status::before,
+.menu-status::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.menu-status::before {
+  inset: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  border-radius: 13px;
+}
+
+.menu-status::after {
+  top: 8px;
+  bottom: 8px;
+  right: 25%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.menu-status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.menu-status-kicker {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.menu-status-title {
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(5, 12, 40, 0.45);
+}
+
+.menu-status.is-open .menu-status-title {
+  color: #e9ff6b;
+}
+
+.menu-status-sub {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* La pelota, en la caja de saque de la derecha. Abierto pica (un anillo
+   que se agranda y se apaga); cerrado queda quieta y apagada. */
+.menu-status-ball {
+  position: absolute;
+  right: calc(12.5% - 14px);
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  margin-top: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 6px 12px rgba(5, 12, 40, 0.45);
+  opacity: 0.55;
+}
+
+.menu-status.is-open .menu-status-ball {
+  opacity: 1;
+}
+
+.menu-status-ball::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(233, 255, 107, 0.8);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu-sheet.open .menu-status.is-open .menu-status-ball::after {
+    animation: hdrBallRing 1.8s var(--ease) 0.4s infinite;
+  }
+}
+
+@keyframes hdrBallRing {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.7);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* --- Acciones rápidas --- */
+.menu-quick {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.menu-quick-reserve {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 58px;
+  padding: 0 20px 0 22px;
+  border-radius: 16px;
+  background: var(--color-accent-orange);
+  color: #fff;
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 14px 26px -14px rgba(232, 114, 42, 0.95);
+}
+
+.menu-quick-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.menu-quick-btn.is-wa {
+  background: var(--wa-verde, #1fa855);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 12px 22px -14px rgba(31, 168, 85, 0.9);
+}
+
+.menu-quick-reserve:active,
+.menu-quick-btn:active,
+.menu-section-link:active,
+.menu-tool:active {
+  transform: scale(0.98);
+}
+
+/* --- Secciones --- */
+.menu-sections {
+  display: flex;
+  flex-direction: column;
+  margin-top: 18px;
+  border-radius: 18px;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface-card);
+  overflow: hidden;
+}
+
+.menu-section-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 8px 14px 8px 16px;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.menu-section-link + .menu-section-link {
+  border-top: 1px solid var(--color-hairline);
+}
+
+.menu-section-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.28));
+}
+
+.menu-section-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menu-section-label {
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.menu-section-desc {
+  font-size: 12.5px;
+  color: var(--color-muted);
+}
+
+.menu-section-chev {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--color-muted-soft);
+}
+
+/* La sección donde estás: fondo azul suave, raya azul y la pelotita. */
+.menu-section-link[aria-current] {
+  background: color-mix(in srgb, var(--hdr-azul) 8%, transparent);
+}
+
+.menu-section-link[aria-current]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--hdr-azul);
+}
+
+.menu-section-link[aria-current] .menu-section-label {
+  color: var(--hdr-azul-texto);
+}
+
+.menu-section-link[aria-current] .menu-section-label::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 8px;
+  vertical-align: 0.2em;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 1px 3px rgba(120, 140, 10, 0.6);
+}
+
+@media (hover: hover) {
+  .menu-section-link:hover,
+  .menu-tool:hover {
+    background: color-mix(in srgb, var(--hdr-azul) 6%, transparent);
+  }
+}
+
+.menu-section-link:focus-visible,
+.menu-tool:focus-visible,
+.menu-quick-reserve:focus-visible,
+.menu-quick-btn:focus-visible {
+  outline: 2px solid var(--color-accent-orange);
+  outline-offset: -2px;
+}
+
+/* --- Herramientas --- */
+.menu-tools {
+  margin-top: 22px;
+}
+
+.menu-tools-title {
+  display: block;
+  padding: 0 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.menu-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.menu-tool {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 68px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface-subtle);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.menu-tool strong {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.menu-tool span {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--color-muted);
+}
+
+.menu-tool[aria-current] {
+  border-color: color-mix(in srgb, var(--hdr-azul) 45%, transparent);
+  background: color-mix(in srgb, var(--hdr-azul) 8%, transparent);
+}
+
+.menu-tool[aria-current] strong {
+  color: var(--hdr-azul-texto);
+}
+
+/* --- Animación: la hoja aparece y los bloques entran escalonados --- */
+@media (prefers-reduced-motion: no-preference) {
+  .menu-sheet {
+    transform: translateY(-10px);
+    transition:
+      opacity var(--t-estado) var(--ease),
+      transform var(--t-estado) var(--ease),
+      visibility 0s linear var(--t-estado);
+  }
+
+  .menu-sheet.open {
+    transform: none;
+    transition:
+      opacity var(--t-estado) var(--ease),
+      transform var(--t-estado) var(--ease),
+      visibility 0s;
+  }
+
+  .menu-sheet-scroll > * {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity var(--t-hover) var(--ease),
+      transform var(--t-hover) var(--ease);
+  }
+
+  .menu-sheet.open .menu-sheet-scroll > * {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--t-entrada) var(--ease),
+      transform var(--t-entrada) var(--ease);
+    transition-delay: calc(60ms + var(--i, 0) * 50ms);
+  }
+
+  .menu-quick-reserve,
+  .menu-quick-btn,
+  .menu-section-link,
+  .menu-tool,
+  .menu-sheet-close,
+  .mobile-menu-btn {
+    transition:
+      transform var(--t-hover) var(--ease),
+      background-color var(--t-hover) var(--ease);
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+@media (prefers-color-scheme: dark) {
+  .app-top-nav,
+  .menu-sheet {
+    --hdr-azul: #5b82ff;
+    --hdr-azul-texto: #9fb6ff;
+  }
+
+  .nav-inner {
+    background: color-mix(in srgb, var(--color-canvas) 66%, transparent);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 8px 24px -14px rgba(0, 0, 0, 0.6);
+  }
+
+  .nav-inner::before {
+    background: color-mix(in srgb, var(--color-canvas) 88%, transparent);
+    box-shadow: 0 16px 36px -16px rgba(0, 0, 0, 0.75);
+  }
+
+  .menu-status {
+    box-shadow: 0 18px 34px -22px rgba(35, 80, 214, 0.9);
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import "./ScrollProgress.css";
 
 /** Barra fina fija arriba de todo que marca cuánto queda de la página. */
 export default function ScrollProgress() {
@@ -15,8 +16,10 @@ export default function ScrollProgress() {
       const pct = scrollable > 0 ? window.scrollY / scrollable : 0;
       if (fillRef.current) fillRef.current.style.transform = `scaleX(${pct})`;
       // La pelotita viaja con la barra y gira (una vuelta cada ~10%).
-      if (ballRef.current)
+      if (ballRef.current) {
         ballRef.current.style.transform = `translateX(${pct * (window.innerWidth - 10)}px) rotate(${pct * 3600}deg)`;
+        ballRef.current.classList.toggle("is-on", pct > 0.004);
+      }
     }
     update();
     window.addEventListener("scroll", update, { passive: true });

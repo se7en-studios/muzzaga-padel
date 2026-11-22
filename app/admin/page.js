@@ -59,6 +59,8 @@ import { ICON_PROPS, NAV_GROUPS, NAV_ITEMS, findNavItem } from "./nav";
 import { Toaster, useToasts } from "./ui/Toaster";
 import CommandPalette from "./ui/CommandPalette";
 import MobileNav from "./ui/MobileNav";
+import AvisosPanel from "./ui/AvisosPanel";
+import { useAnimatedOpen } from "./ui/useAnimatedOpen";
 
 const CLUB_PILL_CLASS = {
   abierto: "is-open",
@@ -154,6 +156,7 @@ export default function AdminPage() {
   const [alerts, setAlerts] = useState([]);
   const webOrdersSeen = useRef(null);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const avisos = useAnimatedOpen(220);
   // Búsqueda que llega desde el command palette a Clientes. La key fuerza a
   // la vista a arrancar con esa búsqueda aunque ya estuviera montada.
   const [clientesSearch, setClientesSearch] = useState({ query: "", key: 0 });
@@ -261,7 +264,8 @@ export default function AdminPage() {
         else if (isModalOpen) setIsModalOpen(false);
         return;
       }
-      const isBusy = isModalOpen || isPaletteOpen || detailBooking;
+      const isBusy =
+        isModalOpen || isPaletteOpen || detailBooking || avisos.open;
       if (
         e.key.toLowerCase() === "n" &&
         !e.metaKey &&
@@ -276,7 +280,7 @@ export default function AdminPage() {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isAuthenticated, isModalOpen, isPaletteOpen, detailBooking]);
+  }, [isAuthenticated, isModalOpen, isPaletteOpen, detailBooking, avisos.open]);
 
   // Si el modal de detalle está abierto y llega dayData nuevo (por ej. tras
   // registrar un cobro), lo refrescamos para que el saldo no quede viejo.
@@ -762,10 +766,12 @@ export default function AdminPage() {
                     className={`admin-sidebar-link${view === id ? " active" : ""}`}
                     aria-current={view === id ? "page" : undefined}
                     onClick={() => navigate(id)}
-                    title={sidebarCollapsed ? label : undefined}
+                    aria-label={sidebarCollapsed ? label : undefined}
                   >
                     <Icon {...ICON_PROPS} />
-                    {!sidebarCollapsed && <span>{label}</span>}
+                    <SidebarLabel collapsed={sidebarCollapsed}>
+                      {label}
+                    </SidebarLabel>
                   </button>
                 ))}
               </div>
@@ -777,29 +783,35 @@ export default function AdminPage() {
               href="/admin/monitor"
               target="_blank"
               className="admin-sidebar-link"
-              title={sidebarCollapsed ? "Pantalla de la TV" : undefined}
+              aria-label={sidebarCollapsed ? "Pantalla de la TV" : undefined}
             >
               <Tv {...ICON_PROPS} />
-              {!sidebarCollapsed && <span>Pantalla de la TV</span>}
+              <SidebarLabel collapsed={sidebarCollapsed}>
+                Pantalla de la TV
+              </SidebarLabel>
             </Link>
             <Link
               href="/"
               target="_blank"
               className="admin-sidebar-link"
-              title={sidebarCollapsed ? "Ver la web del club" : undefined}
+              aria-label={sidebarCollapsed ? "Ver la web del club" : undefined}
             >
               <ExternalLink {...ICON_PROPS} />
-              {!sidebarCollapsed && <span>Ver la web del club</span>}
+              <SidebarLabel collapsed={sidebarCollapsed}>
+                Ver la web del club
+              </SidebarLabel>
             </Link>
 
             <button
               type="button"
               className="admin-sidebar-link admin-sidebar-logout"
               onClick={handleLogout}
-              title={sidebarCollapsed ? "Cerrar sesión" : undefined}
+              aria-label={sidebarCollapsed ? "Cerrar sesión" : undefined}
             >
               <LogOut {...ICON_PROPS} />
-              {!sidebarCollapsed && <span>Cerrar sesión</span>}
+              <SidebarLabel collapsed={sidebarCollapsed}>
+                Cerrar sesión
+              </SidebarLabel>
             </button>
             {!sidebarCollapsed && <Se7enCredit className="admin-se7en-sidebar" />}
           </div>
@@ -846,28 +858,16 @@ export default function AdminPage() {
                   type="button"
                   className="admin-top-icon-btn admin-top-alerts"
                   title="Avisos"
-                  onClick={() => {
-                    if (alerts.length === 0) {
-                      showToast("No hay avisos. Todo en orden.");
-                      return;
-                    }
-                    alerts.forEach((a) =>
-                      showToast(`${a.title} · ${a.detail}`, {
-                        tone: a.tone === "danger" ? "error" : "success",
-                        duration: 8000,
-                        action: a.view
-                          ? { label: "Ver", onClick: () => navigate(a.view) }
-                          : undefined,
-                      }),
-                    );
-                  }}
+                  aria-haspopup="dialog"
+                  aria-expanded={avisos.open && !avisos.closing}
+                  onClick={avisos.open ? avisos.hide : avisos.show}
                   aria-label={
                     alerts.length
                       ? `Avisos: ${alerts.length} pendiente${alerts.length === 1 ? "" : "s"}`
                       : "Avisos"
                   }
                 >
-                  <Bell size={18} />
+                  <Bell size={18} strokeWidth={1.9} />
                   <span>Avisos</span>
                   {alerts.length > 0 && (
                     <span className="admin-bell-badge" aria-hidden="true">
@@ -882,7 +882,7 @@ export default function AdminPage() {
                   title="Abrir la pantalla de la TV del club"
                   aria-label="Pantalla de la TV"
                 >
-                  <Tv size={18} />
+                  <Tv size={18} strokeWidth={1.9} />
                 </Link>
               </div>
             </div>
@@ -908,15 +908,39 @@ export default function AdminPage() {
                 {/* Problemas de conexión en su propio renglón, como cartel:
                     mezclados con la fecha pasaban como un dato más. */}
                 {!isOnline ? (
-                  <p className="admin-header-alert" role="status">
-                    <IconAlert size={16} /> Sin conexión — lo que cargues ahora
-                    no se va a guardar
+                  <p
+                    className="admin-header-alert"
+                    data-tone="danger"
+                    role="status"
+                  >
+                    <span
+                      className="admin-header-alert-icon"
+                      aria-hidden="true"
+                    >
+                      <IconAlert size={16} />
+                    </span>
+                    <span>
+                      <strong>Sin conexión</strong> — lo que cargues ahora no se
+                      va a guardar
+                    </span>
                   </p>
                 ) : (
                   dayData?.firebaseOk === false && (
-                    <p className="admin-header-alert" role="status">
-                      <IconAlert size={16} /> No se pudo leer la base — los
-                      datos pueden no estar actualizados
+                    <p
+                      className="admin-header-alert"
+                      data-tone="warning"
+                      role="status"
+                    >
+                      <span
+                        className="admin-header-alert-icon"
+                        aria-hidden="true"
+                      >
+                        <IconAlert size={16} />
+                      </span>
+                      <span>
+                        <strong>No se pudo leer la base</strong> — los datos
+                        pueden no estar actualizados
+                      </span>
                     </p>
                   )
                 )}
@@ -1047,6 +1071,15 @@ export default function AdminPage() {
         />
       )}
 
+      {avisos.open && (
+        <AvisosPanel
+          alerts={alerts}
+          closing={avisos.closing}
+          onClose={avisos.hide}
+          onNavigate={navigate}
+        />
+      )}
+
       <Toaster toasts={toasts} onDismiss={dismissToast} />
 
       {/* MODAL PARA CREAR RESERVA MANUAL O BLOQUEO */}
@@ -1163,6 +1196,17 @@ export default function AdminPage() {
 }
 
 /** "Hecho por se7en" con el link a su Instagram (login y menú lateral). */
+/** Texto del menú; con el menú achicado queda como cartelito al pasar. */
+function SidebarLabel({ collapsed, children }) {
+  return collapsed ? (
+    <span className="admin-sidebar-tip" aria-hidden="true">
+      {children}
+    </span>
+  ) : (
+    <span>{children}</span>
+  );
+}
+
 function Se7enCredit({ className = "" }) {
   return (
     <a

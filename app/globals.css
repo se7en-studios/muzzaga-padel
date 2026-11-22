@@ -304,24 +304,6 @@ select:focus-visible,
      setea ScrollReveal. */
 }
 
-.scroll-progress-track {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2.5px;
-  z-index: 200;
-  background: transparent;
-}
-
-.scroll-progress-fill {
-  width: 100%;
-  height: 100%;
-  background: var(--color-accent-orange);
-  transform-origin: left center;
-  transform: scaleX(0);
-}
-
 /* ==========================================================================
    BUTTONS & BADGES (EXPO MINIMAL EDITORIAL FEEL)
    ========================================================================== */
@@ -562,226 +544,6 @@ select:focus-visible,
   border-radius: 50%;
   background: currentColor;
   box-shadow: 0 0 6px currentColor;
-}
-
-/* ==========================================================================
-   TOP NAVIGATION
-   ========================================================================== */
-.app-top-nav {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  padding: 14px 20px 0;
-}
-
-.nav-inner {
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  background: color-mix(in srgb, var(--color-canvas) 88%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--color-hairline-strong);
-  border-radius: var(--radius-pill);
-  padding: 0 10px 0 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-}
-
-.brand-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-mark {
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, #e8722a 0%, #cf611e 100%);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 14px;
-  box-shadow: 0 2px 8px rgba(232, 114, 42, 0.35);
-}
-
-.brand-text {
-  font-weight: 600;
-  font-size: 16px;
-  color: var(--color-ink);
-  letter-spacing: -0.02em;
-}
-
-.nav-links-row {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.nav-link {
-  font-size: 14px;
-  color: var(--color-body);
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.nav-link:hover {
-  color: var(--color-accent-orange);
-}
-
-/* ==========================================================================
-   MOBILE NAV PANEL
-   ========================================================================== */
-.mobile-menu-btn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  /* Solo las tres líneas, sin fondo ni contorno: al lado de "Reservar" el
-     recuadro parecía un segundo botón. Sigue midiendo 44 px para el dedo y
-     al tocarlo se marca con un círculo suave. Va 8 px más a la derecha: sin
-     el recuadro, las líneas quedaban más lejos del borde que el logo del
-     otro lado (22,7 contra 15 px). */
-  background: transparent;
-  border: 0;
-  border-radius: 50%;
-  margin-right: -8px;
-  color: var(--color-ink);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.mobile-menu-btn:active {
-  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
-}
-
-@media (hover: hover) {
-  .mobile-menu-btn:hover {
-    background: color-mix(in srgb, var(--color-ink) 6%, transparent);
-  }
-}
-
-.mobile-menu-btn svg {
-  width: 20px;
-  height: 20px;
-}
-
-.mobile-nav-panel {
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 76px;
-  right: 16px;
-  left: 16px;
-  background: var(--color-canvas);
-  border: 1px solid var(--color-hairline-strong);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  z-index: 200;
-  max-height: calc(100dvh - 92px);
-  overflow: hidden;
-  transform: translateY(-12px);
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    transform var(--t-estado) var(--ease),
-    opacity var(--t-estado) var(--ease);
-}
-
-.mobile-nav-panel.open {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Si no entra (celu chico o acostado) scrollea esto, con el borde de abajo
-   difuminado mientras quede algo; el recuadro del panel no se corta. */
-.mobile-nav-scroll {
-  min-height: 0;
-  padding: 8px;
-  overscroll-behavior: contain;
-}
-
-/* Herramientas en dos columnas y Maps + WhatsApp en un renglón: así el
-   panel entra entero en un celular de 667 px de alto. */
-.mobile-nav-group {
-  border-top: 1px solid var(--color-hairline);
-  margin: 4px 0 2px;
-  padding-top: 6px;
-}
-
-.mobile-nav-group-title {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-  padding: 6px 14px 2px;
-}
-
-.mobile-nav-tools,
-.mobile-nav-contact {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 4px;
-}
-
-.mobile-nav-tools .mobile-nav-link,
-.mobile-nav-contact .mobile-nav-link {
-  padding-inline: 12px;
-}
-
-.mobile-nav-contact {
-  border-top: 1px solid var(--color-hairline);
-  padding-top: 4px;
-}
-
-/* Con la barra de abajo visible el panel termina antes: antes seguía por
-   detrás de la barra y los últimos links quedaban tapados. */
-@media (max-width: 768px), (max-width: 1180px) and (max-height: 500px) {
-  .mobile-nav-panel {
-    max-height: calc(
-      100dvh - 76px - var(--bottom-bar-h) - env(safe-area-inset-bottom, 0px) - 12px
-    );
-  }
-}
-
-.mobile-nav-link {
-  /* Sin display los links de herramientas (que no son hijos directos del
-     panel flex) quedaban en línea, uno pegado al otro. */
-  display: block;
-  padding: 12px 14px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-ink);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.mobile-nav-link:hover {
-  background: var(--color-canvas-soft);
-  color: var(--color-accent-orange);
-}
-
-.mobile-nav-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  z-index: 150;
-}
-
-.mobile-nav-backdrop.open {
-  display: block;
 }
 
 /* ==========================================================================
@@ -2257,19 +2019,6 @@ select:focus-visible,
     min-width: 0;
   }
 
-  /* El header completo (logo + links + Maps + WhatsApp + Admin) necesita
-     1176px para entrar, pero recién pasaba al menú hamburguesa en 768. En la
-     franja intermedia los botones quedaban cortados, y ahí cae justamente el
-     teléfono en horizontal (844 a 932px). */
-  .nav-links-row,
-  .header-maps-btn,
-  .header-admin-btn {
-    display: none;
-  }
-
-  .mobile-menu-btn {
-    display: flex;
-  }
 }
 
 .info-link-card {
@@ -4229,165 +3978,6 @@ body:has(.footer-wordmark) {
 }
 
 
-/* Barra de abajo en el celu: una pastilla flotante, como la de Instagram.
-   Al bajar se achica y quedan los íconos; al subir (o arriba de todo)
-   vuelve con los nombres. Se achica solo con transform/opacity: el fondo
-   se escala desde el centro y cada ícono se corre hacia el medio lo mismo
-   que se achica el fondo (--k es su posición: 2, 1, 0, -1, -2). */
-.mobile-bottom-bar {
-  --pill-s: 0.78;
-  display: none;
-  position: fixed;
-  /* 12 px a cada lado, centrada, y hasta 480 de ancho. Se mide contra el
-     ancho visible: con barra de scroll clásica (compu), 100vw incluye la
-     barra y la pastilla quedaba más ancha que la pantalla. */
-  left: 12px;
-  right: 12px;
-  bottom: calc(var(--bottom-pill-gap) + env(safe-area-inset-bottom, 0px));
-  max-width: 480px;
-  height: var(--bottom-pill-h);
-  margin-inline: auto;
-  z-index: 99;
-  justify-content: space-around;
-  align-items: stretch;
-}
-
-.bottom-bar-bg {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-surface-card) 90%, transparent);
-  /* Sin la línea -webkit- a mano: el compilador de CSS ya la agrega, y si
-     están las dos se queda solo con la de Safari (Chrome no desenfoca). */
-  backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid var(--color-hairline-strong);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06);
-  pointer-events: none;
-}
-
-.bottom-bar-item {
-  flex: 1;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  color: var(--color-muted);
-  font-size: 11px;
-  font-weight: 500;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* La burbuja del activo: va detrás del ícono y del nombre. */
-.bottom-bar-item::before {
-  content: "";
-  position: absolute;
-  inset: 6px 3px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
-  opacity: 0;
-}
-
-.bottom-bar-item.active::before {
-  opacity: 1;
-}
-
-.bottom-bar-icon,
-.bottom-bar-label {
-  position: relative;
-  display: flex;
-}
-
-.bottom-bar-icon svg {
-  width: 21px;
-  height: 21px;
-}
-
-/* WhatsApp va sin nombre: el logo solo, más grande. Abierta, va un poco a
-   la izquierda y arriba del centro de su lugar: en el medio del espacio
-   libre entre "Menú" y el borde. En el centro exacto, sin nombre, se veía
-   despegado del resto. Achicada, vuelve a la fila de los otros íconos. */
-.bottom-bar-item--wa .bottom-bar-icon {
-  transform: translate(-10px, -4px);
-}
-
-.bottom-bar-item--wa .bottom-bar-icon svg {
-  width: 28px;
-  height: 28px;
-}
-
-.bottom-bar-item.active,
-.bottom-bar-item:hover {
-  color: var(--color-ink);
-}
-
-.bottom-bar-item.active svg {
-  stroke: var(--color-accent-orange);
-}
-
-.bottom-bar-item.active .bottom-bar-label {
-  font-weight: 600;
-}
-
-.bottom-bar-item:active .bottom-bar-icon svg {
-  transform: scale(0.9);
-}
-
-.bottom-bar-item:focus-visible {
-  outline: none;
-}
-
-.bottom-bar-item:focus-visible::before {
-  opacity: 1;
-  box-shadow: 0 0 0 2px var(--color-accent-orange);
-}
-
-/* Achicada (con teclado se abre para que se lea a dónde va cada una). */
-.mobile-bottom-bar.is-compact:not(:has(:focus-visible)) .bottom-bar-bg {
-  transform: scale(var(--pill-s));
-}
-
-.mobile-bottom-bar.is-compact:not(:has(:focus-visible)) .bottom-bar-item {
-  /* 100% es el ancho de su lugar: un quinto de la pastilla. */
-  transform: translateX(calc(100% * (1 - var(--pill-s)) * var(--k)));
-}
-
-.mobile-bottom-bar.is-compact:not(:has(:focus-visible)) .bottom-bar-item::before {
-  transform: scale(var(--pill-s), 0.72);
-}
-
-.mobile-bottom-bar.is-compact:not(:has(:focus-visible)) .bottom-bar-icon {
-  transform: translateY(9px);
-}
-
-.mobile-bottom-bar.is-compact:not(:has(:focus-visible)) .bottom-bar-item--wa .bottom-bar-icon {
-  transform: scale(0.82);
-}
-
-.mobile-bottom-bar.is-compact:not(:has(:focus-visible)) .bottom-bar-label {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .bottom-bar-bg,
-  .bottom-bar-item,
-  .bottom-bar-item::before,
-  .bottom-bar-icon {
-    transition: transform var(--t-estado) var(--ease), opacity var(--t-estado) var(--ease);
-  }
-
-  .bottom-bar-label {
-    transition: transform var(--t-estado) var(--ease), opacity var(--t-hover) var(--ease);
-  }
-
-  .bottom-bar-icon svg {
-    transition: transform var(--t-hover) var(--ease);
-  }
-}
-
 /* ==========================================================================
    ADMIN PANEL STYLES (EXPO / NOTION LIGHT DASHBOARD)
    ========================================================================== */
@@ -6124,110 +5714,6 @@ body:has(.footer-wordmark) {
 }
 
 /* ==========================================================================
-   FLOATING LIVE STATUS PILL (SCROLL-TRIGGERED)
-   ========================================================================== */
-.floating-live-pill {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 95;
-  animation: floatIn var(--t-entrada) var(--ease);
-}
-
-@keyframes floatIn {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.floating-live-inner {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: color-mix(in srgb, var(--color-canvas) 95%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--color-hairline-strong);
-  border-radius: var(--radius-pill);
-  padding: 8px 18px 8px 14px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-.floating-live-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.floating-status-txt {
-  font-size: 12.5px;
-  color: var(--color-body);
-}
-
-.floating-status-txt strong {
-  color: var(--color-ink);
-}
-
-.floating-live-action {
-  background: var(--color-accent-orange);
-  color: #ffffff;
-  padding: 0 18px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 600;
-  position: relative;
-  transition:
-    transform var(--t-hover) var(--ease),
-    opacity var(--t-hover) var(--ease);
-  white-space: nowrap;
-}
-
-.floating-live-action:hover {
-  background: var(--color-accent-orange-hover);
-  transform: translateY(-1px);
-}
-
-/* Un solo pulso cuando aparece la píldora: marca dónde reservar y se queda
-   quieta. Antes pulsaba tres veces al lado del texto. */
-@media (prefers-reduced-motion: no-preference) {
-  .floating-live-action::after {
-    animation: ctaPulseRing 1.2s var(--ease) 0.4s 1;
-  }
-}
-
-/* El anillo es un pseudo-elemento con sombra fija: se anima su escala y su
-   opacidad, no la sombra. */
-.floating-live-action::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: 0 0 0 6px rgba(232, 114, 42, 0.45);
-  opacity: 0;
-  pointer-events: none;
-}
-
-@keyframes ctaPulseRing {
-  0% {
-    opacity: 1;
-    transform: scale(0.92);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.18);
-  }
-}
-
-/* ==========================================================================
    MOBILE RESPONSIVENESS (SMARTPHONES)
    ========================================================================== */
 @media (max-width: 768px) {
@@ -6245,35 +5731,6 @@ body:has(.footer-wordmark) {
     padding-bottom: calc(
       var(--bottom-bar-h) + env(safe-area-inset-bottom, 0px) + 20px
     );
-  }
-
-  .app-top-nav {
-    padding: 10px 12px 0;
-  }
-
-  .nav-inner {
-    height: 54px;
-    padding: 0 8px 0 14px;
-  }
-
-  .nav-links-row {
-    display: none;
-  }
-
-  .header-maps-btn {
-    display: none;
-  }
-
-  .header-admin-btn {
-    display: none;
-  }
-
-  .header-whatsapp-btn {
-    display: none;
-  }
-
-  .mobile-menu-btn {
-    display: flex;
   }
 
   .live-weather-radar-bar {
@@ -6419,10 +5876,6 @@ body:has(.footer-wordmark) {
     font-size: 44px;
   }
 
-  .mobile-bottom-bar {
-    display: flex;
-  }
-
   .counter-btn {
     width: 44px;
     height: 44px;
@@ -6460,20 +5913,6 @@ body:has(.footer-wordmark) {
     width: 36px;
     height: 36px;
     font-size: 18px;
-  }
-
-  .floating-live-pill {
-    display: none !important;
-  }
-
-  .floating-live-inner {
-    justify-content: space-between;
-    width: 100%;
-    padding: 6px 12px;
-  }
-
-  .floating-status-txt {
-    font-size: 11px;
   }
 
   .racket-finder-grid {
@@ -7711,15 +7150,6 @@ body:has(.footer-wordmark) {
   }
 }
 
-/* Telefono en horizontal: es angosto de alto, no de ancho, asi que no entra
-   en el breakpoint de 768 pero igual necesita la barra inferior. Va al final
-   del archivo para ganarle a la definicion base de .mobile-bottom-bar. */
-@media (max-width: 1180px) and (max-height: 500px) {
-  .mobile-bottom-bar {
-    display: flex;
-  }
-}
-
 /* ==========================================================================
    DARK MODE (respeta prefers-color-scheme, sin toggle manual)
    Va al final del archivo a propósito: son overrides de --variables que
@@ -8512,8 +7942,7 @@ textarea:focus-visible {
 .fc-pill:active,
 .player-count-btn:active,
 .americano-count-btn:active,
-.pass-copy-btn:active,
-.floating-live-action:active {
+.pass-copy-btn:active {
   transform: scale(0.98);
 }
 

@@ -1,17 +1,95 @@
 /* Estilos de la sección: ubicacion-pie (landing). Se cargan después de landing.css y
-   fondo-cancha.css, así que pisan lo anterior con la misma especificidad. */
+   fondo-cancha.css, así que pisan lo anterior con la misma especificidad.
+   El pie en sí vive en components/Footer.css: acá queda solo la pelota del
+   nombre gigante (más abajo). */
 
 /* ==========================================================================
-   UBICACIÓN: los horarios como tablero de partido
-   El horario es lo que más se consulta, así que deja de ser un renglón más y
-   pasa a ser el marcador del club: panel oscuro con puntitos de LED y la
-   hora en verde pelota, en mono para que se lea como reloj. Oscuro en los
-   dos temas (un tablero siempre es negro).
+   UBICACIÓN: la tarjeta
+   Celu: mapa arriba, después dirección, "Cómo llegar" y la semana. PC:
+   dirección, botones y semana a la izquierda; el mapa a la derecha.
    ========================================================================== */
-.section-ubicacion .location-detail-item:has(.location-icon-clock) {
+.section-ubicacion .location-unified-card {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+}
+
+.section-ubicacion .location-map-pane {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.section-ubicacion .location-info-pane {
+  grid-column: 1;
+  grid-row: 1;
+  justify-content: flex-start;
+  gap: 18px;
+  padding: 28px 28px 28px 30px;
+}
+
+/* Dirección: el ícono más chico y el texto pegado. */
+.section-ubicacion .location-direccion {
   align-items: center;
-  padding: 14px 18px 14px 12px;
+}
+
+.section-ubicacion .location-direccion .location-detail-icon {
+  width: 44px;
+  height: 44px;
+}
+
+.section-ubicacion .location-direccion .location-detail-value {
+  font-size: 21px;
+  line-height: 1.15;
+}
+
+/* ==========================================================================
+   UBICACIÓN: "Cómo llegar" manda; Waze y WhatsApp lo acompañan
+   ========================================================================== */
+.section-ubicacion .location-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.section-ubicacion .location-btn {
+  min-height: 52px;
+  justify-content: center;
+  border-radius: 14px;
+}
+
+.section-ubicacion .location-btn-llegar {
+  gap: 10px;
+  padding: 0 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-accent-orange);
+  border-color: transparent;
+  box-shadow:
+    0 10px 24px -10px var(--orange-glow, rgba(232, 114, 42, 0.6)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.section-ubicacion .location-btn-llegar:hover {
+  background: #f07e36;
+  border-color: transparent;
+}
+
+.section-ubicacion .location-btn-waze,
+.section-ubicacion .location-btn-wa {
+  padding: 0 16px;
+}
+
+/* ==========================================================================
+   UBICACIÓN: la semana como tablero de partido
+   Panel oscuro con puntitos de LED en los dos temas (un tablero siempre es
+   negro): los siete días con su lucecita (verde pelota si abre, apagada si
+   no), el de hoy con borde naranja, y la hora en mono como un reloj.
+   ========================================================================== */
+.horario-tablero {
+  padding: 14px 14px 12px;
   border-radius: 16px;
+  color: #fff;
   background:
     radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1.3px) 0 0 / 6px 6px,
     linear-gradient(180deg, #1f201a 0%, #0f100c 100%);
@@ -21,39 +99,141 @@
     0 12px 24px -16px rgba(0, 0, 0, 0.7);
 }
 
-.section-ubicacion .location-detail-item:has(.location-icon-clock) .location-detail-label {
-  color: rgba(255, 255, 255, 0.55);
+.horario-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px;
 }
 
-.section-ubicacion .location-detail-item:has(.location-icon-clock) .location-detail-value {
-  color: #ffffff;
-}
-
-.section-ubicacion .location-detail-item:has(.location-icon-clock) .location-detail-sub {
-  margin-top: 2px;
-  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
-  font-size: 18px;
+.horario-titulo {
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.horario-hoy-txt {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffb07a;
+}
+
+.horario-dias {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  margin: 10px 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.horario-dia {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 48px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.05);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+/* La lucecita del día. */
+.horario-dia::after {
+  content: "";
+  width: 58%;
+  height: 4px;
+  border-radius: 2px;
+  background: #d7f03a;
+  box-shadow: 0 0 8px rgba(215, 240, 58, 0.55);
+}
+
+.horario-dia.is-closed {
+  color: rgba(255, 255, 255, 0.42);
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0 4px, transparent 4px 8px),
+    rgba(255, 255, 255, 0.02);
+}
+
+.horario-dia.is-closed::after {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+}
+
+.horario-dia.is-today {
+  border-color: var(--color-accent-orange);
+  background-color: rgba(232, 114, 42, 0.18);
+  box-shadow: 0 0 0 1px var(--color-accent-orange);
+}
+
+.horario-detalle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  padding: 0 2px;
+}
+
+.horario-horas {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   color: #d7f03a;
   text-shadow: 0 0 12px rgba(215, 240, 58, 0.45);
 }
 
-/* "Abierto ahora · cierra a las…" adentro del tablero (si en page.js se
-   suma <LiveWeatherRadar> al ítem de horarios). Se pisa la píldora blanca
-   del hero por una línea de LED. */
-.section-ubicacion .location-detail-item .live-weather-radar-bar {
-  display: inline-flex;
-  width: auto;
-  margin: 10px 0 0;
-  padding: 6px 12px;
+.horario-resumen {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Si un día tiene otro horario: renglón por grupo de días. */
+.horario-lista {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.horario-lista li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.horario-lista strong {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  color: #d7f03a;
+}
+
+/* "Abierto ahora · cierra a las…" (LiveWeatherRadar) al pie del tablero:
+   se pisa la píldora blanca del hero por una línea de LED. */
+.horario-tablero .live-weather-radar-bar {
+  display: flex;
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 8px 12px;
   justify-content: flex-start;
-  /* En el celu el texto puede ir en dos renglones: esquinas de tarjeta y
-     no de píldora para que no quede un óvalo raro. */
   border-radius: 10px;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: none;
@@ -61,13 +241,13 @@
   -webkit-backdrop-filter: none;
 }
 
-.section-ubicacion .location-detail-item .radar-dot {
+.horario-tablero .radar-dot {
   width: 8px;
   height: 8px;
   color: #8a8a84;
 }
 
-.section-ubicacion .location-detail-item .radar-dot.is-open {
+.horario-tablero .radar-dot.is-open {
   color: #d7f03a;
 }
 
@@ -75,11 +255,12 @@
    UBICACIÓN: el mapa adentro de una cancha
    El mapa es el "piso" y alrededor queda la zona de afuera en el azul
    cancha con su textura; la línea blanca es la de fondo. La red pasa por
-   el medio (detrás del mapa, se ve arriba y abajo) y una pelota queda
-   apoyada en la esquina.
+   el medio (se ve arriba y abajo), una pelota queda en la esquina y el pin
+   del club (naranja, con la pelota adentro) marca el lugar.
    ========================================================================== */
 .section-ubicacion .location-map-pane {
   --marco: 14px;
+  min-height: 360px;
   border-left: 0;
   background-color: #2350d6;
   background-image:
@@ -89,16 +270,145 @@
   background-repeat: no-repeat, repeat;
 }
 
+/* Mapa dibujado (cuadras, una avenida y una plaza) que se ve mientras
+   carga el de Google o si no carga. */
+.mapa-dibujo,
 .section-ubicacion .location-map-pane iframe {
+  position: absolute;
   inset: var(--marco);
-  z-index: 1;
   width: calc(100% - 2 * var(--marco));
   height: calc(100% - 2 * var(--marco));
   border-radius: 6px;
-  background: #e8eaed;
+}
+
+.mapa-dibujo {
+  --tierra: #ebe8df;
+  --calle: #ffffff;
+  --avenida: #fbd98a;
+  --plaza: #c9e5b5;
+  background:
+    linear-gradient(118deg, transparent calc(50% - 5px), var(--avenida) calc(50% - 5px) calc(50% + 5px), transparent calc(50% + 5px)),
+    linear-gradient(var(--plaza), var(--plaza)) 18% 22% / 22% 26% no-repeat,
+    repeating-linear-gradient(0deg, transparent 0 44px, var(--calle) 44px 50px),
+    repeating-linear-gradient(90deg, transparent 0 58px, var(--calle) 58px 64px),
+    var(--tierra);
   box-shadow:
     0 0 0 3px #ffffff,
     0 10px 22px -8px rgba(5, 14, 48, 0.7);
+}
+
+.section-ubicacion .location-map-pane iframe {
+  z-index: 1;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Todo el cuadro es el link a Google Maps. */
+.mapa-abrir {
+  position: absolute;
+  inset: var(--marco);
+  z-index: 3;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.mapa-abrir:focus-visible {
+  outline: 3px solid var(--color-accent-orange);
+  outline-offset: 3px;
+}
+
+/* El pin: su punta cae justo en el centro, donde Google pone el suyo. */
+.mapa-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+
+.mapa-pin-gota {
+  position: absolute;
+  left: -21px;
+  top: -50px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50% 50% 50% 0;
+  rotate: -45deg;
+  background: linear-gradient(135deg, #ff9a55, #e8722a 55%, #c85a17);
+  border: 3px solid #ffffff;
+  box-shadow: -3px 4px 10px rgba(5, 14, 48, 0.45);
+}
+
+/* La pelota adentro del pin, con su costura. */
+.mapa-pin-gota::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at -18% 50%, transparent 52%, rgba(255, 255, 255, 0.9) 54%, transparent 62%),
+    radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: inset -1px -2px 3px rgba(0, 0, 0, 0.2);
+}
+
+.mapa-pin-sombra {
+  position: absolute;
+  left: -11px;
+  top: -4px;
+  width: 22px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(5, 14, 48, 0.45), transparent);
+}
+
+.mapa-pin-cartel {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  translate: -50% 0;
+  padding: 5px 10px 4px;
+  border-radius: 8px;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: #0f0f0d;
+  box-shadow: 0 6px 14px -6px rgba(5, 14, 48, 0.7);
+}
+
+.mapa-pin-cartel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  translate: -50% 0;
+  border: 5px solid transparent;
+  border-top-color: #0f0f0d;
+}
+
+.mapa-abrir-chip {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1b1b19;
+  background: #ffffff;
+  box-shadow: 0 6px 14px -6px rgba(5, 14, 48, 0.6);
+  transition: transform var(--t-hover) var(--ease);
+}
+
+.mapa-abrir:hover .mapa-abrir-chip {
+  transform: translateY(-2px);
 }
 
 /* La red: línea blanca de lado a lado con un poste en cada punta (queda
@@ -118,12 +428,11 @@
   pointer-events: none;
 }
 
-/* La pelota en la esquina, sobre el marco (no tapa los controles del mapa,
-   que Google pone arriba a la izquierda y abajo a la derecha). */
+/* La pelota en la esquina, sobre el marco. */
 .section-ubicacion .location-map-pane::after {
   content: "";
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   top: calc(var(--marco) - 13px);
   right: calc(var(--marco) - 13px);
   width: 26px;
@@ -138,23 +447,141 @@
   pointer-events: none;
 }
 
-/* Botones: los tres de 48 px de alto para el dedo. */
-.section-ubicacion .location-btn {
-  min-height: 48px;
+/* El pin cae y pica una vez cuando el mapa entra en pantalla (solo
+   transform y opacidad; sin soporte de scroll-timeline queda quieto). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .mapa-pin-gota,
+    .mapa-pin-cartel {
+      animation: pinCae linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 45%;
+    }
+
+    .mapa-pin-cartel {
+      animation-name: cartelAparece;
+    }
+
+    .mapa-pin-sombra {
+      animation: sombraPin linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 45%;
+    }
+  }
 }
 
+@keyframes pinCae {
+  0% {
+    opacity: 0;
+    transform: translate(28px, -28px);
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    transform: none;
+  }
+  82% {
+    transform: translate(5px, -5px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cartelAparece {
+  0%,
+  60% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sombraPin {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  70%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .mapa-dibujo {
+    --tierra: #2a2c2f;
+    --calle: #3b3e44;
+    --avenida: #6e5a2c;
+    --plaza: #2f4a2b;
+  }
+}
+
+/* ==========================================================================
+   UBICACIÓN: celu
+   ========================================================================== */
 @media (max-width: 900px) {
+  .section-ubicacion .location-unified-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .section-ubicacion .location-map-pane,
+  .section-ubicacion .location-info-pane {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
   .section-ubicacion .location-map-pane {
     --marco: 12px;
     border-top: 0;
-    height: 250px;
-    min-height: 250px;
+    height: 210px;
+    min-height: 210px;
   }
 
-  /* En el celu el tablero ocupa todo el ancho y la hora se agranda: es lo
-     primero que se busca. */
-  .section-ubicacion .location-detail-item:has(.location-icon-clock) .location-detail-sub {
-    font-size: 19px;
+  .section-ubicacion .location-info-pane {
+    gap: 16px;
+    padding: 18px 16px 16px;
+  }
+
+  .section-ubicacion .location-direccion .location-detail-value {
+    font-size: 20px;
+  }
+
+  /* Waze y WhatsApp: solo el logo (cuadrados de 52 px para el dedo). */
+  .section-ubicacion .location-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 52px 52px;
+  }
+
+  .section-ubicacion .location-btn-waze,
+  .section-ubicacion .location-btn-wa {
+    padding: 0;
+  }
+
+  .section-ubicacion .location-btn-txt {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .horario-dias {
+    gap: 4px;
+  }
+
+  .horario-dia {
+    font-size: 13.5px;
+  }
+
+  /* "Cerrado · abre mañana a las 14:00" en un renglón también a 360. */
+  .horario-tablero .live-weather-radar-bar {
+    padding: 8px 10px;
+    font-size: 12px;
   }
 }
 

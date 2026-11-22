@@ -24,7 +24,8 @@ import MotionFx from "../components/MotionFx";
 import StatCounter from "../components/StatCounter";
 import HeroMascot from "../components/HeroMascot";
 import HeroLiveSlots from "../components/HeroLiveSlots";
-import { WhatsAppLogo, GoogleMapsLogo, WazeLogo } from "../components/BrandLogos";
+import HorarioSemana from "../components/HorarioSemana";
+import { WhatsAppLogo, WazeLogo } from "../components/BrandLogos";
 import "./landing.css";
 import "./fondo-cancha.css";
 import "./secciones/hero.css";
@@ -160,6 +161,8 @@ export default async function Home() {
                   <path d="M12 5v14M5 12l7 7 7-7" />
                 </svg>
               </a>
+              {/* Solo en el celu: el próximo turno libre, pegado al botón. */}
+              <HeroLiveSlots variant="hint" />
             </div>
 
             <ul className="hero-trust">
@@ -319,44 +322,62 @@ export default async function Home() {
           </div>
 
           <div className="location-unified-card">
-            <div className="location-info-pane">
-              <div className="location-details-list">
-                <div className="location-detail-item">
-                  <div className="location-detail-icon location-icon-pin" aria-hidden="true">
-                    <Image src="/img/iconos/biblioteca/icono-ubicacion.webp" alt="" width={44} height={44} className="icono-3d" />
-                  </div>
-                  <div className="location-detail-content">
-                    <span className="location-detail-label">Dirección</span>
-                    <strong className="location-detail-value">{location.street}</strong>
-                    <span className="location-detail-sub">{location.locality}</span>
-                  </div>
-                </div>
+            {/* El mapa no se arrastra: tiene el pin del club encima y todo el
+                cuadro abre Google Maps (en el celu, un mapa embebido atrapaba
+                el scroll). Abajo hay un mapa dibujado por si tarda en cargar. */}
+            <div className="location-map-pane">
+              <div className="mapa-dibujo" aria-hidden="true" />
+              <iframe
+                title={`Mapa de Muzzaga Pádel en ${location.city}`}
+                src={location.embedUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                tabIndex={-1}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <a
+                href={location.mapsHref}
+                target="_blank"
+                rel="noopener"
+                className="mapa-abrir"
+                aria-label="Ver la ubicación del club en Google Maps"
+              >
+                <span className="mapa-pin" aria-hidden="true">
+                  <span className="mapa-pin-cartel">Muzzaga Pádel</span>
+                  <span className="mapa-pin-gota" />
+                  <span className="mapa-pin-sombra" />
+                </span>
+                <span className="mapa-abrir-chip" aria-hidden="true">
+                  Abrir mapa <span>↗</span>
+                </span>
+              </a>
+            </div>
 
-                <div className="location-detail-item">
-                  <div className="location-detail-icon location-icon-clock" aria-hidden="true">
-                    <Image src="/img/iconos/biblioteca/icono-reloj.webp" alt="" width={44} height={44} className="icono-3d" />
-                  </div>
-                  <div className="location-detail-content">
-                    <span className="location-detail-label">Horarios</span>
-                    <strong className="location-detail-value">Lunes a sábado</strong>
-                    <span className="location-detail-sub">14:00 a 00:30 hs</span>
-                    {/* Abierto ahora / cerrado, calculado del horario de Configuración. */}
-                    <LiveWeatherRadar schedule={config.schedule} blockedDates={config.blockedDates} />
-                  </div>
+            <div className="location-info-pane">
+              <div className="location-detail-item location-direccion">
+                <div className="location-detail-icon location-icon-pin" aria-hidden="true">
+                  <Image src="/img/iconos/biblioteca/icono-ubicacion.webp" alt="" width={44} height={44} className="icono-3d" />
+                </div>
+                <div className="location-detail-content">
+                  <span className="location-detail-label">Dirección</span>
+                  <strong className="location-detail-value">{location.street}</strong>
+                  <span className="location-detail-sub">{location.locality}</span>
                 </div>
               </div>
 
               <div className="location-actions">
                 <a
-                  href={location.mapsHref}
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}`}
                   target="_blank"
                   rel="noopener"
-                  className="location-btn location-btn-maps"
-                  aria-label="Abrir en Google Maps"
+                  className="location-btn location-btn-llegar"
                 >
-                  <GoogleMapsLogo size={18} />
-                  <span>Google Maps</span>
-                  <span className="location-btn-arrow" aria-hidden="true">↗</span>
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" fillRule="evenodd" aria-hidden="true">
+                    <path d="M21.7 11.3l-9-9a1 1 0 0 0-1.4 0l-9 9a1 1 0 0 0 0 1.4l9 9a1 1 0 0 0 1.4 0l9-9a1 1 0 0 0 0-1.4zM14 14.5V12h-4v3H8v-4a1 1 0 0 1 1-1h5V7.5l3.5 3.5-3.5 3.5z" />
+                  </svg>
+                  <span>Cómo llegar</span>
                 </a>
 
                 <a
@@ -364,11 +385,11 @@ export default async function Home() {
                   target="_blank"
                   rel="noopener"
                   className="location-btn location-btn-waze"
-                  aria-label="Navegar con Waze"
+                  aria-label="Ir con Waze"
+                  title="Ir con Waze"
                 >
-                  <WazeLogo size={18} />
-                  <span>Waze</span>
-                  <span className="location-btn-arrow" aria-hidden="true">↗</span>
+                  <WazeLogo size={22} />
+                  <span className="location-btn-txt">Waze</span>
                 </a>
 
                 <a
@@ -376,26 +397,17 @@ export default async function Home() {
                   target="_blank"
                   rel="noopener"
                   className="location-btn location-btn-wa"
-                  aria-label="Contactar por WhatsApp"
+                  aria-label="Escribirle al club por WhatsApp"
+                  title="WhatsApp del club"
                 >
-                  <WhatsAppLogo size={18} />
-                  <span>WhatsApp</span>
-                  <span className="location-btn-arrow" aria-hidden="true">↗</span>
+                  <WhatsAppLogo size={22} />
+                  <span className="location-btn-txt">WhatsApp</span>
                 </a>
               </div>
-            </div>
 
-            <div className="location-map-pane">
-              <iframe
-                title={`Mapa de Muzzaga Pádel en ${location.city}`}
-                src={location.embedUrl}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
+              {/* Lunes a domingo, del horario de Configuración, con el de hoy
+                  marcado y el "abierto ahora / cerrado" de siempre. */}
+              <HorarioSemana schedule={config.schedule} blockedDates={config.blockedDates} />
             </div>
           </div>
         </div>
