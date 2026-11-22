@@ -193,7 +193,7 @@ export default function BookingPassModal({
   return (
     <Portal>
       <div
-        className="admin-modal-backdrop"
+        className="admin-modal-backdrop pass-backdrop"
         onClick={onClose}
         style={{ zIndex: 1001 }}
       >
@@ -206,349 +206,266 @@ export default function BookingPassModal({
           aria-label="Pase digital de tu reserva"
           tabIndex={-1}
         >
-          {/* CONFIRMATION BANNER */}
-          <div
-            style={{
-              background: "rgba(232, 114, 42, 0.12)",
-              border: "1px solid rgba(232, 114, 42, 0.3)",
-              borderRadius: "var(--radius-md, 8px)",
-              padding: "10px 14px",
-              marginBottom: 12,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
+          {/* AVISO: reservado, falta la seña */}
+          <div className="pass-confirm-banner">
             {/* Reserva confirmada: la mascota festeja (entra una vez y queda quieta). */}
             <Mascota pose="trofeo-paleta" size="s" className="pass-festejo" />
-            <div
-              style={{
-                fontSize: 12.5,
-                color: "var(--color-ink)",
-                lineHeight: 1.35,
-              }}
-            >
+            <div className="pass-confirm-text">
               <strong>¡Listo!</strong> Tu turno queda reservado. Para
               confirmarlo de forma definitiva, aboná la seña y envianos el
               comprobante.
             </div>
           </div>
 
-          {/* TOP PASS BAR */}
+          {/* LA ENTRADA: arriba la cancha (cuándo y dónde), un corte
+              troquelado y abajo el talón (lo que falta pagar y los botones). */}
           <div className="digital-pass-card">
-            <div className="pass-header-row">
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Image
-                  src="/img/logo_badge.png"
-                  alt="Muzzaga"
-                  width={30}
-                  height={30}
-                  style={{
-                    width: 30,
-                    height: 30,
-                    objectFit: "contain",
-                    display: "block",
-                  }}
-                />
-                <div>
-                  <strong className="pass-brand">MUZZAGA PÁDEL</strong>
-                  <span className="pass-sub-brand">Pase digital de cancha</span>
-                </div>
-              </div>
-              <div className="pass-code-badge">{bookingCode}</div>
-            </div>
-
-            <div className="pass-divider" />
-
-            {/* MAIN MATCH DETAILS */}
-            <div className="pass-details-grid">
-              <div className="pass-detail-item">
-                <span className="pass-label">Fecha</span>
-                <strong className="pass-val">{passDate(booking.date)}</strong>
-              </div>
-
-              <div className="pass-detail-item">
-                <span className="pass-label">Horario</span>
-                <strong className="pass-val">
-                  {booking.startTime} a {booking.endTime} hs
-                </strong>
-              </div>
-
-              <div className="pass-detail-item">
-                <span className="pass-label">Pista</span>
-                <strong className="pass-val pass-val-court">
-                  {booking.courtName}
-                </strong>
-              </div>
-
-              <div className="pass-detail-item">
-                <span className="pass-label">Titular</span>
-                <strong className="pass-val">{booking.name}</strong>
-              </div>
-            </div>
-
-            {/* FINANCIALS */}
-            <div className="pass-financial-row">
-              <div>
-                <span className="pass-label">Total cancha (90 min)</span>
-                <div className="pass-price-val">
-                  ${booking.total.toLocaleString("es-AR")}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "var(--text-muted)",
-                    marginTop: 2,
-                  }}
-                >
-                  ${perPlayer.toLocaleString("es-AR")} por jugador
-                  {players === 4 ? " si son cuatro" : ` (${players} jugadores)`}
-                </div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <span className="pass-label">Seña para confirmar</span>
-                <div className="pass-sena-val">
-                  ${deposit.toLocaleString("es-AR")}
-                </div>
-                {depositIsOnePlayer && (
-                  <span className="pass-sena-hint">
-                    <span className="pass-sena-ball" aria-hidden="true" />
-                    Lo que paga 1 jugador
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* TRANSFER DATA BOX */}
-            <div className="pass-transfer-box">
-              <div className="pass-transfer-header">
-                <span>Datos para transferir la seña:</span>
-              </div>
-
-              {REAL_ALIAS || REAL_CBU ? (
-                <>
-                  {REAL_ALIAS && (
-                    <div className="pass-bank-row">
-                      <div>
-                        <span className="pass-bank-sub">
-                          Alias (Mercado Pago / Banco):
-                        </span>
-                        <code className="pass-alias-code">{REAL_ALIAS}</code>
-                      </div>
-                      <button
-                        type="button"
-                        className={`pass-copy-btn${copiedField === "alias" ? " copied" : ""}`}
-                        onClick={() => copyValue("alias", REAL_ALIAS)}
-                      >
-                        {copiedField === "alias" ? "Copiado" : "Copiar alias"}
-                      </button>
-                    </div>
-                  )}
-
-                  {REAL_CBU && (
-                    <div className="pass-bank-row" style={{ marginTop: 8 }}>
-                      <div>
-                        <span className="pass-bank-sub">CBU / CVU:</span>
-                        <code className="pass-cbu-code">{REAL_CBU}</code>
-                      </div>
-                      <button
-                        type="button"
-                        className={`pass-copy-btn${copiedField === "cbu" ? " copied" : ""}`}
-                        onClick={() => copyValue("cbu", REAL_CBU)}
-                      >
-                        {copiedField === "cbu" ? "Copiado" : "Copiar CBU"}
-                      </button>
-                    </div>
-                  )}
-
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "var(--text-muted)",
-                      marginTop: 6,
-                    }}
-                  >
-                    Titular: {TITULAR}
+            <div className="pass-ticket-top">
+              <div className="pass-header-row">
+                <div className="pass-brand-block">
+                  <Image
+                    src="/img/logo_badge.png"
+                    alt="Muzzaga"
+                    width={30}
+                    height={30}
+                    className="pass-logo"
+                  />
+                  <div>
+                    <strong className="pass-brand">MUZZAGA PÁDEL</strong>
+                    <span className="pass-sub-brand">Pase digital de cancha</span>
                   </div>
-                </>
-              ) : (
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "var(--text-secondary)",
-                    margin: 0,
-                  }}
-                >
-                  Consultá el alias por WhatsApp o en el mostrador.
-                </p>
-              )}
-            </div>
-
-            {/* ACTION BUTTONS */}
-            <div className="pass-actions-col">
-              {/* MERCADO PAGO / WHATSAPP ACTIONS */}
-              {mpEnabled && (
-                <>
-                  {mpMessage && (
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: "var(--color-ink)",
-                        background: "rgba(56, 189, 248, 0.12)",
-                        border: "1px solid rgba(56, 189, 248, 0.3)",
-                        borderRadius: 6,
-                        padding: "8px 10px",
-                        lineHeight: 1.35,
-                      }}
-                    >
-                      {mpMessage}
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={payingMp}
-                    style={{
-                      width: "100%",
-                      justifyContent: "center",
-                      height: 44,
-                      fontSize: 14,
-                      fontWeight: 700,
-                      background: "#009ee3",
-                      color: "#ffffff",
-                      border: "none",
-                      gap: 8,
-                      boxShadow: "0 2px 8px rgba(0, 158, 227, 0.25)",
-                    }}
-                    onClick={handlePayMercadoPago}
-                  >
-                    {payingMp ? (
-                      "Generando pago seguro…"
-                    ) : (
-                      <>
-                        <svg
-                          viewBox="0 0 24 24"
-                          width="18"
-                          height="18"
-                          fill="currentColor"
-                        >
-                          <path d="M19 4H5c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H5V8h14v10z" />
-                        </svg>
-                        Pagar seña con Mercado Pago ($
-                        {deposit.toLocaleString("es-AR")})
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
-
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener"
-                className="btn btn-whatsapp pass-wa-main"
-                style={{
-                  width: "100%",
-                  justifyContent: "center",
-                  height: 54,
-                  fontSize: 15.5,
-                  gap: 10,
-                }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="17"
-                  height="17"
-                  fill="currentColor"
-                >
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                </svg>
-                {mpEnabled ? "O confirmar" : "Confirmar"} seña por WhatsApp →
-              </a>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 8,
-                }}
-              >
-                <a
-                  href={googleCalUrl}
-                  target="_blank"
-                  rel="noopener"
-                  className="btn btn-secondary"
-                  style={{ justifyContent: "center", height: 44, fontSize: 12.5, whiteSpace: "nowrap" }}
-                >
-                  <CalendarPlus
-                    size={20}
-                    className="icono-marca"
-                    aria-hidden="true"
-                  />{" "}
-                  Google Calendar
-                </a>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  style={{ justifyContent: "center", height: 44, fontSize: 12.5, whiteSpace: "nowrap" }}
-                  onClick={handleDownloadCalendar}
-                >
-                  <Download
-                    size={20}
-                    className="icono-marca"
-                    aria-hidden="true"
-                  />{" "}
-                  Apple · Outlook
-                </button>
+                </div>
+                <div className="pass-code-block">
+                  <span className="pass-code-label">Código</span>
+                  <div className="pass-code-badge">{bookingCode}</div>
+                </div>
               </div>
 
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{
-                  width: "100%",
-                  justifyContent: "center",
-                  height: 38,
-                  fontSize: 12.5,
-                }}
-                onClick={handleShareGroup}
-              >
-                {shareSuccess ? (
+              <div className="pass-divider" />
+
+              {/* MAIN MATCH DETAILS: horario y pista grandes, como un marcador */}
+              <div className="pass-details-grid">
+                <div className="pass-detail-item pass-item-time">
+                  <span className="pass-label">Horario</span>
+                  <strong className="pass-val">
+                    <span className="pass-time-start">{booking.startTime}</span>
+                    <span className="pass-time-end">
+                      a {booking.endTime} hs
+                    </span>
+                  </strong>
+                </div>
+
+                <div className="pass-detail-item pass-item-court">
+                  <span className="pass-label">Pista</span>
+                  <strong className="pass-val pass-val-court">
+                    {booking.courtName}
+                  </strong>
+                </div>
+
+                <div className="pass-detail-item pass-item-date">
+                  <span className="pass-label">Fecha</span>
+                  <strong className="pass-val">{passDate(booking.date)}</strong>
+                </div>
+
+                <div className="pass-detail-item pass-item-name">
+                  <span className="pass-label">Titular</span>
+                  <strong className="pass-val">{booking.name}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="pass-ticket-stub">
+              {/* FINANCIALS */}
+              <div className="pass-financial-row">
+                <div className="pass-fin-total">
+                  <span className="pass-label">Total cancha (90 min)</span>
+                  <div className="pass-price-val">
+                    ${booking.total.toLocaleString("es-AR")}
+                  </div>
+                  <div className="pass-fin-note">
+                    ${perPlayer.toLocaleString("es-AR")} por jugador
+                    {players === 4 ? " si son cuatro" : ` (${players} jugadores)`}
+                  </div>
+                </div>
+                <div className="pass-fin-sena">
+                  <span className="pass-label">Seña para confirmar</span>
+                  <div className="pass-sena-val">
+                    ${deposit.toLocaleString("es-AR")}
+                  </div>
+                  {depositIsOnePlayer && (
+                    <span className="pass-sena-hint">
+                      <span className="pass-sena-ball" aria-hidden="true" />
+                      Lo que paga 1 jugador
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* TRANSFER DATA BOX */}
+              <div className="pass-transfer-box">
+                <div className="pass-transfer-header">
+                  <span>Datos para transferir la seña:</span>
+                </div>
+
+                {REAL_ALIAS || REAL_CBU ? (
                   <>
-                    <Check
-                      size={20}
-                      className="icono-marca"
-                      aria-hidden="true"
-                    />{" "}
-                    Mensaje para el grupo copiado
+                    {REAL_ALIAS && (
+                      <div className="pass-bank-row">
+                        <div>
+                          <span className="pass-bank-sub">
+                            Alias (Mercado Pago / Banco):
+                          </span>
+                          <code className="pass-alias-code">{REAL_ALIAS}</code>
+                        </div>
+                        <button
+                          type="button"
+                          className={`pass-copy-btn${copiedField === "alias" ? " copied" : ""}`}
+                          onClick={() => copyValue("alias", REAL_ALIAS)}
+                        >
+                          {copiedField === "alias" ? "Copiado" : "Copiar alias"}
+                        </button>
+                      </div>
+                    )}
+
+                    {REAL_CBU && (
+                      <div className="pass-bank-row">
+                        <div>
+                          <span className="pass-bank-sub">CBU / CVU:</span>
+                          <code className="pass-cbu-code">{REAL_CBU}</code>
+                        </div>
+                        <button
+                          type="button"
+                          className={`pass-copy-btn${copiedField === "cbu" ? " copied" : ""}`}
+                          onClick={() => copyValue("cbu", REAL_CBU)}
+                        >
+                          {copiedField === "cbu" ? "Copiado" : "Copiar CBU"}
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="pass-titular">Titular: {TITULAR}</div>
                   </>
                 ) : (
+                  <p className="pass-transfer-empty">
+                    Consultá el alias por WhatsApp o en el mostrador.
+                  </p>
+                )}
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div className="pass-actions-col">
+                {/* MERCADO PAGO / WHATSAPP ACTIONS */}
+                {mpEnabled && (
                   <>
-                    <Users
+                    {mpMessage && <div className="pass-mp-message">{mpMessage}</div>}
+
+                    <button
+                      type="button"
+                      className="btn pass-mp-btn"
+                      disabled={payingMp}
+                      onClick={handlePayMercadoPago}
+                    >
+                      {payingMp ? (
+                        "Generando pago seguro…"
+                      ) : (
+                        <>
+                          <svg
+                            viewBox="0 0 24 24"
+                            width="18"
+                            height="18"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path d="M19 4H5c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H5V8h14v10z" />
+                          </svg>
+                          Pagar seña con Mercado Pago ($
+                          {deposit.toLocaleString("es-AR")})
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener"
+                  className="btn btn-whatsapp pass-wa-main"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="17"
+                    height="17"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                  </svg>
+                  {mpEnabled ? "O confirmar" : "Confirmar"} seña por WhatsApp →
+                </a>
+
+                <div className="pass-cal-grid">
+                  <a
+                    href={googleCalUrl}
+                    target="_blank"
+                    rel="noopener"
+                    className="btn btn-secondary pass-sec-btn"
+                  >
+                    <CalendarPlus
                       size={20}
                       className="icono-marca"
                       aria-hidden="true"
                     />{" "}
-                    Compartir al grupo de WhatsApp
-                  </>
-                )}
-              </button>
+                    Google Calendar
+                  </a>
+                  <button
+                    type="button"
+                    className="btn btn-secondary pass-sec-btn"
+                    onClick={handleDownloadCalendar}
+                  >
+                    <Download
+                      size={20}
+                      className="icono-marca"
+                      aria-hidden="true"
+                    />{" "}
+                    Apple · Outlook
+                  </button>
+                </div>
 
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{
-                  width: "100%",
-                  justifyContent: "center",
-                  height: 38,
-                  fontSize: 13,
-                  marginTop: 2,
-                }}
-                onClick={onClose}
-              >
-                Listo, cerrar pase
-              </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary pass-sec-btn"
+                  onClick={handleShareGroup}
+                >
+                  {shareSuccess ? (
+                    <>
+                      <Check
+                        size={20}
+                        className="icono-marca"
+                        aria-hidden="true"
+                      />{" "}
+                      Mensaje para el grupo copiado
+                    </>
+                  ) : (
+                    <>
+                      <Users
+                        size={20}
+                        className="icono-marca"
+                        aria-hidden="true"
+                      />{" "}
+                      Compartir al grupo de WhatsApp
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className="pass-close-btn"
+                  onClick={onClose}
+                >
+                  Listo, cerrar pase
+                </button>
+              </div>
             </div>
           </div>
         </div>

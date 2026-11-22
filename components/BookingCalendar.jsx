@@ -636,6 +636,17 @@ export default function BookingCalendar({
                                 ? "Finalizado"
                                 : "Ocupado"}
                         </span>
+                        {/* En compu la cancha es ancha: a la derecha va el
+                            precio real de esa franja (pico/valle) y la
+                            invitación a tocarla. En celu no entra. */}
+                        {slot.available && slot.price?.total > 0 && (
+                          <span className="slot-price" aria-hidden="true">
+                            <strong>${slot.price.total.toLocaleString("es-AR")}</strong>
+                            <span className="slot-price-cta">
+                              {isSelected ? "Elegido" : "Reservar →"}
+                            </span>
+                          </span>
+                        )}
                       </button>
                     );
                   })}

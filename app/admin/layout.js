@@ -14,6 +14,8 @@ import "./rediseno/clientes-calendario.css";
 import "./rediseno/torneos-reportes.css";
 import "./rediseno/ajustes-actividad.css";
 import "./rediseno/modales.css";
+import "./rediseno/editores.css";
+import "./rediseno/login.css";
 
 // Una sola sans para todo el admin (inputs, montos, placeholders). La web
 // pública sigue con Poppins: esta fuente y admin.css solo aplican dentro de

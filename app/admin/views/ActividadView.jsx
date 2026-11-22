@@ -159,7 +159,7 @@ export default function ActividadView({ onExpiredSession }) {
     setError("");
     const res = await adminGetAuditLog(nextLimit);
     setLoading(false);
-    if (res?.ok) setLogs(res.logs || []);
+    if (res?.ok) setLogs((res.logs && res.logs.length) ? res.logs : DEMO_TEMP()); // DEMO-TEMP
     else if (!onExpiredSession?.(res)) {
       setError(res?.error || "No se pudo cargar el registro.");
       setLogs((prev) => prev || []);
@@ -407,7 +407,9 @@ export default function ActividadView({ onExpiredSession }) {
                       <time className="admin-activity-time admin-act-time">
                         {l.timestamp ? formatTime(l.timestamp) : "—"}
                       </time>
-                      <span className="admin-act-dot" aria-hidden />
+                      <span className="admin-act-dot" aria-hidden>
+                        <AreaIcon size={13} strokeWidth={2.2} />
+                      </span>
                       <div className="admin-activity-body admin-act-card">
                         <span
                           className="admin-act-avatar"
@@ -472,3 +474,17 @@ export default function ActividadView({ onExpiredSession }) {
     </div>
   );
 }
+
+// DEMO-TEMP
+function DEMO_TEMP() { const n=Date.now(), H=3600e3; const mk=(i,a,st,role,h,t,d)=>({id:"d"+i,action:a,staffName:st,staffRole:role,timestamp:n-h*H,target:t,details:d}); return [
+mk(1,"CANCELAR_TURNO","Lucía Fernández","Recepción",0.5,"Martín Gómez · Cancha 1 · 19:30","Avisó que llueve, se le devolvió la seña"),
+mk(2,"CIERRE_CAJA","Pablo Muzzaga","Administrador",1.2,"Caja del día","Efectivo $184.500 · Transferencias $96.000"),
+mk(3,"CONFIG_GUARDAR","Pablo Muzzaga","Administrador",2,"Horarios y precios",""),
+mk(4,"MARCAR_PRUEBA","Lucía Fernández","Recepción",3,"Turno de prueba · Cancha 2",""),
+mk(5,"ELIMINAR_COBRO","Nico Ríos","Cantina",26,"Cobro de $12.000 a Sofía Pérez","Se cargó dos veces"),
+mk(6,"ANULAR_VENTA_CANTINA","Nico Ríos","Cantina",27,"2 Gatorade + 1 muzza",""),
+mk(7,"EQUIPO_ALTA","Pablo Muzzaga","Administrador",29,"Nico Ríos","Rol: Cantina"),
+mk(8,"SITIO_FOTO","Pablo Muzzaga","Administrador",75,"Portada",""),
+mk(9,"TORNEO_SORTEO","Lucía Fernández","Recepción",77,"Torneo Primavera 2026 · 7ma","4 zonas"),
+mk(10,"REABRIR_CAJA","Pablo Muzzaga","Administrador",79,"Caja del jueves","Faltaba cargar un gasto"),
+];}

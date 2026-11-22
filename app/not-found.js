@@ -12,17 +12,18 @@ export default async function NotFound() {
   return (
     <>
       <EstadoMarca
-        pose="enredado-paleta"
+        pose="golpe-pelota"
         kicker="Error 404"
-        title="Se nos enredó la paleta"
-        text="La página que buscás no existe o cambió de lugar."
+        code="404"
+        title="¡Pelota afuera!"
+        text="Esta página quedó fuera de la cancha: no existe o cambió de lugar. Volvé al juego desde acá."
         location={location}
       >
-        <Link href="/" className="btn btn-linear-primary">
-          Ir al inicio
-        </Link>
-        <Link href="/#turnos" className="btn btn-secondary">
+        <Link href="/#turnos" className="estado-btn estado-btn-primary">
           Reservar turno
+        </Link>
+        <Link href="/" className="estado-btn estado-btn-secondary">
+          <span aria-hidden="true">←</span> Volver al inicio
         </Link>
       </EstadoMarca>
     </>

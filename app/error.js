@@ -22,22 +22,22 @@ export default function Error({ error, retry }) {
   return (
     <>
       <EstadoMarca
-        pose="golpe-pelota"
-        kicker="Error"
-        title="Pelota afuera"
+        pose="enredado-paleta"
+        kicker="Algo falló"
+        title="Se nos enredó la paleta"
         text="Algo falló de nuestro lado. Probá de nuevo en un rato o escribinos por WhatsApp."
       >
-        <button type="button" className="btn btn-linear-primary" onClick={() => retry()}>
+        <button type="button" className="estado-btn estado-btn-primary" onClick={() => retry()}>
           Reintentar
         </button>
-        <Link href="/" className="btn btn-secondary">
-          Ir al inicio
+        <Link href="/" className="estado-btn estado-btn-secondary">
+          <span aria-hidden="true">←</span> Ir al inicio
         </Link>
         <a
           href={`https://wa.me/${CLUB_INFO.phoneRaw}`}
           target="_blank"
           rel="noopener"
-          className="btn btn-secondary-whatsapp"
+          className="estado-btn estado-btn-whatsapp"
         >
           Escribir por WhatsApp
         </a>

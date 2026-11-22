@@ -312,7 +312,9 @@ export default function CartaEditor({
               pedido” del inicio y en la caja de la cantina. Los pedidos y las ventas
               que ya entraron quedan con su precio.
             </p>
-            <p className="admin-field-hint admin-carta-saved">
+            <p
+              className={`admin-field-hint admin-carta-saved${menu.custom && menu.updatedAt ? " is-custom" : ""}`}
+            >
               {menu.custom && menu.updatedAt
                 ? `Guardada por última vez el ${savedAtLabel(menu.updatedAt)}.`
                 : "Es la carta original: todavía no se guardaron cambios desde el panel."}
@@ -340,7 +342,9 @@ export default function CartaEditor({
         {adding && (
           <form className="admin-carta-add" onSubmit={submitAdd} noValidate>
             <div className="admin-carta-add-head">
-              <strong>Producto nuevo</strong>
+              <strong>
+                <Plus {...ICON} /> Producto nuevo
+              </strong>
               <button
                 type="button"
                 className="admin-modal-close"
@@ -495,7 +499,11 @@ export default function CartaEditor({
             <section key={g.id} className="admin-carta-group" aria-label={categoryLabel(g.id)}>
               <h3 className="admin-pos-group-title admin-carta-group-title">
                 <span aria-hidden="true">{productIcon("", g.id)}</span>
-                {categoryLabel(g.id)} · {plural(g.items.length, "producto", "productos")}
+                {categoryLabel(g.id)}
+                <span className="admin-carta-group-count">
+                  <span className="sr-only"> · </span>
+                  {plural(g.items.length, "producto", "productos")}
+                </span>
               </h3>
               {/* Encabezado de columnas (solo en pantalla ancha, por CSS). */}
               <div className="admin-carta-cols" aria-hidden="true">

@@ -1,0 +1,384 @@
+/* ==========================================================================
+   EXTRAS: cartel "Instalar la app", estado del club (LiveWeatherRadar) y
+   miga de pan de las páginas internas. Mismo idioma que el resto: el azul
+   cancha con su textura y una línea blanca, la pelota amarilla y el naranja.
+   Animaciones solo de transform/opacity y con movimiento permitido.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   CARTEL "INSTALAR APP" · solo celular, arriba de la pastilla de navegación.
+   Una mini cancha: azul con textura, la línea blanca adentro y el botón
+   pelota.
+   -------------------------------------------------------------------------- */
+.install-prompt {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  max-width: 480px;
+  margin-inline: auto;
+  bottom: calc(
+    var(--bottom-pill-gap) + var(--bottom-pill-h) + 12px +
+      env(safe-area-inset-bottom, 0px)
+  );
+  z-index: 98;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px 12px 14px;
+  border-radius: 18px;
+  background-color: #2350d6;
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.1), rgba(11, 26, 77, 0.5)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 200px 200px;
+  background-repeat: no-repeat, repeat;
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 18px 36px -12px rgba(11, 26, 77, 0.7),
+    0 2px 6px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  isolation: isolate;
+}
+
+/* La línea de la cancha, adentro del borde. */
+.install-prompt::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: -1;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 13px;
+  pointer-events: none;
+}
+
+.install-prompt-icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 3px rgba(215, 240, 58, 0.9),
+    0 6px 12px rgba(11, 26, 77, 0.45);
+}
+
+.install-prompt-icono img {
+  display: block;
+  width: 38px;
+  height: 38px;
+}
+
+.install-prompt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.38;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.install-prompt-text strong {
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: #ffffff;
+}
+
+/* El ícono de Compartir de Safari, para que lo encuentre de un vistazo. */
+.install-prompt-compartir {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: -3px 1px 0;
+  vertical-align: middle;
+  fill: none;
+  stroke: #d7f03a;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.install-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  flex: none;
+}
+
+.install-prompt-btn {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  color: #13210a;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--t-hover) var(--ease);
+}
+
+.install-prompt-btn:active {
+  transform: scale(0.97);
+}
+
+.install-prompt-dismiss {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.install-prompt-btn:focus-visible,
+.install-prompt-dismiss:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+@media (min-width: 769px) {
+  .install-prompt {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .install-prompt {
+    animation: extrasCartelSube 420ms var(--ease) both;
+  }
+
+  .install-prompt-icono {
+    animation: extrasPelotaEntra 520ms var(--ease-mascota) 160ms both;
+  }
+}
+
+@keyframes extrasCartelSube {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@keyframes extrasPelotaEntra {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-90deg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   ESTADO DEL CLUB (LiveWeatherRadar) · hero y tablero de horarios.
+   La píldora y sus colores por contexto viven en globals/landing/hero y
+   ubicacion-pie; acá va el texto ("ABIERTO AHORA" como en un marcador y el
+   detalle más suave) y el latido del punto cuando está abierto.
+   -------------------------------------------------------------------------- */
+.live-weather-radar-bar .radar-status-item {
+  gap: 8px;
+}
+
+.live-weather-radar-bar .radar-texto {
+  min-width: 0;
+}
+
+.live-weather-radar-bar .radar-estado {
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-size: 1.18em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: inherit;
+}
+
+.live-weather-radar-bar .radar-detalle {
+  opacity: 0.82;
+}
+
+.live-weather-radar-bar .radar-dot {
+  position: relative;
+  flex: none;
+  width: 8px;
+  height: 8px;
+}
+
+/* Cierra en menos de una hora: el punto pasa a naranja. */
+.live-weather-radar-bar .radar-dot.is-open.is-soon {
+  color: #f59a4e;
+}
+
+.live-weather-radar-bar .radar-dot.is-open::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .live-weather-radar-bar .radar-dot.is-open::after {
+    animation: extrasRadarLate 2.4s var(--ease) infinite;
+  }
+}
+
+@keyframes extrasRadarLate {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.5);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   MIGA DE PAN DE LAS PÁGINAS INTERNAS
+   "← Inicio" como botón fácil de tocar (44 px) y el resto del camino al
+   lado, separado por pelotitas. En el celu el paso del medio
+   ("Herramientas") se oculta: entra en un renglón.
+   -------------------------------------------------------------------------- */
+.page-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.page-crumbs-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 16px 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--color-hairline-strong);
+  background: var(--color-surface-card);
+  color: var(--color-ink);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color var(--t-hover) var(--ease),
+    transform var(--t-hover) var(--ease);
+}
+
+.page-crumbs-flecha {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e8722a;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform var(--t-hover) var(--ease);
+}
+
+.page-crumbs-back:hover {
+  border-color: #e8722a;
+}
+
+.page-crumbs-back:active {
+  transform: scale(0.97);
+}
+
+.page-crumbs-back:focus-visible,
+.page-crumbs ol a:focus-visible {
+  outline: 3px solid #2350d6;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-crumbs-back:hover .page-crumbs-flecha {
+    transform: translateX(-2px);
+  }
+}
+
+.page-crumbs ol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-crumbs li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Entre paso y paso, una pelotita en lugar de la barra. */
+.page-crumbs li + li::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+}
+
+.page-crumbs ol a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.page-crumbs ol a:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.page-crumbs [aria-current="page"] {
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .page-crumbs li.is-middle {
+    display: none;
+  }
+}
