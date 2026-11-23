@@ -2438,14 +2438,14 @@
     row-gap: 6px;
     align-items: center;
     justify-items: start;
-    padding: 2px 4px 14px;
+    padding: 2px 4px;
     text-align: left;
   }
 
-  /* Misma pantallita, al 72 % (zoom achica también su caja). */
+  /* Misma pantallita, al 68 % (zoom achica también su caja). */
   .bt-mock {
     grid-row: 1 / -1;
-    zoom: 0.72;
+    zoom: 0.68;
   }
 
   .bt-num {

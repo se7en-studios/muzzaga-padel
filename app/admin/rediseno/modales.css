@@ -1820,3 +1820,72 @@
     }
   }
 }
+
+/* ==========================================================================
+   CELU APAISADO (≤500px de alto)
+   Con ~390px de alto, cabecera + pasos + ticket dejaban menos de 100px para
+   completar la reserva. Acá la cabecera va en un renglón, los pasos (que
+   repiten los títulos numerados de adentro) se esconden y el ticket va al
+   lado del botón de guardar.
+   ========================================================================== */
+@media (max-height: 500px) {
+  .admin-root .admin-modal-card.admin-bk {
+    max-height: 100dvh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .admin-root .admin-modal-card.admin-bk::before {
+    top: 4px;
+  }
+
+  .admin-root .admin-bk-head {
+    align-items: center;
+    padding: 10px 16px 8px;
+  }
+
+  .admin-root .admin-bk-eyebrow {
+    margin-bottom: 2px;
+    font-size: 11.5px;
+  }
+
+  .admin-root .admin-bk-title {
+    font-size: 24px;
+  }
+
+  .admin-root .admin-bk-stepper {
+    display: none;
+  }
+
+  .admin-root .admin-bk-scroll {
+    gap: 16px;
+    padding: 12px 16px 16px;
+  }
+
+  .admin-root .admin-bk--create .admin-bk-ticket {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, auto);
+    align-items: stretch;
+    gap: 10px;
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-bk-ticket-head {
+    padding: 4px 12px;
+  }
+
+  .admin-root .admin-bk-ticket-time {
+    font-size: 20px;
+  }
+
+  .admin-root .admin-bk-ticket-total {
+    padding: 4px 12px;
+  }
+
+  .admin-root .admin-bk-ticket-amount strong {
+    font-size: 22px;
+  }
+
+  .admin-root .admin-dashboard-layout .admin-bk--create .admin-bk-submit {
+    min-height: 48px;
+  }
+}

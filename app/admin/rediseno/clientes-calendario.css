@@ -3113,11 +3113,8 @@
    dejaban cada día en 40px de ancho. Achicando el aire de los costados y entre
    columnas cada día llega a 44px para el dedo, sin perder la grilla. */
 @media (max-width: 380px) {
-  .admin-root .cc-cal-body {
-    padding-inline: 2px;
-  }
-
   .admin-root .cc-heatmap {
     column-gap: 2px;
+    margin-inline: -8px;
   }
 }
