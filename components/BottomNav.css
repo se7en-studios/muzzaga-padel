@@ -160,6 +160,46 @@
   box-shadow: 0 0 0 2px var(--color-accent-orange);
 }
 
+/* "Turnos": la acción principal de la barra. Relleno naranja de botón
+   siempre (blanco sobre #bf5512: 4,6:1, AA). La burbuja (::before) es el
+   relleno, así que al achicarse la barra se achica con ella; la pelotita
+   (::after) sigue marcando cuándo estás en Turnos. */
+.bottom-bar-item.bottom-bar-item--cta {
+  color: #fff;
+}
+
+.bottom-bar-item.bottom-bar-item--cta::before {
+  opacity: 1;
+  background: var(--btn-naranja, #bf5512);
+  box-shadow:
+    inset 0 -2px 0 rgba(0, 0, 0, 0.16),
+    0 6px 14px -8px rgba(191, 85, 18, 0.9);
+}
+
+.bottom-bar-item.bottom-bar-item--cta .bottom-bar-label {
+  font-weight: 700;
+}
+
+.bottom-bar-item.bottom-bar-item--cta .bottom-bar-3d {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .bottom-bar-item.bottom-bar-item--cta:hover {
+    color: #fff;
+  }
+
+  .bottom-bar-item.bottom-bar-item--cta:hover::before {
+    background: var(--btn-naranja-hover, #a9470c);
+  }
+}
+
+.bottom-bar-item.bottom-bar-item--cta:focus-visible::before {
+  box-shadow:
+    0 0 0 2px var(--color-surface-card),
+    0 0 0 4px var(--btn-naranja, #bf5512);
+}
+
 /* Íconos 3D de la marca: los que no están activos, un poco apagados. */
 .bottom-bar-3d {
   display: block;

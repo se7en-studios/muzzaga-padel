@@ -242,7 +242,9 @@
   color: #d7f03a;
 }
 
-/* El botón es una pelota estirada: el mismo verde amarillo. */
+/* El botón: primario naranja, como el resto de la web (blanco sobre
+   #bf5512, 4,6:1). Antes era una pelota estirada verde amarilla: el lima
+   queda como acento (el ícono del celu, arriba). */
 .tc-pizarra-cta {
   display: inline-flex;
   align-items: center;
@@ -252,11 +254,11 @@
   min-height: 46px;
   padding: 0 20px;
   border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  background: var(--btn-naranja, #bf5512);
   box-shadow:
     inset 0 -2px 0 rgba(0, 0, 0, 0.15),
     0 6px 14px -6px rgba(0, 0, 0, 0.6);
-  color: #1d2a06;
+  color: #fff;
   font-size: 15px;
   font-weight: 700;
   text-decoration: none;
@@ -266,6 +268,12 @@
 .tc-pizarra-cta:focus-visible {
   outline: 2px solid #f4f1e6;
   outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .tc-pizarra-cta:hover {
+    background: var(--btn-naranja-hover, #a9470c);
+  }
 }
 
 /* Tablet: fotos de a dos y la pizarra abajo, a lo ancho. */
@@ -1314,5 +1322,96 @@
       from { transform: scale(0.88) rotate(2deg); opacity: 0.5; }
       to { transform: none; opacity: 1; }
     }
+  }
+}
+
+/* ==========================================================================
+   SIN TORNEO ABIERTO: BANDA DE UNA LÍNEA
+   Antes la sección abría con un afiche grande "¿? PRONTO / Fecha a
+   confirmar" y una llave vacía; las fotos reales quedaban abajo. Ahora
+   abre el cuadro de honor y el aviso va en esta banda debajo (con torneo
+   abierto vuelve el afiche, sin cambios).
+   ========================================================================== */
+.tn-pronto-banda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 18px 0 0;
+  padding: 6px 8px 6px 18px;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 999px;
+  background: var(--color-surface-card);
+  font-size: 15px;
+  color: var(--color-body);
+}
+
+.tn-pronto-banda-txt {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tn-pronto-banda-txt i {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.tn-pronto-banda-txt b {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+.tn-pronto-banda-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: var(--wa-verde, #14804a);
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.tn-pronto-banda-cta:hover {
+  background: rgba(20, 128, 74, 0.08);
+}
+
+.tn-pronto-banda-cta:focus-visible {
+  outline: 2px solid var(--wa-verde, #14804a);
+  outline-offset: 2px;
+}
+
+/* Celu: dos renglones prolijos (texto y, abajo, el enlace). */
+@media (max-width: 520px) {
+  .tn-pronto-banda {
+    border-radius: 16px;
+    padding: 10px 6px 4px 16px;
+  }
+
+  .tn-pronto-banda-cta {
+    padding: 0 10px 0 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .tn-pronto-banda-cta {
+    color: #5fe39a;
+  }
+
+  .tn-pronto-banda-cta:hover {
+    background: rgba(95, 227, 154, 0.1);
+  }
+
+  .tn-pronto-banda-cta:focus-visible {
+    outline-color: #5fe39a;
   }
 }

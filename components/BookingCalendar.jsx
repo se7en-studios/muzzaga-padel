@@ -352,6 +352,15 @@ export default function BookingCalendar({
   }, [visibleSlots]);
   const showPast = pastOpenFor === activeDate;
 
+  // Precio de la franja general (valle) entre los turnos visibles. En compu
+  // cada cancha libre repetía "$60.000": ahora el precio aparece solo en los
+  // turnos de tarifa pico que cuestan distinto (el general ya está arriba,
+  // en la etiqueta de precio de la sección).
+  const valleTotal = useMemo(
+    () => visibleSlots?.find((s) => s.price?.band !== "pico" && s.price?.total > 0)?.price.total,
+    [visibleSlots],
+  );
+
   const selectedPricing = useMemo(() => {
     if (!selected) return null;
     // El precio lo calcula el server según la franja (pico/valle).
@@ -658,10 +667,15 @@ export default function BookingCalendar({
                   ? courts
                   : courts.filter((c) => c.id === courtFilter);
 
+              // Horario que ya pasó en todas las canchas: un renglón gris y bajo.
+              const pasada = visibleSlots
+                .filter((s) => s.start === time)
+                .every((s) => s.past);
+
               return (
                 <div
                   key={time}
-                  className="booking-matrix-row"
+                  className={`booking-matrix-row${pasada ? " is-pasada" : ""}`}
                   style={{ "--fila": fila }}
                 >
                   <div className="booking-matrix-time-col">
@@ -699,8 +713,15 @@ export default function BookingCalendar({
                       selected?.courtId === slot.courtId &&
                       selected?.start === slot.start;
 
+                    // Precio solo si esta franja (pico) cuesta distinto de la general.
+                    const precioDistinto =
+                      slot.available &&
+                      slot.price?.total > 0 &&
+                      slot.price.band === "pico" &&
+                      slot.price.total !== valleTotal;
+
                     // El nombre accesible empieza con el texto visible ("Cancha 1
-                    // Disponible") y suma la hora.
+                    // Reservar") y suma la hora y el estado.
                     return (
                       <button
                         key={`${slot.courtId}-${slot.start}`}
@@ -708,7 +729,7 @@ export default function BookingCalendar({
                         className={`booking-slot${slot.available ? "" : " taken"}${slot.past ? " past" : ""}${isSelected ? " selected" : ""}`}
                         disabled={!slot.available}
                         onClick={() => pickSlot(slot)}
-                        aria-label={`${court.name} ${isSelected ? "Tu selección" : slot.available ? "Disponible" : slot.past ? "Finalizado" : "Ocupado"}, ${slot.start} hs`}
+                        aria-label={`${court.name} ${isSelected ? "Tu selección" : slot.available ? "Reservar" : slot.past ? "Finalizado" : "Ocupado"}, ${slot.start} hs${slot.available && !isSelected ? ", disponible" : ""}`}
                       >
                         <span className="slot-meta" style={{ fontWeight: 600 }}>
                           {court.name}
@@ -717,20 +738,18 @@ export default function BookingCalendar({
                           {isSelected
                             ? "Tu selección ✓"
                             : slot.available
-                              ? "Disponible"
+                              ? "Reservar"
                               : slot.past
                                 ? "Finalizado"
                                 : "Ocupado"}
                         </span>
-                        {/* En compu la cancha es ancha: a la derecha va el
-                            precio real de esa franja (pico/valle) y la
-                            invitación a tocarla. En celu no entra. */}
-                        {slot.available && slot.price?.total > 0 && (
+                        {/* En compu, a la derecha: el precio solo si es la
+                            tarifa pico (distinta de la general). En celu no
+                            entra. */}
+                        {precioDistinto && (
                           <span className="slot-price" aria-hidden="true">
                             <strong>${slot.price.total.toLocaleString("es-AR")}</strong>
-                            <span className="slot-price-cta">
-                              {isSelected ? "Elegido" : "Reservar →"}
-                            </span>
+                            <span className="slot-price-cta">Tarifa pico</span>
                           </span>
                         )}
                       </button>
@@ -915,12 +934,21 @@ export default function BookingCalendar({
                 <span className="booking-btn-arrow" aria-hidden="true">→</span>
               </button>
 
+              {/* Con el formulario vacío es una ayuda neutra (antes salía en
+                  naranja, como un error, antes de escribir nada); el aviso de
+                  lo que falta aparece cuando ya empezaste a completarlo. */}
               {!isFormValid && !submitting && (
+                !form.playerName.trim() && !form.playerPhone.trim() ? (
+                <p className="booking-missing is-ayuda" aria-live="polite">
+                  Completá tu nombre y tu WhatsApp para confirmar.
+                </p>
+                ) : (
                 <p className="booking-missing" aria-live="polite">
                   {form.playerName.trim().length < 2
                     ? "Falta tu nombre para guardar el turno."
                     : "Falta tu WhatsApp: con característica, sin 0 ni 15 (ej. 299 597 4176)."}
                 </p>
+                )
               )}
 
               <div className="booking-guarantee-note">

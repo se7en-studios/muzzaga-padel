@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLightbox } from "./LightboxProvider";
 import { CLUB_INFO } from "../data/club";
-import Mascota from "./Mascota";
 import { formatARS } from "../lib/format";
 import { tournamentDateText } from "../lib/tournament";
 import { useVista } from "../lib/useVista";
@@ -142,105 +141,102 @@ export default function HomeTorneosTeaser({ photos, tournament }) {
               a los últimos campeones.
             </p>
           </div>
-          <div className="mascot-section-badge">
-            <Mascota
-              pose="trofeo-bolso"
-              alt="Muzzaguito Campeón con Copa de Torneo"
-              className="mascot-section-img"
-            />
-          </div>
         </div>
 
-        {/* PRÓXIMO TORNEO: afiche sobre la cancha azul. La fecha va en un
-            marcador de LED y el nombre en letra de cartel. */}
-        <article
-          className={`tn-afiche tc-cartel ${tournament ? "is-abierto" : "is-pronto"}`}
-          aria-labelledby="tn-afiche-titulo"
-          ref={aficheRef}
-        >
-          <span className="tn-afiche-fondo" aria-hidden="true">
-            Torneo
-          </span>
-          <span className="tn-afiche-pelota" aria-hidden="true" />
-
-          <p className="tn-afiche-kicker">
-            <i aria-hidden="true" />
-            {tournament ? "Inscripción abierta" : "Próximo torneo"}
-            {/* Cuenta regresiva solo con fecha real; aparece al final de la
-                línea (no corre nada de lugar). */}
-            {cuenta && (
-              <span className="tn-cuenta">
-                <span aria-hidden="true">
-                  · <Paletas texto={cuenta} />
-                </span>
-                <span className="sr-only">, {cuenta}</span>
-              </span>
-            )}
-          </p>
-
-          <div className="tn-afiche-main">
-            <div className="tn-led" aria-hidden="true">
-              <span className="tn-led-label">Fecha</span>
-              <strong className="tn-led-num">
-                <Paletas texto={day || "¿?"} />
-              </strong>
-              <span className="tn-led-mes">{day ? month : "Pronto"}</span>
-            </div>
-            <div className="tn-afiche-cabeza">
-              <h3 id="tn-afiche-titulo" className="tn-afiche-titulo">
-                {tournament ? tournament.name : "Se viene el próximo"}
-              </h3>
-              {tournament ? (
-                <p className="tn-afiche-fecha">
-                  {tournamentDateText(tournament.date, tournament.dateEnd)}
-                </p>
-              ) : (
-                <p className="tn-sello">Fecha a confirmar</p>
-              )}
-            </div>
-          </div>
-
-          {tournament ? (
-            <ul className="tn-datos" aria-label="Datos del torneo">
-              {tournament.price > 0 && (
-                <li className="tn-dato-precio">
-                  <b>{formatARS(tournament.price)}</b> por pareja
-                </li>
-              )}
-              {tournament.categories.map((c) => (
-                <li key={c.id || c.name}>{c.name}</li>
-              ))}
-              {parejas > 0 && (
-                <li className="tn-dato-parejas">
-                  {parejas}{" "}
-                  {parejas === 1 ? "pareja anotada" : "parejas anotadas"}
-                </li>
-              )}
-            </ul>
-          ) : (
-            <p className="tn-afiche-desc">
-              Escribinos y te avisamos la fecha y las categorías apenas estén
-              definidas.
-            </p>
-          )}
-
-          <Llave />
-
-          {tournament ? (
-            <Link href="/torneos#inscripcion" className="tn-afiche-cta">
-              Inscribir mi pareja <span aria-hidden="true">→</span>
-            </Link>
-          ) : (
-            <a
-              href={WA_TORNEO}
-              target="_blank"
-              rel="noopener"
-              className="tn-afiche-cta"
+        {tournament && (
+          <>
+            {/* PRÓXIMO TORNEO: afiche sobre la cancha azul. La fecha va en un
+                marcador de LED y el nombre en letra de cartel. */}
+            <article
+              className={`tn-afiche tc-cartel ${tournament ? "is-abierto" : "is-pronto"}`}
+              aria-labelledby="tn-afiche-titulo"
+              ref={aficheRef}
             >
-              Anotarme por WhatsApp <span aria-hidden="true">→</span>
-            </a>
-          )}
-        </article>
+              <span className="tn-afiche-fondo" aria-hidden="true">
+                Torneo
+              </span>
+              <span className="tn-afiche-pelota" aria-hidden="true" />
+
+              <p className="tn-afiche-kicker">
+                <i aria-hidden="true" />
+                {tournament ? "Inscripción abierta" : "Próximo torneo"}
+                {/* Cuenta regresiva solo con fecha real; aparece al final de la
+                    línea (no corre nada de lugar). */}
+                {cuenta && (
+                  <span className="tn-cuenta">
+                    <span aria-hidden="true">
+                      · <Paletas texto={cuenta} />
+                    </span>
+                    <span className="sr-only">, {cuenta}</span>
+                  </span>
+                )}
+              </p>
+
+              <div className="tn-afiche-main">
+                <div className="tn-led" aria-hidden="true">
+                  <span className="tn-led-label">Fecha</span>
+                  <strong className="tn-led-num">
+                    <Paletas texto={day || "¿?"} />
+                  </strong>
+                  <span className="tn-led-mes">{day ? month : "Pronto"}</span>
+                </div>
+                <div className="tn-afiche-cabeza">
+                  <h3 id="tn-afiche-titulo" className="tn-afiche-titulo">
+                    {tournament ? tournament.name : "Se viene el próximo"}
+                  </h3>
+                  {tournament ? (
+                    <p className="tn-afiche-fecha">
+                      {tournamentDateText(tournament.date, tournament.dateEnd)}
+                    </p>
+                  ) : (
+                    <p className="tn-sello">Fecha a confirmar</p>
+                  )}
+                </div>
+              </div>
+
+              {tournament ? (
+                <ul className="tn-datos" aria-label="Datos del torneo">
+                  {tournament.price > 0 && (
+                    <li className="tn-dato-precio">
+                      <b>{formatARS(tournament.price)}</b> por pareja
+                    </li>
+                  )}
+                  {tournament.categories.map((c) => (
+                    <li key={c.id || c.name}>{c.name}</li>
+                  ))}
+                  {parejas > 0 && (
+                    <li className="tn-dato-parejas">
+                      {parejas}{" "}
+                      {parejas === 1 ? "pareja anotada" : "parejas anotadas"}
+                    </li>
+                  )}
+                </ul>
+              ) : (
+                <p className="tn-afiche-desc">
+                  Escribinos y te avisamos la fecha y las categorías apenas estén
+                  definidas.
+                </p>
+              )}
+
+              <Llave />
+
+              {tournament ? (
+                <Link href="/torneos#inscripcion" className="tn-afiche-cta">
+                  Inscribir mi pareja <span aria-hidden="true">→</span>
+                </Link>
+              ) : (
+                <a
+                  href={WA_TORNEO}
+                  target="_blank"
+                  rel="noopener"
+                  className="tn-afiche-cta"
+                >
+                  Anotarme por WhatsApp <span aria-hidden="true">→</span>
+                </a>
+              )}
+            </article>
+          </>
+        )}
 
         {/* CUADRO DE HONOR: tira que se desliza en el celu; cada ganador con
             su medalla y el marco del color del puesto (según la leyenda). */}
@@ -301,6 +297,24 @@ export default function HomeTorneosTeaser({ photos, tournament }) {
               );
             })}
           </ul>
+        )}
+        {/* Sin torneo abierto (lo más común): primero el cuadro de honor con
+            las fotos reales y el aviso queda en una banda de una línea. */}
+        {!tournament && (
+          <p className="tn-pronto-banda">
+            <span className="tn-pronto-banda-txt">
+              <i aria-hidden="true" />
+              <b>Próximo torneo:</b> fecha a confirmar
+            </span>
+            <a
+              href={WA_TORNEO}
+              target="_blank"
+              rel="noopener"
+              className="tn-pronto-banda-cta"
+            >
+              Avisame por WhatsApp <span aria-hidden="true">→</span>
+            </a>
+          </p>
         )}
       </div>
     </section>

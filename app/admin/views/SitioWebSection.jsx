@@ -44,19 +44,18 @@ import { usePinGate } from "../ui/usePinGate";
 const ICON = { size: 18, strokeWidth: 1.75, "aria-hidden": true };
 const SMALL = { size: 14, strokeWidth: 1.75, "aria-hidden": true };
 
-/** Mismo encabezado que el resto de Ajustes (es la sección 08 del índice). */
+/** Mismo encabezado que las secciones de Ajustes; en vez del número, el ícono. */
 function SiteHead() {
   return (
     <header className="admin-cfg-head">
-      <span className="admin-cfg-head-num" aria-hidden>
-        08
+      <span className="admin-cfg-head-num is-icon" aria-hidden>
+        <Images size={20} strokeWidth={2} />
       </span>
       <div className="admin-cfg-head-text">
-        <h3 className="admin-section-title">
-          <Images {...ICON} /> Sitio web
-        </h3>
+        <h3 className="admin-section-title">Fotos, ubicación y galería</h3>
         <p className="admin-cfg-head-hint">
-          Fotos, ubicación y galería de torneos de la página.
+          Lo que se ve en la web del club: ubicación, portada, instalaciones,
+          cantina y galería de torneos.
         </p>
       </div>
       <span className="admin-cfg-save-tag is-live">
@@ -590,8 +589,8 @@ const fileFor = (blob) =>
   });
 
 /**
- * Configuración → Sitio web: las fotos de la landing y la galería de
- * /torneos. A diferencia del resto de Configuración, cada cambio se guarda
+ * Sitio web (sección propia del menú): las fotos de la landing, la ubicación
+ * y la galería de /torneos. A diferencia de Ajustes, cada cambio se guarda
  * y se publica en el momento.
  */
 export default function SitioWebSection({ onExpiredSession, onToast }) {

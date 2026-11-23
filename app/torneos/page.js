@@ -3,7 +3,7 @@ import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
 import BottomNav from "../../components/BottomNav";
 import TorneosGallery from "../../components/TorneosGallery";
-import TournamentSignup, { Llave } from "../../components/TournamentSignup";
+import TournamentSignup from "../../components/TournamentSignup";
 import TorneosFx from "../../components/TorneosFx";
 import Mascota from "../../components/Mascota";
 import { CLUB_INFO } from "../../data/club";
@@ -60,57 +60,23 @@ export default async function TorneosPage() {
               ))}
             </div>
           ) : (
-            /* Sin torneo abierto (lo más común): el mismo afiche, con la
-               fecha en signos de pregunta y la invitación a WhatsApp. */
-            <article className="tsu-card tt-pronto" aria-labelledby="tt-pronto-title">
-              <div className="tsu-poster">
-                <div className="tt-marcador" aria-hidden="true">
-                  <span className="tt-marcador-label">Fecha</span>
-                  <strong className="tt-marcador-num">
-                    <span className="tt-digito" style={{ "--d": 0 }}>¿</span>
-                    <span className="tt-digito" style={{ "--d": 1 }}>?</span>
-                  </strong>
-                  <span className="tt-marcador-mes">Pronto</span>
-                </div>
-                <div className="tsu-info">
-                  <span className="tt-tag">Próximo torneo</span>
-                  <h2 id="tt-pronto-title" className="tsu-title">
-                    Fecha a confirmar
-                  </h2>
-                  <p className="tsu-when">
-                    Escribinos por WhatsApp y te avisamos la fecha y las categorías apenas estén definidas.
-                  </p>
-                </div>
-                <Llave />
-              </div>
-              <div className="tt-pronto-side">
-                <p className="tsu-form-head">
-                  Cómo te anotás <span>Sin vueltas</span>
-                </p>
-                <ol className="tsu-steps tt-pronto-pasos">
-                  <li className="tsu-step">
-                    <p className="tsu-step-title">Escribinos por WhatsApp</p>
-                    <p className="tsu-hint">Con tu nombre y tu categoría.</p>
-                  </li>
-                  <li className="tsu-step">
-                    <p className="tsu-step-title">Te avisamos la fecha</p>
-                    <p className="tsu-hint">Apenas estén las categorías y el precio.</p>
-                  </li>
-                  <li className="tsu-step">
-                    <p className="tsu-step-title">Anotás a tu pareja</p>
-                    <p className="tsu-hint">Desde esta misma página, en un minuto.</p>
-                  </li>
-                </ol>
-                <a
-                  href={`https://wa.me/${CLUB_INFO.phoneRaw}?text=${encodeURIComponent("¡Hola Muzzaga! Quiero información e inscribirme para el próximo torneo de pádel.")}`}
-                  target="_blank"
-                  rel="noopener"
-                  className="tt-cta tt-cta--wa"
-                >
-                  Anotarme por WhatsApp <span aria-hidden="true">→</span>
-                </a>
-              </div>
-            </article>
+            /* Sin torneo abierto (lo más común): una banda de una línea y
+               enseguida el cuadro de honor con las fotos reales. Antes iba un
+               afiche grande "¿? Pronto" con la llave vacía. */
+            <p className="tt-pronto-banda">
+              <span className="tt-pronto-banda-txt">
+                <i className="tt-pelota" aria-hidden="true" />
+                <b>Próximo torneo:</b> fecha a confirmar
+              </span>
+              <a
+                href={`https://wa.me/${CLUB_INFO.phoneRaw}?text=${encodeURIComponent("¡Hola Muzzaga! Quiero información e inscribirme para el próximo torneo de pádel.")}`}
+                target="_blank"
+                rel="noopener"
+                className="tt-pronto-banda-cta"
+              >
+                Avisame por WhatsApp <span aria-hidden="true">→</span>
+              </a>
+            </p>
           )}
         </div>
 

@@ -107,7 +107,16 @@ export default function BottomNav() {
     <nav ref={ref} className="mobile-bottom-bar" aria-label="Navegación móvil inferior">
       <span className="bottom-bar-bg" aria-hidden="true" />
 
-      <a {...item("turnos")} href="/#turnos" aria-label="Ir a turnos" style={{ "--k": 2 }}>
+      {/* Turnos es la acción principal del celu (el header ya no lleva
+          "Reservar"): va siempre en naranja; la pelotita sigue marcando
+          cuándo es la sección que estás mirando. */}
+      <a
+        {...item("turnos")}
+        className={`${item("turnos").className} bottom-bar-item--cta`}
+        href="/#turnos"
+        aria-label="Ir a turnos"
+        style={{ "--k": 2 }}
+      >
         <span className="bottom-bar-icon">
           <Icon3D name="calendario" />
         </span>

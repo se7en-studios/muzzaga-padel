@@ -1,139 +1,10 @@
 /* ==========================================================================
-   FLOTANTES DE ESCRITORIO (FloatingLiveBar.jsx y MascotFloatHelper.jsx)
-   La pastilla "Abierto ahora · Reservar turno" al centro y la mascota
-   "Escribinos" en el margen derecho. Las dos aparecen al dejar atrás el
-   hero y no existen donde está la barra de abajo (celu y celu acostado).
+   FLOTANTE DE ESCRITORIO (MascotFloatHelper.jsx)
+   La mascota "Escribinos" en el margen derecho: aparece al dejar atrás el
+   hero y no existe donde está la barra de abajo (celu y celu acostado).
+   Antes había también una pastilla "Abierto ahora · Reservar turno" al
+   centro: repetía el "Reservar" del header fijo y tapaba contenido.
    ========================================================================== */
-.floating-live-pill {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  translate: -50% 0;
-  z-index: 95;
-}
-
-@media (max-width: 768px), (orientation: landscape) and (max-height: 500px) {
-  .floating-live-pill {
-    display: none;
-  }
-}
-
-/* Vidrio oscuro, como la etiqueta de la mascota: se lee igual sobre una
-   foto, la cancha azul o el fondo claro. */
-.floating-live-inner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 6px 6px 6px 18px;
-  border-radius: var(--radius-pill);
-  background: rgba(18, 21, 32, 0.8);
-  backdrop-filter: blur(18px) saturate(1.5);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 18px 40px -16px rgba(8, 14, 40, 0.6);
-  color: #fff;
-}
-
-.floating-live-status {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Abierto: la pelotita amarilla. Cerrado: un punto gris. */
-.floating-live-dot {
-  flex-shrink: 0;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #8d8d96;
-}
-
-.floating-live-dot.is-open {
-  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
-  box-shadow: 0 0 0 3px rgba(215, 240, 58, 0.22);
-}
-
-.floating-status-txt {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  white-space: nowrap;
-}
-
-.floating-live-action {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 20px;
-  border-radius: var(--radius-pill);
-  /* Naranja de botón (texto blanco a 4,6:1; el de marca daba 3,1:1). */
-  background: var(--btn-naranja, #bf5512);
-  color: #fff;
-  font-size: 13.5px;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-  box-shadow: 0 8px 18px -8px rgba(232, 114, 42, 0.9);
-  transition: transform var(--t-hover) var(--ease);
-}
-
-.floating-live-action:hover {
-  background: var(--btn-naranja-hover, #a9470c);
-  transform: translateY(-1px);
-}
-
-.floating-live-action:active {
-  transform: scale(0.98);
-}
-
-.floating-live-action:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
-}
-
-/* El anillo de "acá se reserva" (un solo pulso al aparecer): se anima su
-   escala y su opacidad, no la sombra. */
-.floating-live-action::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: 0 0 0 6px rgba(232, 114, 42, 0.45);
-  opacity: 0;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .floating-live-pill {
-    animation: flotanteEntra var(--t-entrada) var(--ease);
-  }
-
-  .floating-live-action::after {
-    animation: flotantePulso 1.2s var(--ease) 0.4s 1;
-  }
-}
-
-@keyframes flotanteEntra {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-}
-
-@keyframes flotantePulso {
-  0% {
-    opacity: 1;
-    transform: scale(0.92);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.18);
-  }
-}
 
 /* --------------------------------------------------------------------------
    La mascota "Escribinos": vive en el margen lateral. El contenido mide
@@ -217,27 +88,9 @@
 /* Celulares: sin vidrio esmerilado en los flotantes (mismo motivo que las
    barras: el desenfoque se recalcula en cada píxel de scroll). */
 @media (pointer: coarse), (max-width: 900px) {
-  .floating-live-inner {
-    background: rgba(18, 21, 32, 0.95);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
   .mascot-float-label {
     background: rgba(18, 21, 32, 0.95);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-  }
-}
-
-/* Modo oscuro: "Reservar turno" de la barra flotante, blanco sobre #e8722a
-   daba 3,1:1; con el naranja de botón, 4,6:1. */
-@media (prefers-color-scheme: dark) {
-  .floating-live-action {
-    background: var(--btn-naranja, #bf5512);
-  }
-
-  .floating-live-action:hover {
-    background: var(--btn-naranja-hover, #a9470c);
   }
 }

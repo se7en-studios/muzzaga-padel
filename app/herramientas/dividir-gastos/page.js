@@ -1,6 +1,5 @@
 import Link from "next/link";
 import "../herramientas.css";
-import PageCrumbs from "../../../components/PageCrumbs";
 import HerramientasNav from "../../../components/HerramientasNav";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
@@ -27,7 +26,6 @@ export default async function DividirGastosPage() {
     <>
       <SiteHeader />
       <main className="page-main">
-        <PageCrumbs items={[{ label: "Herramientas", href: "/#herramientas" }, { label: "Dividir gastos" }]} />
         <HerramientasNav actual="dividir-gastos" />
 
         <SplitCostCalculator extras={featuredItems(items)} />

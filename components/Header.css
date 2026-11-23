@@ -370,11 +370,14 @@
   .header-whatsapp-btn {
     display: none;
   }
+}
 
+/* Donde está la barra de abajo (celu parado y acostado), el header queda
+   con logo + menú: la acción de reservar es la pestaña "Turnos" de la
+   barra, en naranja (BottomNav.css). Mismo corte que .mobile-bottom-bar. */
+@media (max-width: 768px), (max-width: 1180px) and (max-height: 500px) {
   .header-reserve-btn {
-    height: 44px;
-    min-height: 44px;
-    padding: 0 18px;
+    display: none;
   }
 }
 

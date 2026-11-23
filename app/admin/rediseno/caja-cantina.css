@@ -2054,6 +2054,18 @@
   max-width: 240px;
 }
 
+/* Ticket vacío: ícono lineal sobrio (la mascota quedó solo para la bienvenida). */
+.admin-root .admin-pos-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 2px dashed rgba(35, 80, 214, 0.35);
+  border-radius: 50%;
+  background: var(--court-tint);
+  color: var(--court);
+}
+
 /* Los renglones del ticket. */
 .admin-root .admin-cantina .admin-pos-lines {
   margin: 0;
@@ -3051,5 +3063,74 @@
   .admin-root .admin-cantina .admin-pos-cartbar {
     bottom: calc(64px + env(safe-area-inset-bottom));
     min-height: 52px;
+  }
+}
+
+/* ==========================================================================
+   CANTINA EN LA COMPU: CATÁLOGO COMPACTO
+   57 productos en tarjetas de 172px ocupaban casi 4.000px de alto. En la
+   compu (mouse, mostrador) la tarjeta se achica: ícono más chico, nombre y
+   precio más justos, y entran cinco columnas al lado del ticket. Toda la
+   tarjeta sigue siendo el botón que suma uno; en el celu no cambia nada.
+   ========================================================================== */
+@media (min-width: 901px) and (min-height: 501px) {
+  .admin-root .admin-cantina .admin-product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    gap: 10px;
+  }
+
+  .admin-root .admin-cantina .admin-product {
+    gap: 6px 6px;
+    min-height: 0;
+    padding: 10px 10px 10px 12px;
+    border-width: 1px;
+    border-radius: 14px;
+  }
+
+  .admin-root .admin-cantina .admin-product-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    font-size: 22px;
+  }
+
+  .admin-root .admin-cantina .admin-product-name {
+    min-height: 2.4em;
+    font-size: 14px;
+  }
+
+  .admin-root .admin-cantina .admin-product-price {
+    font-size: 20px;
+  }
+
+  .admin-root .admin-cantina .admin-product-add {
+    width: 32px;
+    height: 32px;
+  }
+
+  .admin-root .admin-cantina .admin-product-add svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .admin-root .admin-cantina .admin-product-qty {
+    top: 8px;
+    right: 8px;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 6px;
+    border-width: 2px;
+    font-size: 17px;
+  }
+
+  /* Los fantasmas de carga, a la misma altura que la tarjeta nueva. */
+  .admin-root .admin-cantina .admin-product-grid[aria-busy="true"] > * {
+    height: 128px !important;
+  }
+}
+
+@media (min-width: 1680px) and (min-height: 501px) {
+  .admin-root .admin-cantina .admin-product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }

@@ -2044,3 +2044,82 @@
     padding-inline: 32px;
   }
 }
+
+/* ==========================================================================
+   SIN TORNEO ABIERTO: BANDA DE UNA LÍNEA
+   Reemplaza al afiche "¿? Pronto" con la llave vacía: la página abre con
+   el cuadro de honor (fotos reales) y el aviso queda en este renglón.
+   ========================================================================== */
+.tt-pronto-banda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 0 0 8px;
+  padding: 6px 8px 6px 18px;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 999px;
+  background: var(--color-surface-card);
+  font-size: 15px;
+  color: var(--color-body);
+}
+
+.tt-pronto-banda-txt {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tt-pronto-banda-txt b {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+.tt-pronto-banda-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: var(--wa-verde, #14804a);
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.tt-pronto-banda-cta:hover {
+  background: rgba(20, 128, 74, 0.08);
+}
+
+.tt-pronto-banda-cta:focus-visible {
+  outline: 2px solid var(--wa-verde, #14804a);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .tt-pronto-banda {
+    border-radius: 16px;
+    padding: 10px 6px 4px 16px;
+  }
+
+  .tt-pronto-banda-cta {
+    padding: 0 10px 0 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .tt-pronto-banda-cta {
+    color: #5fe39a;
+  }
+
+  .tt-pronto-banda-cta:hover {
+    background: rgba(95, 227, 154, 0.1);
+  }
+
+  .tt-pronto-banda-cta:focus-visible {
+    outline-color: #5fe39a;
+  }
+}

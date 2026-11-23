@@ -443,7 +443,7 @@ body:has(.mon-root) {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--mon-display);
-  font-size: 5.2vh;
+  font-size: min(5.2vh, 2.925vw);
   font-weight: 800;
   line-height: 0.92;
   text-transform: uppercase;
@@ -459,7 +459,7 @@ body:has(.mon-root) {
   background: var(--state);
   color: var(--state-ink);
   font-family: var(--mon-display);
-  font-size: 3.8vh;
+  font-size: min(3.8vh, 2.137vw);
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.03em;
@@ -534,7 +534,7 @@ body:has(.mon-root) {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--mon-display);
-  font-size: 5.2vh;
+  font-size: min(5.2vh, 2.925vw);
   font-weight: 800;
   line-height: 1;
   text-transform: uppercase;
@@ -545,16 +545,53 @@ body:has(.mon-root) {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--mon-suave);
-  font-size: 2.2vh;
+  font-size: min(2.2vh, 1.238vw);
   font-weight: 500;
 }
 
-/* Libre: una pelota grande donde iría la cuenta regresiva. */
-.mon-card-ball {
-  width: min(11vh, 100cqh);
-  height: min(11vh, 100cqh);
-  object-fit: contain;
-  filter: drop-shadow(0 1vh 1.2vh rgba(0, 0, 0, 0.5));
+/* Libre: sin anillo. En grande, hasta qué hora está libre (o "todo el
+   día") y abajo dónde reservar. Ocupa todo el ancho de la tarjeta. Las
+   letras se miden con min(vh, vw) para que en una pantalla 16:10 (más alta)
+   no se corten: en 16:9 da lo mismo que antes. */
+.mon-card.is-libre .mon-card-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mon-card-libre {
+  gap: 0.6vh;
+}
+
+.mon-card-libre-big {
+  font-family: var(--mon-display);
+  font-size: min(7.6vh, 4.25vw, 40cqh);
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.mon-card-libre-big small {
+  margin-left: 0.15em;
+  color: var(--mon-naranja-claro);
+  font-size: 0.45em;
+  letter-spacing: 0.04em;
+}
+
+.mon-card-reserva {
+  color: var(--mon-suave);
+  font-size: min(2.3vh, 1.3vw);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.mon-card-reserva strong {
+  margin-left: 0.2em;
+  color: #fff;
+  font-family: var(--mon-display);
+  font-size: 1.3em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
 /* Pie: el turno que sigue, en una línea. */
@@ -583,7 +620,7 @@ body:has(.mon-root) {
   align-items: baseline;
   gap: 1.2vh;
   min-width: 0;
-  font-size: 2.3vh;
+  font-size: min(2.3vh, 1.294vw);
   font-weight: 600;
 }
 
@@ -619,7 +656,7 @@ body:has(.mon-root) {
 /* Cuenta regresiva: el anillo se vacía a medida que pasa el turno. */
 .mon-ring {
   position: relative;
-  width: min(15vh, 100cqh);
+  width: min(15vh, 8.44vw, 100cqh);
   aspect-ratio: 1;
   color: var(--tone, var(--state));
 }
@@ -655,7 +692,7 @@ body:has(.mon-root) {
 
 .mon-ring-num strong {
   font-family: var(--mon-display);
-  font-size: 7.2vh;
+  font-size: min(7.2vh, 4.05vw);
   font-weight: 800;
   line-height: 0.82;
   font-variant-numeric: tabular-nums;
@@ -830,7 +867,7 @@ body:has(.mon-root) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 1.8vh;
+  font-size: min(1.8vh, 1.012vw);
   font-weight: 600;
 }
 
@@ -922,7 +959,7 @@ body:has(.mon-root) {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--mon-display);
-  font-size: 3.4vh;
+  font-size: min(3.4vh, 1.912vw);
   font-weight: 800;
   line-height: 0.95;
   text-transform: uppercase;
@@ -939,7 +976,7 @@ body:has(.mon-root) {
   background: #f6a21c;
   color: #0a0a0a;
   font-family: var(--mon-display);
-  font-size: 2.4vh;
+  font-size: min(2.4vh, 1.35vw);
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: 0.02em;
@@ -966,7 +1003,7 @@ body:has(.mon-root) {
   border: 1px solid rgba(246, 162, 28, 0.55);
   background: rgba(246, 162, 28, 0.12);
   font-family: var(--mon-display);
-  font-size: 1.95vh;
+  font-size: min(1.95vh, 1.097vw);
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -1215,9 +1252,12 @@ body:has(.mon-root) {
     width: 104px;
   }
 
-  .mon-card-ball {
-    width: 80px;
-    height: 80px;
+  .mon-card-libre-big {
+    font-size: 40px;
+  }
+
+  .mon-card-reserva {
+    font-size: 15px;
   }
 
   .mon-card-name h2 {

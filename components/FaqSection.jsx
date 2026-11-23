@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FAQS } from "../data/faq";
-import Mascota from "./Mascota";
 
 export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState(0);
@@ -63,15 +62,6 @@ export default function FaqSection() {
               Todo lo que necesitás saber antes de venir a jugar a Muzzaga
               Pádel.
             </p>
-          </div>
-          <div className="header-aside">
-            <div className="mascot-section-badge">
-              <Mascota
-                pose="enredado-grip"
-                alt="Muzzaguito enredado con el grip, como con las dudas"
-                className="mascot-section-img"
-              />
-            </div>
           </div>
         </div>
 

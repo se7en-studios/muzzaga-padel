@@ -50,6 +50,7 @@ import CantinaView from "./views/CantinaView";
 import TorneosView from "./views/TorneosView";
 import CajaView from "./views/CajaView";
 import ConfiguracionView from "./views/ConfiguracionView";
+import SitioWebView from "./views/SitioWebView";
 import ActividadView from "./views/ActividadView";
 import CreateBookingModal from "./CreateBookingModal";
 import BookingDetailModal from "./BookingDetailModal";
@@ -1090,6 +1091,12 @@ export default function AdminPage() {
               )}
               {view === "actividad" && (
                 <ActividadView onExpiredSession={handleExpiredSession} />
+              )}
+              {view === "sitio" && (
+                <SitioWebView
+                  onExpiredSession={handleExpiredSession}
+                  onToast={showToast}
+                />
               )}
               {view === "configuracion" && (
                 <ConfiguracionView

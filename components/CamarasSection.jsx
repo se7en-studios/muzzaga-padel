@@ -363,9 +363,9 @@ function BeelupCartel({ href }) {
           mejores jugadas y compartilas con tus amigos.
         </p>
         <ul className="bl-perks">
-          <li>🎥 Tu partido completo</li>
-          <li>⭐ Tus mejores puntos</li>
-          <li>📲 Para compartir</li>
+          <li>Tu partido completo</li>
+          <li>Tus mejores puntos</li>
+          <li>Para compartir</li>
         </ul>
         <ol
           className="bl-search"

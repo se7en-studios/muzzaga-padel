@@ -15,7 +15,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { findNavItem } from "../nav";
+import { findNavItem, preselectAjustesSection } from "../nav";
 
 // Cada aviso con su dibujito, así se reconoce sin leer el título entero.
 const ALERT_ICON = {
@@ -142,6 +142,11 @@ export default function AvisosPanel({ alerts, closing, onClose, onNavigate }) {
                               className="admin-aviso-go"
                               onClick={() => {
                                 onClose();
+                                // Ajustes va por partes: este aviso abre
+                                // directo en Equipo.
+                                if (alert.id === "staff-setup") {
+                                  preselectAjustesSection("equipo");
+                                }
                                 onNavigate(alert.view);
                               }}
                             >

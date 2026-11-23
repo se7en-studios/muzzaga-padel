@@ -484,6 +484,7 @@ export default function ClientesView({
                       <EmptyState
                         icon={Users}
                         mascot="mochila-pulgar"
+                        welcome
                         title="Todavía no hay clientes"
                         text="Se arman solos con cada reserva: nombre y teléfono del organizador."
                       />

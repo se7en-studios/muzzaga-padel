@@ -497,13 +497,9 @@ export default function CantinaView({ onExpiredSession, onToast }) {
 
       {cart.length === 0 ? (
         <div className="admin-pos-empty">
-          <img
-            src="/img/mascotas/muzzaguito-pizza-cerveza.webp"
-            alt=""
-            width={72}
-            height={72}
-            loading="lazy"
-          />
+          <span className="admin-pos-empty-icon" aria-hidden="true">
+            <ShoppingCart size={22} strokeWidth={1.75} />
+          </span>
           <p className="admin-field-hint">
             Tocá un producto para sumarlo. Cada toque suma uno.
           </p>

@@ -155,7 +155,7 @@ export function AjustesSkeleton() {
     <Busy label="Cargando los ajustes…" className="sk-cfg">
       <div className="sk-card sk-cfg-nav">
         <Bone w={60} h={11} />
-        {range(8).map((i) => (
+        {range(7).map((i) => (
           <span key={i} className="sk-row">
             <Bone w={18} h={12} />
             <Bone w={W[i]} h={14} />
