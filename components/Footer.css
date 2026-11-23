@@ -205,8 +205,10 @@
 }
 
 .pie-sitio .pie-accion-wa {
-  background: var(--wa-verde, #1fa855);
-  border-color: var(--wa-verde, #1fa855);
+  background: var(--wa-verde, #14804a);
+  border-color: var(--wa-verde, #14804a);
+  /* Blanco pleno: al 90 % sobre el verde quedaba en 4,3:1. */
+  color: #fff;
   box-shadow: 0 10px 22px -12px rgba(3, 8, 28, 0.8);
 }
 
@@ -218,8 +220,8 @@
   }
 
   .pie-sitio .pie-accion-wa:hover {
-    background: var(--wa-verde-hover, #178f47);
-    border-color: var(--wa-verde-hover, #178f47);
+    background: var(--wa-verde-hover, #0f6b3e);
+    border-color: var(--wa-verde-hover, #0f6b3e);
   }
 }
 

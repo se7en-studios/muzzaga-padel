@@ -63,7 +63,8 @@
   font-size: 16px;
   font-weight: 700;
   color: #fff;
-  background: var(--color-accent-orange);
+  /* Naranja de botón: letra blanca de 16 px a 4,64:1 (el de marca, 3,06:1). */
+  background: var(--btn-naranja);
   border-color: transparent;
   box-shadow:
     0 10px 24px -10px var(--orange-glow, rgba(232, 114, 42, 0.6)),
@@ -71,7 +72,7 @@
 }
 
 .section-ubicacion .location-btn-llegar:hover {
-  background: #f07e36;
+  background: var(--btn-naranja-hover);
   border-color: transparent;
 }
 
