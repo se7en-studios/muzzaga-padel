@@ -4,13 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarX,
   Check,
+  ChevronDown,
   Clock,
   Copy,
   CreditCard,
   ExternalLink,
   Eye,
   EyeOff,
-  Images,
   KeyRound,
   Pencil,
   Plus,
@@ -21,7 +21,6 @@ import {
   Users,
   Video,
   X,
-  Zap,
 } from "lucide-react";
 import {
   adminGetClubConfig,
@@ -45,7 +44,7 @@ import { AjustesSkeleton, StaffSkeleton } from "./Esqueletos";
 import StaffPinModal from "../ui/StaffPinModal";
 import BusyButton from "../ui/BusyButton";
 import { usePinGate } from "../ui/usePinGate";
-import SitioWebSection from "./SitioWebSection";
+import { AJUSTES_SECTION_KEY } from "../nav";
 
 // Espejo del server (lib/staff.js no se puede importar en un componente
 // "use client": usa node:crypto para hashear PINs).
@@ -124,21 +123,39 @@ const SECTIONS = [
     hint: "Quién usa el panel. Cada uno firma con su PIN lo que borra o cancela.",
     save: "pin",
   },
-  {
-    id: "sitio",
-    label: "Sitio web",
-    icon: Images,
-    hint: "Fotos, ubicación y galería de torneos de la página.",
-    save: "live",
-  },
 ];
+// Sitio web (fotos, ubicación, galería) ahora es una sección propia del menú.
 const SECTION_BY_ID = Object.fromEntries(SECTIONS.map((s) => [s.id, s]));
 
 const SAVE_TAGS = {
   form: { icon: Save, text: "Se aplica al tocar Guardar" },
   pin: { icon: KeyRound, text: "Cada cambio se confirma con PIN" },
-  live: { icon: Zap, text: "Se publica al instante" },
 };
+
+// En qué sección se ve el error de cada campo que devuelve el servidor.
+function sectionForField(key) {
+  if (/^courts\.\d+\.streamUrl/.test(key) || key === "beelupUrl") return "camaras";
+  if (key.startsWith("courts") || key.startsWith("pricing")) return "canchas";
+  if (key.startsWith("schedule") || key === "slotDurationMin") return "horarios";
+  if (key === "depositPct" || key.startsWith("payment")) return "cobros";
+  if (key.startsWith("blockedDates")) return "cierres";
+  if (key === "clubPhone") return "club";
+  return null;
+}
+
+// La sección elegida se recuerda en la pestaña del navegador; un link con
+// #cfg-<sección> (ej. #cfg-equipo) abre directo esa.
+function initialSection() {
+  try {
+    const fromHash = /^#cfg-([a-z]+)$/.exec(window.location.hash)?.[1];
+    if (SECTION_BY_ID[fromHash]) return fromHash;
+    const stored = window.sessionStorage.getItem(AJUSTES_SECTION_KEY);
+    if (SECTION_BY_ID[stored]) return stored;
+  } catch {
+    // Sin acceso al almacenamiento: arranca en la primera.
+  }
+  return SECTIONS[0].id;
+}
 
 const SHORT_DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 const toMin = (hhmm) => {
@@ -289,6 +306,29 @@ function WeekGrid({ form, onPickDay }) {
   );
 }
 
+/**
+ * La semana en una línea, agrupando días seguidos con el mismo horario:
+ * "Lun–Sáb 14:00–00:30 · Dom cerrado".
+ */
+function scheduleSummary(schedule) {
+  const key = (d) => (d.open ? `${d.start}–${d.end}` : "cerrado");
+  const runs = [];
+  for (const weekday of WEEK_ORDER) {
+    const k = key(schedule[weekday]);
+    const last = runs[runs.length - 1];
+    if (last && last.k === k) last.to = weekday;
+    else runs.push({ k, from: weekday, to: weekday });
+  }
+  if (runs.length === 1 && runs[0].k === "cerrado") return "Cerrado toda la semana";
+  return runs
+    .map(({ k, from, to }) => {
+      const days =
+        from === to ? SHORT_DAYS[from] : `${SHORT_DAYS[from]}–${SHORT_DAYS[to]}`;
+      return `${days} ${k}`;
+    })
+    .join(" · ");
+}
+
 /** Próximo día de la semana `weekday` desde hoy, para previsualizar turnos. */
 function nextDateFor(weekday) {
   const today = todayInClub();
@@ -311,7 +351,10 @@ export default function ConfiguracionView({
   const [fieldErrors, setFieldErrors] = useState({});
   const [newBlockedDate, setNewBlockedDate] = useState("");
   const [showCbu, setShowCbu] = useState(false);
-  const [activeSection, setActiveSection] = useState("canchas");
+  const [activeSection, setActiveSection] = useState(initialSection);
+  // La grilla de la semana y los horarios día por día arrancan plegados en
+  // un resumen de una línea; "Editar" los despliega.
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const navRef = useRef(null);
 
   // Equipo (PINs de staff)
@@ -420,32 +463,25 @@ export default function ConfiguracionView({
     );
   }, [form, saved]);
 
-  // El índice sigue al scroll: queda marcada la última sección cuyo
-  // título ya pasó el primer tercio de la pantalla. Escucha en captura para
-  // enterarse sea cual sea el contenedor que scrollea.
-  const ready = Boolean(form);
+  // Si al guardar el servidor marca un error en otra sección, se pasa a
+  // esa: con una sección por vez, si no, el error quedaría escondido.
   useEffect(() => {
-    if (!ready) return;
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const line = window.innerHeight * 0.3;
-      let current = SECTIONS[0].id;
-      for (const { id } of SECTIONS) {
-        const el = document.getElementById(`cfg-${id}`);
-        if (el && el.getBoundingClientRect().top <= line) current = id;
-      }
-      setActiveSection(current);
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll, { capture: true });
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [ready]);
+    const withErrors = Object.keys(fieldErrors).map(sectionForField).filter(Boolean);
+    if (withErrors.length && !withErrors.includes(activeSection)) {
+      setActiveSection(withErrors[0]);
+    }
+    // Solo cuando llegan errores nuevos, no al cambiar de sección a mano.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldErrors]);
+
+  // Se muestra una sección por vez: la elegida queda guardada en la pestaña.
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(AJUSTES_SECTION_KEY, activeSection);
+    } catch {
+      // Sin almacenamiento: solo no se recuerda.
+    }
+  }, [activeSection]);
 
   // En el celu el índice es una tira horizontal: la sección activa se corre
   // al medio para que no quede escondida fuera de la pantalla.
@@ -557,15 +593,25 @@ export default function ConfiguracionView({
   const smooth = () =>
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
+  // Cambiar de sección solo oculta la anterior (todas quedan montadas y el
+  // formulario es uno solo), así que no se pierde nada sin guardar.
   function goTo(id) {
     setActiveSection(id);
-    document
-      .getElementById(`cfg-${id}`)
-      ?.scrollIntoView({ behavior: smooth(), block: "start" });
+    // Si el usuario bajó mucho, vuelve al principio de la sección nueva
+    // (en el celu, contando la tira del índice que queda pegada arriba).
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`cfg-${id}`);
+      const strip = window.matchMedia?.("(max-width: 900px), (max-height: 500px)").matches;
+      const limit = strip ? (navRef.current?.getBoundingClientRect().bottom ?? 0) : 0;
+      if (el && el.getBoundingClientRect().top < limit) {
+        el.scrollIntoView({ behavior: "auto", block: "start" });
+      }
+    });
   }
 
   // Desde la grilla de la semana: lleva a la fila de ese día y la enfoca.
   function pickDay(weekday) {
+    setScheduleOpen(true);
     const el =
       document.getElementById(`cfg-day-${weekday}-start`) ||
       document.getElementById(`cfg-day-${weekday}-open`);
@@ -591,6 +637,18 @@ export default function ConfiguracionView({
   const depositSample = depositFor(form, valle.court);
   const phoneDigits = form.clubPhone.replace(/\D/g, "");
   const isHttp = (url) => /^https?:\/\//i.test(String(url || "").trim());
+  // Con un error en algún día, los horarios quedan abiertos para verlo.
+  const scheduleForcedOpen = Object.keys(fieldErrors).some((k) =>
+    k.startsWith("schedule."),
+  );
+  const showSchedule = scheduleOpen || scheduleForcedOpen;
+  const weeklySlots = WEEK_ORDER.reduce(
+    (n, weekday) =>
+      form.schedule[weekday].open
+        ? n + slotTimesFor({ ...form, blockedDates: [] }, nextDateFor(weekday)).length
+        : n,
+    0,
+  );
 
   return (
     <div className="admin-settings admin-cfg">
@@ -600,13 +658,14 @@ export default function ConfiguracionView({
         aria-label="Secciones de configuración"
       >
         <p className="admin-cfg-nav-title" aria-hidden>
-          Índice
+          Secciones
         </p>
         {SECTIONS.map(({ id, label, icon: Icon }, i) => (
           <button
             key={id}
             type="button"
             aria-current={activeSection === id ? "true" : undefined}
+            aria-controls={`cfg-${id}`}
             onClick={() => goTo(id)}
           >
             <span className="admin-cfg-nav-num" aria-hidden>
@@ -678,6 +737,7 @@ export default function ConfiguracionView({
         {/* CANCHAS Y PRECIOS */}
         <section
           id="cfg-canchas"
+          hidden={activeSection !== "canchas"}
           className={`admin-settings-card admin-cfg-card${isSectionDirty("canchas") ? " is-dirty" : ""}`}
         >
           <SectionHead id="canchas" dirty={isSectionDirty("canchas")} />
@@ -881,11 +941,38 @@ export default function ConfiguracionView({
         {/* HORARIOS */}
         <section
           id="cfg-horarios"
+          hidden={activeSection !== "horarios"}
           className={`admin-settings-card admin-cfg-card${isSectionDirty("horarios") ? " is-dirty" : ""}`}
         >
           <SectionHead id="horarios" dirty={isSectionDirty("horarios")} />
 
-          <WeekGrid form={form} onPickDay={pickDay} />
+          {/* Resumen de la semana en una línea; la grilla y los horarios día
+              por día se despliegan con "Editar". */}
+          <div className={`admin-cfg-sched-sum${showSchedule ? " is-open" : ""}`}>
+            <div className="admin-cfg-sched-sum-text">
+              <span className="admin-cfg-sched-sum-kicker">Así abre el club</span>
+              <strong>{scheduleSummary(form.schedule)}</strong>
+              <small>
+                Turnos de {form.slotDurationMin} min ·{" "}
+                {plural(weeklySlots, "turno", "turnos")} por semana en cada cancha
+              </small>
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary admin-cfg-sched-toggle"
+              aria-expanded={showSchedule}
+              aria-controls="cfg-schedule-edit"
+              onClick={() => setScheduleOpen((v) => !v)}
+              disabled={scheduleForcedOpen}
+            >
+              {showSchedule ? "Plegar" : (
+                <>
+                  <Pencil size={15} strokeWidth={2} aria-hidden /> Editar
+                </>
+              )}
+              <ChevronDown size={16} strokeWidth={2} aria-hidden className="admin-cfg-sched-chev" />
+            </button>
+          </div>
 
           <div className="admin-field" style={{ maxWidth: 220 }}>
             <label className="admin-field-label" htmlFor="cfg-duration">
@@ -904,6 +991,9 @@ export default function ConfiguracionView({
             </select>
             {err("slotDurationMin")}
           </div>
+
+          <div id="cfg-schedule-edit" className="admin-cfg-sched-edit" hidden={!showSchedule}>
+          <WeekGrid form={form} onPickDay={pickDay} />
 
           <div className="admin-schedule">
             {WEEK_ORDER.map((weekday) => {
@@ -972,11 +1062,13 @@ export default function ConfiguracionView({
             Un cierre antes de la apertura (ej. 00:30) se toma como del día
             siguiente.
           </p>
+          </div>
         </section>
 
         {/* COBROS */}
         <section
           id="cfg-cobros"
+          hidden={activeSection !== "cobros"}
           className={`admin-settings-card admin-cfg-card${isSectionDirty("cobros") ? " is-dirty" : ""}`}
         >
           <SectionHead id="cobros" dirty={isSectionDirty("cobros")} />
@@ -1096,6 +1188,7 @@ export default function ConfiguracionView({
         {/* CIERRES */}
         <section
           id="cfg-cierres"
+          hidden={activeSection !== "cierres"}
           className={`admin-settings-card admin-cfg-card${isSectionDirty("cierres") ? " is-dirty" : ""}`}
         >
           <SectionHead id="cierres" dirty={isSectionDirty("cierres")} />
@@ -1155,6 +1248,7 @@ export default function ConfiguracionView({
         {/* CLUB */}
         <section
           id="cfg-club"
+          hidden={activeSection !== "club"}
           className={`admin-settings-card admin-cfg-card${isSectionDirty("club") ? " is-dirty" : ""}`}
         >
           <SectionHead id="club" dirty={isSectionDirty("club")} />
@@ -1189,6 +1283,7 @@ export default function ConfiguracionView({
         {/* CÁMARAS (Beelup) */}
         <section
           id="cfg-camaras"
+          hidden={activeSection !== "camaras"}
           className={`admin-settings-card admin-cfg-card${isSectionDirty("camaras") ? " is-dirty" : ""}`}
         >
           <SectionHead id="camaras" dirty={isSectionDirty("camaras")} />
@@ -1294,7 +1389,11 @@ export default function ConfiguracionView({
         </section>
 
         {/* EQUIPO */}
-        <section id="cfg-equipo" className="admin-settings-card admin-cfg-card">
+        <section
+          id="cfg-equipo"
+          hidden={activeSection !== "equipo"}
+          className="admin-settings-card admin-cfg-card"
+        >
           <SectionHead id="equipo" />
           <p className="admin-field-hint admin-cfg-lead">
             Cada integrante tiene su propio PIN (4 a 6 números): lo pide el
@@ -1457,12 +1556,6 @@ export default function ConfiguracionView({
             </>
           )}
         </section>
-
-        {/* SITIO WEB: fotos de la landing y galería de torneos */}
-        <SitioWebSection
-          onExpiredSession={onExpiredSession}
-          onToast={onToast}
-        />
       </div>
 
       {pinModal}

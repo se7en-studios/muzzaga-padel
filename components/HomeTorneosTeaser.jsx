@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLightbox } from "./LightboxProvider";
 import { CLUB_INFO } from "../data/club";
-import Mascota from "./Mascota";
 import { formatARS } from "../lib/format";
 import { tournamentDateText } from "../lib/tournament";
 import { useVista } from "../lib/useVista";
@@ -141,13 +140,6 @@ export default function HomeTorneosTeaser({ photos, tournament }) {
               Torneos por categoría todo el año. Anotate para el próximo y mirá
               a los últimos campeones.
             </p>
-          </div>
-          <div className="mascot-section-badge">
-            <Mascota
-              pose="trofeo-bolso"
-              alt="Muzzaguito Campeón con Copa de Torneo"
-              className="mascot-section-img"
-            />
           </div>
         </div>
 

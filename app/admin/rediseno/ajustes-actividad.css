@@ -2348,3 +2348,175 @@
   border-radius: 16px;
   box-shadow: var(--shadow-card);
 }
+
+/* ==========================================================================
+   AJUSTES POR PARTES (r111)
+   El índice ahora es la navegación: se ve una sección por vez. Las demás
+   quedan montadas pero ocultas (con `hidden`), así no se pierde nada sin
+   guardar al cambiar de sección.
+   ========================================================================== */
+.admin-root .admin-cfg .admin-cfg-card[hidden],
+.admin-root .admin-cfg .admin-cfg-sched-edit[hidden] {
+  display: none !important;
+}
+
+/* Las secciones del índice ya no tienen que estirar la página: con una sola
+   a la vista, el formulario queda corto y la barra de guardar cerca. */
+.admin-root .admin-cfg .admin-settings-body {
+  min-width: 0;
+}
+
+/* Con cambios sin guardar, la barra va abajo de la pantalla aunque la
+   sección elegida sea corta: la fila de la barra se estira y ella se apoya
+   al pie (sticky sigue funcionando si la sección es larga). Solo crece el
+   espacio vacío de abajo: no se mueve nada de lo que ya se ve. */
+@media (min-width: 901px) and (min-height: 501px) {
+  .admin-root .admin-cfg:has(> .admin-cfg-savebar) {
+    min-height: calc(100dvh - 220px);
+    grid-template-rows: auto 1fr;
+  }
+}
+
+@media (max-width: 900px), (max-height: 500px) {
+  .admin-root .admin-cfg:has(> .admin-cfg-savebar) {
+    min-height: calc(100dvh - 420px);
+    grid-template-rows: auto auto 1fr;
+  }
+
+  /* Portada más baja en el celu: solo el estado, sin la explicación. */
+  .admin-root .admin-cfg-hero:not(.is-dirty) .admin-cfg-hero-status small {
+    display: none;
+  }
+}
+
+.admin-root .admin-cfg > .admin-cfg-savebar {
+  align-self: end;
+}
+
+/* ---------- Horarios: resumen plegado ---------- */
+.admin-root .admin-cfg-sched-sum {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid #c9d6fb;
+  border-left: 4px solid var(--cfg-blue);
+  border-radius: 12px;
+  background: #f2f5fe;
+}
+
+.admin-root .admin-cfg-sched-sum-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 260px;
+}
+
+.admin-root .admin-cfg-sched-sum-kicker {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cfg-blue-ink);
+}
+
+.admin-root .admin-cfg-sched-sum-text strong {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.admin-root .admin-cfg-sched-sum-text small {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-cfg-sched-toggle {
+  min-height: 44px;
+  gap: 6px;
+}
+
+.admin-root .admin-cfg-sched-chev {
+  margin-left: 2px;
+}
+
+.admin-root .admin-cfg-sched-sum.is-open .admin-cfg-sched-chev {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-root .admin-cfg-sched-chev {
+    transition: transform 0.2s ease;
+  }
+}
+
+/* ---------- Encabezado con ícono en vez de número (Sitio web) ---------- */
+.admin-root .admin-cfg-head-num.is-icon svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+/* ---------- Sitio web como sección propia ---------- */
+.admin-root .admin-sitio-view {
+  display: block;
+  max-width: 1120px;
+  padding-bottom: 24px;
+}
+
+@media (max-width: 900px), (max-height: 500px) {
+  /* La tira del índice: fondo liso (el blur era caro en celus modestos). */
+  .admin-root .admin-cfg-nav {
+    background: #f5f2ea;
+    backdrop-filter: none;
+  }
+
+  /* La portada, compacta: los cuatro datos en una fila, para que la sección
+     elegida empiece arriba y no debajo de un cartel. */
+  .admin-root .admin-cfg-hero {
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .admin-root .admin-cfg-hero-kicker {
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .admin-root .admin-cfg-hero-text {
+    width: 100%;
+  }
+
+  .admin-root .admin-cfg-hero-facts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-root .admin-cfg-hero-facts strong {
+    font-size: 22px;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-root .admin-cfg-hero-status {
+    padding: 10px 12px;
+    backdrop-filter: none;
+  }
+
+  .admin-root .admin-cfg-sched-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-root .admin-sitio-view {
+    padding-bottom: 12px;
+  }
+}

@@ -56,7 +56,9 @@ export default function CommandPalette({
       },
     ].filter((a) => matches(a.label));
 
-    const sections = NAV_ITEMS.filter((n) => matches(`ir a ${n.label}`)).map(
+    const sections = NAV_ITEMS.filter((n) =>
+      matches(`ir a ${n.label} ${n.keywords || ""}`),
+    ).map(
       (n) => ({
         id: `nav-${n.id}`,
         group: "Ir a",

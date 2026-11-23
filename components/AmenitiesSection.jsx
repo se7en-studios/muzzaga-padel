@@ -1,58 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import FeatureCarousel from "./FeatureCarousel";
 import Mascota from "./Mascota";
-import Image from "next/image";
-
-// Solo lo que se puede afirmar sin la ficha técnica del club: el espesor
-// del cristal, la homologación, el césped y los proyectores quedan afuera
-// hasta que el club los confirme.
-const SPECS = [
-  {
-    id: "cristal",
-    short: "Cristales",
-    title: "Cristal templado",
-    subtitle: "Rebote parejo",
-    icon: "/img/iconos/icono-cristal.webp",
-    tag: "Las dos canchas",
-    desc: "Paredes de cristal templado en las dos canchas: el rebote es parejo en el fondo y en los laterales.",
-  },
-  {
-    id: "cesped",
-    short: "Césped",
-    title: "Césped sintético",
-    subtitle: "Buen agarre",
-    icon: "/img/iconos/icono-cesped.webp",
-    tag: "Las dos canchas",
-    desc: "Césped sintético para frenar, girar y arrancar sin resbalarte.",
-  },
-  {
-    id: "led",
-    short: "Iluminación",
-    title: "Iluminación LED",
-    subtitle: "Para jugar de noche",
-    icon: "/img/iconos/icono-led.webp",
-    tag: "Turnos de noche",
-    desc: "Iluminación LED en las dos canchas para jugar de noche, hasta el último turno.",
-  },
-  {
-    id: "cantina",
-    short: "Cantina",
-    title: "Cantina y tercer tiempo",
-    subtitle: "Después de cada partido",
-    icon: "/img/iconos/icono-cantina.webp",
-    tag: "Menú completo",
-    desc: "Mesas, pantalla grande para seguir partidos y torneos, pizzas caseras, bebidas frías y opciones sin TACC para después del partido.",
-  },
-];
 
 export default function AmenitiesSection({ photos }) {
-  const [selectedSpec, setSelectedSpec] = useState(SPECS[0].id);
-
-  const active = SPECS.find((s) => s.id === selectedSpec) || SPECS[0];
-  const activeNum = SPECS.indexOf(active) + 1;
-
   return (
     <section id="instalaciones" className="section-bento">
       <div className="container">
@@ -81,50 +32,10 @@ export default function AmenitiesSection({ photos }) {
           </div>
         </div>
 
+        {/* Instalaciones y ficha técnica en un solo bloque: cada foto lleva su
+            renglón de especificación (ver FICHA en FeatureCarousel). Antes la
+            ficha iba aparte, debajo, y repetía lo mismo que el carrusel. */}
         <FeatureCarousel photos={photos} />
-
-        {/* FICHA TÉCNICA INTERACTIVA DE PISTAS */}
-        <div className="spec-panel">
-          <div className="spec-panel-head">
-            <div>
-              <span className="spec-eyebrow">Ficha técnica</span>
-              <h3 className="spec-heading">Especificaciones de las pistas</h3>
-            </div>
-
-            <div className="spec-tabs" role="tablist" aria-label="Especificaciones">
-              {SPECS.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={selectedSpec === s.id}
-                  className="spec-tab"
-                  onClick={() => setSelectedSpec(s.id)}
-                >
-                  <Image src={s.icon} alt="" width={26} height={26} className="icono-3d" aria-hidden="true" />
-                  <span>{s.short}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* key: re-monta el detalle para que la animación de entrada corra en cada cambio */}
-          {/* El ícono va parado sobre una cancha chiquita (spec-icon) y el
-              número de ítem en mono, como una ficha de las de torneo. */}
-          <div className="spec-detail" key={active.id} role="tabpanel">
-            <div className="spec-icon" aria-hidden="true"><Image src={active.icon} alt="" width={72} height={72} className="icono-3d" /></div>
-            <div className="spec-head">
-              <span className="spec-num" aria-hidden="true">
-                {String(activeNum).padStart(2, "0")} / {String(SPECS.length).padStart(2, "0")} · {active.subtitle}
-              </span>
-              <div className="spec-title-row">
-                <strong>{active.title}</strong>
-                <span className="spec-tag">✓ {active.tag}</span>
-              </div>
-            </div>
-            <p className="spec-desc">{active.desc}</p>
-          </div>
-        </div>
       </div>
     </section>
   );

@@ -2054,6 +2054,18 @@
   max-width: 240px;
 }
 
+/* Ticket vacío: ícono lineal sobrio (la mascota quedó solo para la bienvenida). */
+.admin-root .admin-pos-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 2px dashed rgba(35, 80, 214, 0.35);
+  border-radius: 50%;
+  background: var(--court-tint);
+  color: var(--court);
+}
+
 /* Los renglones del ticket. */
 .admin-root .admin-cantina .admin-pos-lines {
   margin: 0;

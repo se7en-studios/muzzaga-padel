@@ -9,7 +9,11 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
-// Íconos 3D de la marca (public/img/iconos), los mismos de la ficha técnica.
+// Íconos 3D de la marca (public/img/iconos).
+// `ficha`: el renglón de especificación de cada foto, con los textos de la
+// ficha técnica que antes iba en un panel aparte debajo del carrusel (y
+// repetía lo mismo). Solo lo confirmado: sin espesor del cristal,
+// homologación ni marca de césped o proyectores.
 // La foto de cada tarjeta sale de Configuración → Sitio web (slot
 // `inst-<id>` en lib/siteContent.js, que también tiene las de por defecto).
 const FEATURES = [
@@ -18,6 +22,7 @@ const FEATURES = [
     label: "Canchas de cristal",
     icon: "/img/iconos/icono-cristal.webp",
     description: "2 canchas de cristal templado con rebote parejo.",
+    ficha: ["Cristal templado", "Césped sintético", "Las dos canchas"],
   },
   {
     id: "led",
@@ -25,12 +30,14 @@ const FEATURES = [
     icon: "/img/iconos/icono-led.webp",
     description:
       "Luz LED en todas las canchas para jugar de noche sin perder nitidez.",
+    ficha: ["Las dos canchas", "Turnos de noche"],
   },
   {
     id: "cantina",
     label: "Cantina propia",
     icon: "/img/iconos/icono-cantina.webp",
     description: "Pizzas caseras, minutas y bebidas para el tercer tiempo.",
+    ficha: ["Menú completo", "Opciones sin TACC"],
   },
   {
     id: "torneos",
@@ -210,6 +217,13 @@ export default function FeatureCarousel({ photos }) {
                 <div className="ig-caption">
                   <span className="ig-tag">{f.label}</span>
                   <p className="ig-desc">{f.description}</p>
+                  {f.ficha && (
+                    <ul className="ig-ficha" aria-label="Ficha técnica">
+                      {f.ficha.map((dato) => (
+                        <li key={dato}>{dato}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </li>
             );

@@ -55,10 +55,37 @@ const STOPS = [
   },
 ];
 
-// Parada (índice de STOPS) de cada cuadro clave de la ruta. La de cada chip
-// sale de su `p` con la misma cuenta (ver stopAt), así que coinciden siempre.
-const SHOTS = [0, 0, 1, 1, 2, 3, 4, 5];
-const stopAt = (p) => SHOTS[Math.round(p * (SHOTS.length - 1))];
+// La ruta: puntos repartidos parejo a lo largo del scroll de la sección, cada
+// uno con su parada (índice de STOPS) y la posición de cámara `cam` (0..1)
+// que se le manda a la maqueta. Entre dos puntos la cámara va de una a otra
+// (la maqueta suaviza el viaje por los cuadros clave intermedios); la parada
+// —tarjeta, chip y puntitos— es la del punto más cercano. Una sola cuenta
+// para todo, así que nunca se desfasan.
+// Compu: los 8 cuadros clave, uno por tramo (cam = i / 7), como siempre.
+const RUTA_PC = [0, 0, 1, 1, 2, 3, 4, 5].map((stop, i) => ({ stop, cam: i / 7 }));
+// Celu: solo vista general → canchas → barra y cantina (la sección mide 2,5
+// pantallas en vez de 6; ver ClubRecorrido.css). El último tramo se queda en
+// la barra para que se vea antes de seguir con la página. Mesas y Baños
+// quedan en los chips: tocarlos mueve la cámara sin scrollear.
+const RUTA_CELU = [
+  { stop: 0, cam: 0 },
+  { stop: 1, cam: STOPS[1].p },
+  { stop: 2, cam: STOPS[2].p },
+  { stop: 2, cam: STOPS[2].p },
+];
+// Misma condición que el CSS que acorta la sección (y que wantsMobile3d).
+const CELU_MQ = "(pointer: coarse), (max-width: 900px)";
+
+/** Scroll 0..1 → { cam, stop } sobre la ruta. */
+function enRuta(ruta, s) {
+  const f = clamp01(s) * (ruta.length - 1);
+  const i = Math.min(ruta.length - 2, Math.floor(f));
+  const t = f - i;
+  return {
+    cam: ruta[i].cam + (ruta[i + 1].cam - ruta[i].cam) * t,
+    stop: ruta[Math.round(f)].stop,
+  };
+}
 
 // Los chips: las paradas que son un lugar del club (la última no).
 const ZONAS = STOPS.flatMap((s, i) => (s.zona ? [{ label: s.zona, p: s.p, stop: i }] : []));
@@ -102,6 +129,15 @@ export default function ClubRecorrido() {
   const [ready, setReady] = useState(false);
   // La parada actual: de acá salen la tarjeta y el chip activo.
   const [step, setStep] = useState(0);
+  // Recorrido corto del celu (RUTA_CELU) o el completo de la compu. El alto
+  // de la sección lo pone el CSS con la misma media query: el HTML del
+  // servidor ya llega con la altura justa y no salta nada al hidratar.
+  const [celu, setCelu] = useState(false);
+  const ruta = celu ? RUTA_CELU : RUTA_PC;
+  // Zona elegida con un chip que no está en la ruta (Mesas o Baños en el
+  // celu): la cámara va ahí sin scrollear y vuelve a seguir al scroll apenas
+  // la persona se mueve un poco.
+  const fueraRef = useRef(null);
 
   const post = useCallback((msg) => {
     frameRef.current?.contentWindow?.postMessage(msg, window.location.origin);
@@ -179,6 +215,14 @@ export default function ClubRecorrido() {
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia(CELU_MQ);
+    const sync = () => setCelu(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   // La maqueta solo dibuja mientras la sección está a la vista (el iframe no puede saberlo por sí solo).
   useEffect(() => {
     const el = sectionRef.current;
@@ -226,14 +270,22 @@ export default function ClubRecorrido() {
           franjas.style.setProperty("--fade-bottom-o", (bottom / size).toFixed(3));
         }
       }
-      const p = clamp01(
+      const fuera = fueraRef.current;
+      if (fuera && Math.abs(window.scrollY - fuera.y) < 48) {
+        if (last !== -2) post({ muzzaga: "tour", p: fuera.cam });
+        last = -2;
+        return;
+      }
+      fueraRef.current = null;
+      const s = clamp01(
         -rect.top / Math.max(1, rect.height - window.innerHeight),
       );
-      if (p === last) return;
-      last = p;
+      if (s === last) return;
+      last = s;
+      const { cam, stop } = enRuta(ruta, s);
       // la tarjeta (y el chip) siguen al scroll aunque la 3D todavía se esté armando
-      setStep(stopAt(p));
-      post({ muzzaga: "tour", p });
+      setStep(stop);
+      post({ muzzaga: "tour", p: cam });
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -246,7 +298,7 @@ export default function ClubRecorrido() {
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [ready, post]);
+  }, [ready, post, ruta]);
 
   // Parallax suave: la posición del cursor se manda a la maqueta (se apaga con "reducir movimiento").
   useEffect(() => {
@@ -286,10 +338,21 @@ export default function ClubRecorrido() {
     });
   }, [step]);
 
-  // Tocar un punto de interés: scroll suave hasta ese tramo, la cámara lo sigue.
-  const goTo = (p) => {
+  // Tocar un punto de interés: scroll suave hasta su tramo de la ruta y la
+  // cámara lo sigue. Si la zona no está en la ruta (celu), la cámara va
+  // directo, sin mover la página.
+  const goTo = (zona) => {
     const el = sectionRef.current;
     if (!el) return;
+    const j = ruta.findIndex((r) => r.stop === zona.stop);
+    if (j < 0) {
+      fueraRef.current = { y: window.scrollY, cam: zona.p };
+      setStep(zona.stop);
+      post({ muzzaga: "tour", p: zona.p });
+      return;
+    }
+    fueraRef.current = null;
+    const p = j / (ruta.length - 1);
     const top = el.getBoundingClientRect().top + window.scrollY;
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -301,6 +364,7 @@ export default function ClubRecorrido() {
   };
 
   const stop = STOPS[step];
+  const paradas = [...new Set(ruta.map((r) => r.stop))];
 
   return (
     <section
@@ -338,7 +402,7 @@ export default function ClubRecorrido() {
               type="button"
               className={item.stop === step ? "on" : ""}
               aria-current={item.stop === step ? "true" : undefined}
-              onClick={() => goTo(item.p)}
+              onClick={() => goTo(item)}
             >
               <span className="club-tour-poi-dot" aria-hidden="true" />
               {item.label}
@@ -356,8 +420,8 @@ export default function ClubRecorrido() {
             </a>
           </div>
           <ol className="club-tour-dots" aria-hidden="true">
-            {STOPS.map((s, i) => (
-              <li key={s.title} className={i === step ? "on" : ""} />
+            {paradas.map((i) => (
+              <li key={i} className={i === step ? "on" : ""} />
             ))}
           </ol>
           {/* Todas las paradas en la misma celda (solo se ve la actual): la

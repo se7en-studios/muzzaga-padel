@@ -602,24 +602,40 @@
   width: 112px;
 }
 
-/* "Agregar" en amarillo pelota: el botón que más se toca, el más visible. */
+/* "Agregar": botón secundario de la web (contorno naranja, texto naranja
+   de texto: 5,2:1 en claro y 8,2:1 en oscuro). Antes era amarillo pelota; el
+   lima queda como acento (la pelota que vuela al pedido). Uno por plato:
+   en relleno, la carta era una columna de botones gritando. */
 .carta .menu-add-btn {
   width: 100%;
   height: 44px;
   gap: 4px;
   padding: 0 10px;
-  border: 1px solid #a9c41c;
+  border: 1.5px solid var(--btn-naranja, #bf5512);
   border-radius: var(--radius-pill);
-  background: var(--carta-pelota);
-  color: #1b1b19;
+  background: var(--color-surface-card, #fff);
+  color: var(--color-accent-orange-text, #c2410c);
   font-size: 14px;
   font-weight: 700;
-  box-shadow: 0 2px 0 #8aa315, 0 4px 10px -4px rgba(120, 150, 10, 0.6);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--btn-naranja, #bf5512) 35%, transparent);
 }
 
 .carta .menu-add-btn:active {
   transform: translateY(1px);
-  box-shadow: 0 1px 0 #8aa315;
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  .carta .menu-add-btn:hover {
+    background: var(--btn-naranja, #bf5512);
+    color: #fff;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .carta .menu-add-btn {
+    border-color: #ff9a5a;
+  }
 }
 
 .carta .menu-add-btn:focus-visible,
@@ -740,14 +756,24 @@
   color: rgba(255, 255, 255, 0.88);
 }
 
+/* Primario naranja, como los demás botones rellenos (antes amarillo
+   pelota). Blanco sobre #bf5512: 4,6:1. */
 .btn.carta-cierre-btn {
   min-height: 46px;
   padding: 0 24px;
-  border: 1px solid #a9c41c;
+  border: 1px solid var(--btn-naranja, #bf5512);
   border-radius: var(--radius-pill);
-  background: var(--carta-pelota);
-  color: #1b1b19;
+  background: var(--btn-naranja, #bf5512);
+  color: #fff;
   font-weight: 700;
+}
+
+@media (hover: hover) {
+  .btn.carta-cierre-btn:hover {
+    background: var(--btn-naranja-hover, #a9470c);
+    border-color: var(--btn-naranja-hover, #a9470c);
+    color: #fff;
+  }
 }
 
 /* ==========================================================================

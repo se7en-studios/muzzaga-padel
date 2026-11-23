@@ -570,6 +570,42 @@
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 
+/* Ficha técnica de la foto (antes era un panel aparte debajo del carrusel):
+   un renglón con los datos confirmados, separados por la red punteada de
+   arriba. Lima sobre el degradé oscuro (más de 10:1). */
+#instalaciones .ig-ficha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  width: 100%;
+  margin: 2px 0 0;
+  padding: 8px 0 0;
+  border-top: 2px dotted rgba(255, 255, 255, 0.32);
+  list-style: none;
+  color: #e6f77a;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+}
+
+#instalaciones .ig-ficha li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#instalaciones .ig-ficha li::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+}
+
 /* Las fotos de los costados se apagan y achican a medida que se alejan del
    centro, atadas al deslizamiento (sin JS). */
 @supports (animation-timeline: view()) {
@@ -817,396 +853,6 @@
   }
 }
 
-/* ---------- Ficha técnica ---------- */
-/* Una planilla de cancha: césped azul con su textura, perímetro blanco
-   adentro del borde y la red (punteada) bajo el título. Va OPACA: antes
-   era un vidrio translúcido (rgba 0.66 → 0.9 + blur) y, como queda justo
-   donde el césped de la sección se funde con la página clara, se veía
-   lavada, como deshabilitada. Ahora el degradé pasa por debajo y la ficha
-   se lee entera. */
-#instalaciones .spec-panel {
-  --spec-naranja: #e8722a;
-  --spec-amarillo: #d7f03a;
-  --spec-linea: rgba(255, 255, 255, 0.26);
-  position: relative;
-  isolation: isolate;
-  margin-top: 32px;
-  padding: 26px 28px 28px;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background-image:
-    radial-gradient(120% 90% at 85% 0%, rgba(255, 255, 255, 0.12), transparent 60%),
-    linear-gradient(180deg, rgba(10, 24, 80, 0.62) 0%, rgba(6, 13, 40, 0.9) 100%),
-    url("/img/fondo/textura-cesped.jpg");
-  background-size: auto, auto, 320px 320px;
-  background-color: var(--cancha-azul, #2350d6);
-  backdrop-filter: none;
-  color: #fff;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 2px 0 rgba(4, 10, 32, 0.35),
-    0 36px 70px -34px rgba(4, 10, 32, 0.95);
-}
-
-/* El perímetro de la cancha, a 8 px del borde. */
-#instalaciones .spec-panel::after {
-  content: "";
-  position: absolute;
-  inset: 8px;
-  z-index: -1;
-  border: 2px solid var(--spec-linea);
-  border-radius: 17px;
-  pointer-events: none;
-}
-
-#instalaciones .spec-panel-head {
-  position: relative;
-  align-items: flex-end;
-  gap: 16px 24px;
-  margin-bottom: 22px;
-  padding-bottom: 20px;
-}
-
-/* La red: una línea punteada de lado a lado bajo el título. */
-#instalaciones .spec-panel-head::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.7) 0 2px, transparent 2px 6px);
-}
-
-#instalaciones .spec-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-jetbrains-mono), monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--naranja-claro, #ffb27f);
-}
-
-/* La pelota de la marca al lado del rótulo. */
-#instalaciones .spec-eyebrow::before {
-  content: "";
-  flex: none;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-}
-
-#instalaciones .spec-heading {
-  margin-top: 6px;
-  font-family: var(--font-display);
-  font-size: 34px;
-  font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: 0.005em;
-  color: #fff;
-  text-wrap: balance;
-}
-
-/* Pestañas: un selector segmentado oscuro; la elegida en blanco con la
-   línea naranja abajo, como la de saque. */
-#instalaciones .spec-tabs {
-  gap: 4px;
-  padding: 4px;
-  border-radius: 14px;
-  background: rgba(4, 10, 32, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
-}
-
-#instalaciones .spec-tab {
-  min-height: 46px;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.8);
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  transition:
-    background-color var(--t-hover) var(--ease),
-    color var(--t-hover) var(--ease),
-    box-shadow var(--t-hover) var(--ease),
-    transform var(--t-hover) var(--ease);
-}
-
-#instalaciones .spec-tab:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-#instalaciones .spec-tab[aria-selected="true"] {
-  background: #fff;
-  color: #0b1640;
-  box-shadow:
-    inset 0 -3px 0 var(--spec-naranja),
-    0 8px 18px -8px rgba(4, 10, 32, 0.8);
-}
-
-#instalaciones .spec-tab:focus-visible {
-  outline: 2px solid var(--spec-amarillo);
-  outline-offset: 2px;
-}
-
-#instalaciones .spec-tab .icono-3d {
-  width: 28px;
-  height: 28px;
-  transition: transform var(--t-hover) var(--ease);
-}
-
-#instalaciones .spec-tab[aria-selected="true"] .icono-3d {
-  transform: scale(1.1) rotate(-6deg);
-}
-
-/* Detalle: ícono a la izquierda parado sobre una cancha chiquita; a la
-   derecha el número de ítem, el título y la descripción. */
-#instalaciones .spec-detail {
-  grid-template-columns: 148px minmax(0, 1fr);
-  grid-template-areas:
-    "icono cabeza"
-    "icono desc";
-  column-gap: 26px;
-  row-gap: 8px;
-  align-items: center;
-  padding: 16px 28px 16px 16px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(4, 10, 32, 0.5), rgba(4, 10, 32, 0.68));
-  border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-#instalaciones .spec-head {
-  grid-area: cabeza;
-  align-self: end;
-}
-
-#instalaciones .spec-desc {
-  grid-area: desc;
-  align-self: start;
-  max-width: 62ch;
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.88);
-}
-
-#instalaciones .spec-num {
-  display: block;
-  margin-bottom: 6px;
-  font-family: var(--font-jetbrains-mono), monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--spec-amarillo);
-}
-
-#instalaciones .spec-title-row {
-  gap: 8px 12px;
-  margin-bottom: 0;
-}
-
-#instalaciones .spec-title-row strong {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-  color: #fff;
-}
-
-#instalaciones .spec-tag {
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(215, 240, 58, 0.4);
-  background: rgba(215, 240, 58, 0.12);
-  color: #ecfa9c;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-/* La cancha: césped azul, perímetro (outline hacia adentro) y, adentro del
-   perímetro (content-box), la red, las líneas de saque y la central. */
-#instalaciones .spec-icon {
-  grid-area: icono;
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 148px;
-  height: 100px;
-  padding: 9px;
-  border: 0;
-  border-radius: 12px;
-  background-color: var(--cancha-azul, #2350d6);
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),
-    linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
-    linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
-    linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
-    radial-gradient(70% 70% at 50% 20%, rgba(255, 255, 255, 0.2), transparent 70%),
-    url("/img/fondo/textura-cesped.jpg");
-  background-size: 3px 100%, 2px 100%, 2px 100%, 69.5% 2px, 100% 100%, 220px 220px;
-  background-position: 50% 0, 15.25% 0, 84.75% 0, 50% 50%, 0 0, 0 0;
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
-  background-origin: content-box, content-box, content-box, content-box, border-box, border-box;
-  background-clip: content-box, content-box, content-box, content-box, border-box, border-box;
-  outline: 2px solid rgba(255, 255, 255, 0.7);
-  outline-offset: -9px;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-    0 14px 26px -16px rgba(4, 10, 32, 0.9);
-}
-
-#instalaciones .spec-icon .icono-3d {
-  position: relative;
-  width: 78px;
-  height: 78px;
-  filter: drop-shadow(0 10px 6px rgba(4, 10, 32, 0.55));
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  /* Al cambiar de pestaña el ícono cae y pica sobre la cancha, una vez. */
-  #instalaciones .spec-icon .icono-3d {
-    animation: specIconoPica 0.6s var(--ease) both;
-  }
-}
-
-@keyframes specIconoPica {
-  0% {
-    opacity: 0;
-    transform: translateY(-16px) scale(0.9);
-  }
-  55% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  78% {
-    transform: translateY(-5px);
-  }
-  100% {
-    transform: none;
-  }
-}
-
-@media (max-width: 640px) {
-  /* Celu: más compacta; las cuatro pestañas en una fila con el ícono
-     arriba del nombre, y cancha + título lado a lado con la descripción
-     abajo, a lo ancho. */
-  #instalaciones .spec-panel {
-    margin-top: 36px;
-    padding: 20px 16px 16px;
-    border-radius: 20px;
-  }
-
-  #instalaciones .spec-panel::after {
-    inset: 6px;
-    border-width: 1.5px;
-    border-radius: 15px;
-  }
-
-  #instalaciones .spec-panel-head {
-    gap: 14px;
-    margin-bottom: 14px;
-    padding-bottom: 0;
-  }
-
-  /* En celu la red va bajo el título, antes de las pestañas. */
-  #instalaciones .spec-panel-head::after {
-    display: none;
-  }
-
-  #instalaciones .spec-panel-head > div:first-child {
-    position: relative;
-    width: 100%;
-    padding-bottom: 14px;
-  }
-
-  #instalaciones .spec-panel-head > div:first-child::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 3px;
-    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.7) 0 2px, transparent 2px 6px);
-  }
-
-  #instalaciones .spec-heading {
-    font-size: 27px;
-  }
-
-  #instalaciones .spec-tabs {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 3px;
-    padding: 3px;
-    border-radius: 13px;
-  }
-
-  #instalaciones .spec-tab {
-    flex-direction: column;
-    justify-content: center;
-    gap: 3px;
-    min-height: 60px;
-    padding: 8px 2px 7px;
-    font-size: 13.5px;
-    letter-spacing: 0.02em;
-  }
-
-  #instalaciones .spec-tab .icono-3d {
-    margin: 0;
-  }
-
-  #instalaciones .spec-detail {
-    grid-template-columns: 104px minmax(0, 1fr);
-    grid-template-areas:
-      "icono cabeza"
-      "desc desc";
-    column-gap: 14px;
-    row-gap: 12px;
-    padding: 12px;
-  }
-
-  #instalaciones .spec-head {
-    align-self: center;
-  }
-
-  #instalaciones .spec-icon {
-    width: 104px;
-    height: 78px;
-    padding: 7px;
-    outline-offset: -7px;
-  }
-
-  #instalaciones .spec-icon .icono-3d {
-    width: 60px;
-    height: 60px;
-  }
-
-  #instalaciones .spec-title-row {
-    gap: 6px 8px;
-  }
-
-  #instalaciones .spec-title-row strong {
-    font-size: 23px;
-  }
-
-  #instalaciones .spec-desc {
-    padding: 0 4px 2px;
-    font-size: 14.5px;
-    line-height: 1.5;
-  }
-}
 
 /* ---------- Celu: la sección más corta ---------- */
 /* 120 px de aire arriba y abajo era mucho: con 84 alcanza para que el
@@ -1536,6 +1182,16 @@
   font-size: 12.5px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* Sin emojis (🎥 ⭐ 📲 no eran de la marca): una pelotita lima de acento. */
+.bl-perks li::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
 }
 
 /* ---------- El buscador de Beelup (club → cancha → cuándo) ---------- */
@@ -2503,12 +2159,6 @@
 #instalaciones .section-header-row div:has(> .section-title) > .badge-linear:first-child::before {
   color: #fff;
   border-right-color: #d7f03a;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  #instalaciones .spec-panel.reveal-up {
-    opacity: 1;
-  }
 }
 
 #instalaciones {

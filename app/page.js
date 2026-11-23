@@ -13,7 +13,6 @@ import {
   ClubToolsSection,
   FaqSection,
 } from "../components/SeccionesDiferidas";
-import FloatingLiveBar from "../components/FloatingLiveBar";
 import MascotFloatHelper from "../components/MascotFloatHelper";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
@@ -289,7 +288,11 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 3. LOOP DE CÁMARAS (debajo de reservar turnos) */}
+      {/* 3. TORNEOS DESTACADOS: la prueba social (el próximo torneo y el
+          cuadro de honor) pegada a la reserva, antes del bloque "el club". */}
+      <HomeTorneosTeaser photos={photos} tournament={openTournaments[0]} />
+
+      {/* 4. LOOP DE CÁMARAS */}
       <CamarasSection
         courts={config.courts.map(({ id, name, streamUrl }) => ({
           id,
@@ -305,25 +308,22 @@ export default async function Home() {
       {/* Testimonios: fuera hasta tener reseñas reales con nombre y foto (o
           las de Google). El componente queda en components/. */}
 
-      {/* 4. INSTALACIONES */}
+      {/* 5. INSTALACIONES (con la ficha técnica en cada foto) */}
       <AmenitiesSection photos={photos} />
 
-      {/* 5. TORNEOS DESTACADOS */}
-      <HomeTorneosTeaser photos={photos} tournament={openTournaments[0]} />
-
-      {/* 7. CANTINA DESTACADA */}
+      {/* 6. CANTINA DESTACADA */}
       <HomeCantinaTeaser
         photos={photos}
         featured={featuredItems(menu.items).slice(0, HOME_FEATURED_COUNT)}
       />
 
-      {/* 8. HERRAMIENTAS DEL CLUB */}
+      {/* 7. HERRAMIENTAS DEL CLUB */}
       <ClubToolsSection />
 
-      {/* 9. FAQ */}
+      {/* 8. FAQ */}
       <FaqSection />
 
-      {/* 10. UBICACIÓN Y CONTACTO */}
+      {/* 9. UBICACIÓN Y CONTACTO */}
       <section id="ubicacion" className="section-turnos section-ubicacion">
         <div className="container">
           <div className="section-header-row" style={{ marginBottom: 20 }}>
@@ -428,7 +428,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <FloatingLiveBar schedule={config.schedule} blockedDates={config.blockedDates} />
       <MascotFloatHelper />
       <SiteFooter />
       <BottomNav />

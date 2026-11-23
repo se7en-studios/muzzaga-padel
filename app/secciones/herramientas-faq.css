@@ -200,8 +200,9 @@
   text-wrap: pretty;
 }
 
-/* El botón en el color de la herramienta, con la flecha en una pelotita
-   azul noche. */
+/* El botón es secundario (contorno blanco, texto blanco): los botones
+   rellenos de la web son naranjas. El color de la herramienta queda como
+   acento, en la pelotita de la flecha. */
 .hl-cta {
   display: flex;
   align-items: center;
@@ -211,14 +212,19 @@
   margin: 16px 14px 14px;
   padding: 0 7px 0 20px;
   border-radius: 999px;
-  background: var(--hl-acento);
-  color: #0b1a4d;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.72);
+  color: #fff;
   font-size: 15.5px;
   font-weight: 700;
   text-decoration: none;
-  box-shadow:
-    inset 0 -3px 0 rgba(0, 0, 0, 0.12),
-    0 10px 20px -12px rgba(0, 0, 0, 0.8);
+}
+
+@media (hover: hover) {
+  .hl-card:hover .hl-cta {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: #fff;
+  }
 }
 
 /* Toda la tarjeta se puede tocar, no solo el botón. */
@@ -242,8 +248,8 @@
   height: 36px;
   flex: none;
   border-radius: 50%;
-  background: #0b1a4d;
-  color: var(--hl-acento);
+  background: var(--hl-acento);
+  color: #0b1a4d;
   font-size: 17px;
   line-height: 1;
 }

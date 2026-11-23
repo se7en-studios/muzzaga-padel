@@ -20,6 +20,15 @@
   height: calc(var(--stops) * 100svh);
 }
 
+/* Celu y tablet: recorrido corto (vista general → canchas → barra; ver
+   RUTA_CELU en ClubRecorrido.jsx, que usa esta misma media query). Antes eran
+   6 pantallas de scroll fijo; ahora 2,5. Mesas y Baños siguen en los chips. */
+@media (pointer: coarse), (max-width: 900px) {
+  .club-tour {
+    height: 250svh;
+  }
+}
+
 .club-tour-sticky {
   position: sticky;
   top: 0;

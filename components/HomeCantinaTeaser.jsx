@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Beer, Candy, CupSoda, Pizza, ShoppingBag, Smartphone } from "lucide-react";
 import { BentoPhotoCard } from "./PhotoCard";
-import Mascota from "./Mascota";
 import { productIcon } from "../lib/productIcon";
 import { MENU_CATEGORIES } from "../lib/cantinaMenu";
 import CantinaFx, { PrecioTiza } from "./CantinaFx";
@@ -50,13 +49,6 @@ export default function HomeCantinaTeaser({ photos, featured }) {
               Pizzas artesanales al horno, empanadas, cervezas frías y el mejor
               ambiente para seguir jugando afuera de la pista.
             </p>
-          </div>
-          <div className="mascot-section-badge">
-            <Mascota
-              pose="pizza-cerveza"
-              alt="Muzzaguito con pizza y cerveza en la cantina"
-              className="mascot-section-img"
-            />
           </div>
         </div>
 
