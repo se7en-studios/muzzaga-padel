@@ -819,7 +819,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-pos {
     grid-template-columns: minmax(0, 1fr);
     padding-bottom: 64px;
@@ -1157,7 +1157,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-cantina-tabs {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

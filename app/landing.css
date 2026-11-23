@@ -271,7 +271,8 @@ body {
   height: 56px;
   padding: 0 28px;
   border-radius: 999px;
-  background: var(--color-accent-orange);
+  /* Naranja de botón: texto blanco de 16 px a 4,64:1 (el de marca, 3,06:1). */
+  background: var(--btn-naranja);
   color: #fff;
   font-weight: 700;
   font-size: 16px;
@@ -294,7 +295,7 @@ body {
 }
 
 .hero-btn-primary:hover {
-  background: #f07e36;
+  background: var(--btn-naranja-hover);
   transform: translateY(-1px);
 }
 

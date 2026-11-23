@@ -4,27 +4,49 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { buildWhatsAppLink } from "../data/club";
 import { WhatsAppLogo } from "./BrandLogos";
 
-// Cada toma corresponde a un tramo de la ruta de cámara de public/recorrido/index.html (modo ?embed=1).
+// Una sola fuente para la tarjeta y la tira de zonas: cada parada del
+// recorrido tiene su tarjeta y (si es un lugar del club) su chip, con la
+// posición `p` (0..1) a la que viaja la cámara al tocarlo. Antes la tarjeta y
+// el chip salían de dos cálculos distintos y se desfasaban (chip "Canchas" con
+// la tarjeta de la entrada; "Mesas" y "Baños" con la misma tarjeta; al final,
+// "Ahora, a jugar" con el chip de los baños).
+// Las posiciones son las de los cuadros clave de la ruta de cámara de
+// public/recorrido/index.html (modo ?embed=1): 8 cuadros → i / 7.
 const STOPS = [
   {
     kick: "El club · Catriel",
     title: "Así es Muzzaga",
     text: "Toda la sede en una maqueta. Scrolleá y recorrela.",
+    zona: "Vista general",
+    p: 0,
   },
   {
     kick: "Pistas",
     title: "Dos canchas de cristal",
     text: "El Tano y La Vasca: cristal templado, cubiertas y sin viento.",
+    zona: "Canchas",
+    p: 2 / 7,
   },
   {
     kick: "Cantina",
     title: "Barra y cantina",
     text: "Pizzas al horno, empanadas, tostados y cerveza fría. Con opciones sin TACC.",
+    zona: "Barra y cantina",
+    p: 4 / 7,
   },
   {
     kick: "Tercer tiempo",
-    title: "Mesas, baños y duchas",
-    text: "Mesas con vista a las canchas para comentar el partido, y baños de hombres y de mujeres con duchas para cambiarte antes y después de jugar.",
+    title: "Mesas con vista",
+    text: "Mesas mirando a las canchas para comentar el partido después de jugar.",
+    zona: "Mesas",
+    p: 5 / 7,
+  },
+  {
+    kick: "Vestuarios",
+    title: "Baños y duchas",
+    text: "Baños de hombres y de mujeres, con duchas para cambiarte antes y después de jugar.",
+    zona: "Baños y duchas",
+    p: 6 / 7,
   },
   {
     kick: "Te esperamos",
@@ -33,18 +55,13 @@ const STOPS = [
   },
 ];
 
-// Puntos de interés: `p` es la posición (0..1) del recorrido a la que viaja la cámara al tocarlos.
-// Son las posiciones de los cuadros clave de la ruta (8 cuadros → i / 7).
-const POIS = [
-  { label: "Vista general", p: 0 },
-  { label: "Canchas", p: 2 / 7 },
-  { label: "Barra y cantina", p: 4 / 7 },
-  { label: "Mesas", p: 5 / 7 },
-  { label: "Baños y duchas", p: 6 / 7 },
-];
+// Parada (índice de STOPS) de cada cuadro clave de la ruta. La de cada chip
+// sale de su `p` con la misma cuenta (ver stopAt), así que coinciden siempre.
+const SHOTS = [0, 0, 1, 1, 2, 3, 4, 5];
+const stopAt = (p) => SHOTS[Math.round(p * (SHOTS.length - 1))];
 
-// Toma (índice de STOPS) de cada cuadro clave de la ruta: el campo `shot` de KF en public/recorrido/index.html.
-const SHOTS = [0, 0, 1, 1, 2, 3, 3, 4];
+// Los chips: las paradas que son un lugar del club (la última no).
+const ZONAS = STOPS.flatMap((s, i) => (s.zona ? [{ label: s.zona, p: s.p, stop: i }] : []));
 
 const WHATSAPP_HREF = buildWhatsAppLink("Hola! Quiero reservar una cancha");
 
@@ -75,12 +92,6 @@ function wantsMobile3d() {
   );
 }
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
-const nearestPoi = (p) =>
-  POIS.reduce(
-    (best, poi, i) =>
-      Math.abs(poi.p - p) < Math.abs(POIS[best].p - p) ? i : best,
-    0,
-  );
 
 export default function ClubRecorrido() {
   const sectionRef = useRef(null);
@@ -89,8 +100,8 @@ export default function ClubRecorrido() {
   const poiRef = useRef(null);
   const [load, setLoad] = useState(false);
   const [ready, setReady] = useState(false);
+  // La parada actual: de acá salen la tarjeta y el chip activo.
   const [step, setStep] = useState(0);
-  const [poi, setPoi] = useState(0);
 
   const post = useCallback((msg) => {
     frameRef.current?.contentWindow?.postMessage(msg, window.location.origin);
@@ -220,9 +231,8 @@ export default function ClubRecorrido() {
       );
       if (p === last) return;
       last = p;
-      setPoi(nearestPoi(p));
-      // la tarjeta sigue al scroll aunque la 3D todavía se esté armando
-      setStep(SHOTS[Math.round(p * (SHOTS.length - 1))]);
+      // la tarjeta (y el chip) siguen al scroll aunque la 3D todavía se esté armando
+      setStep(stopAt(p));
       post({ muzzaga: "tour", p });
     };
     const onScroll = () => {
@@ -266,14 +276,15 @@ export default function ClubRecorrido() {
   // En el celu la tira de zonas no entra entera: la zona activa se centra (solo la tira, no la página).
   useEffect(() => {
     const nav = poiRef.current;
-    const btn = nav?.children[poi];
+    const i = ZONAS.findIndex((z) => z.stop === step);
+    const btn = i >= 0 ? nav?.children[i] : null;
     if (!btn || nav.scrollWidth <= nav.clientWidth) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     nav.scrollTo({
       left: btn.offsetLeft - (nav.clientWidth - btn.offsetWidth) / 2,
       behavior: reduce ? "auto" : "smooth",
     });
-  }, [poi]);
+  }, [step]);
 
   // Tocar un punto de interés: scroll suave hasta ese tramo, la cámara lo sigue.
   const goTo = (p) => {
@@ -321,12 +332,12 @@ export default function ClubRecorrido() {
         )}
 
         <nav ref={poiRef} className="club-tour-poi" aria-label="Zonas del club">
-          {POIS.map((item, i) => (
+          {ZONAS.map((item) => (
             <button
               key={item.label}
               type="button"
-              className={i === poi ? "on" : ""}
-              aria-current={i === poi ? "true" : undefined}
+              className={item.stop === step ? "on" : ""}
+              aria-current={item.stop === step ? "true" : undefined}
               onClick={() => goTo(item.p)}
             >
               <span className="club-tour-poi-dot" aria-hidden="true" />
@@ -349,9 +360,24 @@ export default function ClubRecorrido() {
               <li key={s.title} className={i === step ? "on" : ""} />
             ))}
           </ol>
-          <div key={step} className="club-tour-card-body">
-            <h2 className="club-tour-title">{stop.title}</h2>
-            <p className="club-tour-text">{stop.text}</p>
+          {/* Todas las paradas en la misma celda (solo se ve la actual): la
+              tarjeta mide lo que la más larga y no cambia de alto al
+              scrollear (antes movía la página: CLS). */}
+          <div className="club-tour-card-body">
+            {STOPS.map((s, i) => {
+              const on = i === step;
+              const Title = on ? "h2" : "p";
+              return (
+                <div
+                  key={s.title}
+                  className={`club-tour-card-stop${on ? " on" : ""}`}
+                  aria-hidden={on ? undefined : "true"}
+                >
+                  <Title className="club-tour-title">{s.title}</Title>
+                  <p className="club-tour-text">{s.text}</p>
+                </div>
+              );
+            })}
           </div>
           <div className="club-tour-actions">
             <a className="btn btn-orange-primary club-tour-btn" href="#reservar">

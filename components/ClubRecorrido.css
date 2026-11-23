@@ -9,7 +9,8 @@
 .club-tour {
   --ct-blue: #2350d6;
   --ct-blue-deep: #0b1a4d;
-  --ct-orange: #e8722a;
+  /* Naranja de botón (texto blanco 4,6:1; el de marca #e8722a daba 3:1). */
+  --ct-orange: var(--btn-naranja, #bf5512);
   --ct-ball: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
   --ct-line: rgba(255, 255, 255, 0.92);
   --ct-glass: rgba(9, 14, 34, 0.56);
@@ -242,7 +243,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 14px 0 18px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(11, 26, 77, 0.25)),
@@ -305,7 +306,19 @@
 }
 
 .club-tour-card-body {
+  display: grid;
   padding: 14px 18px 0;
+}
+
+/* Todas las paradas apiladas en la misma celda; solo se ve la actual. */
+.club-tour-card-stop {
+  grid-area: 1 / 1;
+  min-width: 0;
+  visibility: hidden;
+}
+
+.club-tour-card-stop.on {
+  visibility: visible;
 }
 
 .club-tour-title {
@@ -347,7 +360,7 @@
   border-color: var(--ct-orange);
 }
 
-/* "Recorrer el club →" va en la cabecera: alto de toque completo (40 px de la
+/* "Recorrer el club →" va en la cabecera: alto de toque completo (44 px de la
    cabecera) sin sumarle un renglón a la tarjeta */
 .club-tour-link {
   flex: none;
@@ -474,6 +487,62 @@
 }
 
 /* --------------------------------------------------------------------------
+   Celu acostado (hasta 500 px de alto): la tarjeta tapaba casi toda la
+   pantalla y la barra de abajo la pisaba. Va compacta (título en un renglón,
+   sin el texto) y apoyada arriba de la barra.
+   -------------------------------------------------------------------------- */
+@media (orientation: landscape) and (max-height: 500px) {
+  .club-tour-poi {
+    top: 62px;
+  }
+  .club-tour-poi button {
+    font-size: 0.9rem;
+  }
+
+  .club-tour-card {
+    left: max(12px, env(safe-area-inset-left));
+    width: min(360px, calc(100% - 24px));
+    bottom: calc(var(--bottom-bar-h, 54px) + env(safe-area-inset-bottom, 0px) + 8px);
+    border-radius: 14px;
+  }
+  .club-tour-card-head {
+    padding: 0 10px 0 14px;
+  }
+  .club-tour-kick {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+  }
+  .club-tour-card-body {
+    padding: 8px 14px 0;
+  }
+  .club-tour-title {
+    margin: 0;
+    overflow: hidden;
+    font-size: 1.35rem;
+    line-height: 1.05;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .club-tour-text {
+    display: none;
+  }
+  .club-tour-actions {
+    flex-wrap: nowrap;
+    padding: 8px 14px 10px;
+  }
+  .club-tour-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 0.85rem;
+    gap: 6px;
+  }
+  .club-tour-scroll {
+    bottom: calc(var(--bottom-bar-h, 54px) + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+}
+
+/* --------------------------------------------------------------------------
    Movimiento (solo transform/opacity, y solo si el usuario no pidió menos)
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: no-preference) {
@@ -496,7 +565,7 @@
   }
 
   .club-tour-kick,
-  .club-tour-card-body {
+  .club-tour-card-stop.on {
     animation: club-tour-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
 

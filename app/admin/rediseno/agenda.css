@@ -696,7 +696,7 @@
   content: "a las ";
 }
 
-@media (min-width: 768px) {
+@media (min-width: 901px) and (min-height: 501px) {
   .admin-root .admin-agenda .admin-timeline-time span::before {
     content: "a ";
   }
@@ -744,7 +744,7 @@
   display: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 901px) and (min-height: 501px) {
   .admin-root .admin-agenda .admin-timeline-row.is-past {
     min-height: 0;
   }
@@ -1116,7 +1116,7 @@
 /* ==========================================================================
    CELU
    ========================================================================== */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-agenda .admin-daystrip {
     gap: 8px;
     margin-bottom: 14px;
@@ -1743,7 +1743,7 @@
   vertical-align: -2px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-agenda .admin-slot.is-taken .admin-slot-badge {
     display: inline-flex;
     align-items: center;
@@ -1779,7 +1779,7 @@
   transform-origin: left center;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-agenda .admin-timeline-clock {
     max-width: 46px;
     background: rgba(232, 114, 42, 0.18);
@@ -1792,7 +1792,7 @@
 
 /* La línea de "ahora" adentro de la franja en juego (en la compu): la fila
    es la referencia y la línea cae en el minuto exacto de esa franja. */
-@media (min-width: 768px) {
+@media (min-width: 901px) and (min-height: 501px) {
   .admin-root .admin-agenda .admin-timeline-row.is-current {
     position: relative;
   }
@@ -1916,7 +1916,7 @@
   }
 
   /* Celu: al tocar una cancha se hunde apenas, así se siente el toque. */
-  @media (max-width: 767px) {
+  @media (max-width: 900px), (max-height: 500px) {
     .admin-root .admin-agenda .admin-slot-main,
     .admin-root .admin-agenda .admin-slot-assign {
       transition: transform 0.1s ease;
@@ -2040,7 +2040,7 @@
 
 /* Gráfico semanal en el celu: siete montos no entran arriba de las barras;
    queda solo el de hoy (el resto está al tocar cada barra). */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-weekchart .admin-weekchart-col:not(.is-today) .admin-weekchart-value {
     visibility: hidden;
   }

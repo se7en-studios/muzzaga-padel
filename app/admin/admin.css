@@ -1650,7 +1650,7 @@
   display: none;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-dashboard-layout {
     --card-pad: 16px;
   }
@@ -2195,13 +2195,13 @@
   font-weight: 500;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-unsaved-bar {
     left: 0;
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-settings {
     grid-template-columns: 1fr;
   }

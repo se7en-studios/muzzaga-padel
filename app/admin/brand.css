@@ -481,7 +481,7 @@ body:has(.admin-login-wrapper) {
 /* Celu: la ficha centrada y derecha arriba, y la composición (paleta,
    pelotas, muzza) abajo, en el espacio que queda libre debajo de la ficha.
    El césped de la foto se repite como piso para que no quede un corte. */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-login-wrapper {
     justify-content: center;
     align-items: flex-start;
@@ -531,7 +531,7 @@ body:has(.admin-login-wrapper) {
 }
 
 /* ---------- Celu: barras de arriba y de abajo oscuras ---------- */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root :is(.admin-page-title, .admin-greeting-title) {
     font-size: 28px;
   }
@@ -609,7 +609,7 @@ body:has(.admin-login-wrapper) {
    En compu la barra de arriba solo tenía esos dos botones y ocupaba una fila
    entera (~90 px) antes del título de cada panel. Flotando a la derecha, el
    encabezado (flex = contexto propio) se acomoda al costado y todo sube. */
-@media (min-width: 768px) {
+@media (min-width: 901px) and (min-height: 501px) {
   .admin-root .admin-kravio-topbar {
     float: right;
     margin: 2px 0 8px 16px;

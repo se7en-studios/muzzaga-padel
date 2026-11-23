@@ -480,8 +480,9 @@
     font-size: 15.5px;
   }
 
+  /* 16 px: en 390 px el "18:30" deja aire a los costados de la placa. */
   .htab-hora {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   .htab-horas {
@@ -502,6 +503,58 @@
 
   .htab-pie {
     margin: 4px 10px 0;
+  }
+}
+
+/* "+N" de 3 horarios: solo en celus angostos (ver abajo). */
+.htab-horas > .htab-solo-angosto {
+  display: none;
+}
+
+/* Celus angostos (320 a 380 px): con 4 placas de ~39 px el "14:00" tocaba
+   los bordes y el "+3" quedaba pegado. Van 3 horarios por cancha (el "+N"
+   cuenta desde el 3.º), la letra un poco más chica y la columna del nombre
+   más angosta. */
+@media (max-width: 380px) {
+  .htab-horas > .htab-solo-ancho {
+    display: none;
+  }
+
+  .htab-horas > .htab-solo-angosto {
+    display: list-item;
+  }
+
+  .htab-fila {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 6px;
+    padding: 11px 4px;
+  }
+
+  .htab-nombre {
+    gap: 6px;
+  }
+
+  .htab-num {
+    width: 20px;
+    font-size: 16px;
+  }
+
+  .htab-nombre-txt b {
+    font-size: 14.5px;
+    letter-spacing: 0.01em;
+  }
+
+  .htab-nombre-txt small {
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .htab-hora {
+    font-size: 15px;
+  }
+
+  .htab-mas {
+    font-size: 14px;
   }
 }
 
@@ -848,9 +901,19 @@
     content: none;
   }
 
+  /* El poste derecho de la red va en la grilla (celda de la 4.ª cifra) y no
+     en la cifra: colgado de la cifra la desbordaba 4 px. Así cae sobre el
+     perímetro igual, dentro del relleno del tablero. */
   .hero-night .hero-stat:nth-child(4)::after {
+    content: none;
+  }
+
+  .hero-night .hero-stats::after {
     content: "";
     position: absolute;
+    z-index: 2;
+    grid-column: 2;
+    grid-row: 2;
     top: -3px;
     right: -4px;
     width: 9px;

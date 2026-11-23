@@ -7,6 +7,7 @@ import {
   buildOrderMessage,
   buildOrderWhatsAppUrl,
   deliveryFromParam,
+  locationKey,
   makeOrderCode,
   orderCount,
   orderLines,
@@ -134,6 +135,31 @@ test("deliveryFromParam entiende los QR de canchas y mesas", () => {
   assert.equal(deliveryFromParam("quincho"), "quincho");
   assert.equal(deliveryFromParam(""), null);
   assert.equal(deliveryFromParam(null), null);
+});
+
+test("deliveryFromParam entiende el número solo de ?mesa=3 y ?cancha=1", () => {
+  assert.equal(deliveryFromParam("3", "mesa"), "Mesa 3");
+  assert.equal(deliveryFromParam(" 03 ", "mesa"), "Mesa 3");
+  assert.equal(deliveryFromParam("1", "cancha"), "Cancha 1");
+  assert.equal(deliveryFromParam("mesa-3", "mesa"), "Mesa 3");
+  assert.equal(deliveryFromParam("cancha-2", "cancha"), "Cancha 2");
+  // Una mesa que no está en la lista igual sale con nombre, no "9".
+  assert.equal(deliveryFromParam("9", "mesa"), "Mesa 9");
+  assert.equal(deliveryFromParam("mesa-9"), "Mesa 9");
+  // Sin saber de qué parámetro vino, un número solo queda tal cual.
+  assert.equal(deliveryFromParam("3"), "3");
+  assert.equal(deliveryFromParam("3", "ubicacion"), "3");
+  assert.equal(deliveryFromParam("quincho", "mesa"), "quincho");
+});
+
+test("locationKey normaliza las formas del QR", () => {
+  assert.equal(locationKey("3", "mesa"), "mesa-3");
+  assert.equal(locationKey("Mesa 3"), "mesa-3");
+  assert.equal(locationKey("mesa3", "cancha"), "mesa-3");
+  assert.equal(locationKey("CANCHA-1"), "cancha-1");
+  assert.equal(locationKey("1", "cancha"), "cancha-1");
+  assert.equal(locationKey("quincho"), "quincho");
+  assert.equal(locationKey("", "mesa"), null);
 });
 
 test("parseStoredCart descarta basura y productos que ya no están", () => {

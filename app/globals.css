@@ -53,6 +53,11 @@
   --color-accent-orange-hover: #cf611e;
   --color-accent-orange-subtle: #fdf6f0;
   --color-accent-orange-border: #f2cbb4;
+  /* Fondo de los botones naranjas con letra blanca chica (13-16 px): el
+     naranja de marca da 3,06:1; este, del mismo tono, 4,64:1 (AA). Solo
+     botones: el resto de la marca sigue en #e8722a. */
+  --btn-naranja: #bf5512;
+  --btn-naranja-hover: #a9470c;
   --color-text-link: #a8501a;
   --color-text-link-secondary: #a8501a;
   --color-gradient-sky-light: #fef8f4;
@@ -356,16 +361,16 @@ select:focus-visible,
 
 /* Orange Voltage CTA Variant */
 .btn-orange-primary {
-  background: var(--color-accent-orange);
+  background: var(--btn-naranja);
   color: #ffffff;
-  border: 1px solid var(--color-accent-orange);
+  border: 1px solid var(--btn-naranja);
   box-shadow: 0 2px 8px rgba(255, 94, 0, 0.25);
   font-weight: 600;
 }
 
 .btn-orange-primary:hover {
-  background: var(--color-accent-orange-hover);
-  border-color: var(--color-accent-orange-hover);
+  background: var(--btn-naranja-hover);
+  border-color: var(--btn-naranja-hover);
   transform: translateY(-1px);
 }
 
@@ -1355,6 +1360,10 @@ select:focus-visible,
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  /* En línea (compu), al centrarlo tras elegir turno que no quede bajo el
+     header fijo (10 + 64 px) ni pegado al borde de abajo. */
+  scroll-margin-top: 88px;
+  scroll-margin-bottom: 24px;
 }
 
 .booking-drawer-handle {
@@ -1619,7 +1628,9 @@ select:focus-visible,
   color: var(--color-muted, #6b6b66);
 }
 
-@media (max-width: 768px) {
+/* Drawer: celu parado y también acostado (poco alto). La misma query usa
+   BookingCalendar.jsx (DRAWER_QUERY). */
+@media (max-width: 768px), (max-width: 1180px) and (max-height: 500px) {
   .booking-drawer-backdrop {
     position: fixed;
     inset: 0;
@@ -1640,6 +1651,27 @@ select:focus-visible,
     padding: 16px 20px max(24px, calc(env(safe-area-inset-bottom) + 16px));
     box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.35);
     animation: slideUp var(--t-estado) var(--ease);
+  }
+}
+
+/* Celu acostado: la hoja ocupa casi todo el alto (se scrollea por dentro) y
+   no el ancho entero; las letras de los campos en 16 px para que iOS no haga
+   zoom al tocarlos. */
+@media (min-width: 769px) and (max-width: 1180px) and (max-height: 500px) {
+  .booking-drawer-backdrop {
+    justify-content: center;
+  }
+
+  .booking-drawer-backdrop .booking-form {
+    max-width: 560px;
+    max-height: calc(100dvh - 12px);
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+
+  .booking-form input,
+  .booking-form select {
+    font-size: 16px;
   }
 }
 
@@ -4637,39 +4669,10 @@ body:has(.footer-wordmark) {
   transition: width 0.25s ease;
 }
 
-/* Sidebar fija de 240px no entra cómoda por debajo de ~900px: pasa a barra
-   horizontal arriba, como ya hacía el topbar viejo. */
-@media (max-width: 900px) {
-  .admin-shell {
-    flex-direction: column;
-  }
-  .admin-sidebar {
-    width: 100%;
-    height: auto;
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  .admin-sidebar-brand {
-    border-bottom: none;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-  }
-  .admin-sidebar-nav {
-    flex-direction: row;
-    flex: 1;
-    padding: 10px 8px;
-    overflow-x: auto;
-  }
-  .admin-sidebar-footer {
-    border-top: none;
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    flex-direction: row;
-  }
-  .admin-main-inner {
-    padding: 20px 16px 80px;
-  }
-}
+/* (Antes había acá un bloque de ≤900px que ponía la sidebar del panel en
+   fila arriba. Peleaba con la sidebar sticky del rediseño y rompía el panel
+   entre 768 y 900px. Ahora el layout de celu —barra de abajo + "Más"— cubre
+   ≤900px y las pantallas bajas apaisadas: ver app/admin/rediseno/base.css.) */
 
 @media (max-width: 720px) {
   .admin-main-header {

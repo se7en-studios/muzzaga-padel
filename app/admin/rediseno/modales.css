@@ -1401,7 +1401,7 @@
 /* ==========================================================================
    CELU: hojas que suben desde abajo, con lo importante fijo abajo
    ========================================================================== */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-modal-card.admin-bk {
     max-width: none;
     max-height: 94dvh;

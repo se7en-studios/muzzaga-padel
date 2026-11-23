@@ -341,7 +341,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-dashboard-layout .admin-carta .admin-carta-head .admin-section-title {
     font-size: 24px;
   }
@@ -785,7 +785,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-dashboard-layout #cfg-sitio .admin-site-group-title {
     font-size: 21px;
   }

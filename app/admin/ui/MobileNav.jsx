@@ -8,7 +8,8 @@ import { useAnimatedOpen } from "./useAnimatedOpen";
 import { useNavIndicator } from "./motion";
 
 /**
- * Mobile (<768px): bottom nav con 4 secciones + "Más", y "Nueva Reserva"
+ * Celu, tablet chica y celu apaisado (≤900px de ancho o ≤500px de alto):
+ * bottom nav con 4 secciones + "Más", y "Nueva Reserva"
  * como FAB. En desktop no se renderiza nada visible (CSS).
  */
 const FAB_VIEWS = ["agenda", "calendario", "clientes"];

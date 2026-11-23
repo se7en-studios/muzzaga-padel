@@ -273,8 +273,8 @@
 
 .header-reserve-btn,
 .header-whatsapp-btn {
-  height: 42px;
-  min-height: 42px;
+  height: 44px;
+  min-height: 44px;
   padding: 0 18px;
   border-radius: var(--radius-pill);
   font-weight: 700;

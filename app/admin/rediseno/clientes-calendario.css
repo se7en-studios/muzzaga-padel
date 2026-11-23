@@ -1397,7 +1397,7 @@
 }
 
 /* Tablet y compus chicas: el marcador baja a una grilla que se acomoda. */
-@media (min-width: 768px) and (max-width: 1180px) {
+@media (min-width: 901px) and (max-width: 1180px) and (min-height: 501px) {
   .admin-root .cc-board {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
@@ -1411,7 +1411,7 @@
 /* ==========================================================================
    CELU
    ========================================================================== */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   /* Marcador: grilla sin deslizar, así los cinco segmentos se ven siempre.
      "Todos" va a lo ancho y los otros cuatro de a dos, en formato renglón. */
   .admin-root .cc-board {
@@ -2512,7 +2512,7 @@
 }
 
 /* Tablet y compus chicas: el talón se aprieta. */
-@media (min-width: 768px) and (max-width: 1180px) {
+@media (min-width: 901px) and (max-width: 1180px) and (min-height: 501px) {
   .admin-root .cc-heat-cell {
     padding: 8px 9px 0;
     min-height: 112px;
@@ -2538,7 +2538,7 @@
 /* ---------- Calendario en el celu ----------
    La misma grilla de 7 columnas, compacta: número, % y color. El detalle
    con turnos y plata queda en "Ver día por día". */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .cc-cal-card {
     border-radius: 16px;
   }
@@ -3022,7 +3022,7 @@
   border-top: 1px solid var(--border);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .sk-cc-board {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
@@ -3095,7 +3095,7 @@
 
 /* En la ficha del celu el renglón del teléfono ya dice "Sin teléfono": el
    segundo aviso a la derecha se partía en dos renglones y repetía lo mismo. */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .cc-contact .cc-no-phone {
     display: none;
   }
@@ -3103,8 +3103,21 @@
 
 /* El marcador en carga mide lo mismo que el de verdad (en el celu son dos
    filas). */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .cc-cal {
     --cc-kpi-skel-h: 300px;
+  }
+}
+
+/* Celus de 360: con 7 columnas, los márgenes de 10px y la separación de 4px
+   dejaban cada día en 40px de ancho. Achicando el aire de los costados y entre
+   columnas cada día llega a 44px para el dedo, sin perder la grilla. */
+@media (max-width: 380px) {
+  .admin-root .cc-cal-body {
+    padding-inline: 2px;
+  }
+
+  .admin-root .cc-heatmap {
+    column-gap: 2px;
   }
 }
