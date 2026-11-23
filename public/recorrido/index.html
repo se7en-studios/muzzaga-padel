@@ -1108,7 +1108,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
   let lastDraw = 0, cost = 8;
   // en la tele de recepción (?monitor=1) ~30 cuadros por segundo alcanzan y la placa del televisor trabaja la mitad
-  const MIN_GAP = MONITOR ? 50 : LITE ? 33 : MOVIL ? 25 : 12.5, COST_K = MONITOR ? 3 : 1.5; // en el monitor la maqueta usa como mucho un tercio del hilo
+  const MIN_GAP = MONITOR ? 50 : LITE || MOVIL ? 33 : 12.5, COST_K = MONITOR ? 3 : 1.5; // en el monitor la maqueta usa como mucho un tercio del hilo
   function frame(now) {
     requestAnimationFrame(frame);
     // fuera de la vista no se anima ni se dibuja nada: en la landing comparte el hilo con la página y le trababa el scroll

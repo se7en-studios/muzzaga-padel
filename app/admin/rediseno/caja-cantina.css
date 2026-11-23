@@ -1191,7 +1191,75 @@
   }
 }
 
-/* ---------- Caja: movimiento (solo transform/opacity) ---------- */
+/* ---------- Caja: movimiento (solo transform/opacity) ----------
+   Los montos corren como tanteador (Tanteador.jsx), la cuenta del cajón
+   entra como un marcador que se arma, los billetes contados se apilan y el
+   cierre tiene un festejo sobrio. */
+
+/* Estático: vale también con "reducir movimiento". */
+.admin-root .admin-caja .admin-tanteador {
+  font-variant-numeric: tabular-nums;
+}
+
+/* La pila de billetes va en la misma celda que el billete, por detrás. */
+.admin-root .admin-caja .admin-bill-field > .admin-bill-note {
+  position: relative;
+  z-index: 1;
+  grid-column: 1;
+}
+
+.admin-root .admin-caja .admin-bill-pile {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: center;
+  height: 46px;
+  pointer-events: none;
+}
+
+.admin-root .admin-caja .admin-bill-pile > i {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 7px),
+    var(--bill);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.32),
+    0 1px 3px rgba(0, 0, 0, 0.25);
+  opacity: calc(1 - var(--k) * 0.14);
+  transform: translate(calc(var(--k) * 2.5px), calc(var(--k) * -1.5px));
+}
+
+@media (max-width: 767px) {
+  .admin-root .admin-caja .admin-bill-field > .admin-bill-note,
+  .admin-root .admin-caja .admin-bill-pile {
+    grid-row: 1;
+  }
+
+  .admin-root .admin-caja .admin-bill-pile {
+    height: 44px;
+  }
+}
+
+/* El festejo del cierre vive adentro del aviso (que ya recorta). */
+.admin-root .admin-caja .admin-caja-closed-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.admin-root .admin-caja .admin-caja-closed-fx i {
+  display: block;
+}
+
+/* Sin movimiento, el festejo no se ve: el aviso alcanza. */
+@media (prefers-reduced-motion: reduce) {
+  .admin-root .admin-caja .admin-caja-closed-fx {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .admin-root .admin-caja .admin-caja-score {
     animation: cajaScoreIn 0.22s ease-out;
@@ -1201,12 +1269,44 @@
     animation: cajaBallPop 0.32s ease-out;
   }
 
+  /* La cuenta del cajón se arma como un marcador: cada cartel da vuelta en
+     orden y los signos caen como pelotitas. */
+  .admin-root .admin-caja .admin-caja-formula > li:not(.admin-caja-op) {
+    animation: cajaFlipIn 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.1) backwards;
+  }
+
+  .admin-root .admin-caja .admin-caja-formula > .admin-caja-op {
+    animation: cajaOpDrop 0.4s cubic-bezier(0.3, 1.4, 0.5, 1) backwards;
+  }
+
+  .admin-root .admin-caja .admin-caja-formula > li:nth-child(2) { animation-delay: 0.08s; }
+  .admin-root .admin-caja .admin-caja-formula > li:nth-child(3) { animation-delay: 0.12s; }
+  .admin-root .admin-caja .admin-caja-formula > li:nth-child(4) { animation-delay: 0.2s; }
+  .admin-root .admin-caja .admin-caja-formula > li:nth-child(5) { animation-delay: 0.24s; }
+  .admin-root .admin-caja .admin-caja-formula > li:nth-child(6) { animation-delay: 0.32s; }
+  .admin-root .admin-caja .admin-caja-formula > li:nth-child(7) { animation-delay: 0.36s; }
+
+  .admin-root .admin-caja .admin-caja-outside .admin-caja-method {
+    animation: cajaFlipIn 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.1) 0.4s backwards;
+  }
+
+  .admin-root .admin-caja .admin-caja-outside .admin-caja-method + .admin-caja-method {
+    animation-delay: 0.46s;
+  }
+
+  /* Cada egreso entra como un renglón nuevo del marcador. */
   .admin-root .admin-caja .admin-caja-receipt .admin-expense-row {
-    animation: cajaLineIn 0.2s ease-out;
+    animation: cajaRowFlip 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.1) backwards;
+    animation-delay: calc(var(--i, 0) * 45ms);
   }
 
   .admin-root .admin-caja .admin-bill-field.has-qty .admin-bill-note {
     animation: cajaBillBump 0.22s ease-out;
+  }
+
+  /* Cada billete que se suma cae sobre la pila. */
+  .admin-root .admin-caja .admin-bill-pile > i {
+    animation: cajaBillDrop 0.3s cubic-bezier(0.3, 1.3, 0.5, 1) backwards;
   }
 
   .admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper button {
@@ -1215,6 +1315,64 @@
 
   .admin-root .admin-dashboard-layout .admin-caja .admin-bill-stepper button:active:not(:disabled) {
     transform: scale(0.9);
+  }
+
+  /* Cerrar caja: el candado se mueve apenas al pasar, como pidiendo el PIN. */
+  .admin-root .admin-caja .admin-caja-close-btn svg {
+    transition: transform 0.18s ease;
+  }
+
+  .admin-root .admin-caja .admin-caja-close-btn:hover:not(:disabled) svg {
+    transform: rotate(-12deg) scale(1.08);
+  }
+
+  .admin-root .admin-caja .admin-caja-close-btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  /* ---------- Festejo del cierre ---------- */
+  .admin-root .admin-caja .admin-closed-banner.is-just-closed {
+    animation: cajaBannerIn 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+
+  .admin-root .admin-caja .admin-closed-banner.is-just-closed > svg {
+    animation: cajaLockSnap 0.5s cubic-bezier(0.3, 1.4, 0.5, 1) 0.18s backwards;
+  }
+
+  /* La pelotita cruza el aviso picando tres veces sobre la línea de abajo
+     (en el aire de abajo del aviso, sin pasar por arriba del texto). */
+  .admin-root .admin-caja .admin-caja-closed-track {
+    position: absolute;
+    bottom: 3px;
+    left: 0;
+    width: 100%;
+    height: 12px;
+    animation: cajaBallTrack 1.5s cubic-bezier(0.25, 0.6, 0.45, 1) 0.3s both;
+  }
+
+  .admin-root .admin-caja .admin-caja-closed-ball {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--cc-ball);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transform-origin: 50% 100%;
+    animation: cajaBallBounce 1.5s linear 0.3s both;
+  }
+
+  /* Una línea de cancha que subraya el aviso, de izquierda a derecha. */
+  .admin-root .admin-caja .admin-caja-closed-line {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--cc-green);
+    transform-origin: left center;
+    animation: cajaLineDraw 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s both;
   }
 
   @keyframes cajaScoreIn {
@@ -1227,14 +1385,66 @@
     100% { transform: none; }
   }
 
-  @keyframes cajaLineIn {
-    from { opacity: 0; transform: translateY(-4px); }
+  @keyframes cajaFlipIn {
+    0% { opacity: 0; transform: perspective(500px) rotateX(-70deg); }
+    65% { opacity: 1; transform: perspective(500px) rotateX(10deg); }
+    100% { transform: perspective(500px) rotateX(0); }
+  }
+
+  @keyframes cajaRowFlip {
+    0% { opacity: 0; transform: perspective(400px) rotateX(-80deg); }
+    70% { opacity: 1; transform: perspective(400px) rotateX(8deg); }
+    100% { transform: perspective(400px) rotateX(0); }
+  }
+
+  @keyframes cajaOpDrop {
+    0% { opacity: 0; transform: translateY(-18px) scale(0.6); }
+    60% { opacity: 1; transform: translateY(2px) scale(1.1, 0.88); }
+    100% { transform: none; }
   }
 
   @keyframes cajaBillBump {
     0% { transform: translateY(0); }
     40% { transform: translateY(-3px); }
     100% { transform: none; }
+  }
+
+  @keyframes cajaBillDrop {
+    0% {
+      opacity: 0;
+      transform: translate(calc(var(--k) * 2.5px), -16px) rotate(-8deg);
+    }
+  }
+
+  @keyframes cajaBannerIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+  }
+
+  @keyframes cajaLockSnap {
+    0% { transform: translateY(-6px) rotate(-25deg) scale(0.6); }
+    55% { transform: translateY(1px) rotate(6deg) scale(1.12); }
+    100% { transform: none; }
+  }
+
+  @keyframes cajaBallTrack {
+    0% { opacity: 0; transform: translateX(-12px); }
+    8% { opacity: 1; }
+    88% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(calc(100% - 12px)); }
+  }
+
+  /* Tres piques cada vez más bajitos, aplastándose al tocar la línea. */
+  @keyframes cajaBallBounce {
+    0% { transform: translateY(-14px); animation-timing-function: ease-in; }
+    18% { transform: translateY(0) scale(1.15, 0.8); animation-timing-function: ease-out; }
+    38% { transform: translateY(-11px); animation-timing-function: ease-in; }
+    56% { transform: translateY(0) scale(1.1, 0.86); animation-timing-function: ease-out; }
+    72% { transform: translateY(-5px); animation-timing-function: ease-in; }
+    86%, 100% { transform: translateY(0); }
+  }
+
+  @keyframes cajaLineDraw {
+    from { transform: scaleX(0); }
   }
 }
 

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { depositFor, priceFor, slotTimesFor } from "../../lib/clubConfig";
 import { formatARS, formatDate } from "../../lib/format";
 import { IconClose } from "./adminHelpers";
+import BusyButton from "./ui/BusyButton";
+import { useExitAnimation } from "./ui/motion";
 import PlayerNamesFields from "./ui/PlayerNamesFields";
 
 const weekdayShort = new Intl.DateTimeFormat("es-AR", {
@@ -61,6 +63,8 @@ export default function CreateBookingModal({
   const court = clubConfig.courts.find((c) => c.id === modalForm.courtId);
   const hasTime = slotTimes.some((s) => s.start === modalForm.startTime);
   const who = (modalForm.playerName || "").trim();
+  // Al cerrar con la X o tocando afuera, la hoja sale antes de desmontarse.
+  const exit = useExitAnimation(onClose);
   const steps = [
     { n: 1, label: "Cuándo", done: Boolean(court) && hasTime },
     { n: 2, label: isBlock ? "Motivo" : "Quién", done: Boolean(who) },
@@ -68,7 +72,10 @@ export default function CreateBookingModal({
   ];
 
   return (
-    <div className="admin-modal-backdrop" onClick={onClose}>
+    <div
+      className={`admin-modal-backdrop${exit.closing ? " is-closing" : ""}`}
+      onClick={exit.close}
+    >
       <div
         className="admin-modal-card admin-detail admin-bk admin-bk--create"
         role="dialog"
@@ -86,7 +93,7 @@ export default function CreateBookingModal({
           <button
             type="button"
             className="admin-detail-close admin-bk-close"
-            onClick={onClose}
+            onClick={exit.close}
             aria-label="Cerrar"
           >
             <IconClose size={18} /> <span>Cerrar</span>
@@ -496,10 +503,11 @@ export default function CreateBookingModal({
               </div>
             </div>
 
-            <button
+            <BusyButton
               type="submit"
               className="btn btn-linear-primary admin-detail-submit admin-bk-submit"
               disabled={modalSubmitting}
+              busy={modalSubmitting}
             >
               <span className="admin-bk-submit-label">
                 {modalSubmitting
@@ -515,7 +523,7 @@ export default function CreateBookingModal({
                   {formatARS(modalPrice)}
                 </span>
               )}
-            </button>
+            </BusyButton>
           </aside>
         </form>
       </div>

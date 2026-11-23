@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Banknote, CalendarDays, CircleAlert, CircleCheck } from "lucide-react";
 import {
   isoAddDays,
@@ -19,6 +19,7 @@ import { adminGetRangeStats } from "../actions";
 import CourtTimeline from "./agenda/CourtTimeline";
 import DayStrip from "./agenda/DayStrip";
 import WeekChart from "./agenda/WeekChart";
+import Tanteador from "./agenda/Tanteador";
 import { EmptyState, Skeleton, SkeletonRows } from "../ui/states";
 
 const BOARD_ICON = { size: 15, strokeWidth: 1.9, "aria-hidden": true };
@@ -41,6 +42,50 @@ export default function AgendaView({
   weekStats,
 }) {
   const [rangeStats, setRangeStats] = useState(null);
+  // Reloj de la grilla: cada 30 s se vuelve a pintar con la hora nueva, así
+  // la línea de "ahora", la franja "En juego" y "Próximo turno" avanzan
+  // solas sin tocar Actualizar. Con la pestaña oculta no hace nada.
+  const [, setClockTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") setClockTick((t) => t + 1);
+    }, 30000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") setClockTick((t) => t + 1);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
+  // Para qué lado se desliza la grilla al cambiar de día: el día nuevo
+  // entra desde la derecha si es posterior y desde la izquierda si es
+  // anterior, como pasar de cancha.
+  const slideRef = useRef({ date: null, dir: 0 });
+  const dayKey = dayData?.date || activeDate;
+  if (dayData && slideRef.current.date !== dayKey) {
+    const prev = slideRef.current.date;
+    slideRef.current = {
+      date: dayKey,
+      dir: prev ? (dayKey > prev ? 1 : -1) : 0,
+    };
+  }
+  const slideDir = slideRef.current.dir;
+
+  // Las animaciones que se repiten (la pelotita de "ahora", la luz del turno
+  // en juego) solo corren mientras la grilla está en pantalla.
+  const courtsRef = useRef(null);
+  useEffect(() => {
+    const el = courtsRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return undefined;
+    const io = new IntersectionObserver(([entry]) => {
+      el.toggleAttribute("data-onscreen", entry.isIntersecting);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [Boolean(dayData)]);
   // Jornada: a la 01:00 la agenda sigue mostrando los turnos de esa noche.
   const todayIso = businessDayInClub();
   const now = nowInClubTimezone();
@@ -156,13 +201,14 @@ export default function AgendaView({
               <CalendarDays {...BOARD_ICON} /> Turnos reservados
             </span>
             <strong className="admin-board-value">
-              {summary.turnos}
+              <Tanteador value={summary.turnos} duration={500} />
               {!isClosed && <small>/{stats.totalSlots}</small>}
             </strong>
             {!isClosed && (
               <span className="admin-board-meter-row">
                 <span className="admin-board-meter" aria-hidden>
-                  <span style={{ width: `${occupancy}%` }} />
+                  {/* scaleX y no width: la barra se llena sin mover el layout. */}
+                  <span style={{ transform: `scaleX(${occupancy / 100})` }} />
                 </span>
                 <em>{formatPct(stats.ocupacionPct ?? 0)} ocupado</em>
               </span>
@@ -178,7 +224,9 @@ export default function AgendaView({
             <span className="admin-board-label">
               <Banknote {...BOARD_ICON} /> Plata que entró
             </span>
-            <strong className="admin-board-value">{formatARS(summary.cobrado)}</strong>
+            <strong className="admin-board-value">
+              <Tanteador value={summary.cobrado} format={formatARS} />
+            </strong>
             <span className="admin-board-sub">Turnos y cantina</span>
           </div>
 
@@ -193,7 +241,9 @@ export default function AgendaView({
               )}{" "}
               Falta cobrar
             </span>
-            <strong className="admin-board-value">{formatARS(summary.porCobrar)}</strong>
+            <strong className="admin-board-value">
+              <Tanteador value={summary.porCobrar} format={formatARS} />
+            </strong>
             <span className="admin-board-sub">
               {owing > 0
                 ? `${owing} ${owing === 1 ? "turno debe" : "turnos deben"}`
@@ -243,6 +293,7 @@ export default function AgendaView({
         </section>
 
         <section
+          ref={courtsRef}
           className="admin-day-courts"
           aria-labelledby="admin-day-courts-title"
         >
@@ -287,15 +338,21 @@ export default function AgendaView({
               />
             </div>
           ) : (
-            <CourtTimeline
-              courts={dayData.courts}
-              slots={dayData.slots}
-              activeDate={activeDate}
-              clubConfig={clubConfig}
-              now={now}
-              onAssign={onOpenCreate}
-              onOpenDetail={onOpenDetail}
-            />
+            <div
+              key={dayKey}
+              className="admin-day-slide"
+              data-dir={slideDir > 0 ? "next" : slideDir < 0 ? "prev" : "first"}
+            >
+              <CourtTimeline
+                courts={dayData.courts}
+                slots={dayData.slots}
+                activeDate={activeDate}
+                clubConfig={clubConfig}
+                now={now}
+                onAssign={onOpenCreate}
+                onOpenDetail={onOpenDetail}
+              />
+            </div>
           )}
         </section>
 

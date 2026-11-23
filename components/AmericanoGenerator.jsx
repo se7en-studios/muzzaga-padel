@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   generateFixtures,
   buildAmericanoShareMessage,
@@ -87,6 +87,33 @@ export default function AmericanoGenerator() {
   }, [names, fixtures, scores]);
 
   const matchesPerPlayer = Math.round((fixtures.length * 4) / playerCount);
+
+  // Tabla en vivo: cuando alguien pasa adelante, la fila viaja a su lugar
+  // (FLIP con transform) en vez de saltar. Solo visual.
+  const tablaRef = useRef(null);
+  const tablaPos = useRef(new Map());
+  useLayoutEffect(() => {
+    const ol = tablaRef.current;
+    if (!ol) {
+      tablaPos.current = new Map();
+      return;
+    }
+    const rows = [...ol.children];
+    const next = new Map(rows.map((li) => [li.dataset.jugador, li.getBoundingClientRect().top]));
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce) {
+      rows.forEach((li) => {
+        const before = tablaPos.current.get(li.dataset.jugador);
+        const now = next.get(li.dataset.jugador);
+        if (before === undefined || Math.abs(before - now) < 1) return;
+        li.animate(
+          [{ transform: `translateY(${before - now}px)` }, { transform: "none" }],
+          { duration: 420, easing: "cubic-bezier(0.34, 1.3, 0.64, 1)" },
+        );
+      });
+    }
+    tablaPos.current = next;
+  }, [ranking]);
 
   return (
     <section id="generador-americano" className="hx-tool hx-tool--americano">
@@ -187,14 +214,20 @@ export default function AmericanoGenerator() {
               </div>
             </div>
 
-            <ol className="hx-am-rondas">
-              {fixtures.map((fix) => {
+            {/* key: al cambiar la cantidad, el cuadro nuevo "da vuelta"
+                ronda por ronda como un tablero (ver herramientas.css). */}
+            <ol className="hx-am-rondas" key={playerCount}>
+              {fixtures.map((fix, i) => {
                 const roundScore = scores[fix.round] || { t1: "", t2: "" };
                 const hasScore = roundScore.t1 !== "" || roundScore.t2 !== "";
                 const a = Number(roundScore.t1) || 0;
                 const b = Number(roundScore.t2) || 0;
                 return (
-                  <li key={fix.round} className="hx-marcador hx-am-ronda">
+                  <li
+                    key={fix.round}
+                    className="hx-marcador hx-am-ronda"
+                    style={{ "--i": Math.min(i, 8) }}
+                  >
                     <div className="hx-am-ronda-cabeza">
                       <span className="hx-am-ronda-num">Ronda {fix.round}</span>
                       {fix.bye && (
@@ -253,9 +286,9 @@ export default function AmericanoGenerator() {
                     <p className="hx-paso-desc">Games ganados por cada jugador</p>
                   </div>
                 </div>
-                <ol className="hx-am-tabla">
+                <ol className="hx-am-tabla" ref={tablaRef}>
                   {ranking.map(([name, games], i) => (
-                    <li key={`${name}-${i}`}>
+                    <li key={name} data-jugador={name}>
                       <span className="hx-am-pos">{i + 1}</span>
                       <span className="hx-am-tabla-nombre">{name || `Jugador ${i + 1}`}</span>
                       <span className="hx-am-tabla-pts">

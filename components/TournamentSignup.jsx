@@ -8,10 +8,26 @@ import { tournamentDateText } from "../lib/tournament";
 
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
-/** Llave decorativa: cuartos → semis → final → copa, como en el inicio. */
-function Llave() {
+/**
+ * Llave decorativa: cuartos → semis → final → copa, como en el inicio. Las
+ * líneas van en un SVG propio, una ronda por grupo, para que el cuadro se
+ * "arme" de izquierda a derecha (torneos.css). También la usa /torneos
+ * cuando no hay torneo abierto.
+ */
+export function Llave() {
   return (
     <div className="tt-llave" aria-hidden="true">
+      <svg className="tt-llave-lineas" viewBox="0 0 244 100" width="244" height="100">
+        <g className="tt-llave-r1">
+          <path d="M52 12.5h7v25h-7M59 25h7M52 62.5h7v25h-7M59 75h7" />
+        </g>
+        <g className="tt-llave-r2">
+          <path d="M118 25h7v50h-7M125 50h7" />
+        </g>
+        <g className="tt-llave-r3">
+          <path d="M206 50h14" />
+        </g>
+      </svg>
       <div className="tt-llave-col">
         <i /><i /><i /><i />
       </div>
@@ -25,6 +41,32 @@ function Llave() {
     </div>
   );
 }
+
+/** El número del marcador, dígito por dígito: cada uno da vuelta como paleta. */
+function Digitos({ text }) {
+  return [...text].map((c, i) => (
+    <span key={i} className="tt-digito" style={{ "--d": i }}>
+      {c}
+    </span>
+  ));
+}
+
+// Festejo de la inscripción: pelotitas y papelitos que saltan desde el tilde.
+// Posiciones fijas (no al azar) para que servidor y cliente coincidan.
+const FESTEJO = [
+  { x: -94, y: -122, r: 200, t: "pelota" },
+  { x: 54, y: -162, r: -160, t: "pelota" },
+  { x: 162, y: -94, r: 260, t: "pelota" },
+  { x: 243, y: -40, r: -220, t: "pelota" },
+  { x: -40, y: -176, r: 320, t: "papel", c: "naranja" },
+  { x: 122, y: -189, r: -300, t: "papel", c: "azul" },
+  { x: 202, y: -148, r: 240, t: "papel", c: "naranja" },
+  { x: 297, y: -108, r: -260, t: "papel", c: "lima" },
+  { x: -81, y: -54, r: 180, t: "papel", c: "azul" },
+  { x: 351, y: -68, r: 300, t: "papel", c: "naranja" },
+  { x: 14, y: -81, r: -200, t: "papel", c: "lima" },
+  { x: 270, y: -189, r: 280, t: "papel", c: "azul" },
+];
 
 const waLink = (text) =>
   `https://wa.me/${CLUB_INFO.phoneRaw}?text=${encodeURIComponent(text)}`;
@@ -77,6 +119,10 @@ export default function TournamentSignup({ tournament }) {
   // "2026-12-12" → 12 / DIC para el marcador; sin fecha, signos de pregunta.
   const day = date ? date.slice(8, 10) : "";
   const month = date ? MESES[Number(date.slice(5, 7)) - 1] : "";
+  // Marcador de la planilla: cuántos pasos van completos (solo para pintar).
+  const pasos = [...(categories.length > 1 ? [Boolean(categoryId)] : []), okPair, okPhone];
+  const hechos = pasos.filter(Boolean).length;
+  const avance = hechos / pasos.length;
 
   return (
     <article className="tsu-card" aria-labelledby={`tsu-${id}`}>
@@ -84,7 +130,9 @@ export default function TournamentSignup({ tournament }) {
       <div className="tsu-poster">
         <div className="tt-marcador" aria-hidden="true">
           <span className="tt-marcador-label">Fecha</span>
-          <strong className="tt-marcador-num">{day || "¿?"}</strong>
+          <strong className="tt-marcador-num">
+            <Digitos text={day || "¿?"} />
+          </strong>
           <span className="tt-marcador-mes">{month || "Pronto"}</span>
         </div>
         <div className="tsu-info">
@@ -113,7 +161,18 @@ export default function TournamentSignup({ tournament }) {
 
       {done ? (
         <div className="tsu-done" role="status">
-          <span className="tsu-done-check" aria-hidden="true">✓</span>
+          <span className="tsu-done-check" aria-hidden="true">
+            ✓
+            <span className="tsu-festejo">
+              {FESTEJO.map((f, i) => (
+                <i
+                  key={i}
+                  className={`tsu-festejo-${f.t}${f.c ? ` is-${f.c}` : ""}`}
+                  style={{ "--x": `${f.x}px`, "--y": `${f.y}px`, "--r": `${f.r}deg`, "--d": `${(i % 4) * 40}ms` }}
+                />
+              ))}
+            </span>
+          </span>
           <strong className="tsu-done-title">¡Listo, quedaron anotados!</strong>
           <p className="tsu-done-pareja">
             {done.name} <span aria-hidden="true">/</span> {done.partner}
@@ -144,9 +203,25 @@ export default function TournamentSignup({ tournament }) {
           <p className="tsu-form-head">
             Inscribí tu pareja <span>Tarda un minuto</span>
           </p>
+          {/* Marcador de avance: se llena a medida que completás los pasos. */}
+          <div className={`tsu-prog${hechos === pasos.length ? " is-completo" : ""}`} aria-hidden="true">
+            <span className="tsu-prog-led">
+              <b key={hechos}>{hechos}</b>/{pasos.length}
+            </span>
+            <span className="tsu-prog-pista">
+              <span className="tsu-prog-relleno" style={{ transform: `scaleX(${avance})` }} />
+              <span className="tsu-prog-riel" style={{ transform: `translateX(${avance * 100}%)` }}>
+                <i className="tsu-prog-pelota" />
+              </span>
+            </span>
+            <span className="tsu-prog-txt">
+              {hechos === pasos.length ? "¡A inscribir!" : "Pasos"}
+            </span>
+          </div>
           <ol className="tsu-steps">
             {categories.length > 1 && (
               <li className={`tsu-step${categoryId ? " is-ok" : ""}`}>
+                <span className="tsu-step-red" aria-hidden="true" />
                 <fieldset className="tsu-cats">
                   <legend className="tsu-step-title">Elegí la categoría</legend>
                   <div className="tsu-chips">
@@ -175,6 +250,7 @@ export default function TournamentSignup({ tournament }) {
               </li>
             )}
             <li className={`tsu-step${okPair ? " is-ok" : ""}`}>
+              <span className="tsu-step-red" aria-hidden="true" />
               <p className="tsu-step-title">La pareja</p>
               <div className="tsu-pareja">
                 <label className="tsu-field">

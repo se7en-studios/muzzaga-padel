@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ExternalLink, LogOut, MoreHorizontal, Plus, Tv } from "lucide-react";
 import { ICON_PROPS, MOBILE_PRIMARY_IDS, NAV_ITEMS } from "../nav";
 import { useAnimatedOpen } from "./useAnimatedOpen";
+import { useNavIndicator } from "./motion";
 
 /**
  * Mobile (<768px): bottom nav con 4 secciones + "Más", y "Nueva Reserva"
@@ -25,6 +26,10 @@ export default function MobileNav({
   );
   const secondary = NAV_ITEMS.filter((n) => !MOBILE_PRIMARY_IDS.includes(n.id));
   const isSecondaryActive = secondary.some((n) => n.id === view);
+  // La pastilla de cancha detrás del ícono activo: una sola que viaja.
+  const slider = useNavIndicator(isSecondaryActive ? "mas" : view, {
+    selector: '[aria-current="page"] svg',
+  });
 
   useEffect(() => {
     if (!isMoreOpen) return;
@@ -50,7 +55,18 @@ export default function MobileNav({
         </button>
       )}
 
-      <nav className="admin-bottom-nav" aria-label="Secciones">
+      <nav
+        ref={slider.ref}
+        className={`admin-bottom-nav${slider.style ? " has-slider" : ""}`}
+        aria-label="Secciones"
+      >
+        {slider.style && (
+          <span
+            className="admin-nav-slider"
+            aria-hidden="true"
+            style={slider.style}
+          />
+        )}
         {primary.map(({ id, label, shortLabel, icon: Icon }) => (
           <button
             key={id}
@@ -90,10 +106,11 @@ export default function MobileNav({
             {/* Grilla de fichas: con el pulgar se acierta más fácil que a una
                 lista larga, y entran todas sin hacer scroll. */}
             <div className="admin-sheet-grid">
-              {secondary.map(({ id, label, icon: Icon }) => (
+              {secondary.map(({ id, label, icon: Icon }, i) => (
                 <button
                   key={id}
                   type="button"
+                  style={{ "--i": i }}
                   aria-current={view === id ? "page" : undefined}
                   onClick={() => go(id)}
                 >

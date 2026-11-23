@@ -36,6 +36,7 @@ import {
 import { businessDayInClub, todayInClub, isoAddDays } from "../../../lib/booking";
 import { JornadaNote } from "../adminHelpers";
 import { CLUB_INFO } from "../../../data/club";
+import Tanteador from "./agenda/Tanteador";
 
 const ICON = { size: 18, strokeWidth: 1.75, "aria-hidden": true };
 const BILL_DENOMINATIONS = [20000, 10000, 2000, 1000, 500, 200, 100];
@@ -64,6 +65,11 @@ const DIFF_TEXT = {
   major: "Diferencia grande: revisá antes de cerrar",
 };
 const EMPTY_BILLS = Object.fromEntries(BILL_DENOMINATIONS.map((d) => [d, ""]));
+// Billetes que se ven apilados detrás de cada billete del arqueo: más de
+// cuatro ya no se distinguen y solo suman capas.
+const PILE_MAX = 4;
+// Montos de la caja que corren como tanteador.
+const Plata = ({ value }) => <Tanteador value={value} format={formatARS} />;
 
 function diffLabel(diff) {
   if (!diff) return "$0";
@@ -108,6 +114,8 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
   const [closingNotes, setClosingNotes] = useState("");
   const [isClosing, setIsClosing] = useState(false);
   const [isReopening, setIsReopening] = useState(false);
+  // Solo para el festejo: la caja se cerró recién, en esta pantalla.
+  const [justClosed, setJustClosed] = useState(false);
 
   function handleBillChange(denom, val) {
     const nextCounts = { ...billCounts, [denom]: val };
@@ -124,6 +132,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
     setBillCounts(EMPTY_BILLS);
     setShowBillCalc(false);
     setClosingNotes("");
+    setJustClosed(false);
     loadSummary();
   }, [date]);
 
@@ -183,6 +192,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
       throw new Error(res.error || "No se pudo cerrar la caja.");
     }
     setIsClosing(false);
+    setJustClosed(true);
     onToast?.(`Caja cerrada por ${res.staff} · ${diffLabel(res.difference)}`);
     loadSummary();
     loadHistory();
@@ -195,6 +205,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
       throw new Error(res.error || "No se pudo reabrir la caja.");
     }
     setIsReopening(false);
+    setJustClosed(false);
     onToast?.(`Caja reabierta por ${res.staff}`);
     loadSummary();
     loadHistory();
@@ -312,7 +323,20 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
       {header}
 
       {isClosed && (
-        <div className="admin-closed-banner" role="status">
+        <div
+          className={`admin-closed-banner${justClosed ? " is-just-closed" : ""}`}
+          role="status"
+        >
+          {/* Festejo sobrio al cerrar: el candado se traba, una pelotita
+              cruza picando y una línea de cancha subraya el aviso. */}
+          {justClosed && (
+            <span className="admin-caja-closed-fx" aria-hidden="true">
+              <i className="admin-caja-closed-track">
+                <i className="admin-caja-closed-ball" />
+              </i>
+              <i className="admin-caja-closed-line" />
+            </span>
+          )}
           <Lock {...ICON} />
           <div>
             <strong>
@@ -367,7 +391,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
           <li className="is-in">
             <span className="admin-caja-formula-label">Efectivo turnos</span>
             <strong className="admin-caja-amount is-cobrado">
-              {formatARS(summary.cashTurnos)}
+              <Plata value={summary.cashTurnos} />
             </strong>
             <small>Cobrado en mano por turnos</small>
           </li>
@@ -375,7 +399,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
           <li className="is-in">
             <span className="admin-caja-formula-label">Efectivo cantina</span>
             <strong className="admin-caja-amount is-cobrado">
-              {formatARS(summary.cashCantina)}
+              <Plata value={summary.cashCantina} />
             </strong>
             <small>Ventas del tercer tiempo</small>
           </li>
@@ -383,7 +407,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
           <li className="is-out">
             <span className="admin-caja-formula-label">Egresos</span>
             <strong className="admin-caja-amount">
-              {formatARS(-summary.totalExpenses)}
+              <Plata value={-summary.totalExpenses} />
             </strong>
             <small>
               {summary.expensesList.length
@@ -395,7 +419,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
           <li className="is-result">
             <span className="admin-caja-formula-label">Esperado en cajón</span>
             <strong className="admin-caja-amount">
-              {formatARS(summary.expectedCash)}
+              <Plata value={summary.expectedCash} />
             </strong>
             <small>Efectivo físico a controlar</small>
           </li>
@@ -411,7 +435,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
           <div>
             <span>Transferencias</span>
             <strong className="admin-caja-amount is-cobrado">
-              {formatARS(summary.transferTurnos + summary.transferCantina)}
+              <Plata value={summary.transferTurnos + summary.transferCantina} />
             </strong>
             <small>
               Turnos {formatARS(summary.transferTurnos)} · Cantina{" "}
@@ -424,7 +448,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
           <div>
             <span>Mercado Pago</span>
             <strong className="admin-caja-amount is-cobrado">
-              {formatARS(summary.mpTurnos + summary.mpCantina)}
+              <Plata value={summary.mpTurnos + summary.mpCantina} />
             </strong>
             <small>
               Turnos {formatARS(summary.mpTurnos)} · Cantina{" "}
@@ -441,7 +465,7 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
             <Receipt {...ICON} /> Egresos del día
             {summary.totalExpenses > 0 && (
               <span className="admin-caja-card-total">
-                {formatARS(-summary.totalExpenses)}
+                <Plata value={-summary.totalExpenses} />
               </span>
             )}
           </h3>
@@ -527,8 +551,13 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
           ) : (
             <div className="admin-caja-receipt">
             <ul className="admin-expense-list">
-              {summary.expensesList.map((x) => (
-                <li key={x.id} className="admin-expense-row" data-cat={x.category}>
+              {summary.expensesList.map((x, i) => (
+                <li
+                  key={x.id}
+                  className="admin-expense-row"
+                  data-cat={x.category}
+                  style={{ "--i": Math.min(i, 8) }}
+                >
                   <span className="admin-caja-cat-icon" data-cat={x.category}>
                     <CategoryIcon id={x.category} size={18} />
                   </span>
@@ -566,7 +595,9 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                     {plural(summary.expensesList.length, "salida", "salidas")}
                   </small>
                 </span>
-                <strong>{formatARS(-summary.totalExpenses)}</strong>
+                <strong>
+                  <Plata value={-summary.totalExpenses} />
+                </strong>
               </div>
             </div>
           )}
@@ -626,6 +657,16 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                             className={`admin-bill-field${qty > 0 ? " has-qty" : ""}`}
                             data-denom={denom}
                           >
+                            {/* Los billetes contados se apilan detrás del
+                                billete, como fichas sobre el mostrador. */}
+                            <span className="admin-bill-pile" aria-hidden="true">
+                              {Array.from(
+                                { length: Math.min(Math.max(qty - 1, 0), PILE_MAX) },
+                                (_, k) => (
+                                  <i key={k} style={{ "--k": k + 1 }} />
+                                ),
+                              )}
+                            </span>
                             <span className="admin-bill-note" aria-hidden="true">
                               <span>{formatARS(denom)}</span>
                             </span>
@@ -667,7 +708,13 @@ export default function CajaView({ initialDate, onExpiredSession, onToast }) {
                     <div className="admin-bill-calc-foot">
                       <span className="admin-bill-total">
                         Total en billetes
-                        <strong>{formatARS(billTotal)}</strong>
+                        <strong>
+                          <Tanteador
+                            value={billTotal}
+                            format={formatARS}
+                            duration={320}
+                          />
+                        </strong>
                       </span>
                       <button
                         type="button"

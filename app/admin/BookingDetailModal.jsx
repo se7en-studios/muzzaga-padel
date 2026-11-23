@@ -17,6 +17,8 @@ import PlayerNamesFields from "./ui/PlayerNamesFields";
 import { bookingTotal, onAccountTotal } from "../../lib/metrics";
 import { formatDate, plural } from "../../lib/format";
 import StaffPinModal from "./ui/StaffPinModal";
+import BusyButton from "./ui/BusyButton";
+import { useExitAnimation } from "./ui/motion";
 import {
   IconClose,
   IconTrash,
@@ -81,6 +83,10 @@ export default function BookingDetailModal({
     booking.startTime || "14:00",
   );
   const [moveSubmitting, setMoveSubmitting] = useState(false);
+  // Qué medio de pago se tocó, para que la pelotita pique en ese botón.
+  const [tappedMethod, setTappedMethod] = useState(null);
+  // Al cerrar con la X o tocando afuera, la hoja sale antes de desmontarse.
+  const exit = useExitAnimation(onClose);
   const [moveError, setMoveError] = useState("");
   // Jugadores: lo guardado se muestra al toque, sin esperar que se recargue
   // el día (savedPlayers pisa lo que trae el turno hasta entonces).
@@ -207,7 +213,10 @@ export default function BookingDetailModal({
   }
 
   return (
-    <div className="admin-modal-backdrop" onClick={onClose}>
+    <div
+      className={`admin-modal-backdrop${exit.closing ? " is-closing" : ""}`}
+      onClick={exit.close}
+    >
       <div
         className="admin-modal-card admin-detail admin-bk admin-bk--detail"
         role="dialog"
@@ -230,7 +239,7 @@ export default function BookingDetailModal({
             <button
               type="button"
               className="admin-detail-close admin-bk-close"
-              onClick={onClose}
+              onClick={exit.close}
               aria-label="Cerrar"
             >
               <IconClose size={18} /> <span>Cerrar</span>
@@ -362,17 +371,19 @@ export default function BookingDetailModal({
               </p>
               <div className="admin-detail-pay-methods">
                 {PAYMENT_METHODS.map((m) => (
-                  <button
+                  <BusyButton
                     key={m.value}
                     type="button"
                     className="admin-detail-pay-btn"
                     disabled={paymentSubmitting}
-                    onClick={() =>
-                      onAddPayment(null, { method: m.value, amount: pending })
-                    }
+                    busy={paymentSubmitting && tappedMethod === m.value}
+                    onClick={() => {
+                      setTappedMethod(m.value);
+                      onAddPayment(null, { method: m.value, amount: pending });
+                    }}
                   >
                     {m.label}
-                  </button>
+                  </BusyButton>
                 ))}
               </div>
 
@@ -430,17 +441,19 @@ export default function BookingDetailModal({
                       ))}
                     </select>
                   </label>
-                  <button
+                  <BusyButton
                     type="submit"
                     className="btn btn-linear-primary admin-detail-submit"
                     disabled={paymentSubmitting || !paymentForm.amount}
+                    busy={paymentSubmitting && !tappedMethod}
+                    onClick={() => setTappedMethod(null)}
                   >
                     {paymentSubmitting
                       ? "Guardando…"
                       : paymentForm.amount
                         ? `Anotar cobro de ${formatARS(paymentForm.amount)}`
                         : "Anotar cobro"}
-                  </button>
+                  </BusyButton>
                 </form>
               )}
             </div>
@@ -491,13 +504,14 @@ export default function BookingDetailModal({
                     >
                       Volver
                     </button>
-                    <button
+                    <BusyButton
                       type="submit"
                       className="btn btn-linear-primary"
                       disabled={playersSaving}
+                      busy={playersSaving}
                     >
                       {playersSaving ? "Guardando…" : "Guardar jugadores"}
-                    </button>
+                    </BusyButton>
                   </div>
                 </form>
               ) : (
@@ -727,13 +741,14 @@ export default function BookingDetailModal({
                     >
                       Volver
                     </button>
-                    <button
+                    <BusyButton
                       type="submit"
                       className="btn btn-linear-primary"
                       disabled={moveSubmitting}
+                      busy={moveSubmitting}
                     >
                       {moveSubmitting ? "Cambiando…" : "Guardar el cambio"}
-                    </button>
+                    </BusyButton>
                   </div>
                 </form>
               )}

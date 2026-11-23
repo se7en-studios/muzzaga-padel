@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   buildTacticWhatsAppUrl,
   buildRopeWhatsAppUrl,
@@ -298,6 +298,22 @@ export default function TacticalCourtSimulator() {
     r2: { x: 190, y: 190, label: "R2" },
   });
   const [selectedFreePlayer, setSelectedFreePlayer] = useState("p1");
+  // Solo visual: el "pique" donde tocaste la cancha en el modo libre.
+  const [tapFx, setTapFx] = useState(null);
+
+  // La pelota de la jugada da vueltas sin fin (SMIL): se frena cuando la
+  // cancha sale de pantalla para no gastar batería en el celu.
+  const courtRef = useRef(null);
+  useEffect(() => {
+    const svg = courtRef.current;
+    if (!svg || !("IntersectionObserver" in window) || !svg.pauseAnimations) return undefined;
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) svg.unpauseAnimations();
+      else svg.pauseAnimations();
+    });
+    io.observe(svg);
+    return () => io.disconnect();
+  }, []);
 
   const tactic =
     PRESET_TACTICS.find((t) => t.id === activeTacticId) || PRESET_TACTICS[0];
@@ -323,6 +339,7 @@ export default function TacticalCourtSimulator() {
     const boundedX = Math.max(30, Math.min(270, x));
     const boundedY = Math.max(30, Math.min(470, y));
 
+    setTapFx({ x: boundedX, y: boundedY, k: Date.now() });
     setFreePlayers((prev) => ({
       ...prev,
       [selectedFreePlayer]: {
@@ -518,6 +535,7 @@ export default function TacticalCourtSimulator() {
             </div>
 
             <svg
+              ref={courtRef}
               className="tactical-court-svg"
               viewBox="0 0 300 500"
               preserveAspectRatio="xMidYMid meet"
@@ -706,7 +724,9 @@ export default function TacticalCourtSimulator() {
 
               {/* MODO ROPE: Danger Zone & Rope Line */}
               {boardMode === "rope" && (
-                <>
+                // key: al cambiar de momento la cuerda aparece cuando los
+                // jugadores ya llegaron a su lugar (se deslizan con CSS).
+                <g key={rope.id} className="hx-pz-cuerda">
                   <line
                     x1={currentPlayers.p1.x}
                     y1={currentPlayers.p1.y}
@@ -738,7 +758,7 @@ export default function TacticalCourtSimulator() {
                   >
                     {rope.dangerZone.label}
                   </text>
-                </>
+                </g>
               )}
 
               {/* MODO PRESETS: Animated Trajectory & Ball.
@@ -787,6 +807,8 @@ export default function TacticalCourtSimulator() {
                   {/* Bounce Indicator */}
                   {tactic.bouncePos && (
                     <g
+                      key={`pique-${tactic.id}`}
+                      className="hx-pz-pique"
                       transform={`translate(${tactic.bouncePos.x}, ${tactic.bouncePos.y})`}
                     >
                       <circle
@@ -813,6 +835,8 @@ export default function TacticalCourtSimulator() {
                   {/* Wall Impact Indicator */}
                   {tactic.wallPos && (
                     <g
+                      key={`rebote-${tactic.id}`}
+                      className="hx-pz-pique hx-pz-pique--pared"
                       transform={`translate(${tactic.wallPos.x}, ${tactic.wallPos.y})`}
                     >
                       <circle
@@ -836,9 +860,23 @@ export default function TacticalCourtSimulator() {
                 </g>
               )}
 
+              {/* Pique donde tocaste (modo libre): anillo que se abre y se va. */}
+              {boardMode === "free" && tapFx && (
+                <g
+                  key={tapFx.k}
+                  transform={`translate(${tapFx.x}, ${tapFx.y})`}
+                  aria-hidden="true"
+                >
+                  <circle className="hx-pz-toque" r="18" fill="none" stroke="#d7f03a" strokeWidth="2.5" />
+                </g>
+              )}
+
               {/* PLAYERS (Equipo Naranja / Muzzaga) */}
               <g
-                transform={`translate(${currentPlayers.p1.x}, ${currentPlayers.p1.y})`}
+                className="hx-pz-jugador"
+                style={{
+                  transform: `translate(${currentPlayers.p1.x}px, ${currentPlayers.p1.y}px)`,
+                }}
               >
                 <circle
                   r="13"
@@ -860,7 +898,10 @@ export default function TacticalCourtSimulator() {
               </g>
 
               <g
-                transform={`translate(${currentPlayers.p2.x}, ${currentPlayers.p2.y})`}
+                className="hx-pz-jugador"
+                style={{
+                  transform: `translate(${currentPlayers.p2.x}px, ${currentPlayers.p2.y}px)`,
+                }}
               >
                 <circle
                   r="13"
@@ -883,7 +924,10 @@ export default function TacticalCourtSimulator() {
 
               {/* RIVALS (Equipo Cyan) */}
               <g
-                transform={`translate(${currentPlayers.r1.x}, ${currentPlayers.r1.y})`}
+                className="hx-pz-jugador"
+                style={{
+                  transform: `translate(${currentPlayers.r1.x}px, ${currentPlayers.r1.y}px)`,
+                }}
               >
                 <circle
                   r="12"
@@ -905,7 +949,10 @@ export default function TacticalCourtSimulator() {
               </g>
 
               <g
-                transform={`translate(${currentPlayers.r2.x}, ${currentPlayers.r2.y})`}
+                className="hx-pz-jugador"
+                style={{
+                  transform: `translate(${currentPlayers.r2.x}px, ${currentPlayers.r2.y}px)`,
+                }}
               >
                 <circle
                   r="12"
@@ -933,7 +980,10 @@ export default function TacticalCourtSimulator() {
           </div>
 
           {/* EXPLICACIÓN */}
-          <div className="tactical-info-card hx-pz-info">
+          <div
+            className="tactical-info-card hx-pz-info"
+            key={`${boardMode}-${boardMode === "presets" ? tactic.id : boardMode === "rope" ? rope.id : "libre"}`}
+          >
             {boardMode === "presets" && (
               <>
                 <div>

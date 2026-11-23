@@ -31,6 +31,7 @@ import {
   isInactiveClient,
 } from "../../../lib/clientsExport";
 import { EmptyState } from "../ui/states";
+import CountUp from "../ui/CountUp";
 import { ClientesSkeleton } from "./Esqueletos";
 import { WhatsAppMiniIcon } from "../adminHelpers";
 import ClientDrawer, { avatarTone, initials } from "./clientes/ClientDrawer";
@@ -202,7 +203,9 @@ export default function ClientesView({
                 </span>
                 <span className="cc-board-label">{meta.label}</span>
               </span>
-              <strong className="cc-board-num">{counts[s.id]}</strong>
+              <strong className="cc-board-num">
+                <CountUp value={counts[s.id]} />
+              </strong>
               <span className="cc-board-hint">{meta.hint}</span>
               {/* Qué parte de la base es este segmento, de un vistazo. */}
               <span className="cc-board-share" aria-hidden>

@@ -1715,10 +1715,116 @@
 
 /* ==========================================================================
    MOVIMIENTO: cortito y solo si la persona no pidió menos animaciones.
+   Todo con transform/opacity. Lo que se repite (pelotita de "ahora", luz
+   del turno en juego, chip "En juego") corre solo con la grilla en pantalla:
+   AgendaView le pone [data-onscreen] a .admin-day-courts con un
+   IntersectionObserver.
    ========================================================================== */
+
+/* ---------- Estático (vale también con "reducir movimiento") ---------- */
+
+/* La barrita de ocupación se llena con scaleX (AgendaView), no con width. */
+.admin-root .admin-board-meter span {
+  width: 100%;
+  transform-origin: left center;
+}
+
+/* Tanteador: cifras de ancho fijo, así el número no "baila" mientras corre. */
+.admin-root .admin-agenda .admin-tanteador {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ícono del estado de cobro en la etiqueta: se distingue pagado / seña /
+   debe sin depender solo del color. */
+.admin-root .admin-agenda .admin-slot-badge-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+
+@media (max-width: 767px) {
+  .admin-root .admin-agenda .admin-slot.is-taken .admin-slot-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .admin-root .admin-agenda .admin-slot-badge-icon {
+    order: -1;
+    margin-right: 0;
+  }
+}
+
+/* Reloj de la franja en juego: una barrita que se llena como el tiempo de
+   una transmisión. En la compu va sobre la hora naranja; en el celu, debajo
+   de la hora. */
+.admin-root .admin-agenda .admin-timeline-clock {
+  display: block;
+  width: 100%;
+  max-width: 64px;
+  height: 4px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.admin-root .admin-agenda .admin-timeline-clock > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #d7f03a;
+  transform: scaleX(var(--p, 0));
+  transform-origin: left center;
+}
+
+@media (max-width: 767px) {
+  .admin-root .admin-agenda .admin-timeline-clock {
+    max-width: 46px;
+    background: rgba(232, 114, 42, 0.18);
+  }
+
+  .admin-root .admin-agenda .admin-timeline-clock > i {
+    background: var(--brand, #e8722a);
+  }
+}
+
+/* La línea de "ahora" adentro de la franja en juego (en la compu): la fila
+   es la referencia y la línea cae en el minuto exacto de esa franja. */
+@media (min-width: 768px) {
+  .admin-root .admin-agenda .admin-timeline-row.is-current {
+    position: relative;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-now.is-in-row {
+    right: 0;
+  }
+}
+
+/* Luz LED del turno en juego: un aro amarillo pelota por dentro de la
+   cancha (la cancha tiene overflow: hidden, por eso va inset). */
+.admin-root .admin-agenda .admin-timeline-row.is-current .admin-slot.is-taken:not([data-state="bloqueado"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 2px #e9ff6b,
+    inset 0 0 18px rgba(215, 240, 58, 0.5);
+  pointer-events: none;
+}
+
+/* La grilla se desliza al cambiar de día: el borde que la recorta es el de
+   la sección, así no aparece scroll de costado en el celu. */
+.admin-root .admin-agenda .admin-day-courts {
+  overflow-x: clip;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .admin-root .admin-board-meter span {
-    transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .admin-root .admin-board-next-cta {
@@ -1729,7 +1835,7 @@
     transform: translateX(3px);
   }
 
-  .admin-root .admin-live-chip.is-on::before {
+  .admin-root .admin-day-courts[data-onscreen] .admin-live-chip.is-on::before {
     animation: adminAgendaLive 1.8s ease-in-out infinite;
   }
 
@@ -1739,6 +1845,74 @@
 
   .admin-root .admin-agenda .admin-timeline-row:not(.is-past) .admin-slot.is-taken:not([data-state="bloqueado"]):hover {
     transform: translateY(-1px);
+  }
+
+  /* ---------- Cambio de día: la grilla entra del lado elegido ---------- */
+  .admin-root .admin-agenda .admin-day-slide[data-dir="next"] {
+    animation: adminDayFromRight 0.34s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+
+  .admin-root .admin-agenda .admin-day-slide[data-dir="prev"] {
+    animation: adminDayFromLeft 0.34s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+
+  /* ---------- Los turnos entran escalonados, como jugadores a la cancha.
+     `backwards`: el estado inicial solo durante la espera; al terminar no
+     queda pisando el hover ni el toque. ---------- */
+  .admin-root .admin-agenda .admin-timeline .admin-slot {
+    animation: adminSlotIn 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: calc(80ms + var(--i, 0) * 24ms);
+  }
+
+  /* ---------- Cambio de estado de cobro: la etiqueta da vuelta como un
+     cartel de marcador y el ícono pica como pelota. ---------- */
+  .admin-root .admin-agenda .admin-slot.is-state-changed .admin-slot-badge {
+    animation: adminBadgeFlip 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.15) backwards;
+  }
+
+  .admin-root .admin-agenda .admin-slot.is-state-changed .admin-slot-badge-icon {
+    animation: adminBadgeBall 0.6s ease-out 0.25s backwards;
+  }
+
+  /* ---------- En juego ---------- */
+  /* Luz LED: el aro respira; quieto si la grilla no está en pantalla. */
+  .admin-root .admin-agenda .admin-day-courts[data-onscreen] .admin-timeline-row.is-current .admin-slot.is-taken:not([data-state="bloqueado"])::after {
+    animation: adminLed 1.7s ease-in-out infinite;
+  }
+
+  /* La pelotita de la línea de "ahora" late como el punto rojo de "en vivo". */
+  .admin-root .admin-agenda .admin-timeline-now::after {
+    content: "";
+    position: absolute;
+    left: -2px;
+    top: -7px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #d7f03a;
+    border-radius: 50%;
+    box-sizing: border-box;
+    opacity: 0;
+  }
+
+  .admin-root .admin-agenda .admin-day-courts[data-onscreen] .admin-timeline-now::after {
+    animation: adminNowPing 2s ease-out infinite;
+  }
+
+  .admin-root .admin-agenda .admin-timeline-clock > i {
+    transition: transform 1s linear;
+  }
+
+  /* ---------- Tira de días: el número elegido pica ---------- */
+  .admin-root .admin-agenda .admin-daychip[aria-selected="true"] strong {
+    animation: adminDayPick 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+  }
+
+  .admin-root .admin-agenda .admin-daychip {
+    transition: transform 0.12s ease;
+  }
+
+  .admin-root .admin-agenda .admin-daychip:active:not(:disabled) {
+    transform: scale(0.94);
   }
 
   /* Celu: al tocar una cancha se hunde apenas, así se siente el toque. */
@@ -1753,7 +1927,7 @@
       transform: scale(0.97);
     }
 
-    .admin-root .admin-agenda .admin-timeline-row.is-current .admin-timeline-live::before {
+    .admin-root .admin-agenda .admin-day-courts[data-onscreen] .admin-timeline-row.is-current .admin-timeline-live::before {
       animation: adminAgendaBall 1.4s ease-in-out infinite;
     }
 
@@ -1766,8 +1940,89 @@
 
   @keyframes adminAgendaLive {
     50% {
-      box-shadow: 0 0 0 6px rgba(232, 114, 42, 0);
-      opacity: 0.55;
+      opacity: 0.45;
+      transform: scale(0.8);
+    }
+  }
+
+  @keyframes adminDayFromRight {
+    from {
+      opacity: 0;
+      transform: translateX(36px);
+    }
+  }
+
+  @keyframes adminDayFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-36px);
+    }
+  }
+
+  @keyframes adminSlotIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+    }
+  }
+
+  @keyframes adminBadgeFlip {
+    0% {
+      opacity: 0;
+      transform: perspective(240px) rotateX(-90deg);
+    }
+    60% {
+      opacity: 1;
+      transform: perspective(240px) rotateX(14deg);
+    }
+    100% {
+      transform: perspective(240px) rotateX(0);
+    }
+  }
+
+  @keyframes adminBadgeBall {
+    0% {
+      transform: translateY(-7px) scale(0.6);
+    }
+    45% {
+      transform: translateY(0) scale(1.25, 0.8);
+    }
+    70% {
+      transform: translateY(-2px) scale(1);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes adminLed {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.25;
+    }
+  }
+
+  @keyframes adminNowPing {
+    0% {
+      opacity: 0.9;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(2.6);
+    }
+  }
+
+  @keyframes adminDayPick {
+    0% {
+      transform: translateY(-5px) scale(0.85);
+    }
+    60% {
+      transform: translateY(1px) scale(1.08);
     }
   }
 }

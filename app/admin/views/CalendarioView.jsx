@@ -14,6 +14,7 @@ import { adminGetMonthStats } from "../actions";
 import { todayInClub } from "../../../lib/booking";
 import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
 import { EmptyState, Skeleton } from "../ui/states";
+import CountUp from "../ui/CountUp";
 
 const MONTH_NAMES = [
   "Enero",
@@ -144,7 +145,11 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
             <div className="admin-kravio-kpi-content">
               <div className="admin-kravio-kpi-left">
                 <div className="admin-kravio-kpi-number">
-                  {formatPct(monthStats.ocupacionPct)}
+                  {monthStats.ocupacionPct == null ? (
+                    formatPct(monthStats.ocupacionPct)
+                  ) : (
+                    <CountUp value={monthStats.ocupacionPct} format={formatPct} />
+                  )}
                 </div>
                 <span className="admin-cell-sub">
                   Promedio en {MONTH_NAMES[month - 1]} {year}
@@ -161,7 +166,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
             <div className="admin-kravio-kpi-content">
               <div className="admin-kravio-kpi-left">
                 <div className="admin-kravio-kpi-number">
-                  {monthStats.totals.turnos} {monthStats.totals.turnos === 1 ? "Turno" : "Turnos"}
+                  <CountUp value={monthStats.totals.turnos} /> {monthStats.totals.turnos === 1 ? "Turno" : "Turnos"}
                 </div>
                 <span className="admin-cell-sub">
                   Jugados y reservados
@@ -178,7 +183,7 @@ export default function CalendarioView({ onSelectDate, onExpiredSession }) {
             <div className="admin-kravio-kpi-content">
               <div className="admin-kravio-kpi-left">
                 <div className="admin-kravio-kpi-number" style={{ color: "#15803d" }}>
-                  {formatARS(monthStats.totals.cobrado)}
+                  <CountUp value={monthStats.totals.cobrado} format={formatARS} />
                 </div>
                 <span className="admin-cell-sub">
                   Ingresos de turnos y cantina

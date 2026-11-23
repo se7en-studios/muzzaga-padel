@@ -362,7 +362,14 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
         <>
           {head}
           <div className="menu-cart-body menu-cart-empty">
-            <ShoppingBasket size={32} className="icono-marca" aria-hidden="true" />
+            {/* Cancha vacía: la pelota pica sola esperando el primer pedido. */}
+            <span className="menu-cart-vacio" aria-hidden="true">
+              <span className="menu-cart-vacio-pelota">
+                <span className="carta-pelota" />
+              </span>
+              <span className="menu-cart-vacio-sombra" />
+              <ShoppingBasket size={30} className="icono-marca menu-cart-vacio-canasto" />
+            </span>
             <p>
               Todavía no sumaste nada. Tocá «Agregar» en cada producto para
               sumarlo al pedido.
@@ -383,8 +390,8 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
         {head}
         <div className="menu-cart-body">
           <ul className="menu-cart-lines">
-            {lines.map((line) => (
-              <li key={line.id}>
+            {lines.map((line, i) => (
+              <li key={line.id} style={{ "--i": i }}>
                 <span className="menu-cart-line-name">
                   {line.name}
                   <small>{formatARS(line.price)} c/u</small>
@@ -481,7 +488,8 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
         <div className="menu-cart-foot">
           <div className="menu-cart-total">
             <span>Total</span>
-            <strong>{formatARS(total)}</strong>
+            {/* key: cada cambio de total "da vuelta" el marcador. */}
+            <strong key={total}>{formatARS(total)}</strong>
           </div>
           <PayNotice payWith={payWith} />
           {sendError && (
@@ -543,7 +551,9 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
               {plural(count, "producto", "productos")} · {deliverTo}
             </small>
           </span>
-          <strong className="menu-cart-bar-total">{formatARS(total)}</strong>
+          <strong key={total} className="menu-cart-bar-total">
+            {formatARS(total)}
+          </strong>
           <span className="menu-cart-bar-arrow" aria-hidden="true">
             <ChevronRight size={22} strokeWidth={2.5} />
           </span>
