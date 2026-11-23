@@ -40,6 +40,20 @@
     --pie-linea: rgba(255, 255, 255, 0.55);
     --pie-panel: rgba(255, 255, 255, 0.05);
   }
+
+  /* El tablero de LED, en el negro azulado de la noche (era un gris pardo
+     que no combinaba con el pie azul). */
+  .pie-tablero {
+    background:
+      radial-gradient(rgba(150, 180, 255, 0.07) 1px, transparent 1.3px) 0 0 / 6px 6px,
+      linear-gradient(180deg, #121a36 0%, #060a18 100%);
+  }
+
+  /* "Catriel, Río Negro": blanco sobre #e8722a daba 3,1:1; con el naranja
+     de botón, 4,6:1. */
+  .pie-sitio .pie-lugar {
+    background: var(--btn-naranja, #bf5512);
+  }
 }
 
 /* La línea de fondo: marco blanco de cancha, abierto abajo (ahí sigue el
@@ -143,7 +157,7 @@
   align-self: flex-start;
   padding: 3px 8px 2px;
   border-radius: 4px;
-  background: #e8722a;
+  background: var(--btn-naranja, #bf5512); /* blanco a 4,6:1 */
   color: #ffffff;
   font-family: var(--pie-display);
   font-size: 12.5px;

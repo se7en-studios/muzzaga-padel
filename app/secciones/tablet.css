@@ -1,0 +1,101 @@
+/* tablet: se carga al final de la home (app/page.js).
+   Solo el rango tablet (768-1180). Ni el celu (<768) ni la compu (>=1181)
+   cambian. */
+
+/* ==========================================================================
+   Tablet vertical (768-900): la home usa el armado del celu, pero con
+   736-868px de ancho algunas piezas quedaban estiradas.
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 900px) {
+  /* Hero: "Reservar turno" no hace falta de lado a lado (a 768 medía 736px);
+     un botón firme a la izquierda, alineado con el título. */
+  .hero-night .hero-night-ctas {
+    width: auto;
+    flex-direction: row;
+  }
+
+  .hero-night .hero-btn-primary {
+    width: auto;
+    min-width: 320px;
+    height: 56px;
+    padding-inline: 36px;
+  }
+}
+
+/* ==========================================================================
+   768-1023: encabezados con mascota. A 768 la mascota de Preguntas
+   frecuentes quedaba sola en un renglón, con un hueco a la derecha.
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :where(#top ~ *) .section-header-row:has(> .header-aside) {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  :where(#top ~ *) .section-header-row > .header-aside {
+    width: auto;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
+
+/* ==========================================================================
+   Tablet apaisada y compus chicas (901-1180): el diseño de compu, apretado.
+   ========================================================================== */
+@media (min-width: 901px) and (max-width: 1100px) {
+  /* Tablero de turnos del hero: con ~400px el rótulo se partía en cuatro
+     renglones ("Turnos / libres · en / vivo") al lado del precio. */
+  .htab-kicker {
+    white-space: nowrap;
+  }
+
+  .htab-kicker-extra {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1180px) {
+  /* Torneos: el afiche en una fila (datos · llave · botón) dejaba al título
+     en ~180px y lo partía en "PRÓXI / MO". Sin la llave, el título respira
+     y el botón queda a la derecha. */
+  .tn-afiche {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "kicker cta"
+      "main   cta"
+      "datos  cta";
+    column-gap: 28px;
+  }
+
+  .tn-llave {
+    display: none;
+  }
+
+  .tn-afiche-titulo {
+    font-size: 52px;
+    overflow-wrap: normal;
+  }
+
+  .tn-afiche-cta {
+    margin-right: 56px;
+  }
+
+  /* Herramientas: de a cuatro las tarjetas medían ~230px y los botones se
+     partían en dos renglones ("Abrir / calculadora"). De a dos, como en
+     tablet vertical, pero con la ilustración más alta. */
+  .hl-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .hl-cancha {
+    height: 168px;
+  }
+
+  .hl-title {
+    font-size: 32px;
+  }
+}

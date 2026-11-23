@@ -2877,3 +2877,21 @@
     }
   }
 }
+
+/* --------------------------------------------------------------------------
+   PANTALLA GRANDE (compu de 1280 px o más)
+   Las herramientas son formularios: con más ancho los renglones se harían
+   larguísimos, así que crecen menos que la home (70vw, tope 1360 px) para no
+   quedar como una columna perdida a 1920 sin estirarse de más. La barra de
+   arriba y el pie siguen el mismo ancho. Solo en estas páginas: todo va
+   colgado de :root:has(.hx-nav).
+   -------------------------------------------------------------------------- */
+@media (min-width: 1280px) {
+  :root:has(.hx-nav) {
+    --pg-ancho: clamp(1200px, 70vw, 1360px);
+  }
+
+  :where(:root:has(.hx-nav)) :is(.container, .nav-inner) {
+    max-width: var(--pg-ancho, 1200px);
+  }
+}

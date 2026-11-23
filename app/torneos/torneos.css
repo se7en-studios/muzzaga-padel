@@ -1995,3 +1995,52 @@
     margin: 0 6px;
   }
 }
+
+/* --------------------------------------------------------------------------
+   PANTALLA GRANDE (compu de 1280 px o más)
+   El contenedor de 1200 px dejaba casi 40% de pantalla vacía a 1920. Ahora
+   crece con la pantalla (76vw, entre 1200 y 1520, igual que la home), con la
+   barra de arriba y el pie al mismo ancho. Solo en esta página: todo va
+   colgado de :root:has(.tt-page).
+   -------------------------------------------------------------------------- */
+@media (min-width: 1280px) {
+  :root:has(.tt-page) {
+    --pg-ancho: clamp(1200px, 76vw, 1520px);
+  }
+
+  :where(:root:has(.tt-page)) :is(.container, .nav-inner) {
+    max-width: var(--pg-ancho, 1200px);
+  }
+}
+
+@media (min-width: 1280px) {
+  /* Podios: con el ancho nuevo, auto-fill de 220 px armaba 6 columnas para
+     4 fotos y dejaba media fila vacía. Con el mínimo atado al ancho vuelven a
+     ser 4 columnas que llenan la fila (de 1280 a 1920). */
+  .tg-podio {
+    grid-template-columns: repeat(auto-fill, minmax(clamp(220px, 18vw, 300px), 1fr));
+  }
+}
+
+/* ==========================================================================
+   TABLET VERTICAL (768-960): el afiche ya va arriba y "Cómo te anotás"
+   abajo, a lo ancho. Los pasos quedan a la izquierda y el botón de WhatsApp
+   a la derecha, a su altura, en vez de una barra naranja de 680 px.
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 960px) {
+  .tt-pronto-side {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    column-gap: 32px;
+  }
+
+  .tt-pronto-side > .tsu-form-head {
+    grid-column: 1 / -1;
+  }
+
+  .tt-pronto-side > .tt-cta {
+    grid-column: 2;
+    align-self: end;
+    padding-inline: 32px;
+  }
+}

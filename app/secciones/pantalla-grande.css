@@ -1,0 +1,104 @@
+/* ==========================================================================
+   PANTALLA GRANDE (compu de 1280 px o más): se carga al final de la home
+   (app/page.js). Todo va dentro de @media (min-width: 1280px) o más, así
+   celu y tablet no cambian.
+
+   Solo en la home: `:where(#top ~ *)` es "después del hero" (mismo truco que
+   landing.css) y `:root:has(#top.hero-night)` para la barra de arriba, que va
+   antes del hero. Así, si se navega a otra página sin recargar, esta hoja
+   sigue cargada pero no le toca nada.
+
+   Qué resuelve: con el contenedor fijo en 1200 px, a 1920 la página quedaba
+   como una columna angosta en el medio (casi 40% de pantalla vacía a los
+   costados). Ahora el ancho crece con la pantalla (76vw, entre 1200 y 1520),
+   la barra de arriba y el pie siguen ese mismo ancho, los títulos escalan y
+   el aire entre secciones acompaña.
+   ========================================================================== */
+
+@media (min-width: 1280px) {
+  /* Un solo ancho para todo: barra, hero, secciones y pie. 76vw da 1200 hasta
+     ~1580 px de pantalla (igual que antes), 1277 a 1680 y 1459 a 1920. */
+  :root:has(#top.hero-night) {
+    --pg-ancho: clamp(1200px, 76vw, 1520px);
+  }
+
+  #top > .container,
+  :where(#top ~ *) .container,
+  :root:has(#top.hero-night) .nav-inner {
+    max-width: var(--pg-ancho, 1200px);
+  }
+
+  /* Encabezados de sección: la escala sigue creciendo un poco más allá de
+     1250 px en vez de quedarse clavada. */
+  :where(#top ~ *) .section-title {
+    font-size: clamp(3.6rem, 3.05vw, 4.4rem);
+    max-width: 920px;
+  }
+
+  :where(#top ~ *) .section-desc {
+    font-size: clamp(15.5px, 0.95vw, 17.5px);
+    max-width: 60ch;
+    line-height: 1.6;
+  }
+
+  /* Instalaciones: el perímetro de la cancha dibujada en el fondo seguía
+     calculado para 1200 px y quedaba metido debajo del contenido. Ahora
+     enmarca el ancho nuevo, con el mismo margen de 60 px de antes. */
+  #instalaciones::after {
+    left: max(16px, calc(50% - var(--pg-ancho, 1200px) / 2 - 60px));
+    right: max(16px, calc(50% - var(--pg-ancho, 1200px) / 2 - 60px));
+  }
+
+  /* Muzzaga Play: con el ancho nuevo la tele (16:9) podía quedar más alta que
+     la pantalla. Se achica lo justo para entrar entera debajo de la barra. */
+  #camaras .camaras-tv:not(:has(.camaras-grid > :nth-child(2))) {
+    max-width: calc((100svh - 190px) * 16 / 9);
+    margin-inline: auto;
+  }
+
+  /* Recorrido 3D: la tarjeta se alinea con el borde del contenido (no pegada
+     al borde de la pantalla) y gana un poco de tamaño para leerse a distancia. */
+  .club-tour {
+    --ct-edge: max(56px, calc((100vw - var(--pg-ancho, 1200px)) / 2 + 24px));
+  }
+}
+
+@media (min-width: 1680px) {
+  #top .hero-night-title {
+    font-size: clamp(5.6rem, 5vw, 6.4rem);
+  }
+
+  /* Hero: el tablero de turnos y la mascota crecen con la columna (zoom
+     escala todo el tablero parejo, sin rearmar su grilla interna); así no
+     queda un hueco entre el título y el tablero. */
+  #top .hero-v2-board {
+    zoom: 1.06;
+  }
+
+  #top .hero-mascot {
+    width: clamp(320px, 19vw, 370px);
+  }
+
+  .club-tour-card {
+    width: 450px;
+  }
+
+  .club-tour-text {
+    font-size: 1.02rem;
+  }
+
+  /* Un poco más de aire entre secciones para el ancho nuevo. */
+  :where(#top ~ *) .section-header-row {
+    margin-bottom: 44px;
+  }
+}
+
+/* A 1880 o más la columna del tablero ya tiene lugar para escalarlo más
+   (452 px × 1,14 = 515 px, con la columna en ~550). Más abajo de eso, el
+   renglón "Turnos libres · en vivo" se partía en dos. */
+@media (min-width: 1880px) {
+  #top .hero-v2-board {
+    zoom: 1.14;
+  }
+}
+

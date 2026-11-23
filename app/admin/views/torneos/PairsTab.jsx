@@ -532,7 +532,7 @@ export default function PairsTab({
                         {p.source === "web" && (
                           <span
                             className="tn-web-tag"
-                            title="Se anotó desde la web (muzzagapadel.com/torneos)"
+                            title="Se anotó desde la web (página de Torneos)"
                           >
                             Web
                           </span>

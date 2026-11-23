@@ -1713,3 +1713,55 @@
     scroll-padding-block: 0;
   }
 }
+
+/* --------------------------------------------------------------------------
+   PANTALLA GRANDE (compu de 1280 px o más)
+   Con el contenedor fijo en 1200 px, a 1920 la carta quedaba como una columna
+   en el medio. Ahora crece con la pantalla (76vw, entre 1200 y 1520, igual
+   que la home) y la grilla de productos (auto-fill) suma una columna sola.
+   La barra de arriba y el pie siguen el mismo ancho. Solo en esta página:
+   todo va colgado de :root:has(.carta-pizarra).
+   -------------------------------------------------------------------------- */
+@media (min-width: 1280px) {
+  :root:has(.carta-pizarra) {
+    --pg-ancho: clamp(1200px, 76vw, 1520px);
+  }
+
+  :where(:root:has(.carta-pizarra)) :is(.container, .nav-inner) {
+    max-width: var(--pg-ancho, 1200px);
+  }
+}
+
+@media (min-width: 1680px) {
+  .carta-pizarra-desc {
+    font-size: 16px;
+    max-width: 60ch;
+  }
+
+  .carta-pizarra-mascota.mascota {
+    width: 210px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   TABLET VERTICAL (768-899): tres fichas por fila de ~235 px. El precio en
+   24 px y el botón de 112 px no entraban juntos y "$18.000" tocaba
+   "Agregar". El botón se achica un poco y el precio baja a 21 px.
+   -------------------------------------------------------------------------- */
+@media (min-width: 768px) and (max-width: 899px) {
+  .carta .carta-item {
+    column-gap: 8px;
+  }
+
+  .carta .carta-item .menu-item-control {
+    width: 102px;
+  }
+
+  .carta .menu-add-btn {
+    padding: 0 8px;
+  }
+
+  .carta .carta-item-price {
+    font-size: 21px;
+  }
+}

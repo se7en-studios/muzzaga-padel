@@ -31,6 +31,9 @@ import { courtSchedule, liveAndNext, toMinutes } from "./schedule";
 import { isMonitorDemo, monitorDemoData } from "./demo";
 import "./monitor.css";
 
+// El dominio que se muestra en la tele para reservar (lo eligió el club).
+const DOMINIO = "muzzagapadel.com";
+
 const REFRESH_MS = 30000;
 const MENU_REFRESH_MS = 10 * 60 * 1000;
 // Los minutos restantes cambian de a uno: no hace falta redibujar la pantalla
@@ -423,7 +426,7 @@ export default function MonitorPage() {
     "Terminá a horario para que el siguiente arranque puntual",
     "Preguntá en recepción por los próximos torneos",
     "Hacé el test de nivel y sumate a partidos parejos de tu categoría",
-    "Reservá tu turno online en muzzagapadel.com",
+    `Reservá tu turno online en ${DOMINIO}`,
     "Reviví tu partido en video en beelup.com",
   ].filter(Boolean);
   const destacados = featuredItems(menuItems);
@@ -473,8 +476,10 @@ export default function MonitorPage() {
               // Si la cancha cae cerca de las tarjetas, el globo se abre hacia
               // la derecha: centrado quedaba medio tapado por la columna.
               className={`mon-callout is-${v.state}${pt[0] < 0.5 ? " is-der" : ""}`}
+              // La x va como variable: el CSS la corre a la derecha de la
+              // columna de tarjetas si la cancha cae debajo de ellas.
               style={{
-                left: `${pt[0] * 100}%`,
+                "--x": `${pt[0] * 100}%`,
                 top: `${pt[1] * 100}%`,
                 ...stateVars(v),
               }}
@@ -513,6 +518,12 @@ export default function MonitorPage() {
             <h1>Muzzaga Pádel</h1>
             <p>Canchas en vivo</p>
           </div>
+        </div>
+
+        {/* Para los que miran la tele y quieren jugar: dónde se reserva. */}
+        <div className="mon-reserva" aria-label="Reservá tu turno online">
+          <span>Reservá online</span>
+          <strong>{DOMINIO}</strong>
         </div>
 
         <div className="mon-tools">
