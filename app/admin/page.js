@@ -61,6 +61,11 @@ import CommandPalette from "./ui/CommandPalette";
 import MobileNav from "./ui/MobileNav";
 import AvisosPanel from "./ui/AvisosPanel";
 import { useAnimatedOpen } from "./ui/useAnimatedOpen";
+import { changeViewAnimated, useNavIndicator } from "./ui/motion";
+
+// Orden en que se ven las secciones en el menú (el de la barra de abajo del
+// celu es el mismo): define para qué lado entra la vista nueva.
+const NAV_ORDER = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id));
 
 const CLUB_PILL_CLASS = {
   abierto: "is-open",
@@ -106,6 +111,10 @@ export default function AdminPage() {
   // Vista activa del sidebar
   const [view, setView] = useState("agenda");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Cómo entró la vista actual: dirección (1 / -1) y si la animó el
+  // navegador (View Transitions) o el CSS. null = recién abierto el panel.
+  const [viewEnter, setViewEnter] = useState(null);
+  const sideNav = useNavIndicator(view, { deps: [sidebarCollapsed] });
 
   // Dashboard Data State (Agenda)
   const [activeDate, setActiveDate] = useState(businessDayInClub);
@@ -537,8 +546,16 @@ export default function AdminPage() {
   }
 
   function navigate(id) {
-    setView(id);
-    window.scrollTo({ top: 0 });
+    if (id === view) {
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    const dir = NAV_ORDER.indexOf(id) < NAV_ORDER.indexOf(view) ? -1 : 1;
+    changeViewAnimated((mode) => {
+      setViewEnter({ dir, mode });
+      setView(id);
+      window.scrollTo({ top: 0 });
+    }, dir);
   }
 
   function openClientFromPalette(client) {
@@ -548,7 +565,7 @@ export default function AdminPage() {
 
   function handleSelectCalendarDate(date) {
     setActiveDate(date);
-    setView("agenda");
+    navigate("agenda");
   }
 
   const clubStatus = getClubStatus(new Date(), {
@@ -753,7 +770,20 @@ export default function AdminPage() {
 
           {/* El buscador vive en la barra de arriba (uno solo, siempre en
               el mismo lugar): acá era un segundo botón que hacía lo mismo. */}
-          <nav className="admin-sidebar-nav" aria-label="Secciones del panel">
+          <nav
+            ref={sideNav.ref}
+            className={`admin-sidebar-nav${sideNav.style ? " has-slider" : ""}`}
+            aria-label="Secciones del panel"
+          >
+            {/* La cancha azul de la sección activa: una sola, que se desliza
+                hasta la sección nueva en vez de aparecer de golpe. */}
+            {sideNav.style && (
+              <span
+                className="admin-nav-slider"
+                aria-hidden="true"
+                style={sideNav.style}
+              />
+            )}
             {NAV_GROUPS.map((group) => (
               <div key={group.title} className="admin-sidebar-group">
                 {!sidebarCollapsed && (
@@ -867,10 +897,18 @@ export default function AdminPage() {
                       : "Avisos"
                   }
                 >
-                  <Bell size={18} strokeWidth={1.9} />
+                  {/* La key hace que la campana suene una vez cuando cambia
+                      la cantidad de avisos. */}
+                  <span className="admin-bell-ring" key={alerts.length}>
+                    <Bell size={18} strokeWidth={1.9} />
+                  </span>
                   <span>Avisos</span>
                   {alerts.length > 0 && (
-                    <span className="admin-bell-badge" aria-hidden="true">
+                    <span
+                      className="admin-bell-badge"
+                      aria-hidden="true"
+                      key={`b${alerts.length}`}
+                    >
                       {alerts.length}
                     </span>
                   )}
@@ -893,7 +931,12 @@ export default function AdminPage() {
                   {dayScoreboard}
                 </div>
                 {/* El saludo solo en Agenda; el resto muestra el título de la sección. */}
-                <h1 className="admin-page-title">
+                <h1
+                  className="admin-page-title"
+                  key={view}
+                  data-enter={viewEnter ? viewEnter.mode : undefined}
+                  style={viewEnter ? { "--nav-d": viewEnter.dir } : undefined}
+                >
                   {view === "agenda" ? (
                     <>
                       {greetingWord()}{" "}
@@ -986,70 +1029,79 @@ export default function AdminPage() {
               </div>
             </header>
 
-            {view === "agenda" && (
-              <AgendaView
-                activeDate={activeDate}
-                setActiveDate={setActiveDate}
-                dayData={dayData}
-                loading={loading}
-                clubConfig={clubConfig}
-                onRefresh={() => loadDayData(activeDate)}
-                onOpenCreate={openCreateModal}
-                onOpenDetail={openDetail}
-                weekStats={weekStats}
-              />
-            )}
-            {view === "calendario" && (
-              <CalendarioView
-                onSelectDate={handleSelectCalendarDate}
-                onExpiredSession={handleExpiredSession}
-              />
-            )}
-            {view === "clientes" && (
-              <ClientesView
-                key={clientesSearch.key}
-                clients={clientsLoaded ? clients : null}
-                initialSearch={clientesSearch.query}
-                onToast={showToast}
-                onReloadClients={loadClients}
-              />
-            )}
-            {view === "caja" && (
-              <CajaView
-                initialDate={activeDate}
-                onExpiredSession={handleExpiredSession}
-                onToast={showToast}
-              />
-            )}
-            {view === "cantina" && (
-              <CantinaView
-                onExpiredSession={handleExpiredSession}
-                onToast={showToast}
-              />
-            )}
-            {view === "torneos" && (
-              <TorneosView
-                clubConfig={clubConfig}
-                onExpiredSession={handleExpiredSession}
-                onToast={showToast}
-              />
-            )}
-            {view === "reportes" && (
-              <ReportesView onExpiredSession={handleExpiredSession} />
-            )}
-            {view === "actividad" && (
-              <ActividadView onExpiredSession={handleExpiredSession} />
-            )}
-            {view === "configuracion" && (
-              <ConfiguracionView
-                onExpiredSession={handleExpiredSession}
-                onToast={showToast}
-                onSaved={(config) => {
-                  setClubConfig(config);
-                  loadDayData(activeDate);
-                }}
-              />
-            )}
+            {/* La vista entra con un desplazamiento corto hacia el lado de
+                la sección elegida (ver rediseno/movimiento.css). */}
+            <div
+              className="admin-view-stage"
+              key={view}
+              data-enter={viewEnter ? viewEnter.mode : undefined}
+              style={viewEnter ? { "--nav-d": viewEnter.dir } : undefined}
+            >
+              {view === "agenda" && (
+                <AgendaView
+                  activeDate={activeDate}
+                  setActiveDate={setActiveDate}
+                  dayData={dayData}
+                  loading={loading}
+                  clubConfig={clubConfig}
+                  onRefresh={() => loadDayData(activeDate)}
+                  onOpenCreate={openCreateModal}
+                  onOpenDetail={openDetail}
+                  weekStats={weekStats}
+                />
+              )}
+              {view === "calendario" && (
+                <CalendarioView
+                  onSelectDate={handleSelectCalendarDate}
+                  onExpiredSession={handleExpiredSession}
+                />
+              )}
+              {view === "clientes" && (
+                <ClientesView
+                  key={clientesSearch.key}
+                  clients={clientsLoaded ? clients : null}
+                  initialSearch={clientesSearch.query}
+                  onToast={showToast}
+                  onReloadClients={loadClients}
+                />
+              )}
+              {view === "caja" && (
+                <CajaView
+                  initialDate={activeDate}
+                  onExpiredSession={handleExpiredSession}
+                  onToast={showToast}
+                />
+              )}
+              {view === "cantina" && (
+                <CantinaView
+                  onExpiredSession={handleExpiredSession}
+                  onToast={showToast}
+                />
+              )}
+              {view === "torneos" && (
+                <TorneosView
+                  clubConfig={clubConfig}
+                  onExpiredSession={handleExpiredSession}
+                  onToast={showToast}
+                />
+              )}
+              {view === "reportes" && (
+                <ReportesView onExpiredSession={handleExpiredSession} />
+              )}
+              {view === "actividad" && (
+                <ActividadView onExpiredSession={handleExpiredSession} />
+              )}
+              {view === "configuracion" && (
+                <ConfiguracionView
+                  onExpiredSession={handleExpiredSession}
+                  onToast={showToast}
+                  onSaved={(config) => {
+                    setClubConfig(config);
+                    loadDayData(activeDate);
+                  }}
+                />
+              )}
+            </div>
           </div>
         </main>
       </div>

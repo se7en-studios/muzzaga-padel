@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Clock, Pencil, X } from "lucide-react";
+import BusyButton from "../../ui/BusyButton";
 import {
   matchLabel,
   pairName,
@@ -178,13 +179,14 @@ export function MatchEditor({
             </option>
           ))}
         </select>
-        <button
+        <BusyButton
           type="submit"
           className="btn btn-linear-primary"
           disabled={saving}
+          busy={saving}
         >
           {saving ? "Guardando..." : "Guardar horario"}
-        </button>
+        </BusyButton>
         {(match.date || match.time) && (
           <button
             type="button"
@@ -246,13 +248,14 @@ export function MatchEditor({
           ))}
         </span>
       )}
-      <button
+      <BusyButton
         type="submit"
         className="btn btn-linear-primary"
         disabled={saving || (!autoWinner && !winner && score.trim() !== "")}
+        busy={saving}
       >
         {saving ? "Guardando..." : "Guardar"}
-      </button>
+      </BusyButton>
       {match.winner && (
         <button
           type="button"

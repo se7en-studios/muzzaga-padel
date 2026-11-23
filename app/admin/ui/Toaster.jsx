@@ -1,9 +1,12 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { CircleAlert, CircleCheck, X } from "lucide-react";
+import { CircleAlert, X } from "lucide-react";
+import { emitToastSignal, prefersReducedMotion } from "./motion";
 
 const DEFAULT_DURATION_MS = 5000;
+// Lo que tarda el aviso en irse (CSS en rediseno/movimiento.css).
+const LEAVE_MS = 180;
 
 /**
  * Toasts para confirmar acciones ("Venta registrada · $12.000 · Deshacer").
@@ -14,7 +17,13 @@ export function useToasts() {
   const nextId = useRef(0);
 
   const dismiss = useCallback((id) => {
-    setToasts((list) => list.filter((t) => t.id !== id));
+    const remove = () => setToasts((list) => list.filter((t) => t.id !== id));
+    if (prefersReducedMotion()) return remove();
+    // Primero se marca "saliendo" (se desliza afuera) y después se saca.
+    setToasts((list) =>
+      list.map((t) => (t.id === id ? { ...t, leaving: true } : t)),
+    );
+    setTimeout(remove, LEAVE_MS);
   }, []);
 
   const show = useCallback(
@@ -24,8 +33,10 @@ export function useToasts() {
     ) => {
       nextId.current += 1;
       const id = nextId.current;
-      setToasts((list) => [...list, { id, message, tone, action }]);
+      setToasts((list) => [...list, { id, message, tone, action, duration }]);
       setTimeout(() => dismiss(id), duration);
+      // Los botones con estado de carga festejan (o niegan) con esta señal.
+      emitToastSignal(tone);
     },
     [dismiss],
   );
@@ -34,10 +45,20 @@ export function useToasts() {
 }
 
 function ToastItem({ toast: t, onDismiss }) {
-  const Icon = t.tone === "error" ? CircleAlert : CircleCheck;
   return (
-    <div className="admin-toast" data-tone={t.tone}>
-      <Icon size={18} strokeWidth={1.75} aria-hidden />
+    <div
+      className={`admin-toast${t.leaving ? " is-leaving" : ""}`}
+      data-tone={t.tone}
+    >
+      {t.tone === "error" ? (
+        <CircleAlert size={18} strokeWidth={1.75} aria-hidden />
+      ) : (
+        // Tilde que se dibuja (dos palitos que crecen), en su circulito.
+        <span className="admin-toast-tick" aria-hidden="true">
+          <i />
+          <i />
+        </span>
+      )}
       <span className="admin-toast-msg">{t.message}</span>
       {t.action && (
         <button
@@ -58,6 +79,12 @@ function ToastItem({ toast: t, onDismiss }) {
       >
         <X size={16} strokeWidth={1.75} aria-hidden />
       </button>
+      {/* Cuánto le queda al aviso antes de irse solo. */}
+      <span
+        className="admin-toast-timer"
+        aria-hidden="true"
+        style={{ animationDuration: `${t.duration || DEFAULT_DURATION_MS}ms` }}
+      />
     </div>
   );
 }

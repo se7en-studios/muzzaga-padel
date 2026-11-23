@@ -9,6 +9,7 @@ import { productIcon } from "../../lib/productIcon";
 import ScrollRow from "../../components/ScrollRow";
 import Mascota from "../../components/Mascota";
 import CantinaCart, { QtyStepper } from "../../components/CantinaCart";
+import { lanzarPelota, useCategoriaEnVista, useIndicadorCategoria } from "./cartaMotion";
 import {
   MAX_ORDER_QTY,
   deliveryFromParam,
@@ -178,6 +179,12 @@ export default function MenuClient({ items }) {
     if (top < below) window.scrollBy({ top: top - below });
   }, [selectedCat]);
 
+  // El indicador (raya de cal + pelota) va debajo de la categoría que se
+  // está leyendo: con "Todo", sigue el scroll grupo por grupo.
+  const indRef = useRef(null);
+  const enVista = useCategoriaEnVista(selectedCat, filtrosRef, listaRef, `${search}|${groups.length}`);
+  useIndicadorCategoria(indRef, enVista);
+
   const renderItem = (item) => {
     const qty = cart[item.id] || 0;
     return (
@@ -207,7 +214,15 @@ export default function MenuClient({ items }) {
         </span>
         {/* Ancho fijo: al agregar, "Agregar" pasa a "− 1 +" sin correr el
             precio ni hacer crecer la tarjeta. */}
-        <span className="menu-item-control">
+        {/* El "+" del stepper también tira una pelota al pedido (es el
+            último botón del grupo; el estado lo maneja QtyStepper). */}
+        <span
+          className="menu-item-control"
+          onClick={(e) => {
+            const b = e.target.closest?.(".qty-stepper button");
+            if (b && !b.disabled && b === b.parentElement.lastElementChild) lanzarPelota(b);
+          }}
+        >
           {qty > 0 ? (
             <QtyStepper
               name={item.name}
@@ -224,7 +239,10 @@ export default function MenuClient({ items }) {
               ref={(el) => {
                 addRefs.current[item.id] = el;
               }}
-              onClick={() => setQty(item.id, 1)}
+              onClick={(e) => {
+                setQty(item.id, 1);
+                lanzarPelota(e.currentTarget);
+              }}
               aria-label={`Agregar ${item.name} al pedido`}
             >
               <Plus size={18} strokeWidth={2.5} aria-hidden="true" />
@@ -286,7 +304,11 @@ export default function MenuClient({ items }) {
           >
             <ShoppingCart size={18} aria-hidden="true" />
             Ver mi pedido
-            {cartCount > 0 && <span className="menu-cart-open-count">{cartCount}</span>}
+            {cartCount > 0 && (
+              <span key={cartCount} className="menu-cart-open-count">
+                {cartCount}
+              </span>
+            )}
           </button>
           <button
             type="button"
@@ -322,7 +344,10 @@ export default function MenuClient({ items }) {
                 <button
                   key={cat.id}
                   type="button"
-                  className={`carta-cat${selectedCat === cat.id ? " active" : ""}`}
+                  data-cat={cat.id}
+                  className={`carta-cat${selectedCat === cat.id ? " active" : ""}${
+                    enVista === cat.id ? " is-en-vista" : ""
+                  }`}
                   aria-pressed={selectedCat === cat.id}
                   onClick={() => pickCat(cat.id)}
                 >
@@ -337,6 +362,12 @@ export default function MenuClient({ items }) {
                   </span>
                 </button>
               ))}
+              <span className="carta-cat-indicador" ref={indRef} aria-hidden="true">
+                <span className="carta-cat-linea" />
+                <span className="carta-cat-bola">
+                  <span className="carta-pelota" />
+                </span>
+              </span>
             </ScrollRow>
           </div>
 
@@ -344,6 +375,12 @@ export default function MenuClient({ items }) {
           <div ref={listaRef}>
             {filteredItems.length === 0 ? (
               <div className="carta-vacia">
+                {/* La pelota que se queda en la red: no hubo punto. */}
+                <span className="carta-vacia-red" aria-hidden="true">
+                  <span className="carta-vacia-pelota">
+                    <span className="carta-pelota" />
+                  </span>
+                </span>
                 <p>
                   No encontramos productos que coincidan con tu búsqueda. Probá
                   con otro término o categoría.
@@ -363,6 +400,7 @@ export default function MenuClient({ items }) {
               groups.map((group) => (
                 <section
                   key={group.id}
+                  data-grupo={group.id}
                   className="carta-grupo"
                   aria-labelledby={selectedCat === "all" ? `carta-grupo-${group.id}` : undefined}
                   aria-label={selectedCat === "all" ? undefined : group.label}

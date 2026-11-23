@@ -19,6 +19,7 @@ import { isoAddDays, isoWeekday, todayInClub } from "../../../lib/booking";
 import { trendPct } from "../../../lib/metrics";
 import { formatARS, formatDate, formatPct, plural } from "../../../lib/format";
 import { EmptyState } from "../ui/states";
+import CountUp from "../ui/CountUp";
 import { ReportesSkeleton } from "./Esqueletos";
 import DailyChart from "./reportes/DailyChart";
 import Highlights from "./reportes/Highlights";
@@ -435,7 +436,7 @@ export function ReportContent({ report, loading }) {
                   <Delta current={t.turnos} previous={p.turnos} />
                 )}
               </header>
-              <strong className="rp-kpi-number">{t.turnos}</strong>
+              <strong className="rp-kpi-number"><CountUp value={t.turnos} /></strong>
               <span className="rp-kpi-sub">
                 {elapsed > 0 &&
                   `${(t.turnos / elapsed).toLocaleString("es-AR", { maximumFractionDigits: 1 })} por día · `}
@@ -451,7 +452,13 @@ export function ReportContent({ report, loading }) {
                 <span className="rp-kpi-title">Canchas ocupadas</span>
                 <Delta current={t.ocupacionPct} previous={p.ocupacionPct} points />
               </header>
-              <strong className="rp-kpi-number">{formatPct(t.ocupacionPct)}</strong>
+              <strong className="rp-kpi-number">
+                {t.ocupacionPct == null ? (
+                  formatPct(t.ocupacionPct)
+                ) : (
+                  <CountUp value={t.ocupacionPct} format={formatPct} />
+                )}
+              </strong>
               {t.ocupacionPct != null && (
                 <span className="rp-meter" aria-hidden>
                   <span style={{ width: `${Math.min(100, t.ocupacionPct)}%` }}>
@@ -472,7 +479,10 @@ export function ReportContent({ report, loading }) {
                 <span className="rp-kpi-title">Promedio por día</span>
               </header>
               <strong className="rp-kpi-number">
-                {formatARS(Math.round(perDay(t.cobrado, elapsed)))}
+                <CountUp
+                  value={Math.round(perDay(t.cobrado, elapsed))}
+                  format={formatARS}
+                />
               </strong>
               <span className="rp-kpi-sub">
                 {elapsed > 0
@@ -489,7 +499,9 @@ export function ReportContent({ report, loading }) {
                 <span className="rp-kpi-title">Por cobrar</span>
                 <Delta current={t.porCobrar} previous={p.porCobrar} goodWhenDown />
               </header>
-              <strong className="rp-kpi-number">{formatARS(t.porCobrar)}</strong>
+              <strong className="rp-kpi-number">
+                <CountUp value={t.porCobrar} format={formatARS} />
+              </strong>
               <span className="rp-kpi-sub">
                 {t.pagadosSinCobro > 0
                   ? `Ojo: ${plural(t.pagadosSinCobro, "turno marcado pagado sin cobro cargado", "turnos marcados pagados sin cobro cargado")}`

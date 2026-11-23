@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Delete, KeyRound, ShieldAlert, X } from "lucide-react";
+import BusyButton from "./BusyButton";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
 const MAX_PIN = 6;
@@ -210,13 +211,14 @@ export default function StaffPinModal({
             >
               Cancelar
             </button>
-            <button
+            <BusyButton
               type="submit"
               className={`btn admin-pin-submit${isDanger ? " is-danger" : ""}`}
               disabled={!canSubmit}
+              busy={loading}
             >
               {loading ? "Verificando…" : confirmButtonText}
-            </button>
+            </BusyButton>
           </div>
         </form>
       </div>

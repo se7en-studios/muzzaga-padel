@@ -19,6 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import { EmptyState, Skeleton, SkeletonRows } from "../ui/states";
+import BusyButton from "../ui/BusyButton";
 import { productIcon } from "../../../lib/productIcon";
 import {
   formatARS,
@@ -613,13 +614,14 @@ export default function CantinaView({ onExpiredSession, onToast }) {
         </div>
       )}
 
-      <button
+      <BusyButton
         type="button"
         className="btn btn-linear-primary admin-btn-block admin-btn-lg admin-pos-charge"
         data-method={method}
         disabled={
           cart.length === 0 || submitting || (method === "cuenta" && !chargeTo)
         }
+        busy={submitting}
         onClick={handleSubmitSale}
       >
         {submitting
@@ -627,7 +629,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
           : method === "cuenta"
             ? `Cargar ${formatARS(cartTotal)} a la cuenta`
             : `Cobrar ${formatARS(cartTotal)}`}
-      </button>
+      </BusyButton>
     </div>
   );
 

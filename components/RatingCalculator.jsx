@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Mascota from "./Mascota";
+import { useCountTo } from "../lib/useCountTo";
 import { PADEL_LEVELS, getCategoryForRating } from "../data/levels";
 import { WhatsAppLogo } from "./BrandLogos";
 import {
@@ -114,6 +115,16 @@ const CONFETTI_PIECES = [
   { left: "94%", delay: "0.12s", emoji: "🏆" },
 ];
 
+/** El nivel corriendo desde 1.0 mientras la pelota sube por la escala. */
+function RatingCuenta({ value, animate }) {
+  const shown = useCountTo(value, {
+    from: animate ? 1 : value,
+    duration: 1100,
+    enabled: animate,
+  });
+  return <b aria-hidden="true">{shown.toFixed(1)}</b>;
+}
+
 export default function RatingCalculator() {
   const [mode, setMode] = useState("quiz"); // 'quiz' | 'slider'
   const [playerName, setPlayerName] = useState("");
@@ -215,6 +226,9 @@ export default function RatingCalculator() {
   const currentQuestion = QUESTIONS[step];
   // Dónde cae la pelota en la escala 1.0 → 7.0.
   const scalePct = ((Number(computedRating) - 1) / 6) * 100;
+  // Al terminar el test la ficha "sube" por la escala: el número corre desde
+  // 1.0 y la pelota viaja desde 8va. En el ajuste manual va directo.
+  const revela = mode === "quiz";
 
   const skillRows = [
     { icon: Clock, label: "Experiencia", value: skills.experience },
@@ -334,7 +348,11 @@ export default function RatingCalculator() {
       {/* FICHA DEL JUGADOR: recién aparece cuando el test termina (el ajuste
           manual la muestra siempre, al ser instantáneo). */}
       {showResult && (
-        <div className="hx-ficha" key={category.id} aria-live="polite">
+        <div
+          className={`hx-ficha${revela ? " is-sube" : ""}`}
+          key={category.id}
+          aria-live="polite"
+        >
           <div className="hx-ficha-cancha">
             {justFinished && (
               <div className="confetti-layer" aria-hidden="true">
@@ -361,7 +379,8 @@ export default function RatingCalculator() {
                 <small>{category.tag}</small>
               </strong>
               <span className="hx-ficha-rating">
-                <b>{computedRating}</b> / 7.0
+                <RatingCuenta value={Number(computedRating)} animate={revela} />
+                <b className="sr-only">{computedRating}</b> / 7.0
               </span>
             </div>
 
@@ -385,7 +404,14 @@ export default function RatingCalculator() {
                   }}
                 />
               ))}
-              <span className="hx-escala-marca" style={{ left: `${scalePct}%` }} />
+              {/* El riel mide lo mismo que la pista: moverlo en % lleva la
+                  pelota al punto justo, y se anima solo con transform. */}
+              <span
+                className="hx-escala-riel"
+                style={{ transform: `translateX(${scalePct}%)` }}
+              >
+                <span className="hx-escala-marca" />
+              </span>
             </div>
             <div className="hx-escala-nombres">
               <span>8va · 1.0</span>

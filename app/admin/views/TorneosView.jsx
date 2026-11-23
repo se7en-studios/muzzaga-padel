@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { DollarSign, Plus, Trophy, Users, X } from "lucide-react";
 import { EmptyState } from "../ui/states";
+import CountUp from "../ui/CountUp";
 import { Bone, TorneosSkeleton } from "./Esqueletos";
 import { formatARS } from "../../../lib/format";
 import { todayInClub } from "../../../lib/booking";
@@ -235,7 +236,7 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
           icon={Trophy}
           color="#ea580c"
           title="Torneos activos"
-          value={metrics.active}
+          value={<CountUp value={metrics.active} />}
           sub={
             tournaments ? (
               `${tournaments.length} en total`
@@ -248,7 +249,7 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
           icon={Users}
           color="#15803d"
           title="Parejas anotadas"
-          value={metrics.pairs}
+          value={<CountUp value={metrics.pairs} />}
           sub={`${metrics.paid} pagaron · ${metrics.pairs - metrics.paid} deben`}
         />
         <Kpi
@@ -256,7 +257,7 @@ export default function TorneosView({ clubConfig, onExpiredSession, onToast }) {
           color="#15803d"
           numberColor="#15803d"
           title="Inscripciones cobradas"
-          value={formatARS(metrics.collected)}
+          value={<CountUp value={metrics.collected} format={formatARS} />}
           sub={
             metrics.pending > 0
               ? `${formatARS(metrics.pending)} por cobrar`

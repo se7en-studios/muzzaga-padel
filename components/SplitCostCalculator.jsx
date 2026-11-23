@@ -8,6 +8,7 @@ import {
   buildSplitCostWhatsAppUrl,
 } from "../lib/splitCost";
 import Mascota from "./Mascota";
+import { useCountTo } from "../lib/useCountTo";
 import { WhatsAppLogo } from "./BrandLogos";
 import { CreditCard, Check, Copy, Minus, Plus, ChevronDown, ArrowDown } from "lucide-react";
 
@@ -64,6 +65,9 @@ export default function SplitCostCalculator({ extras }) {
 
   const grandTotal = canchaPrice + extrasTotal;
   const perPerson = Math.round(grandTotal / (players || 1));
+  // Lo que se ve en el marcador corre hasta el monto nuevo (el texto que se
+  // comparte usa siempre el valor real).
+  const shownPerPerson = Math.round(useCountTo(perPerson, { duration: 650 }));
 
   const handleCopySummary = () => {
     const msg = buildSplitCostMessage({
@@ -243,7 +247,8 @@ export default function SplitCostCalculator({ extras }) {
             {/* Mini marcador del celu: acompaña mientras elegís. */}
             <a href="#resumen-partido" className="hx-dv-mini">
               <span className="hx-dv-mini-monto" key={perPerson}>
-                {money(perPerson)}
+                <span aria-hidden="true">{money(shownPerPerson)}</span>
+                <span className="sr-only">{money(perPerson)}</span>
                 <small>c/u · {players} jug.</small>
               </span>
               <span className="hx-dv-mini-ir">
@@ -257,7 +262,8 @@ export default function SplitCostCalculator({ extras }) {
             <div className="hx-marcador hx-dv-marcador">
               <p className="hx-marcador-label">Cada uno paga</p>
               <strong className="hx-marcador-valor" key={perPerson}>
-                {money(perPerson)}
+                <span aria-hidden="true">{money(shownPerPerson)}</span>
+                <span className="sr-only">{money(perPerson)}</span>
               </strong>
               <p className="hx-marcador-sub">
                 {players} jugadores · total {money(grandTotal)}

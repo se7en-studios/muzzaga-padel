@@ -43,6 +43,7 @@ import { formatARS, formatDate, plural } from "../../../lib/format";
 import { beelupStreamInfo, youtubeEmbedUrl } from "../../../lib/beelup";
 import { AjustesSkeleton, StaffSkeleton } from "./Esqueletos";
 import StaffPinModal from "../ui/StaffPinModal";
+import BusyButton from "../ui/BusyButton";
 import { usePinGate } from "../ui/usePinGate";
 import SitioWebSection from "./SitioWebSection";
 
@@ -1542,14 +1543,15 @@ export default function ConfiguracionView({
             >
               <Trash2 {...ICON} /> Descartar
             </button>
-            <button
+            <BusyButton
               type="button"
               className="btn btn-linear-primary"
               onClick={handleSave}
               disabled={saving || cbuInvalid}
+              busy={saving}
             >
               {saving ? "Guardando…" : "Guardar"}
-            </button>
+            </BusyButton>
           </div>
         </div>
       )}

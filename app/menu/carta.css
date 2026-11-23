@@ -41,7 +41,10 @@
   padding-bottom: 40px;
 }
 
+/* Mientras la carta se arma en el navegador, el lugar ya ocupa la pantalla:
+   así el pie no aparece arriba y después salta para abajo (CLS). */
 .carta-cargando {
+  min-height: 100svh;
   padding: 40px 16px;
   text-align: center;
   color: var(--color-muted);
@@ -978,25 +981,357 @@
   }
 }
 
+
 /* ==========================================================================
-   MOVIMIENTO: solo transform/opacity y en piezas chicas (anda en un celu
-   humilde). Con "reducir movimiento" no se anima nada de esto.
+   PIEZAS DEL MOVIMIENTO (cómo se ven quietas; el movimiento va abajo)
    ========================================================================== */
-@media (prefers-reduced-motion: no-preference) {
-  /* La pelota de la pizarra pica de vez en cuando. */
-  .carta-pizarra-kicker .carta-pelota {
-    animation: carta-pique 3.2s ease-in-out infinite;
+
+/* Raya de tiza amarilla bajo el título, como subrayado de pizarrón. */
+.carta-titulo::after {
+  content: "";
+  display: block;
+  width: min(210px, 72%);
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(90deg, rgba(215, 240, 58, 0.9) 0 16px, rgba(215, 240, 58, 0.55) 16px 20px);
+  transform: rotate(-0.8deg);
+  transform-origin: left center;
+}
+
+/* Indicador de categoría: raya de cal azul + pelotita encima. Lo ubica
+   cartaMotion.js (useIndicadorCategoria) con transform. */
+.carta .menu-category-tabs {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.carta-cat-indicador {
+  position: absolute;
+  left: 0;
+  bottom: 2px;
+  width: 0;
+  height: 12px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.carta-cat-indicador.is-listo {
+  opacity: 1;
+}
+
+.carta-cat-linea {
+  position: absolute;
+  left: 0;
+  bottom: 3px;
+  width: 100px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--carta-azul);
+  transform-origin: 0 50%;
+}
+
+.carta-cat-bola {
+  position: absolute;
+  left: 0;
+  bottom: 1px;
+  width: 10px;
+  height: 10px;
+}
+
+.carta-cat-bola .carta-pelota {
+  display: block;
+  width: 10px;
+  height: 10px;
+}
+
+/* La categoría que se está leyendo (con "Todo" elegido). */
+.carta-cat.is-en-vista:not(.active) {
+  border-color: color-mix(in srgb, var(--carta-azul) 60%, var(--color-hairline-strong));
+  color: var(--carta-azul);
+}
+
+.carta-cat.is-en-vista:not(.active) .carta-cat-n {
+  background: color-mix(in srgb, var(--carta-azul) 12%, transparent);
+  color: var(--carta-azul);
+}
+
+@media (prefers-color-scheme: dark) {
+  .carta-cat-linea {
+    background: #8fa8ff;
   }
 
-  /* Al sumar un producto, el "− 1 +" entra con un saltito. */
+  .carta-cat.is-en-vista:not(.active),
+  .carta-cat.is-en-vista:not(.active) .carta-cat-n {
+    color: #b9c8ff;
+  }
+}
+
+/* La pelota que vuela al pedido (la crea cartaMotion.js). */
+.carta-vuelo {
+  position: fixed;
+  z-index: 1000;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.carta-vuelo-y {
+  position: absolute;
+  left: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  will-change: transform;
+}
+
+.carta-pelota.carta-vuelo-pelota {
+  display: block;
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Pedido vacío: un pedazo de cancha azul con la pelota esperando. */
+.menu-cart-vacio {
+  position: relative;
+  display: block;
+  width: 168px;
+  height: 74px;
+  margin: 4px 0 6px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  background:
+    var(--carta-lineas) center / 100% 100% no-repeat,
+    linear-gradient(rgba(26, 63, 174, 0.84), rgba(35, 80, 214, 0.8)),
+    var(--carta-cesped) center / 200px;
+  box-shadow: 0 0 0 1px rgba(11, 26, 77, 0.25), 0 10px 18px -12px rgba(11, 26, 77, 0.7);
+  overflow: hidden;
+}
+
+.menu-cart-vacio-pelota {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 18px;
+  height: 18px;
+  margin-left: -30px;
+  transform-origin: 50% 100%;
+}
+
+.menu-cart-vacio-pelota .carta-pelota {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.menu-cart-vacio-sombra {
+  position: absolute;
+  left: 50%;
+  bottom: 9px;
+  width: 18px;
+  height: 5px;
+  margin-left: -30px;
+  border-radius: 50%;
+  background: rgba(5, 15, 50, 0.45);
+}
+
+.menu-cart-vacio .icono-marca.menu-cart-vacio-canasto {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  color: var(--carta-tiza);
+}
+
+/* Búsqueda sin resultados: la pelota quedó en la red. */
+.carta-vacia-red {
+  position: relative;
+  display: block;
+  width: 132px;
+  height: 52px;
+}
+
+/* La red: faja blanca arriba y malla. */
+.carta-vacia-red::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 10px;
+  height: 46px;
+  margin-left: -5px;
+  border-top: 4px solid var(--color-ink);
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(0deg, var(--color-hairline-strong) 0 1.5px, transparent 1.5px 6px),
+    repeating-linear-gradient(90deg, var(--color-hairline-strong) 0 1.5px, transparent 1.5px 5px);
+  transform-origin: 50% 100%;
+}
+
+/* El piso. */
+.carta-vacia-red::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-hairline-strong);
+}
+
+.carta-vacia-pelota {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 16px;
+  height: 16px;
+  margin-left: -24px;
+}
+
+.carta-vacia-pelota .carta-pelota {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+/* Cierre: la pelota descansa en la esquina de la cancha. */
+.carta-cierre {
+  position: relative;
+  overflow: hidden;
+}
+
+.carta-cierre::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--carta-pelota);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   MOVIMIENTO: solo transform/opacity y en piezas chicas (anda en un celu
+   humilde). Con "reducir movimiento" no se anima nada de esto y todo queda
+   en su lugar, quieto y visible.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  /* ---- 1 · Pizarra: la tiza se escribe ---- */
+
+  /* La pelota del kicker pica unas veces al llegar y se queda quieta. */
+  .carta-pizarra-kicker .carta-pelota {
+    animation: carta-pique 1.6s ease-in-out 0.4s 3;
+  }
+
+  /* El subrayado se pasa con la tiza, de izquierda a derecha. */
+  .carta-titulo::after {
+    animation: carta-tiza 640ms cubic-bezier(0.6, 0, 0.3, 1) 260ms both;
+  }
+
+  /* Los tres pasos se anotan uno por uno; el número pica como pelota. */
+  .carta-pasos li {
+    animation: carta-paso 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+
+  .carta-pasos b {
+    animation: carta-bote 560ms cubic-bezier(0.3, 0.7, 0.4, 1) both;
+  }
+
+  .carta-pasos li:nth-child(1),
+  .carta-pasos li:nth-child(1) b {
+    animation-delay: 420ms;
+  }
+
+  .carta-pasos li:nth-child(2),
+  .carta-pasos li:nth-child(2) b {
+    animation-delay: 560ms;
+  }
+
+  .carta-pasos li:nth-child(3),
+  .carta-pasos li:nth-child(3) b {
+    animation-delay: 700ms;
+  }
+
+  /* El papelito del QR cae y queda pinchado en la pizarra. */
+  .carta-ubicacion {
+    animation: carta-papelito 620ms cubic-bezier(0.3, 1.4, 0.5, 1) 350ms both;
+  }
+
+  /* ---- 2 · Categorías: el indicador se desliza (y la pelota pica) ---- */
+  .carta-cat-linea {
+    transition: transform 380ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .carta-cat-bola {
+    transition: transform 420ms cubic-bezier(0.3, 1.25, 0.5, 1);
+  }
+
+  .carta-cat-indicador {
+    transition: opacity 200ms ease;
+  }
+
+  .carta-cat {
+    transition: transform var(--t-hover) var(--ease);
+  }
+
+  .carta-cat:active {
+    transform: scale(0.96);
+  }
+
+  .carta-cat.active .icono-marca,
+  .carta-cat.active > .carta-pelota {
+    animation: carta-pop 440ms cubic-bezier(0.3, 1.5, 0.5, 1);
+  }
+
+  /* ---- 3 · Productos ---- */
+
+  /* Al sumar: el "− 1 +" entra con un saltito y el ícono recibe el golpe
+     de paleta (se inclina y vuelve). */
   .carta .carta-item .qty-stepper {
     animation: carta-entra 260ms var(--ease-mascota, ease-out);
   }
 
-  /* Hover solo con mouse: en el celu el toque no deja la tarjeta levantada. */
+  .carta .carta-item.is-en-pedido .carta-item-icon {
+    animation: carta-golpe 520ms cubic-bezier(0.3, 0.8, 0.4, 1);
+  }
+
+  .carta .carta-item-icon {
+    transition: transform 220ms var(--ease);
+  }
+
+  .carta .menu-add-btn {
+    transition: transform 140ms var(--ease);
+  }
+
+  .carta .menu-add-btn svg {
+    transition: transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1);
+  }
+
+  .carta .menu-add-btn:active {
+    transform: translateY(1px) scale(0.95);
+  }
+
+  .carta .menu-add-btn:active svg {
+    transform: rotate(90deg);
+  }
+
+  /* Hover solo con mouse: en el celu el toque no deja nada levantado. */
   @media (hover: hover) {
     .carta .menu-add-btn:hover {
       transform: translateY(-1px);
+    }
+
+    .carta .menu-add-btn:hover svg {
+      transform: rotate(90deg);
+    }
+
+    .carta .carta-item:hover .carta-item-icon {
+      transform: rotate(-8deg) scale(1.06);
     }
 
     .carta-cat:not(.active):hover {
@@ -1004,8 +1339,100 @@
     }
   }
 
-  .carta-cat {
-    transition: transform var(--t-hover) var(--ease);
+  /* Las tarjetas suben al entrar en pantalla (atado al scroll: siempre
+     terminan visibles; sin soporte, quedan quietas). */
+  @supports (animation-timeline: view()) {
+    .carta .carta-lista > .carta-item {
+      animation: carta-tarjeta linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 80%;
+    }
+
+    /* La raya del título de cada grupo se pinta como línea de cancha. */
+    .carta-grupo-titulo {
+      view-timeline-name: --carta-grupo;
+    }
+
+    .carta-grupo-titulo::after {
+      transform-origin: left center;
+      animation: carta-raya linear both;
+      animation-timeline: --carta-grupo;
+      animation-range: entry 20% cover 45%;
+    }
+
+    /* Cierre: la pelota cruza la cancha y queda en la esquina. */
+    .carta-cierre::after {
+      animation: carta-cruce linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 50%;
+    }
+  }
+
+  /* Sin resultados: la pelota pega en la red y cae. */
+  .carta-vacia-pelota {
+    animation: carta-a-la-red 900ms linear both;
+  }
+
+  .carta-vacia-red::before {
+    animation: carta-red 600ms ease-out 380ms both;
+  }
+
+  /* ---- 4 · El pedido ---- */
+
+  /* Pelotita que cae en el carrito: anillo de impacto. */
+  .carta-fx-pique {
+    position: fixed;
+    z-index: 1000;
+    width: 44px;
+    height: 44px;
+    margin: -22px 0 0 -22px;
+    border: 3px solid rgba(215, 240, 58, 0.95);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: carta-anillo 480ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  }
+
+  /* La barra entra como un saque: sube de abajo, pasa y se acomoda. */
+  .menu-cart-bar {
+    animation: carta-bar-saque 560ms cubic-bezier(0.3, 0.9, 0.4, 1) both;
+  }
+
+  /* El número del carrito pica con cada producto (ver key={count}). */
+  .menu-cart-bar-badge,
+  .carta .menu-cart-open-count {
+    animation: carta-badge 560ms cubic-bezier(0.3, 0.8, 0.4, 1);
+  }
+
+  /* El total cambia como marcador de transmisión (ver key={total}). */
+  .menu-cart-bar-total,
+  .menu-cart-total strong {
+    display: inline-block;
+    animation: carta-marcador 320ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+
+  /* La hoja del pedido entra como un saque: desde abajo, con impulso. */
+  .menu-cart-sheet {
+    animation: carta-saque-modal 480ms cubic-bezier(0.25, 1.1, 0.45, 1);
+  }
+
+  /* ...y la pelota del título se tira para arriba, como antes de sacar. */
+  .menu-cart-sheet .menu-cart-head .carta-pelota {
+    animation: carta-toss 820ms cubic-bezier(0.3, 0.6, 0.4, 1) 260ms both;
+  }
+
+  /* Los renglones se anotan en la comanda uno atrás del otro. */
+  .menu-cart-lines li {
+    animation: carta-renglon 360ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation-delay: min(calc(var(--i, 0) * 45ms), 360ms);
+  }
+
+  /* Pedido vacío: la pelota pica unas veces esperando (y se queda). */
+  .menu-cart-vacio-pelota {
+    animation: carta-vacio-pique 1.3s 0.3s 4;
+  }
+
+  .menu-cart-vacio-sombra {
+    animation: carta-vacio-sombra 1.3s 0.3s 4;
   }
 
   @keyframes carta-pique {
@@ -1015,8 +1442,145 @@
     88% { transform: translateY(-2px); }
   }
 
+  @keyframes carta-tiza {
+    from { transform: rotate(-0.8deg) scaleX(0); }
+    to { transform: rotate(-0.8deg) scaleX(1); }
+  }
+
+  @keyframes carta-paso {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes carta-bote {
+    0% { transform: translateY(-14px) scale(0.6); }
+    45% { transform: translateY(0) scale(1.15, 0.85); }
+    70% { transform: translateY(-4px) scale(1); }
+    100% { transform: none; }
+  }
+
+  @keyframes carta-papelito {
+    from { opacity: 0; transform: translateY(-18px) rotate(-6deg) scale(1.04); }
+    to { opacity: 1; transform: rotate(-1deg); }
+  }
+
+  @keyframes carta-pop {
+    0% { transform: scale(0.6) rotate(-20deg); }
+    100% { transform: none; }
+  }
+
   @keyframes carta-entra {
     from { opacity: 0.4; transform: scale(0.9); }
     to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes carta-golpe {
+    0% { transform: none; }
+    25% { transform: rotate(-14deg) scale(1.1); }
+    55% { transform: rotate(7deg) scale(0.98); }
+    80% { transform: rotate(-2deg); }
+    100% { transform: none; }
+  }
+
+  @keyframes carta-tarjeta {
+    from { opacity: 0; transform: translateY(22px) scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes carta-raya {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  @keyframes carta-cruce {
+    0% { transform: translate(-560px, 120px) rotate(-360deg); }
+    55% { transform: translate(-220px, -10px) rotate(-120deg); }
+    100% { transform: none; }
+  }
+
+  @keyframes carta-a-la-red {
+    0% { transform: translate(-58px, -36px) rotate(-200deg); animation-timing-function: cubic-bezier(0.3, 0, 0.6, 1); }
+    40% { transform: translate(6px, -22px) rotate(0); animation-timing-function: ease-in; }
+    70% { transform: translate(0, 0) scale(1.15, 0.85); animation-timing-function: ease-out; }
+    85% { transform: translate(-2px, -6px); animation-timing-function: ease-in; }
+    100% { transform: none; }
+  }
+
+  @keyframes carta-red {
+    0% { transform: none; }
+    30% { transform: skewX(-6deg); }
+    60% { transform: skewX(3deg); }
+    100% { transform: none; }
+  }
+
+  @keyframes carta-anillo {
+    from { opacity: 1; transform: scale(0.3); }
+    to { opacity: 0; transform: scale(1.6); }
+  }
+
+  @keyframes carta-bar-saque {
+    0% { opacity: 0; transform: translateY(140%); }
+    55% { opacity: 1; transform: translateY(-10%); }
+    78% { transform: translateY(3%); }
+    100% { transform: none; }
+  }
+
+  @keyframes carta-badge {
+    0% { transform: scale(1.45); }
+    30% { transform: translateY(-8px) scale(1); }
+    55% { transform: translateY(0) scale(1.12, 0.88); }
+    75% { transform: translateY(-3px); }
+    100% { transform: none; }
+  }
+
+  @keyframes carta-marcador {
+    from { opacity: 0.2; transform: translateY(-45%) scaleY(0.6); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes carta-saque-modal {
+    0% { opacity: 0; transform: translateY(60px) scale(0.92) rotate(-1.5deg); }
+    60% { opacity: 1; transform: translateY(-6px) scale(1.01) rotate(0.3deg); }
+    100% { transform: none; }
+  }
+
+  @keyframes carta-saque-hoja {
+    0% { transform: translateY(100%); }
+    58% { transform: translateY(-14px); }
+    80% { transform: translateY(4px); }
+    100% { transform: none; }
+  }
+
+  @keyframes carta-toss {
+    0% { transform: none; }
+    45% { transform: translateY(-14px) rotate(180deg); }
+    75% { transform: translateY(0) scale(1.18, 0.82) rotate(300deg); }
+    88% { transform: translateY(-3px) rotate(340deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes carta-renglon {
+    from { opacity: 0; transform: translateX(-14px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes carta-vacio-pique {
+    0% { transform: translateY(0) scale(1.18, 0.82); animation-timing-function: ease-out; }
+    12% { transform: translateY(-4px) scale(0.95, 1.05); animation-timing-function: ease-out; }
+    50% { transform: translateY(-34px); animation-timing-function: ease-in; }
+    90% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(0) scale(1.18, 0.82); }
+  }
+
+  @keyframes carta-vacio-sombra {
+    0%, 100% { opacity: 1; transform: scaleX(1.15); }
+    50% { opacity: 0.35; transform: scaleX(0.55); }
+  }
+}
+
+/* Celu: la hoja sube desde abajo de la pantalla, como saque desde el fondo. */
+@media (prefers-reduced-motion: no-preference) and (max-width: 640px) {
+  .menu-cart-sheet {
+    animation: carta-saque-hoja 520ms cubic-bezier(0.3, 0.9, 0.4, 1);
   }
 }
