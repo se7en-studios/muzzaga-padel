@@ -101,7 +101,7 @@ function TorneoBlock({ torneo }) {
                   src={photo.src}
                   alt={photo.alt}
                   label={photo.label}
-                  sizes="(max-width: 640px) 46vw, 270px"
+                  sizes="(max-width: 640px) 46vw, (min-width: 1280px) 340px, 270px"
                 />
               ))}
             </div>
