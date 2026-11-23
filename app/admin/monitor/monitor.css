@@ -233,6 +233,40 @@ body:has(.mon-root) {
   background: var(--mon-pelota);
 }
 
+/* "Reservá online": cartel de césped azul en el medio del header, para el
+   que mira una cancha libre desde la recepción. */
+.mon-reserva {
+  display: grid;
+  justify-items: center;
+  margin: 0 auto;
+  padding: 0.7vh 2.4vh 0.8vh;
+  border-radius: 1.4vh;
+  border: 0.25vh solid rgba(255, 255, 255, 0.85);
+  background-color: var(--mon-cancha);
+  background-image:
+    linear-gradient(180deg, rgba(11, 26, 77, 0.15), rgba(11, 26, 77, 0.55)),
+    url("/img/fondo/textura-cesped.jpg");
+  background-size: auto, 220px 220px;
+  box-shadow: 0 1.2vh 2.4vh -1.2vh rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 4px rgba(7, 16, 52, 0.7);
+  white-space: nowrap;
+}
+
+.mon-reserva span {
+  font-size: 1.7vh;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mon-reserva strong {
+  font-family: var(--mon-display);
+  font-size: 3.6vh;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
 .mon-tools {
   display: flex;
   align-items: center;
@@ -271,7 +305,7 @@ body:has(.mon-root) {
 .mon-clock-date {
   margin-top: 0.4vh;
   color: var(--mon-suave);
-  font-size: 1.7vh;
+  font-size: 2vh;
   font-weight: 500;
 }
 
@@ -453,20 +487,39 @@ body:has(.mon-root) {
   gap: 2vh;
   min-height: 0;
   overflow: hidden;
-  padding: 1.1vh 2vh 1.1vh 2.2vh;
+  padding: 0.7vh 2vh 0.7vh 2.2vh;
   /* El anillo y la pelota se achican si la tarjeta queda baja (cqh). */
   container-type: size;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Un reflejo del color del estado desde la derecha, detrás del anillo: de
+   lejos la tarjeta entera "dice" verde, rojo, naranja o blanco. Fijo. */
+.mon-card-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse 60% 120% at 100% 50%, var(--state), transparent 70%);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.mon-card.is-libre .mon-card-body::before {
+  opacity: 0.08;
 }
 
 .mon-card-info {
   display: grid;
-  gap: 0.6vh;
+  gap: 0.4vh;
+  line-height: 1.15;
   min-width: 0;
 }
 
 .mon-card-kicker {
   color: var(--mon-naranja-claro);
-  font-size: 1.8vh;
+  font-size: 2vh;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -477,8 +530,8 @@ body:has(.mon-root) {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--mon-display);
-  font-size: 4.6vh;
-  font-weight: 700;
+  font-size: 4.8vh;
+  font-weight: 800;
   line-height: 1;
   text-transform: uppercase;
 }
@@ -488,14 +541,14 @@ body:has(.mon-root) {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--mon-suave);
-  font-size: 2.1vh;
+  font-size: 2.25vh;
   font-weight: 500;
 }
 
 /* Libre: una pelota grande donde iría la cuenta regresiva. */
 .mon-card-ball {
-  width: min(11vh, 100cqh);
-  height: min(11vh, 100cqh);
+  width: min(12vh, 100cqh);
+  height: min(12vh, 100cqh);
   object-fit: contain;
   filter: drop-shadow(0 1vh 1.2vh rgba(0, 0, 0, 0.5));
 }
@@ -513,7 +566,7 @@ body:has(.mon-root) {
 
 .mon-card-next-label {
   color: var(--mon-naranja);
-  font-size: 1.7vh;
+  font-size: 1.8vh;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -562,7 +615,7 @@ body:has(.mon-root) {
 /* Cuenta regresiva: el anillo se vacía a medida que pasa el turno. */
 .mon-ring {
   position: relative;
-  width: min(13.4vh, 100cqh);
+  width: min(15vh, 100cqh);
   aspect-ratio: 1;
   color: var(--tone, var(--state));
 }
@@ -598,7 +651,7 @@ body:has(.mon-root) {
 
 .mon-ring-num strong {
   font-family: var(--mon-display);
-  font-size: 6.8vh;
+  font-size: 7.2vh;
   font-weight: 800;
   line-height: 0.82;
   font-variant-numeric: tabular-nums;
@@ -618,6 +671,10 @@ body:has(.mon-root) {
 .mon-callout {
   position: absolute;
   z-index: 2;
+  left: var(--x);
+  /* Si la cancha cae debajo de las tarjetas, el globo se corre a la parte
+     de la cancha que sí se ve (max() se ignora en navegadores viejos). */
+  left: max(calc(var(--mon-lateral) + 2 * clamp(16px, 1.8vw, 36px) + 1vh), var(--x));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1099,6 +1156,20 @@ body:has(.mon-root) {
 
   .mon-header {
     flex-wrap: wrap;
+  }
+
+  .mon-reserva {
+    order: 3;
+    margin: 0;
+    padding: 6px 16px;
+  }
+
+  .mon-reserva span {
+    font-size: 12px;
+  }
+
+  .mon-reserva strong {
+    font-size: 24px;
   }
 
   .mon-brand img {

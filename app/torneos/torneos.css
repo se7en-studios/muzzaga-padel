@@ -1995,3 +1995,20 @@
     margin: 0 6px;
   }
 }
+
+/* --------------------------------------------------------------------------
+   PANTALLA GRANDE (compu de 1280 px o más)
+   El contenedor de 1200 px dejaba casi 40% de pantalla vacía a 1920. Ahora
+   crece con la pantalla (76vw, entre 1200 y 1520, igual que la home), con la
+   barra de arriba y el pie al mismo ancho. Solo en esta página: todo va
+   colgado de :root:has(.tt-page).
+   -------------------------------------------------------------------------- */
+@media (min-width: 1280px) {
+  :root:has(.tt-page) {
+    --pg-ancho: clamp(1200px, 76vw, 1520px);
+  }
+
+  :where(:root:has(.tt-page)) :is(.container, .nav-inner) {
+    max-width: var(--pg-ancho, 1200px);
+  }
+}

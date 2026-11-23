@@ -473,8 +473,10 @@ export default function MonitorPage() {
               // Si la cancha cae cerca de las tarjetas, el globo se abre hacia
               // la derecha: centrado quedaba medio tapado por la columna.
               className={`mon-callout is-${v.state}${pt[0] < 0.5 ? " is-der" : ""}`}
+              // La x va como variable: el CSS la corre a la derecha de la
+              // columna de tarjetas si la cancha cae debajo de ellas.
               style={{
-                left: `${pt[0] * 100}%`,
+                "--x": `${pt[0] * 100}%`,
                 top: `${pt[1] * 100}%`,
                 ...stateVars(v),
               }}
@@ -513,6 +515,12 @@ export default function MonitorPage() {
             <h1>Muzzaga Pádel</h1>
             <p>Canchas en vivo</p>
           </div>
+        </div>
+
+        {/* Para los que miran la tele y quieren jugar: dónde se reserva. */}
+        <div className="mon-reserva" aria-label="Reservá tu turno online">
+          <span>Reservá online</span>
+          <strong>muzzagapadel.com</strong>
         </div>
 
         <div className="mon-tools">

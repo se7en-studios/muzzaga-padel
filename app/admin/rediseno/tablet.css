@@ -1,1 +1,186 @@
-/* Tablet (768-1180): ajustes del panel. */
+/* Tablet (768-1180): ajustes del panel.
+   Dos tramos, iguales a los del resto del admin:
+   - 768-900 (vertical): diseño de celu (barra de abajo + "Más"), pero con
+     la barra flotando acotada al centro, hojas y modales que no ocupan todo
+     el ancho y grillas de 2-3 columnas donde en el celu iba una.
+   - 901-1180: barra lateral de 252px; el contenido queda en ~700-860px, así
+     que se aprietan las tablas y los tableros que estaban pensados para
+     compu. Nada de esto toca el celu (<768) ni la compu (>=1181). */
+
+/* ==========================================================================
+   768-900: tablet vertical con el diseño de celu
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 900px) and (min-height: 501px) {
+  /* Un poco más de aire a los costados que en el celu. */
+  .admin-root .admin-main-inner {
+    padding: 20px 24px calc(168px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-kravio-topbar {
+    margin: -20px -24px 20px;
+    padding-inline: 24px;
+  }
+
+  /* Barra de abajo: una pastilla flotante centrada de 620px, no una franja
+     de 768px con los íconos desparramados. */
+  .admin-root .admin-bottom-nav {
+    left: max(24px, calc(50% - 310px));
+    right: max(24px, calc(50% - 310px));
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    box-shadow:
+      0 18px 36px -14px rgba(0, 0, 0, 0.55),
+      0 2px 6px rgba(0, 0, 0, 0.18);
+  }
+
+  /* Lo que se apoya sobre la barra sube lo mismo que ella (12px de aire). */
+  .admin-root .admin-fab {
+    right: max(24px, calc(50% - 310px));
+    bottom: calc(98px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-toaster {
+    left: max(24px, calc(50% - 260px));
+    right: max(24px, calc(50% - 260px));
+    bottom: calc(164px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-pos-cartbar {
+    left: max(24px, calc(50% - 310px));
+    right: max(24px, calc(50% - 310px));
+    bottom: calc(86px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-caja-close-bar {
+    bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-cfg .admin-cfg-savebar {
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  /* Hoja "Más": del ancho de la barra, y las cinco secciones en una fila. */
+  .admin-root .admin-sheet-backdrop {
+    justify-content: center;
+  }
+
+  .admin-root .admin-sheet {
+    width: min(660px, 100%);
+    padding: 8px 18px calc(18px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-sheet-grid {
+    grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+    gap: 10px;
+  }
+
+  /* Modales (Nueva reserva, detalle del turno, PIN): siguen subiendo desde
+     abajo, pero como hoja centrada y no de lado a lado. */
+  .admin-root .admin-modal-backdrop {
+    justify-content: center;
+  }
+
+  .admin-root .admin-modal-card,
+  .admin-root .admin-modal-card.admin-bk {
+    width: 100%;
+    max-width: 680px;
+    margin-inline: auto;
+  }
+
+  .admin-root .admin-modal-card.admin-detail {
+    max-width: 600px;
+  }
+
+  .admin-root.admin-pin-backdrop {
+    justify-content: center;
+  }
+
+  .admin-root .admin-pin-card {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  /* Tableros de 3 números (Torneos, Calendario): en una fila, no 2 + 1. */
+  .admin-root .admin-kpis-3:not(.rp-kpis) {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .admin-root .admin-kpis-3:not(.rp-kpis) > :last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  .admin-root .admin-kpis-3:not(.rp-kpis) > .admin-kravio-kpi-card + .admin-kravio-kpi-card {
+    border-top: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Caja: transferencias y Mercado Pago lado a lado. */
+  .admin-root .admin-caja-outside {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-root .admin-caja-outside-title {
+    grid-column: 1 / -1;
+  }
+
+  /* Cantina: tres productos por fila; de a dos quedaban fichas de 360px. */
+  .admin-root .admin-cantina .admin-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Clientes: las fichas de a dos. */
+  .admin-root .cc-roster tbody {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .admin-root .cc-roster tbody tr:not(.cc-roster-empty) {
+    margin-bottom: 0;
+  }
+
+  .admin-root .cc-roster tbody tr.cc-roster-empty {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ==========================================================================
+   901-1180: barra lateral, contenido de ~700-860px
+   ========================================================================== */
+@media (min-width: 901px) and (max-width: 1180px) and (min-height: 501px) {
+  /* Tableros de 3 números: siempre en una fila (a 1024 quedaban 2 + un
+     hueco vacío al lado del tercero). */
+  .admin-root .admin-kpis-3:not(.rp-kpis) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-root .admin-kpis-3:not(.rp-kpis) > .admin-kravio-kpi-card {
+    padding: 16px 18px 18px;
+  }
+
+  .admin-root .admin-kpis-3:not(.rp-kpis) .admin-kravio-kpi-number {
+    font-size: 36px;
+  }
+
+  /* Clientes: la tabla entraba en 880px y el contenido mide ~710: se
+     cortaba "Último turno" y el WhatsApp quedaba escondido a la derecha. */
+  .admin-root .cc-roster thead th,
+  .admin-root .cc-roster tbody td {
+    padding-inline: 12px;
+  }
+
+  .admin-root .cc-roster th[data-col="count"] { width: 112px; }
+  .admin-root .cc-roster th[data-col="totalSpent"] { width: 128px; }
+  .admin-root .cc-roster th[data-col="lastDate"] { width: 132px; }
+  .admin-root .cc-roster th[data-col="contact"] { width: 96px; }
+
+  /* Cantina: los rótulos del marcador se cortaban con "…". */
+  .admin-root .admin-pos-stats dt {
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    white-space: normal;
+    line-height: 1.2;
+  }
+}

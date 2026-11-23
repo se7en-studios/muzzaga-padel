@@ -866,6 +866,56 @@ html.menu-abierto {
 
 /* ---------- Modo oscuro ---------- */
 @media (prefers-color-scheme: dark) {
+  /* Paleta "noche de cancha": el fondo deja el gris pardo genérico y pasa a
+     un azul noche que es el mismo de la cancha con las luces apagadas
+     alrededor. Va acá porque el encabezado está en todas las páginas
+     públicas (y no en el admin, que además se reafirma en claro). html:root
+     le gana a :root de globals.css sin depender del orden de los CSS.
+     Contraste (sobre --color-canvas / --color-surface-card): ink 16,9 / 15,4,
+     body 11,7 / 10,6, muted 7,3 / 6,6, muted-soft 5,5 / 5,0. */
+  html:root {
+    color-scheme: dark;
+    --color-canvas: #0a1022;
+    --color-canvas-soft: #0f1730;
+    --color-surface-card: #111a33;
+    --color-surface-subtle: #142040;
+    --color-surface-strong: #1a2850;
+
+    --bg-floor: #0a1022;
+    --bg-surface: #0f1730;
+    --bg-surface-subtle: #142040;
+    --bg-card: #111a33;
+    --bg-card-hover: #1a2850;
+    --bg-elevated: #142040;
+
+    --color-hairline: #243259;
+    --color-hairline-soft: #19244a;
+    --color-hairline-strong: #31437a;
+    --border-subtle: #243259;
+    --border-strong: #31437a;
+
+    --color-ink: #eef2ff;
+    --color-body: #c3cbe3;
+    --color-body-strong: #eef2ff;
+    --color-muted: #93a0c4;
+    --color-muted-soft: #7d8ab0;
+
+    --text-primary: #eef2ff;
+    --text-secondary: #c3cbe3;
+    --text-muted: #93a0c4;
+
+    --color-accent-orange-subtle: #2a1d1c;
+    --color-accent-orange-border: #5a3624;
+  }
+
+  /* Un halo de reflector arriba de todo (fijo en px, no escala con el largo
+     de la página; estático, sin costo de scroll). */
+  html:root body {
+    background:
+      radial-gradient(900px 560px at 50% -160px, rgba(58, 104, 255, 0.2), transparent 70%) no-repeat,
+      var(--color-canvas);
+  }
+
   .app-top-nav,
   .menu-sheet {
     --hdr-azul: #5b82ff;

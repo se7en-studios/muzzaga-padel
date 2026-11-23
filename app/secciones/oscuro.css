@@ -1,1 +1,52 @@
-/* oscuro: se carga al final de la home (app/page.js). */
+/* oscuro: se carga al final de la home (app/page.js).
+   Ajustes de la home en modo oscuro. La paleta base ("noche de cancha":
+   tokens --color-* en azul noche) está en components/Header.css, porque
+   vale para todas las páginas públicas. */
+@media (prefers-color-scheme: dark) {
+  /* ---------- Beelup: el buscador ----------
+     Los tres campos eran cajas blancas sobre la tarjeta negra. En oscuro
+     pasan a campos de vidrio oscuro, como un buscador de app de noche. */
+  .bl-search {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .bl-search li {
+    background: #141a2c;
+    color: #f4f6ff;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .bl-search li::after {
+    border-top-color: var(--bl-hi);
+  }
+
+  /* 7,9:1 sobre el campo. */
+  .bl-search small {
+    color: #aab3cc;
+  }
+
+  .bl-search small::before {
+    color: var(--bl-hi);
+  }
+
+  /* ---------- Ubicación: el mapa ----------
+     El de Google es claro y no se puede pedir en oscuro: se lo invierte y
+     se le devuelve el tono (calles oscuras, agua azul). Filtro fijo, no
+     animado. El dibujo que se ve mientras carga, en la misma noche. */
+  .section-ubicacion .location-map-pane iframe {
+    filter: invert(0.9) hue-rotate(180deg) saturate(0.75) brightness(0.95);
+  }
+
+  .mapa-dibujo {
+    --tierra: #121a33;
+    --calle: #24325a;
+    --avenida: #6b5320;
+    --plaza: #173826;
+    box-shadow:
+      0 0 0 3px rgba(255, 255, 255, 0.85),
+      0 10px 22px -8px rgba(0, 0, 0, 0.8);
+  }
+}
