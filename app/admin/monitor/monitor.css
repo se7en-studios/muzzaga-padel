@@ -236,6 +236,7 @@ body:has(.mon-root) {
 /* "Reservá online": cartel de césped azul en el medio del header, para el
    que mira una cancha libre desde la recepción. */
 .mon-reserva {
+  min-width: 0;
   display: grid;
   justify-items: center;
   margin: 0 auto;
@@ -260,11 +261,21 @@ body:has(.mon-root) {
 }
 
 .mon-reserva strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: var(--mon-display);
   font-size: 3.6vh;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.02em;
+}
+
+/* Mientras el sitio esté en la dirección de Vercel (larga), más chica para
+   que entre en el cartel sin cortarse. */
+.mon-reserva strong.is-largo {
+  font-size: 2.7vh;
+  letter-spacing: 0;
 }
 
 .mon-tools {
