@@ -54,18 +54,18 @@ function Digitos({ text }) {
 // Festejo de la inscripción: pelotitas y papelitos que saltan desde el tilde.
 // Posiciones fijas (no al azar) para que servidor y cliente coincidan.
 const FESTEJO = [
-  { x: -70, y: -90, r: 200, t: "pelota" },
-  { x: 40, y: -120, r: -160, t: "pelota" },
-  { x: 120, y: -70, r: 260, t: "pelota" },
-  { x: 180, y: -30, r: -220, t: "pelota" },
-  { x: -30, y: -130, r: 320, t: "papel", c: "naranja" },
-  { x: 90, y: -140, r: -300, t: "papel", c: "azul" },
-  { x: 150, y: -110, r: 240, t: "papel", c: "naranja" },
-  { x: 220, y: -80, r: -260, t: "papel", c: "lima" },
-  { x: -60, y: -40, r: 180, t: "papel", c: "azul" },
-  { x: 260, y: -50, r: 300, t: "papel", c: "naranja" },
-  { x: 10, y: -60, r: -200, t: "papel", c: "lima" },
-  { x: 200, y: -140, r: 280, t: "papel", c: "azul" },
+  { x: -94, y: -122, r: 200, t: "pelota" },
+  { x: 54, y: -162, r: -160, t: "pelota" },
+  { x: 162, y: -94, r: 260, t: "pelota" },
+  { x: 243, y: -40, r: -220, t: "pelota" },
+  { x: -40, y: -176, r: 320, t: "papel", c: "naranja" },
+  { x: 122, y: -189, r: -300, t: "papel", c: "azul" },
+  { x: 202, y: -148, r: 240, t: "papel", c: "naranja" },
+  { x: 297, y: -108, r: -260, t: "papel", c: "lima" },
+  { x: -81, y: -54, r: 180, t: "papel", c: "azul" },
+  { x: 351, y: -68, r: 300, t: "papel", c: "naranja" },
+  { x: 14, y: -81, r: -200, t: "papel", c: "lima" },
+  { x: 270, y: -189, r: 280, t: "papel", c: "azul" },
 ];
 
 const waLink = (text) =>

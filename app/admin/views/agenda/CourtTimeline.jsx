@@ -82,8 +82,17 @@ export default function CourtTimeline({
   useEffect(() => {
     prevStates.current = nextStates;
   });
-  const stateChanged = (b, state) =>
-    prevStates.current?.has(b.id) && prevStates.current.get(b.id) !== state;
+  // Se recuerda un rato cuándo cambió: el panel vuelve a pintar enseguida
+  // (ocupación de la tira, reloj) y sin esto la vuelta se cortaba a la mitad.
+  const changedAt = useRef(new Map());
+  const stateChanged = (b, state) => {
+    const prev = prevStates.current;
+    if (prev?.has(b.id) && prev.get(b.id) !== state) {
+      changedAt.current.set(b.id, Date.now());
+    }
+    const t = changedAt.current.get(b.id);
+    return t != null && Date.now() - t < 1200;
+  };
 
   // Línea de "ahora": solo mirando hoy y dentro del horario del club.
   let nowTopPct = null;

@@ -7394,7 +7394,9 @@ textarea:focus-visible {
   height: 100%;
   object-fit: cover;
   display: block;
-  filter: saturate(0.85) contrast(1.05);
+  /* Sin filter: un filtro sobre un video que se reproduce obliga al celu a
+     reprocesar cada cuadro (y en Android apaga la reproducción por hardware):
+     era lo que trababa la sección al scrollear. */
 }
 
 .camaras-frame-chrome {

@@ -53,13 +53,14 @@ export function changeViewAnimated(apply, dir) {
  * desliza. La primera medida (y las de cambio de tamaño) van sin transición.
  */
 export function useNavIndicator(active, { selector = '[aria-current="page"]', deps = [] } = {}) {
-  const ref = useRef(null);
+  // Ref por callback: el menú puede montarse después que el componente
+  // (por ejemplo, recién al entrar con el PIN).
+  const [nav, setNav] = useState(null);
   const [box, setBox] = useState(null);
   const animate = useRef(false);
 
   const measure = useCallback(
     (withTransition) => {
-      const nav = ref.current;
       if (!nav) return;
       const el = nav.querySelector(selector);
       if (!el || !el.getClientRects().length) {
@@ -68,18 +69,26 @@ export function useNavIndicator(active, { selector = '[aria-current="page"]', de
       }
       const n = nav.getBoundingClientRect();
       const r = el.getBoundingClientRect();
+      // Tamaño sin transformaciones (el ícono puede estar en medio de su
+      // animación de escala) y posición desde el centro, que no cambia al
+      // escalar desde el medio.
+      const w = el.offsetWidth || el.clientWidth || r.width;
+      const h = el.offsetHeight || el.clientHeight || r.height;
+      const cx = r.left + r.width / 2 - n.left + nav.scrollLeft - nav.clientLeft;
+      const cy = r.top + r.height / 2 - n.top + nav.scrollTop - nav.clientTop;
       setBox({
-        x: Math.round(r.left - n.left + nav.scrollLeft - nav.clientLeft),
-        y: Math.round(r.top - n.top + nav.scrollTop - nav.clientTop),
-        w: Math.round(r.width),
-        h: Math.round(r.height),
+        x: Math.round(cx - w / 2),
+        y: Math.round(cy - h / 2),
+        w: Math.round(w),
+        h: Math.round(h),
         instant: !withTransition,
       });
     },
-    [selector],
+    [nav, selector],
   );
 
   useLayoutEffect(() => {
+    if (!nav) return;
     measure(animate.current);
     animate.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,7 +96,6 @@ export function useNavIndicator(active, { selector = '[aria-current="page"]', de
 
   // Si cambia el tamaño (menú achicado, giro del celu) se reubica sin viaje.
   useEffect(() => {
-    const nav = ref.current;
     if (!nav || typeof ResizeObserver === "undefined") return;
     let last = null;
     const ro = new ResizeObserver(([entry]) => {
@@ -98,7 +106,7 @@ export function useNavIndicator(active, { selector = '[aria-current="page"]', de
     });
     ro.observe(nav);
     return () => ro.disconnect();
-  }, [measure]);
+  }, [nav, measure]);
 
   const style = box
     ? {
@@ -109,7 +117,7 @@ export function useNavIndicator(active, { selector = '[aria-current="page"]', de
       }
     : null;
 
-  return { ref, style };
+  return { ref: setNav, style };
 }
 
 /**

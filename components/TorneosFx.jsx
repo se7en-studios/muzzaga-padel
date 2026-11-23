@@ -18,7 +18,19 @@ export default function TorneosFx() {
       entries.forEach((e) => e.target.classList.toggle("tt-quieto", !e.isIntersecting));
     });
     document.querySelectorAll(LOOPS).forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    // La llave del afiche se arma recién cuando se ve casi entera (en PC
+    // suele quedar al pie de la pantalla): hasta entonces queda en pausa.
+    const llave = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => e.target.classList.toggle("tt-quieto", !e.isIntersecting));
+      },
+      { threshold: 0.6 },
+    );
+    document.querySelectorAll(".tt-llave").forEach((el) => llave.observe(el));
+    return () => {
+      io.disconnect();
+      llave.disconnect();
+    };
   }, []);
   return null;
 }

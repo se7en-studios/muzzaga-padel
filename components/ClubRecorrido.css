@@ -27,29 +27,38 @@
 }
 
 /* La maqueta (foto + 3D + viñeta). Cuando el borde de arriba o el de abajo de la sección está
-   en pantalla, ClubRecorrido pone data-fade y sube --fade-top / --fade-bottom: la maqueta se funde
-   con la página en vez de cortarse en recto. Fija en pantalla no lleva máscara (nada que recortar). */
+   en pantalla, la maqueta se funde con la página en vez de cortarse en recto: dos franjas del
+   color de la página, de alto fijo, por encima de la 3D. ClubRecorrido solo cambia su opacidad
+   (--fade-top-o / --fade-bottom-o) mientras se scrollea: nada de máscaras que obliguen a
+   recomponer la 3D en cada cuadro (eso trababa el celu). */
 .club-tour-scene {
-  --fade-top: 0px;
-  --fade-bottom: 0px;
   position: absolute;
   inset: 0;
   /* foto de la maqueta: se ve al instante mientras carga la 3D */
   background: #141826 url(/recorrido/poster-noche.jpg) center / cover no-repeat;
 }
 
-.club-tour-scene[data-fade] {
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    rgb(0 0 0 / 0.35) calc(var(--fade-top) * 0.4),
-    rgb(0 0 0 / 0.8) calc(var(--fade-top) * 0.75),
-    #000 var(--fade-top),
-    #000 calc(100% - var(--fade-bottom)),
-    rgb(0 0 0 / 0.8) calc(100% - var(--fade-bottom) * 0.75),
-    rgb(0 0 0 / 0.35) calc(100% - var(--fade-bottom) * 0.4),
-    transparent 100%
-  );
+.club-tour-sticky::before,
+.club-tour-sticky::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: var(--fade-size, 180px);
+  pointer-events: none;
+}
+
+.club-tour-sticky::before {
+  top: 0;
+  background: linear-gradient(to bottom, var(--color-canvas) 12%, transparent);
+  opacity: var(--fade-top-o, 0);
+}
+
+.club-tour-sticky::after {
+  bottom: 0;
+  background: linear-gradient(to top, var(--color-canvas) 12%, transparent);
+  opacity: var(--fade-bottom-o, 0);
 }
 
 /* viñeta de cine */
@@ -394,9 +403,11 @@
   opacity: 0;
 }
 
-/* Celus humildes (modo liviano de la maqueta): sin desenfoque de fondo, que
-   recalcularlo sobre la 3D en cada cuadro cuesta; el vidrio pasa a tinte. */
-.club-tour[data-load="lite"] :is(.club-tour-card, .club-tour-poi, .club-tour-scroll) {
+/* En TODOS los celulares (modo liviano y móvil): sin desenfoque de fondo, que
+   recalcularlo sobre la 3D en cada cuadro del scroll traba; el vidrio pasa a
+   tinte. El desenfoque queda solo en la compu. */
+.club-tour[data-load="lite"] :is(.club-tour-card, .club-tour-poi, .club-tour-scroll),
+.club-tour[data-load="movil"] :is(.club-tour-card, .club-tour-poi, .club-tour-scroll, .club-tour-loading) {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background-color: rgba(9, 14, 34, 0.8);

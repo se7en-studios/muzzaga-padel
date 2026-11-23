@@ -110,25 +110,50 @@ export default function ClubRecorrido() {
     const saveData = navigator.connection?.saveData === true;
     let idleId = null;
     let timerId = null;
+    // En el celu, armar la 3D (parsear varios MB y subir texturas) comparte el hilo con la
+    // página: si arrancaba con la sección todavía a pantalla y media, el scroll de "Muzzaga Play"
+    // se trababa. Ahí se arranca recién cuando la sección está por entrar y con el dedo quieto
+    // (≈300 ms sin scroll); mientras tanto se ve la foto de la maqueta.
+    const celu = wantsLite3d() || wantsMobile3d();
+    let quietId = null;
+    let lastScroll = 0;
+    const onScroll = () => {
+      lastScroll = performance.now();
+    };
     const start = () => {
       io.disconnect();
       const run = () =>
         setLoad(wantsLite3d() ? "lite" : wantsMobile3d() ? "movil" : "full");
-      if ("requestIdleCallback" in window) {
-        idleId = window.requestIdleCallback(run, { timeout: 1500 });
-      } else {
-        timerId = window.setTimeout(run, 200);
-      }
+      const idle = () => {
+        if ("requestIdleCallback" in window) {
+          idleId = window.requestIdleCallback(run, { timeout: 1500 });
+        } else {
+          timerId = window.setTimeout(run, 200);
+        }
+      };
+      if (!celu) return idle();
+      const waitQuiet = () => {
+        if (performance.now() - lastScroll < 300) {
+          quietId = window.setTimeout(waitQuiet, 120);
+          return;
+        }
+        window.removeEventListener("scroll", onScroll);
+        idle();
+      };
+      waitQuiet();
     };
+    if (celu) window.addEventListener("scroll", onScroll, { passive: true });
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) start();
       },
-      { rootMargin: saveData ? "0px" : "40% 0px" },
+      { rootMargin: saveData || celu ? "10% 0px" : "40% 0px" },
     );
     io.observe(el);
     return () => {
       io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      if (quietId !== null) window.clearTimeout(quietId);
       if (idleId !== null) window.cancelIdleCallback(idleId);
       if (timerId !== null) window.clearTimeout(timerId);
     };
@@ -149,7 +174,9 @@ export default function ClubRecorrido() {
     if (!el || !ready) return undefined;
     const io = new IntersectionObserver(
       ([entry]) => post({ muzzaga: "visible", v: entry.isIntersecting }),
-      { rootMargin: "20% 0px" },
+      // Solo dibuja con la sección en pantalla: con margen, en el celu seguía
+      // dibujando mientras se scrolleaba la sección de arriba.
+      { rootMargin: "0px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -175,12 +202,17 @@ export default function ClubRecorrido() {
         const bottom = Math.round(
           Math.min(size, Math.max(0, vh - rect.bottom)),
         );
-        if (`${top},${bottom}` !== fades) {
-          fades = `${top},${bottom}`;
-          scene.style.setProperty("--fade-top", `${top}px`);
-          scene.style.setProperty("--fade-bottom", `${bottom}px`);
-          // sin borde a la vista, sin máscara: la 3D fija se dibuja como siempre
-          scene.toggleAttribute("data-fade", top > 0 || bottom > 0);
+        // Antes era una máscara sobre la 3D que cambiaba de tamaño en cada
+        // cuadro del scroll: el celu tenía que recomponer toda la maqueta y
+        // se trababa. Ahora son dos franjas con el color de la página encima
+        // (alto fijo) y solo cambia su opacidad, que es casi gratis.
+        const key = `${top},${bottom}`;
+        if (key !== fades) {
+          fades = key;
+          const franjas = scene.parentElement; // .club-tour-sticky
+          franjas.style.setProperty("--fade-size", `${Math.round(size)}px`);
+          franjas.style.setProperty("--fade-top-o", (top / size).toFixed(3));
+          franjas.style.setProperty("--fade-bottom-o", (bottom / size).toFixed(3));
         }
       }
       const p = clamp01(
@@ -274,7 +306,7 @@ export default function ClubRecorrido() {
             <iframe
               ref={frameRef}
               className={`club-tour-frame${ready ? " is-ready" : ""}`}
-              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261121`}
+              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261123`}
               title="Maqueta 3D del club Muzzaga"
               tabIndex={-1}
               aria-hidden="true"

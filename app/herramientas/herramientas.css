@@ -2663,27 +2663,6 @@
     transition: transform var(--t-hover) var(--ease);
   }
 
-  .hx-nav-pelota {
-    animation: hx-nav-pique 0.7s var(--ease) 0.35s both;
-  }
-
-  @keyframes hx-nav-pique {
-    0% {
-      transform: translateY(-14px) scale(0.6);
-      opacity: 0;
-    }
-    45% {
-      transform: translateY(0) scale(1.15, 0.85);
-      opacity: 1;
-    }
-    70% {
-      transform: translateY(-5px);
-    }
-    100% {
-      transform: none;
-    }
-  }
-
   /* --- Dividir gastos --- */
   .hx-ticket-fila {
     animation: hx-ticket 0.35s var(--ease) both;
