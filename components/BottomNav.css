@@ -276,3 +276,13 @@
     top: -1px;
   }
 }
+
+/* Celulares: sin vidrio esmerilado en la barra de abajo (se recalculaba en
+   cada píxel de scroll y trababa); fondo casi opaco, que se ve igual. */
+@media (pointer: coarse), (max-width: 900px) {
+  .bottom-bar-bg {
+    background: color-mix(in srgb, var(--color-surface-card) 97%, transparent);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

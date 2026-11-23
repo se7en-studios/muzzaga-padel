@@ -43,3 +43,69 @@
     transition: opacity var(--t-estado) var(--ease);
   }
 }
+
+/* Navegadores que atan animaciones al scroll: lo hace el CSS, sin JS (el
+   componente no escucha el scroll en ese caso). La pelotita se mueve con
+   `translate` (relativo al ancho de la barra) y gira con `rotate`. */
+@supports (animation-timeline: scroll()) {
+  .scroll-progress-fill {
+    animation: progresoRelleno linear both;
+    animation-timeline: scroll(root);
+  }
+
+  .scroll-progress-ball {
+    left: 0;
+    right: 10px;
+    width: auto;
+    background: none;
+    box-shadow: none;
+    opacity: 1;
+    animation: progresoPelota linear both;
+    animation-timeline: scroll(root);
+  }
+
+  /* La pelota de verdad es el ::before: el span ocupa el ancho de la barra
+     para que el 100% de translate sea el recorrido completo. */
+  .scroll-progress-ball::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #f4ff8a 0, #d7f03a 45%, #a9c41c 100%);
+    box-shadow: 0 0 8px rgba(215, 240, 58, 0.7);
+    animation: progresoGira linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+@keyframes progresoRelleno {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes progresoPelota {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  0.4% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes progresoGira {
+  to {
+    transform: rotate(3600deg);
+  }
+}

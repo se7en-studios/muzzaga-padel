@@ -212,3 +212,19 @@
     transform: rotate(-3deg);
   }
 }
+
+/* Celulares: sin vidrio esmerilado en los flotantes (mismo motivo que las
+   barras: el desenfoque se recalcula en cada píxel de scroll). */
+@media (pointer: coarse), (max-width: 900px) {
+  .floating-live-inner {
+    background: rgba(18, 21, 32, 0.95);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .mascot-float-label {
+    background: rgba(18, 21, 32, 0.95);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
