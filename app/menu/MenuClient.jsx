@@ -13,6 +13,7 @@ import { lanzarPelota, useCategoriaEnVista, useIndicadorCategoria } from "./cart
 import {
   MAX_ORDER_QTY,
   deliveryFromParam,
+  locationKey,
   orderCount,
   orderLines,
   orderTotal,
@@ -48,11 +49,11 @@ function CategoryIcon({ id }) {
   return Icon ? <Icon size={20} className="icono-marca" aria-hidden="true" /> : null;
 }
 
+// Claves normalizadas por locationKey: "mesa-3" sale igual de ?mesa=3,
+// ?mesa=mesa-3, ?mesa=mesa3 o ?ubicacion=Mesa 3.
 const LOCATION_NAMES = {
   "cancha-1": "Cancha 1 (cristal)",
   "cancha-2": "Cancha 2 (cristal)",
-  "cancha1": "Cancha 1 (cristal)",
-  "cancha2": "Cancha 2 (cristal)",
   "mesa-1": "Mesa 1 (Cantina)",
   "mesa-2": "Mesa 2 (Cantina)",
   "mesa-3": "Mesa 3 (Cantina)",
@@ -61,21 +62,32 @@ const LOCATION_NAMES = {
   "mesa-6": "Mesa 6 (Cantina)",
 };
 
+/** Lugar del QR: qué parámetro trajo (ubicacion, cancha o mesa) y su valor. */
+function locationFromParams(searchParams) {
+  for (const kind of ["ubicacion", "cancha", "mesa"]) {
+    const raw = searchParams.get(kind);
+    if (raw && raw.trim()) return { raw, kind };
+  }
+  return null;
+}
+
 export default function MenuClient({ items }) {
   const searchParams = useSearchParams();
   const [selectedCat, setSelectedCat] = useState("all");
   const [search, setSearch] = useState("");
 
-  const rawLocation =
-    searchParams.get("ubicacion") ||
-    searchParams.get("cancha") ||
-    searchParams.get("mesa");
+  const qrLocation = locationFromParams(searchParams);
 
-  const [activeLocation, setActiveLocation] = useState(
-    rawLocation ? LOCATION_NAMES[rawLocation.toLowerCase()] || rawLocation : null
+  // ?mesa=3 es la "Mesa 3", no un lugar llamado "3".
+  const [activeLocation, setActiveLocation] = useState(() =>
+    qrLocation
+      ? LOCATION_NAMES[locationKey(qrLocation.raw, qrLocation.kind)] ||
+          deliveryFromParam(qrLocation.raw, qrLocation.kind)
+      : null
   );
   // Con el QR de una cancha o mesa, el pedido ya sale con esa entrega.
-  const initialDelivery = activeLocation ? deliveryFromParam(rawLocation) : null;
+  const initialDelivery =
+    activeLocation && qrLocation ? deliveryFromParam(qrLocation.raw, qrLocation.kind) : null;
 
   const [cart, setCart] = useState({}); // { id: cantidad }
   const [cartLoaded, setCartLoaded] = useState(false);

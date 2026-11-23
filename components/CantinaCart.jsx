@@ -114,7 +114,11 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(null); // { code, url, items, total, payWith, via, status, error }
   const nameRefs = useRef({});
+  const nameErrorRefs = useRef({});
   const headingRefs = useRef({});
+  // Celu acostado: la barra se esconde mientras se baja por la carta y
+  // vuelve al subir (el CSS solo la esconde en pantallas bajas).
+  const [barTucked, setBarTucked] = useState(false);
 
   // Después de vaciar, sacar la última línea o enviar, el botón que tenía el
   // foco desaparece: el foco va al título del panel en vez de caer en <body>.
@@ -174,6 +178,30 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
     return () => document.body.classList.remove("has-cart-bar");
   }, [barVisible]);
 
+  useEffect(() => {
+    if (!barVisible) return;
+    let lastY = window.scrollY;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        if (Math.abs(y - lastY) < 8) return;
+        // Cerca del final vuelve: ahí se busca el pedido.
+        const nearEnd = y + window.innerHeight >= document.documentElement.scrollHeight - 80;
+        setBarTucked(y > lastY && y > 120 && !nearEnd);
+        lastY = y;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+      setBarTucked(false);
+    };
+  }, [barVisible]);
+
   const deliveryOptions = DELIVERY_OPTIONS.some((o) => o.label === deliverTo)
     ? DELIVERY_OPTIONS
     : [...DELIVERY_OPTIONS, { id: "qr", label: deliverTo }];
@@ -181,7 +209,13 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
   function checkName(variant) {
     if (name.trim().length >= 2) return true;
     setNameError("Poné tu nombre para que sepamos de quién es el pedido.");
-    nameRefs.current[variant]?.focus();
+    nameRefs.current[variant]?.focus({ preventScroll: true });
+    // El aviso recién aparece en el próximo dibujo: ahí se lleva a la vista
+    // (al centro, así no queda debajo del pie con el total y los botones).
+    requestAnimationFrame(() => {
+      const el = nameErrorRefs.current[variant] || nameRefs.current[variant];
+      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
     return false;
   }
 
@@ -385,6 +419,13 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
       );
     }
 
+    const hint = (
+      <p className="menu-cart-hint">
+        Las dos opciones le llegan a la cantina. Por WhatsApp, además, te
+        respondemos por ahí.
+      </p>
+    );
+
     return (
       <>
         {head}
@@ -439,7 +480,14 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
               />
             </label>
             {nameError && (
-              <p id={ids.nameError} className="menu-cart-error" role="alert">
+              <p
+                id={ids.nameError}
+                className="menu-cart-error"
+                role="alert"
+                ref={(el) => {
+                  nameErrorRefs.current[variant] = el;
+                }}
+              >
                 {nameError}
               </p>
             )}
@@ -483,6 +531,16 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
               />
             </label>
           </div>
+          {/* En la hoja del celu el pie pegado queda solo con el total y los
+              botones: el aviso de pago y la aclaración van acá, al final de
+              lo que scrollea (con el pie entero, en 360×740 tapaba el aviso
+              de «Poné tu nombre»). */}
+          {variant === "sheet" && (
+            <div className="menu-cart-body-foot">
+              <PayNotice payWith={payWith} />
+              {hint}
+            </div>
+          )}
         </div>
 
         <div className="menu-cart-foot">
@@ -491,7 +549,7 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
             {/* key: cada cambio de total "da vuelta" el marcador. */}
             <strong key={total}>{formatARS(total)}</strong>
           </div>
-          <PayNotice payWith={payWith} />
+          {variant !== "sheet" && <PayNotice payWith={payWith} />}
           {sendError && (
             <p className="menu-cart-error" role="alert">
               {sendError}
@@ -517,10 +575,7 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
               Enviar por WhatsApp
             </button>
           </div>
-          <p className="menu-cart-hint">
-            Las dos opciones le llegan a la cantina. Por WhatsApp, además, te
-            respondemos por ahí.
-          </p>
+          {variant !== "sheet" && hint}
         </div>
       </>
     );
@@ -536,7 +591,12 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
           viene después, se pintaba encima de la barra y no se podía tocar. */}
       {barVisible && (
         <Portal>
-        <button type="button" className="menu-cart-bar" onClick={onOpen} aria-haspopup="dialog">
+        <button
+          type="button"
+          className={`menu-cart-bar${barTucked && !open ? " is-guardada" : ""}`}
+          onClick={onOpen}
+          aria-haspopup="dialog"
+        >
           <span className="menu-cart-bar-icon" aria-hidden="true">
             <ShoppingCart size={22} />
             <strong key={count} className="menu-cart-bar-badge">
@@ -546,7 +606,7 @@ export default function CantinaCart({ lines, count, total, onQty, onClear, initi
           {/* Debajo del título, cuántos son y adónde va: con el QR de la mesa
               se confirma de un vistazo que sale para ahí. */}
           <span className="menu-cart-bar-label">
-            Ver mi pedido
+            <span className="menu-cart-bar-title">Ver mi pedido</span>
             <small className="menu-cart-bar-sub">
               {plural(count, "producto", "productos")} · {deliverTo}
             </small>

@@ -18,6 +18,9 @@ import { toWhatsappNumber } from "../lib/phone";
 import { trackEvent } from "../lib/analytics";
 import { X } from "lucide-react";
 
+// Celu parado/tablet chica, o celu acostado (mismo corte que la barra de abajo).
+const DRAWER_QUERY = "(max-width: 768px), (max-width: 1180px) and (max-height: 500px)";
+
 // El pase digital solo aparece después de reservar: su JS no se baja al abrir
 // la landing, se pide al elegir un turno (llega antes de que se confirme).
 const loadPassModal = () => import("./BookingPassModal");
@@ -76,7 +79,10 @@ export default function BookingCalendar({
   const [selected, setSelected] = useState(null); // { courtId, start, end }
   // Hasta 768 el formulario es un drawer fijo sobre la página: va a <body> para
   // no quedar debajo del header y la barra inferior. En notebook va en línea.
-  const isDrawer = useMediaQuery("(max-width: 768px)");
+  // El celu acostado (poco alto) también usa el drawer: en línea, el cerrar
+  // quedaba bajo el header y "Confirmar turno" bajo la barra de abajo. La
+  // misma query está en globals.css y anim-turnos.css (DRAWER_QUERY).
+  const isDrawer = useMediaQuery(DRAWER_QUERY);
   const [form, setForm] = useState({
     playerName: "",
     playerPhone: "",

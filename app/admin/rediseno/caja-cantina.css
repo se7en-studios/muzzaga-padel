@@ -1023,7 +1023,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-caja-drawer {
     padding: 12px 10px 10px;
     border-radius: 14px;
@@ -1231,7 +1231,7 @@
   transform: translate(calc(var(--k) * 2.5px), calc(var(--k) * -1.5px));
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-caja .admin-bill-field > .admin-bill-note,
   .admin-root .admin-caja .admin-bill-pile {
     grid-row: 1;
@@ -1643,7 +1643,7 @@
 .admin-root .admin-cantina [data-category="accesorios"] { --cat: #6b635a; }
 
 /* Solo desde tablet: en el celu la grilla es de una columna (views.css). */
-@media (min-width: 768px) {
+@media (min-width: 901px) and (min-height: 501px) {
   .admin-root .admin-cantina .admin-pos {
     grid-template-columns: minmax(0, 1fr) 380px;
     gap: 24px;
@@ -2540,7 +2540,7 @@
 }
 
 /* ---------- Cantina en pantallas medianas ---------- */
-@media (max-width: 1180px) and (min-width: 768px) {
+@media (min-width: 901px) and (max-width: 1180px) and (min-height: 501px) {
   .admin-root .admin-cantina .admin-pos {
     grid-template-columns: minmax(0, 1fr) 330px;
   }
@@ -2570,7 +2570,7 @@
 }
 
 /* ---------- Cantina en el celu ---------- */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   /* Lugar para la barra de la venta, que queda flotando abajo. */
   .admin-root .admin-cantina .admin-pos {
     padding-bottom: 96px;
@@ -2841,7 +2841,7 @@
 }
 
 /* Barra de la venta: aparece desde abajo al sumar el primer producto. */
-@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+@media (max-width: 900px) and (prefers-reduced-motion: no-preference), (max-height: 500px) and (prefers-reduced-motion: no-preference) {
   .admin-root .admin-cantina .admin-pos-cartbar:not(.is-empty) {
     animation: ccBarIn 0.24s ease-out;
   }
@@ -2997,7 +2997,7 @@
   color: #ffffff;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-cantina .admin-unsaved-bar {
     flex-wrap: wrap;
     padding-inline: 16px;
@@ -3010,5 +3010,46 @@
   .admin-root .admin-carta-unsaved-actions .btn {
     flex: 1;
     justify-content: center;
+  }
+}
+
+/* ---------- Celu: toques cómodos y la pastilla de la venta sin tapar ----------
+   La X de "Cerrar venta" y las solapas Vender / Carta llegan a 44px. Con la
+   venta vacía la pastilla flotante no ofrece nada (la hoja solo dice "tocá
+   un producto") y tapaba el buscador: aparece recién con el primer producto.
+   El fondo de la vista ya deja lugar de sobra para la pastilla (150px). */
+@media (max-width: 900px), (max-height: 500px) {
+  .admin-root .admin-cantina .admin-pos-cart-head .admin-pos-sheet-close {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 999px;
+  }
+
+  .admin-root .admin-cantina .admin-cantina-tabs button {
+    min-height: 44px;
+  }
+
+  .admin-root .admin-cantina .admin-pos-cartbar.is-empty {
+    display: none;
+  }
+}
+
+/* Tablet chica y celu apaisado: la pastilla de la venta no necesita cruzar
+   toda la pantalla (tapaba una fila entera de productos). */
+@media (min-width: 600px) and (max-width: 900px), (min-width: 600px) and (max-height: 500px) {
+  .admin-root .admin-cantina .admin-pos-cartbar {
+    right: auto;
+    width: min(420px, calc(100% - 32px));
+  }
+}
+
+@media (max-height: 500px) {
+  .admin-root .admin-cantina .admin-pos-cartbar {
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    min-height: 52px;
   }
 }

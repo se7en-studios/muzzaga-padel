@@ -3235,7 +3235,7 @@
 }
 
 /* ---------- Números en el celu ---------- */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .rp-hero {
     grid-template-columns: minmax(0, 1fr);
     padding: 20px 16px 16px;
@@ -3825,7 +3825,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .sk-rp-hero {
     grid-template-columns: minmax(0, 1fr);
     min-height: 0;

@@ -63,7 +63,7 @@
   box-shadow: none;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-bottom-nav .admin-nav-slider {
     border-radius: 999px;
     background-color: var(--court);
@@ -206,7 +206,7 @@
     animation-duration: 0.2s;
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 900px), (max-height: 500px) {
     .admin-root .admin-view-stage[data-enter="css"],
     .admin-root .admin-page-title[data-enter="css"] {
       animation-name: adminMovViewInX;
@@ -306,7 +306,7 @@
     background: rgba(252, 165, 165, 0.55);
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 900px), (max-height: 500px) {
     .admin-root .admin-toast {
       animation-name: adminMovToastUp;
     }
@@ -327,7 +327,7 @@
     animation: adminMovModalOut 0.17s cubic-bezier(0.4, 0, 1, 1) forwards;
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 900px), (max-height: 500px) {
     .admin-root .admin-modal-backdrop.is-closing .admin-modal-card {
       animation-name: adminMovSheetOut;
       animation-duration: 0.2s;

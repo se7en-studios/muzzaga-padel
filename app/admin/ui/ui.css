@@ -287,10 +287,10 @@
   }
 }
 
-/* ---------- Mobile (<768px): ajustes transversales del panel ----------
+/* ---------- Mobile (≤900px o ≤500px de alto): ajustes transversales del panel ----------
    Va al final de ui.css (último CSS del admin) para ganarle a las reglas de
    cada vista sin subir especificidad. */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   /* KPIs en 2 columnas compactas: antes eran 3-4 cards de 142px apiladas que
      ocupaban toda la primera pantalla. Si quedan impares, la última va entera. */
   .admin-root :is(.admin-kpis-3, .admin-kpi-grid) {
@@ -413,8 +413,9 @@
     white-space: nowrap;
   }
 
+  /* 44px: el mínimo cómodo para el dedo (Torneos, Números, Cantina…). */
   .admin-root .admin-segmented button {
-    min-height: 36px;
+    min-height: 44px;
   }
 }
 
@@ -464,7 +465,7 @@
   color: var(--text-secondary);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-kravio-topbar {
     justify-content: space-between;
     padding-bottom: 12px;
@@ -524,7 +525,7 @@
   overscroll-behavior: contain;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-modal-backdrop {
     align-items: flex-end;
     padding: 0;
@@ -901,7 +902,7 @@
   cursor: pointer;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-detail-pay-methods,
   .admin-root .admin-detail-wa {
     grid-template-columns: 1fr;

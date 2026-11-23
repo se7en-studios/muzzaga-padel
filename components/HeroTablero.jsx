@@ -11,6 +11,9 @@ import { useFreeSlots } from "../lib/useFreeSlots";
 // sola vez para toda la home y se actualizan solos cada minuto.
 
 const POR_CANCHA = 4;
+// En celus angostos (menos de 381 px, app/secciones/hero-v2.css) entran 3
+// horarios por cancha: el 4.º se oculta por CSS y el "+N" que se ve es el de 3.
+const POR_CANCHA_ANGOSTO = 3;
 
 function irATurnos() {
   document.getElementById("turnos")?.scrollIntoView({ behavior: scrollBehavior() });
@@ -75,14 +78,14 @@ export default function HeroTablero({ precio, precioSub }) {
             <ul className="htab-horas" aria-label={`Horarios libres en ${court.name}`}>
               {cargando
                 ? Array.from({ length: POR_CANCHA }, (_, k) => (
-                    <li key={k}>
+                    <li key={k} className={k >= POR_CANCHA_ANGOSTO ? "htab-solo-ancho" : undefined}>
                       <span className="htab-hora is-skel" aria-hidden="true" />
                     </li>
                   ))
-                : slots.slice(0, POR_CANCHA).map((s) => {
+                : slots.slice(0, POR_CANCHA).map((s, k) => {
                     const primero = masCercano && s === masCercano;
                     return (
-                      <li key={s.start}>
+                      <li key={s.start} className={k >= POR_CANCHA_ANGOSTO ? "htab-solo-ancho" : undefined}>
                         <button
                           type="button"
                           className={`htab-hora${primero ? " is-primero" : ""}`}
@@ -98,7 +101,12 @@ export default function HeroTablero({ precio, precioSub }) {
                 <li className="htab-lleno">Sin turnos libres {diaTexto}</li>
               ) : null}
               {!cargando && slots.length > POR_CANCHA ? (
-                <li className="htab-mas" aria-hidden="true">+{slots.length - POR_CANCHA}</li>
+                <li className="htab-mas htab-solo-ancho" aria-hidden="true">+{slots.length - POR_CANCHA}</li>
+              ) : null}
+              {!cargando && slots.length > POR_CANCHA_ANGOSTO ? (
+                <li className="htab-mas htab-solo-angosto" aria-hidden="true">
+                  +{slots.length - POR_CANCHA_ANGOSTO}
+                </li>
               ) : null}
             </ul>
           </div>

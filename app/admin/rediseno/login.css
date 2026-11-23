@@ -115,7 +115,7 @@
 }
 
 /* ---------- Celu ---------- */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   /* La foto de abajo cortaba seco contra el césped repetido: una banda
      azul oscura funde las dos. */
   .admin-root .admin-login-wrapper {

@@ -654,7 +654,7 @@
   color: var(--warning);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-daystrip {
     flex-direction: column;
     align-items: stretch;
@@ -843,13 +843,13 @@
 
 /* En compu ya está la línea roja de "ahora" con la hora; la etiqueta se
    pisaba con ella. Queda para el celu, donde esa línea no se muestra. */
-@media (min-width: 768px) {
+@media (min-width: 901px) and (min-height: 501px) {
   .admin-root .admin-timeline-live {
     display: none;
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-timeline-live {
     align-self: center;
     margin: 0 0 0 4px;

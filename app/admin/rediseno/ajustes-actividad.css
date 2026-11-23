@@ -1143,7 +1143,7 @@
 }
 
 /* ---------- Tablet ---------- */
-@media (max-width: 1100px) and (min-width: 768px) {
+@media (min-width: 901px) and (max-width: 1100px) and (min-height: 501px) {
   .admin-root .admin-cfg {
     grid-template-columns: 200px minmax(0, 1fr);
     gap: 20px;
@@ -1163,7 +1163,7 @@
 }
 
 /* ---------- Celu ---------- */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-cfg {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
@@ -1747,7 +1747,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   /* Angosto: sin las líneas de cancha de fondo, que cruzaban los números. */
   .admin-root .admin-act-score {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2009,7 +2009,7 @@
 }
 
 /* ---------- Celu ---------- */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   /* Cada cancha en una ficha: el número arriba y nombre + tipo en una
      sola fila (antes el número flotaba a la mitad de dos renglones). */
   .admin-root .admin-cfg .admin-cfg-court {
@@ -2278,7 +2278,7 @@
   border-radius: 12px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .sk-cfg {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;

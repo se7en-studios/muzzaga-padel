@@ -1583,12 +1583,14 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #8a8a8a;
+  /* #8a8a8a sobre blanco daba 3,45:1; #636363 da 6:1. */
+  color: #636363;
 }
 
 .bl-search small::before {
   content: counter(bl) " · ";
-  color: #d98600;
+  /* El número, en el naranja de Beelup pero oscuro (5:1 sobre blanco). */
+  color: #a35f00;
 }
 
 .bl-search b {
@@ -2166,7 +2168,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #8a8a8a;
+  color: #636363;
 }
 
 .bt-campo b {
@@ -2392,5 +2394,82 @@
 
   .bt-abrir {
     align-self: flex-start;
+  }
+}
+
+/* Celu acostado (alto de ~390 px): con la pantallita arriba y el texto abajo,
+   el carrusel quedaba de 117 px y el título y el texto del paso se perdían
+   en un scroll interno. Acá la hoja ocupa el alto entero y cada paso va de
+   costado: la pantallita (achicada) a la izquierda y el texto a la derecha.
+   Cerrar, Atrás y Siguiente quedan siempre a la vista. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .bt-dialog {
+    max-width: min(760px, calc(100% - 24px));
+    max-height: calc(100dvh - 12px);
+    margin: auto;
+    border-radius: 20px;
+  }
+
+  .bt-hoja {
+    gap: 8px;
+    max-height: calc(100dvh - 12px);
+    padding: 10px max(18px, env(safe-area-inset-right)) 10px max(18px, env(safe-area-inset-left));
+  }
+
+  .bt-head-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .bt-head strong {
+    font-size: 21px;
+  }
+
+  .bt-track {
+    flex: none;
+  }
+
+  .bt-slide {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto auto 1fr;
+    column-gap: 22px;
+    row-gap: 6px;
+    align-items: center;
+    justify-items: start;
+    padding: 2px 4px;
+    text-align: left;
+  }
+
+  /* Misma pantallita, al 68 % (zoom achica también su caja). */
+  .bt-mock {
+    grid-row: 1 / -1;
+    zoom: 0.68;
+  }
+
+  .bt-num {
+    grid-row: 2;
+    margin-top: 0;
+  }
+
+  .bt-tit {
+    grid-row: 3;
+    font-size: 28px;
+  }
+
+  .bt-txt {
+    grid-row: 4;
+    max-width: 380px;
+  }
+
+  .bt-tip {
+    padding: 8px 12px;
+    font-size: 12.5px;
+    line-height: 1.35;
+  }
+
+  .bt-nav-btn {
+    min-height: 44px;
   }
 }

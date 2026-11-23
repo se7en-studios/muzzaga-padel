@@ -28,7 +28,7 @@ export function changeViewAnimated(apply, dir) {
   const canVT =
     typeof document.startViewTransition === "function" &&
     !prefersReducedMotion() &&
-    window.matchMedia?.("(min-width: 768px)").matches;
+    window.matchMedia?.("(min-width: 901px) and (min-height: 501px)").matches;
   if (!canVT) {
     apply("css");
     return;

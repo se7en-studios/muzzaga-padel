@@ -374,7 +374,7 @@
    Al pasar el mouse aparece la raya naranja al borde y el ícono se pinta
    amarillo pelota.
    ========================================================================== */
-@media (min-width: 768px) {
+@media (min-width: 901px) and (min-height: 501px) {
   .admin-root .admin-sidebar {
     width: 252px;
     background-color: #151513;
@@ -736,7 +736,7 @@
   font-size: 12px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 901px) and (min-height: 501px) {
   .admin-root .admin-kravio-topbar {
     float: none;
     display: flex;
@@ -791,7 +791,7 @@
 }
 
 /* Pantallas medianas: el buscador se achica antes que el marcador. */
-@media (min-width: 768px) and (max-width: 1180px) {
+@media (min-width: 901px) and (max-width: 1180px) and (min-height: 501px) {
   .admin-root .admin-topbar-search-text {
     display: none;
   }
@@ -1206,7 +1206,7 @@
 }
 
 /* En pantallas táctiles no hay flechas ni Enter. */
-@media (hover: none), (max-width: 767px) {
+@media (hover: none), (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-palette-foot {
     display: none;
   }
@@ -1593,7 +1593,7 @@
   font-size: 13px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-avisos-backdrop {
     background: rgba(10, 12, 22, 0.55);
   }
@@ -2145,7 +2145,7 @@
 /* ==========================================================================
    CELU (< 768 px)
    ========================================================================== */
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-main-inner {
     padding: 16px 16px calc(150px + env(safe-area-inset-bottom));
   }
@@ -2173,7 +2173,7 @@
   }
 
   .admin-root .admin-kravio-topbar .admin-top-icon-btn {
-    height: 42px;
+    height: 44px;
     padding: 0 14px;
     border-radius: 999px;
   }
@@ -2689,7 +2689,7 @@
     animation: adminBaseBounce 0.7s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 900px), (max-height: 500px) {
     .admin-root .admin-modal-card,
     .admin-root .admin-pin-card,
     .admin-root .admin-avisos {
@@ -2907,7 +2907,7 @@
   color: rgba(255, 255, 255, 0.55);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px), (max-height: 500px) {
   .admin-root .admin-kpis-3:not(.rp-kpis) {
     grid-template-columns: 1fr;
   }
@@ -2923,5 +2923,64 @@
 
   .admin-root .admin-kpis-3:not(.rp-kpis) .admin-kravio-kpi-number {
     font-size: 32px;
+  }
+}
+
+/* ==========================================================================
+   CELU APAISADO (pantallas bajas, ≤500px de alto)
+   Mismo layout de celu, pero con ~390px de alto la barra de arriba fija y
+   la de abajo se comían más de un tercio de la pantalla. La de arriba se va
+   con el scroll y la de abajo se achica (sin bajar de 44px de toque).
+   ========================================================================== */
+@media (max-height: 500px) {
+  .admin-root .admin-kravio-topbar {
+    position: relative;
+    top: auto;
+  }
+
+  .admin-root .admin-bottom-nav {
+    padding: 4px 6px calc(4px + env(safe-area-inset-bottom));
+  }
+
+  .admin-root .admin-bottom-nav button {
+    gap: 2px;
+    min-height: 46px;
+    font-size: 12px;
+  }
+
+  .admin-root .admin-bottom-nav button svg {
+    width: 20px;
+    height: 20px;
+    padding: 2px 14px;
+  }
+
+  .admin-root .admin-bottom-nav button[aria-current="page"]::before {
+    top: 3px;
+  }
+
+  .admin-root .admin-fab {
+    bottom: calc(66px + env(safe-area-inset-bottom));
+    height: 48px;
+  }
+}
+
+/* ==========================================================================
+   ATAJOS DE TECLADO SOLO CON TECLADO
+   "Esc", "Ctrl K", "/", "← → día"… no significan nada con el dedo: en
+   pantallas táctiles se esconden.
+   ========================================================================== */
+.admin-root .admin-pos-search-key {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .admin-root .admin-kbd,
+  .admin-root .admin-palette-foot,
+  .admin-root :is(.admin-agenda, .admin-dashboard-layout) :is(.admin-kbd, .admin-daystrip-keys) {
+    display: none;
   }
 }

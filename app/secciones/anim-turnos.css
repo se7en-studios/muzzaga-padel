@@ -183,7 +183,8 @@
 }
 
 /* Celu y tablet: el cajón sube como un saque (llega y se asienta). */
-@media (prefers-reduced-motion: no-preference) and (max-width: 768px) {
+@media (prefers-reduced-motion: no-preference) and (max-width: 768px),
+  (prefers-reduced-motion: no-preference) and (max-width: 1180px) and (max-height: 500px) {
   .booking-drawer-backdrop .booking-form {
     transform-origin: 50% 100%;
     animation: turnosSaqueHoja 460ms cubic-bezier(0.2, 0.85, 0.3, 1) both;
@@ -197,8 +198,10 @@
 }
 
 /* Compu: el formulario aparece al lado de la grilla. Entra desde abajo; la
-   pelota elegida cruza la red y la cancha acusa el golpe. */
-@media (prefers-reduced-motion: no-preference) and (min-width: 769px) {
+   pelota elegida cruza la red y la cancha acusa el golpe. (El celu acostado,
+   de hasta 500 px de alto, usa el drawer de arriba.) */
+@media (prefers-reduced-motion: no-preference) and (min-width: 1181px),
+  (prefers-reduced-motion: no-preference) and (min-width: 769px) and (min-height: 501px) {
   .booking-drawer-backdrop .booking-form {
     animation: turnosFormEntra 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
   }

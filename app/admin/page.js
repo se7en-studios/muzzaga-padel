@@ -674,7 +674,7 @@ export default function AdminPage() {
                 id="admin-pin"
                 type="password"
                 className="admin-input-field admin-login-input"
-                placeholder="Escribí la contraseña del club"
+                placeholder="Contraseña del club"
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value)}
                 autoFocus

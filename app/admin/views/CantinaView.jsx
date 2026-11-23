@@ -824,7 +824,7 @@ export default function CantinaView({ onExpiredSession, onToast }) {
               ref={searchRef}
               type="search"
               className="admin-search-input"
-              placeholder="Buscar producto (tecla /)"
+              placeholder="Buscar producto"
               aria-label="Buscar producto"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -834,6 +834,13 @@ export default function CantinaView({ onExpiredSession, onToast }) {
                   addToCart(filteredItems[0]);
               }}
             />
+            {/* El atajo "/" solo se muestra con teclado y mouse (en el celu
+                o la tablet se oculta por CSS). */}
+            {!query && (
+              <kbd className="admin-kbd admin-pos-search-key" aria-hidden="true">
+                /
+              </kbd>
+            )}
             {query && (
               <button
                 type="button"
