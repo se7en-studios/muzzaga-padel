@@ -271,13 +271,6 @@ body:has(.mon-root) {
   letter-spacing: 0.02em;
 }
 
-/* Mientras el sitio esté en la dirección de Vercel (larga), más chica para
-   que entre en el cartel sin cortarse. */
-.mon-reserva strong.is-largo {
-  font-size: 2.7vh;
-  letter-spacing: 0;
-}
-
 .mon-tools {
   display: flex;
   align-items: center;

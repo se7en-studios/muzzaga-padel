@@ -29,13 +29,10 @@ import { formatARS, formatDate } from "../../../lib/format";
 import { isExpiredSessionError } from "../adminHelpers";
 import { courtSchedule, liveAndNext, toMinutes } from "./schedule";
 import { isMonitorDemo, monitorDemoData } from "./demo";
-import { SITE_URL } from "../../../lib/site";
 import "./monitor.css";
 
-// El dominio que se muestra en la tele sale de la misma fuente que el resto
-// del sitio (lib/site.js): hoy es la dirección de Vercel; cuando el club
-// conecte su dominio propio (NEXT_PUBLIC_SITE_URL) cambia solo.
-const DOMINIO = SITE_URL.replace(/^https?:\/\//, "").replace(/^www\./, "");
+// El dominio que se muestra en la tele para reservar (lo eligió el club).
+const DOMINIO = "muzzagapadel.com";
 
 const REFRESH_MS = 30000;
 const MENU_REFRESH_MS = 10 * 60 * 1000;
@@ -526,7 +523,7 @@ export default function MonitorPage() {
         {/* Para los que miran la tele y quieren jugar: dónde se reserva. */}
         <div className="mon-reserva" aria-label="Reservá tu turno online">
           <span>Reservá online</span>
-          <strong className={DOMINIO.length > 20 ? "is-largo" : undefined}>{DOMINIO}</strong>
+          <strong>{DOMINIO}</strong>
         </div>
 
         <div className="mon-tools">
