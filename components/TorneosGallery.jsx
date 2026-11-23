@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { MarqueeCard } from "./PhotoCard";
 import { useLightbox } from "./LightboxProvider";
@@ -134,8 +135,34 @@ export default function TorneosGallery({ tournaments, signupOpen = false }) {
   // El marcador de la cabecera: cuánta historia tiene el club.
   const podios = tournaments.reduce((n, t) => n + t.ganadores.length, 0);
   const fotos = tournaments.reduce((n, t) => n + t.jugadores.length + t.ganadores.length, 0);
+
+  // Entradas al llegar con el scroll: el tablero da vuelta sus números, la
+  // pelota cruza la placa de cada torneo y las medallas quedan colgando.
+  // El estado oculto depende de la clase tg-fx que pone JS: sin JS (o con
+  // "reducir movimiento") todo se ve quieto desde el principio.
+  const secRef = useRef(null);
+  useEffect(() => {
+    const sec = secRef.current;
+    if (!sec || !("IntersectionObserver" in window)) return undefined;
+    if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) return undefined;
+    const targets = sec.querySelectorAll(".tg-head, .tg-torneo");
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          e.target.classList.add("is-in");
+          io.unobserve(e.target);
+        });
+      },
+      { rootMargin: "0px 0px -12% 0px" },
+    );
+    sec.classList.add("tg-fx");
+    targets.forEach((t) => io.observe(t));
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <section id="torneos" className="tg">
+    <section id="torneos" className="tg" ref={secRef}>
       <div className="container">
         <div className="tg-head">
           <div className="tg-head-text">
@@ -149,15 +176,15 @@ export default function TorneosGallery({ tournaments, signupOpen = false }) {
           </div>
           {tournaments.length > 0 && (
             <dl className="tg-tablero">
-              <div>
+              <div style={{ "--d": 0 }}>
                 <dt>Torneos</dt>
                 <dd>{tournaments.length}</dd>
               </div>
-              <div>
+              <div style={{ "--d": 1 }}>
                 <dt>Podios</dt>
                 <dd>{podios}</dd>
               </div>
-              <div>
+              <div style={{ "--d": 2 }}>
                 <dt>Fotos</dt>
                 <dd>{fotos}</dd>
               </div>

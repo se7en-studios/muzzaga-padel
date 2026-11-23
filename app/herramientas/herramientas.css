@@ -8,7 +8,8 @@
    TOKENS (locales a las herramientas, no tocan :root)
    ========================================================================== */
 .hx-tool,
-.hx-cierre {
+.hx-cierre,
+.hx-nav {
   /* landing.css (donde vive --font-display) no se carga en las subpáginas:
      sin esto los titulares caían en Poppins. */
   --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
@@ -31,7 +32,8 @@
 
 @media (prefers-color-scheme: dark) {
   .hx-tool,
-  .hx-cierre {
+  .hx-cierre,
+  .hx-nav {
     /* El azul cancha sobre el fondo casi negro daba 2,4:1: para texto y
        bordes va uno más claro. */
     --hx-azul: #8ea6ff;
@@ -61,12 +63,24 @@
   border-radius: 24px;
   border: 1px solid var(--hx-cancha-borde);
   background-color: var(--hx-cancha);
-  background-image: var(--hx-lineas), var(--hx-cesped);
-  background-size: 100% 100%, auto, 200px 200px;
-  background-repeat: no-repeat, no-repeat, repeat;
+  background-image: var(--hx-cesped);
+  background-size: auto, 200px 200px;
+  background-repeat: no-repeat, repeat;
   box-shadow: 0 18px 36px -22px rgba(13, 31, 92, 0.85);
   overflow: hidden;
+  isolation: isolate;
   color: #fff;
+}
+
+/* Las líneas de la cancha en su propia capa: al entrar se "marcan". */
+.hx-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--hx-lineas) no-repeat;
+  background-size: 100% 100%;
+  pointer-events: none;
 }
 
 .hx-hero-icono {
@@ -1295,9 +1309,16 @@
   background: var(--color-accent-orange);
 }
 
+.hx-escala-riel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .hx-escala-marca {
   position: absolute;
   top: 50%;
+  left: 0;
   width: 30px;
   height: 30px;
   margin: -15px 0 0 -15px;
@@ -2320,9 +2341,47 @@
     }
   }
 
-  @keyframes hx-pelota-gira {
+  /* La pelota cae desde arriba, pica en la esquina y se acomoda. */
+  @keyframes hx-pelota-pique {
+    0% {
+      opacity: 0;
+      transform: translate(-36px, -170px) rotate(-200deg);
+      animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.5);
+    }
+    12% {
+      opacity: 1;
+    }
+    52% {
+      transform: translate(0, 0) rotate(0) scale(1.12, 0.86);
+      animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+    }
+    70% {
+      transform: translate(0, -16px) rotate(10deg) scale(0.97, 1.03);
+      animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5);
+    }
+    84% {
+      transform: translate(0, 0) rotate(4deg) scale(1.04, 0.96);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  /* Las líneas se marcan desde el centro de la cancha. */
+  @keyframes hx-lineas {
     from {
-      transform: rotate(-120deg) translate(20px, -20px);
+      opacity: 0;
+      transform: scale(0.8, 0.6);
+    }
+  }
+
+  /* Golpe de LED: el monto nuevo se prende con un pulso corto. */
+  @keyframes hx-led {
+    0% {
+      transform: scale(1.08);
+    }
+    100% {
+      transform: none;
     }
   }
 
@@ -2347,13 +2406,6 @@
     }
   }
 
-  @keyframes hx-escala {
-    from {
-      transform: translateX(-60px);
-      opacity: 0;
-    }
-  }
-
   @keyframes hx-ficha {
     from {
       opacity: 0;
@@ -2366,7 +2418,11 @@
   }
 
   .hx-hero-pelota {
-    animation: hx-pelota-gira 0.7s var(--ease) both;
+    animation: hx-pelota-pique 0.95s both;
+  }
+
+  .hx-hero::before {
+    animation: hx-lineas 0.7s var(--ease) 0.1s both;
   }
 
   .hx-hero-cabeza,
@@ -2419,7 +2475,7 @@
 
   .hx-marcador-valor,
   .hx-dv-mini-monto {
-    animation: hx-entra 0.3s var(--ease) both;
+    animation: hx-led 0.45s var(--ease-mascota) both;
   }
 
   .hx-dv-pelotas li {
@@ -2448,9 +2504,6 @@
     animation: hx-icono 0.6s var(--ease-mascota) 0.15s both;
   }
 
-  .hx-escala-marca {
-    animation: hx-escala 0.8s var(--ease) 0.2s both;
-  }
 
   .hx-cat-flecha {
     transition: transform var(--t-estado) var(--ease);
@@ -2462,5 +2515,385 @@
 
   .hx-cierre:hover .hx-cierre-pelota {
     transform: rotate(-35deg);
+  }
+}
+
+/* ==========================================================================
+   TABLERO DE HERRAMIENTAS (components/HerramientasNav.jsx)
+   Las cuatro como el cartel de cambio de cancha: la ficha azul con la pelota
+   marca dónde estás y viaja de una a otra al cambiar (WAAPI, solo transform).
+   ========================================================================== */
+.hx-nav {
+  margin-top: 2px;
+  margin-bottom: 14px;
+}
+
+.hx-nav-tablero {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 4px;
+  border-radius: 16px;
+  border: 1px solid #0a1640;
+  background: linear-gradient(160deg, var(--hx-noche-2), var(--hx-noche));
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, 0.3),
+    0 10px 22px -16px rgba(5, 13, 38, 0.9);
+}
+
+/* La ficha mide una columna: translateX(n × 100 %) la pone en la n. */
+.hx-nav-ficha {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 4);
+  border-radius: 12px;
+  border: 1px solid var(--hx-cancha-borde);
+  background-color: var(--hx-cancha);
+  background-image: var(--hx-cesped);
+  background-size: auto, 160px 160px;
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+.hx-nav-pelota {
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--hx-pelota);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+.hx-nav-link {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1px;
+  min-height: 52px;
+  padding: 4px 2px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hx-nav-num {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(215, 240, 58, 0.55);
+}
+
+.hx-nav-txt {
+  font-family: var(--font-display), sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.hx-nav-link:hover {
+  color: #fff;
+}
+
+.hx-nav-link.is-on {
+  color: #fff;
+}
+
+.hx-nav-link.is-on .hx-nav-num {
+  color: var(--hx-lima);
+}
+
+.hx-nav-link:focus-visible {
+  outline: 2px solid var(--hx-lima);
+  outline-offset: -2px;
+}
+
+@media (max-width: 640px) {
+  .hx-nav {
+    margin-bottom: 12px;
+  }
+
+  .hx-nav-link {
+    min-height: 48px;
+  }
+
+  .hx-nav-txt {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .hx-nav-txt {
+    font-size: 14px;
+  }
+}
+
+/* El anillo del toque en la pizarra solo existe animado. */
+.hx-pz-toque {
+  opacity: 0;
+}
+
+/* ==========================================================================
+   MOVIMIENTO DE CADA HERRAMIENTA (ronda 105)
+   Dividir: el monto corre (JS) y el ticket se imprime renglón por renglón.
+   Nivel: la pelota sube por la escala, se prenden los tramos y recién ahí
+   aparece la categoría. Americano: el cuadro da vuelta ronda por ronda.
+   Pizarra: los jugadores se deslizan y los piques "caen" en la cancha.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  /* --- Tablero de herramientas --- */
+  .hx-nav-link {
+    transition: color var(--t-hover) var(--ease);
+  }
+
+  .hx-nav-link:not(.is-on):hover .hx-nav-txt {
+    transform: translateY(-1px);
+  }
+
+  .hx-nav-txt {
+    display: inline-block;
+    transition: transform var(--t-hover) var(--ease);
+  }
+
+  .hx-nav-pelota {
+    animation: hx-nav-pique 0.7s var(--ease) 0.35s both;
+  }
+
+  @keyframes hx-nav-pique {
+    0% {
+      transform: translateY(-14px) scale(0.6);
+      opacity: 0;
+    }
+    45% {
+      transform: translateY(0) scale(1.15, 0.85);
+      opacity: 1;
+    }
+    70% {
+      transform: translateY(-5px);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  /* --- Dividir gastos --- */
+  .hx-ticket-fila {
+    animation: hx-ticket 0.35s var(--ease) both;
+  }
+
+  @keyframes hx-ticket {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+
+  /* --- Test de nivel --- */
+  .hx-nv-pelotas li.is-hecha {
+    animation: hx-pique-chico 0.45s var(--ease-mascota);
+  }
+
+  @keyframes hx-pique-chico {
+    0% {
+      transform: scale(0.7);
+    }
+    40% {
+      transform: translateY(-8px) scale(1);
+    }
+    70% {
+      transform: translateY(0) scale(1.1, 0.9);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  .hx-escala-riel {
+    transition: transform 0.25s var(--ease);
+  }
+
+  /* Sale de 8va (translateX 0) y frena en tu nivel (el valor del style). */
+  .hx-ficha.is-sube .hx-escala-riel {
+    animation: hx-sube 1.1s cubic-bezier(0.45, 0.05, 0.25, 1) 0.25s both;
+  }
+
+  .hx-ficha.is-sube .hx-escala-marca {
+    animation:
+      hx-rueda 1.1s cubic-bezier(0.45, 0.05, 0.25, 1) 0.25s both,
+      hx-aterriza 0.4s var(--ease-mascota) 1.35s;
+  }
+
+  .hx-ficha.is-sube .hx-escala-seg {
+    animation: hx-tramo 0.3s ease calc(0.25s + var(--i) * 0.12s) both;
+  }
+
+  .hx-ficha.is-sube .hx-escala-seg.is-on {
+    animation:
+      hx-tramo 0.3s ease calc(0.25s + var(--i) * 0.12s) both,
+      hx-tramo-on 0.45s var(--ease-mascota) 1.3s;
+  }
+
+  .hx-ficha.is-sube .hx-ficha-cat {
+    transform-origin: 50% 100%;
+    animation: hx-flip 0.55s var(--ease) 0.95s both;
+  }
+
+  .hx-ficha.is-sube .hx-ficha-masc {
+    animation-delay: 1.05s;
+  }
+
+  @keyframes hx-sube {
+    from {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes hx-rueda {
+    from {
+      transform: rotate(-600deg);
+    }
+  }
+
+  @keyframes hx-aterriza {
+    0% {
+      transform: none;
+    }
+    35% {
+      transform: translateY(-7px);
+    }
+    70% {
+      transform: scale(1.18, 0.84);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes hx-tramo {
+    from {
+      opacity: 0.25;
+      transform: scaleY(0.5);
+    }
+  }
+
+  @keyframes hx-tramo-on {
+    0%,
+    100% {
+      transform: none;
+    }
+    40% {
+      transform: scaleY(1.7);
+    }
+  }
+
+  /* Tablero electrónico: la categoría da vuelta como un cartel de paletas. */
+  @keyframes hx-flip {
+    from {
+      opacity: 0;
+      transform: perspective(500px) rotateX(-80deg);
+    }
+    60% {
+      opacity: 1;
+    }
+    to {
+      transform: perspective(500px) rotateX(0);
+    }
+  }
+
+  /* --- Americano --- */
+  .hx-am-ronda {
+    transform-origin: 50% 0;
+    animation: hx-ronda 0.5s var(--ease) calc(var(--i, 0) * 70ms) both;
+  }
+
+  @keyframes hx-ronda {
+    from {
+      opacity: 0;
+      transform: perspective(700px) rotateX(-70deg);
+    }
+    55% {
+      opacity: 1;
+    }
+    to {
+      transform: perspective(700px) rotateX(0);
+    }
+  }
+
+  /* El nuevo puntero de la tabla se lleva la pelota con un pique. */
+  .hx-am-tabla li:first-child .hx-am-pos {
+    animation: hx-pop 0.4s var(--ease-mascota) both;
+  }
+
+  /* --- Pizarra --- */
+  .hx-pz-jugador {
+    transition: transform 0.65s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  .hx-pz-pique circle {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hx-pz-cae 0.5s var(--ease-mascota) 0.45s both;
+  }
+
+  .hx-pz-pique text {
+    animation: hx-aparece 0.3s ease 0.7s both;
+  }
+
+  .hx-pz-pique--pared circle,
+  .hx-pz-pique--pared text {
+    animation-delay: 0.8s;
+  }
+
+  .hx-pz-cuerda {
+    animation: hx-aparece 0.35s ease 0.45s both;
+  }
+
+  .hx-pz-toque {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hx-pz-toque 0.6s ease-out;
+  }
+
+  .hx-pz-info {
+    animation: hx-entra 0.35s var(--ease) both;
+  }
+
+  @keyframes hx-pz-cae {
+    0% {
+      opacity: 0;
+      transform: scale(0);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.35);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes hx-pz-toque {
+    from {
+      opacity: 1;
+      transform: scale(0.2);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.7);
+    }
+  }
+
+  @keyframes hx-aparece {
+    from {
+      opacity: 0;
+    }
   }
 }

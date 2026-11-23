@@ -3,7 +3,8 @@ import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
 import BottomNav from "../../components/BottomNav";
 import TorneosGallery from "../../components/TorneosGallery";
-import TournamentSignup from "../../components/TournamentSignup";
+import TournamentSignup, { Llave } from "../../components/TournamentSignup";
+import TorneosFx from "../../components/TorneosFx";
 import Mascota from "../../components/Mascota";
 import { CLUB_INFO } from "../../data/club";
 import { pageMetadata } from "../../lib/pageMeta";
@@ -65,7 +66,10 @@ export default async function TorneosPage() {
               <div className="tsu-poster">
                 <div className="tt-marcador" aria-hidden="true">
                   <span className="tt-marcador-label">Fecha</span>
-                  <strong className="tt-marcador-num">¿?</strong>
+                  <strong className="tt-marcador-num">
+                    <span className="tt-digito" style={{ "--d": 0 }}>¿</span>
+                    <span className="tt-digito" style={{ "--d": 1 }}>?</span>
+                  </strong>
                   <span className="tt-marcador-mes">Pronto</span>
                 </div>
                 <div className="tsu-info">
@@ -77,18 +81,7 @@ export default async function TorneosPage() {
                     Escribinos por WhatsApp y te avisamos la fecha y las categorías apenas estén definidas.
                   </p>
                 </div>
-                <div className="tt-llave" aria-hidden="true">
-                  <div className="tt-llave-col">
-                    <i /><i /><i /><i />
-                  </div>
-                  <div className="tt-llave-col">
-                    <i /><i />
-                  </div>
-                  <div className="tt-llave-col">
-                    <i className="tt-llave-vos">¿Tu pareja?</i>
-                  </div>
-                  <span className="tt-llave-copa">🏆</span>
-                </div>
+                <Llave />
               </div>
               <div className="tt-pronto-side">
                 <p className="tsu-form-head">
@@ -122,6 +115,7 @@ export default async function TorneosPage() {
         </div>
 
         <TorneosGallery tournaments={gallery} signupOpen={openTournaments.length > 0} />
+        <TorneosFx />
       </main>
       <SiteFooter />
       <BottomNav />

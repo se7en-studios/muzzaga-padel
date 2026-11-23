@@ -172,6 +172,10 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
+.tt-digito {
+  display: inline-block;
+}
+
 .tt-marcador-num {
   font-family: var(--tt-mono);
   font-size: 40px;
@@ -297,9 +301,21 @@
   display: grid;
   grid-template-columns: 52px 52px 74px 24px;
   column-gap: 14px;
+  position: relative;
   width: 244px;
   height: 100px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 244 100' fill='none' stroke='white' stroke-opacity='.6' stroke-width='1.5'%3E%3Cpath d='M52 12.5h7v25h-7M59 25h7M52 62.5h7v25h-7M59 75h7M118 25h7v50h-7M125 50h7M206 50h14'/%3E%3C/svg%3E") 0 0 / 244px 100px no-repeat;
+}
+
+/* Las líneas de la llave (SVG en components/TournamentSignup.jsx): una ronda
+   por grupo, para que el cuadro se arme de izquierda a derecha. */
+.tt-llave-lineas {
+  position: absolute;
+  inset: 0;
+  fill: none;
+  stroke: #ffffff;
+  stroke-opacity: 0.6;
+  stroke-width: 1.5;
+  pointer-events: none;
 }
 
 .tt-llave-col {
@@ -427,6 +443,24 @@
   bottom: 4px;
   left: 15px;
   border-left: 2px dashed var(--color-hairline-strong);
+}
+
+/* Al completar el paso, la red punteada se "pinta" de naranja hasta el
+   siguiente (crece con scaleY desde arriba). */
+.tsu-step-red {
+  position: absolute;
+  top: 34px;
+  bottom: 4px;
+  left: 15px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--color-accent-orange);
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+}
+
+.tsu-step.is-ok > .tsu-step-red {
+  transform: none;
 }
 
 .tsu-step:last-child {
@@ -667,6 +701,7 @@
 }
 
 .tsu-done-check {
+  position: relative;
   display: grid;
   place-items: center;
   width: 56px;
