@@ -42,7 +42,10 @@ export default function ScrollReveal() {
           );
         });
       },
-      { threshold: 0.15 },
+      // Arranca apenas el borde de arriba está por entrar (10 % de pantalla
+      // antes), no cuando ya se ve el 15 %: en tarjetas altas (la ficha
+      // técnica) eso dejaba cientos de px vacíos al scrollear normal.
+      { threshold: 0, rootMargin: "0px 0px 10% 0px" },
     );
     targets.forEach((el) => io.observe(el));
 

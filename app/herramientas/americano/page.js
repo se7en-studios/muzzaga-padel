@@ -1,6 +1,5 @@
 import Link from "next/link";
 import "../herramientas.css";
-import PageCrumbs from "../../../components/PageCrumbs";
 import HerramientasNav from "../../../components/HerramientasNav";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
@@ -21,7 +20,6 @@ export default function AmericanoPage() {
     <>
       <SiteHeader />
       <main className="page-main">
-        <PageCrumbs items={[{ label: "Herramientas", href: "/#herramientas" }, { label: "Torneo americano" }]} />
         <HerramientasNav actual="americano" />
 
         <AmericanoGenerator />

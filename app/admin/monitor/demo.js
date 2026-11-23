@@ -4,6 +4,7 @@
 // ?demo=8 deja 8 minutos al partido de la primera cancha (por defecto 37).
 // ?demo&proximo hace que la segunda arranque en 12 min, para ver el estado
 // "Próximo" (por defecto está libre hasta dentro de 40).
+// ?demo&libre vacía la primera cancha, para ver "Libre todo el día".
 import { COURTS, nowInClubTimezone, todayInClub } from "../../../lib/booking";
 import { toMinutes } from "./schedule";
 
@@ -44,9 +45,13 @@ export function monitorDemoData() {
       { ...c2, name: "La Vasca" },
     ],
     bookings: [
-      turno("d1", c1.id, start1, "Aldana Martínez"),
-      turno("d2", c1.id, start1 + 90, "Anabella Zeballos"),
-      turno("d3", c1.id, start1 + 270, "Equipo Los Pibes", 4),
+      ...(params.has("libre")
+        ? []
+        : [
+            turno("d1", c1.id, start1, "Aldana Martínez"),
+            turno("d2", c1.id, start1 + 90, "Anabella Zeballos"),
+            turno("d3", c1.id, start1 + 270, "Equipo Los Pibes", 4),
+          ]),
       turno("d4", c2.id, start4, "Pablo Funes", 2),
       turno("d5", c2.id, start4 + 90, "Martín Riquero"),
     ],

@@ -203,8 +203,22 @@ export default function CourtTimeline({
                 };
 
                 if (!slot.isTaken) {
+                  // Libre, en calma: lo que importa en la grilla son los
+                  // turnos reservados. Lo que ya empezó dice "En curso" (se
+                  // puede cargar igual, por si alguien cae a jugar ya) y lo
+                  // que ya pasó, solo "Libre".
+                  const freeText = isPast
+                    ? "Libre"
+                    : isCurrent
+                      ? "En curso · libre"
+                      : "Reservar";
                   return (
-                    <div key={court.id} role="gridcell" className="admin-slot is-free" style={enter}>
+                    <div
+                      key={court.id}
+                      role="gridcell"
+                      className={`admin-slot is-free${isCurrent ? " is-free-now" : ""}`}
+                      style={enter}
+                    >
                       <button
                         type="button"
                         className="admin-slot-assign"
@@ -213,8 +227,8 @@ export default function CourtTimeline({
                       >
                         <span className="admin-slot-court">{court.name}</span>
                         <span className="admin-slot-free-label">
-                          <Plus {...ICON} /> Libre
-                          <span className="admin-slot-free-cta"> · Reservar</span>
+                          {!isPast && !isCurrent && <Plus {...ICON} />}
+                          <span className="admin-slot-free-text">{freeText}</span>
                         </span>
                       </button>
                     </div>

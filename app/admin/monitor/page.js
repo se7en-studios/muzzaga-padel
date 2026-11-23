@@ -434,12 +434,10 @@ export default function MonitorPage() {
     0,
     CANTINA_MAX,
   );
-  // Las tarjetas en el mismo orden en que se ven las canchas (la de atrás arriba).
-  const cards = courtPts
-    ? [...views].sort(
-        (a, b) => (courtPts[a.index]?.[1] ?? 0) - (courtPts[b.index]?.[1] ?? 0),
-      )
-    : views;
+  // Las tarjetas van en el orden de la configuración de canchas (1, 2…).
+  // Antes se ordenaban por la altura de cada cancha en la maqueta (la de
+  // atrás arriba) y quedaba "Cancha 2" sobre "Cancha 1": confundía.
+  const cards = views;
   // Variables de color del estado, para tarjeta y globo.
   const stateVars = (v) => ({
     "--state": ESTADOS[v.state].color,
@@ -643,20 +641,26 @@ export default function MonitorPage() {
                 </>
               ) : (
                 <>
-                  <div className="mon-card-info">
-                    <span className="mon-card-kicker">Disponible</span>
-                    <strong className="mon-card-who">
-                      {v.nextUp ? `Hasta las ${v.nextUp.booking.startTime} hs` : "Todo el día"}
+                  {/* Libre: en grande hasta cuándo se puede jugar y dónde
+                      reservar (antes había una pelota que no decía nada). */}
+                  <div className="mon-card-info mon-card-libre">
+                    <span className="mon-card-kicker">
+                      {v.nextUp ? "Libre hasta las" : "Libre"}
+                    </span>
+                    <strong className="mon-card-libre-big">
+                      {v.nextUp ? (
+                        <>
+                          {v.nextUp.booking.startTime}
+                          <small>hs</small>
+                        </>
+                      ) : (
+                        "Todo el día"
+                      )}
                     </strong>
-                    <span className="mon-card-meta">Reservá en recepción o en la web</span>
+                    <span className="mon-card-reserva">
+                      Reservá en <strong>{DOMINIO}</strong>
+                    </span>
                   </div>
-                  <img
-                    src="/img/iconos/pelota.webp"
-                    alt=""
-                    width={160}
-                    height={160}
-                    className="mon-card-ball"
-                  />
                 </>
               )}
             </div>
@@ -724,7 +728,7 @@ export default function MonitorPage() {
             <ol className="mon-beelup-steps">
               <li>Muzzaga Pádel</li>
               <li>{BEELUP_CANCHAS}</li>
-              <li>Día y horario</li>
+              <li>Día y hora</li>
             </ol>
           </div>
         </section>

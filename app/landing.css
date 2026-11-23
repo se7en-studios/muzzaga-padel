@@ -7,7 +7,7 @@
    ========================================================================== */
 
 :root {
-  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  /* --font-display vive en app/marca.css (todo el sitio). */
   --orange-glow: rgba(232, 114, 42, 0.45);
   --night: #0f0f0d;
 }

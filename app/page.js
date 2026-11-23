@@ -203,9 +203,11 @@ export default async function Home() {
               <dt>Canchas de cristal</dt>
               <dd><StatCounter value={config.courts?.length || 2} /></dd>
             </div>
+            {/* Antes "Torneos: Todo el año" (no era una cifra). Los días que
+                abre el club salen del horario de Configuración. */}
             <div className="hero-stat">
-              <dt>Torneos</dt>
-              <dd className="hero-stat-word">Todo el año</dd>
+              <dt>Días abiertos por semana</dt>
+              <dd><StatCounter value={config.schedule.filter((d) => d.open).length} /></dd>
             </div>
             <div className="hero-stat">
               <dt>Jugadores pasan por el club</dt>

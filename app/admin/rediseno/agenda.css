@@ -740,7 +740,7 @@
   opacity: 0.55;
 }
 
-.admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot-free-cta {
+.admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot-free-label svg {
   display: none;
 }
 
@@ -850,12 +850,14 @@
   box-shadow: 0 0 0 2px var(--brand);
 }
 
-/* Libre: cancha sin pintar, solo las líneas. Al pasar el mouse se pinta de
-   azul (padel.css) como adelanto de cómo queda reservada. */
+/* Libre: en calma. Fondo claro, borde punteado fino y "+ Reservar"
+   discreto; la textura y los colores fuertes quedan para los turnos
+   reservados, que son lo que se busca. Al pasar el mouse se pinta de azul
+   como adelanto de cómo queda reservada. */
 .admin-root .admin-agenda .admin-slot.is-free {
-  border: 1px solid var(--border);
-  background-color: #fbfaf6;
-  background-image: var(--court-lines-soft);
+  border: 1px dashed #d6cfbf;
+  background-color: #fcfbf8;
+  background-image: none;
   background-size: 100% 100%;
   background-repeat: no-repeat;
 }
@@ -869,26 +871,39 @@
 
 .admin-root .admin-agenda .admin-slot-assign {
   min-height: 54px;
-  color: var(--text-secondary);
-  font-size: 15px;
-  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .admin-root .admin-agenda .admin-slot-free-label {
-  padding: 3px 12px;
+  gap: 5px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
+  background: transparent;
 }
 
-.admin-root .admin-agenda .admin-slot-free-cta {
-  margin-left: 3px;
-  font-weight: 600;
-  color: var(--text-muted);
+.admin-root .admin-agenda .admin-slot-free-label svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.2;
 }
 
-.admin-root .admin-agenda .admin-slot-assign:hover .admin-slot-free-cta,
-.admin-root .admin-agenda .admin-slot-assign:focus-visible .admin-slot-free-cta {
+.admin-root .admin-agenda .admin-slot-assign:hover .admin-slot-free-label,
+.admin-root .admin-agenda .admin-slot-assign:focus-visible .admin-slot-free-label {
   color: var(--court-ink);
+}
+
+/* Franja en juego sin reservar: se dice "En curso · libre", sin invitar a
+   reservar (igual se puede tocar para cargar a alguien que cae ya). */
+.admin-root .admin-agenda .admin-slot.is-free-now {
+  border-color: #e3dccd;
+  background-color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-root .admin-agenda .admin-slot.is-free-now .admin-slot-free-label {
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 .admin-root .admin-agenda .admin-slot-assign:focus-visible {
@@ -1402,8 +1417,8 @@
   /* Libre: recuadro punteado y limpio, con el nombre de la cancha arriba y
      "+ Reservar" al medio. Todo el recuadro es el botón. */
   .admin-root .admin-agenda .admin-slot.is-free {
-    border: 1.5px dashed #cfc7b6;
-    background-color: #fbfaf6;
+    border: 1px dashed #cfc7b6;
+    background-color: #fcfbf8;
     background-image: none;
   }
 
@@ -1431,7 +1446,9 @@
     border-radius: 999px;
     background: transparent;
     color: var(--court-ink);
-    font-size: 0;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
   }
 
   .admin-root .admin-agenda .admin-slot-free-label svg {
@@ -1440,17 +1457,10 @@
     stroke-width: 2.4;
   }
 
-  /* "Libre" y "· Reservar" están en el texto; en el celu alcanza con
-     "Reservar" (el botón ya dice cancha y hora para el lector de pantalla). */
-  .admin-root .admin-agenda .admin-slot-free-label::after {
-    content: "Reservar";
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-  }
-
-  .admin-root .admin-agenda .admin-slot-free-cta {
-    display: none;
+  .admin-root .admin-agenda .admin-slot.is-free-now .admin-slot-free-label {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 600;
   }
 
   .admin-root .admin-agenda .admin-slot.is-free:hover,
@@ -1662,8 +1672,7 @@
     display: none;
   }
 
-  .admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot-free-label::after {
-    content: "Libre";
+  .admin-root .admin-agenda .admin-timeline-row.is-past .admin-slot-free-label {
     font-size: 12.5px;
     font-weight: 600;
   }
@@ -2055,5 +2064,329 @@
 
   .admin-root .admin-weekchart .admin-weekchart-turnos strong {
     font-size: 17px;
+  }
+}
+
+/* ==========================================================================
+   AGENDA EN EL CELU: ARRIBA, LO JUSTO
+   Al abrir la agenda en el celu tienen que verse turnos sin bajar. Saludo,
+   hora y estado del club van en un solo renglón; Buscar pasa a ser una lupa
+   al lado de Avisos y "Copiar turnos del día" un botón ícono en ese mismo
+   renglón; el marcador es una fila baja que se desliza de costado; la
+   leyenda de colores sale (cada turno ya dice Pagado / Seña / Debe con su
+   ícono). Solo en la Agenda: el resto de las secciones queda igual.
+   ========================================================================== */
+@media (max-width: 900px), (max-height: 500px) {
+  /* ---- Barra negra: la lupa al lado de Avisos ---- */
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-kravio-topbar {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-topbar-search {
+    display: inline-flex;
+    flex: 0 0 44px;
+    justify-content: center;
+    gap: 0;
+    width: 44px;
+    max-width: 44px;
+    height: 44px;
+    margin-left: auto;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-topbar-search svg {
+    color: #ffffff;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-topbar-search :is(.admin-topbar-search-text, .admin-kbd) {
+    display: none;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-kravio-top-tools {
+    margin-left: 0;
+  }
+
+  /* ---- Encabezado: saludo · hora · estado · copiar, en un renglón ---- */
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-main-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "title meta actions"
+      "alert alert alert";
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-header-text {
+    display: contents;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-page-title {
+    grid-area: title;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 22px;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-header-scoreboard {
+    grid-area: meta;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin: 0;
+  }
+
+  /* La fecha larga ya está en la tira de días ("Hoy 23"): queda la hora. */
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-header-scoreboard .admin-header-date {
+    gap: 0;
+    font-size: 0;
+    letter-spacing: 0;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-header-scoreboard .admin-header-clock {
+    padding: 2px 7px 1px;
+    font-size: 15px;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-header-scoreboard .admin-live-pill {
+    padding: 3px 9px 3px 8px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-header-alert {
+    grid-area: alert;
+    margin: 0;
+    padding: 6px 10px 6px 6px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-header-alert-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-quick-actions {
+    grid-area: actions;
+    width: auto;
+    gap: 0;
+  }
+
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-quick-actions .admin-palette-trigger {
+    display: none;
+  }
+
+  /* "Copiar turnos del día" como botón ícono: el texto queda para el lector
+     de pantalla y el cartelito (title) lo explica. */
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-quick-actions > .btn:not(.admin-palette-trigger):not(.admin-cta-new) {
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    gap: 0;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 0;
+  }
+
+  /* ---- Tira de días, un poco más pegada ---- */
+  .admin-root .admin-agenda .admin-daystrip {
+    margin-bottom: 10px;
+  }
+
+  /* ---- Marcador: una fila baja que se desliza de costado ---- */
+  .admin-root .admin-board {
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    margin-bottom: 14px;
+    border-radius: 12px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .admin-root .admin-board::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-root .admin-board-cell,
+  .admin-root .admin-board-next.is-empty {
+    flex: 1 0 auto;
+    justify-content: center;
+    gap: 3px;
+    min-height: 56px;
+    padding: 7px 12px 7px 11px;
+    scroll-snap-align: start;
+  }
+
+  .admin-root .admin-board-label {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-board-value {
+    margin-top: 0;
+    font-size: 22px;
+  }
+
+  .admin-root .admin-board-value small {
+    font-size: 15px;
+  }
+
+  .admin-root .admin-board-cell :is(.admin-board-sub, .admin-board-meter-row) {
+    display: none;
+  }
+
+  /* Próximo turno: hora, quién y cuánto debe, en un renglón. Toda la
+     cancha es el botón (abre el detalle para cobrar). */
+  .admin-root .admin-board-next:not(.is-empty) {
+    flex: 1 0 auto;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto;
+    justify-content: start;
+    align-items: center;
+    gap: 2px 10px;
+    min-height: 56px;
+    padding: 6px 14px 6px 16px;
+    scroll-snap-align: start;
+  }
+
+  .admin-root .admin-board-next:not(.is-empty) .admin-board-label {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .admin-root .admin-board-next-row {
+    display: contents;
+  }
+
+  .admin-root .admin-board-next-time {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 22px;
+  }
+
+  .admin-root .admin-board-next-time small {
+    font-size: 12px;
+  }
+
+  .admin-root .admin-board-next-who {
+    grid-column: 2;
+    grid-row: 2;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .admin-root .admin-board-next-court {
+    display: none;
+  }
+
+  .admin-root .admin-board-next-name {
+    display: block;
+    max-width: 150px;
+    overflow: hidden;
+    font-size: 15px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-board-next-money {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: start;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  .admin-root .admin-board-next-cta {
+    display: none;
+  }
+
+  .admin-root .admin-board-next.is-empty {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .admin-root .admin-board-next-none {
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  /* ---- Canchas del día: título y "en juego" en un renglón ---- */
+  .admin-root .admin-agenda .admin-day-courts-head {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 10px;
+    margin-bottom: 10px;
+  }
+
+  .admin-root .admin-agenda .admin-day-courts-head .admin-section-title {
+    font-size: 19px;
+  }
+
+  .admin-root .admin-agenda .admin-day-courts-head .admin-live-chip {
+    padding-block: 3px;
+    font-size: 11.5px;
+  }
+
+  .admin-root .admin-agenda :is(.admin-day-courts-hint, .admin-agenda-legend) {
+    display: none;
+  }
+
+  /* ---- Nueva reserva: aire sobre la barra de abajo ---- */
+  .admin-root:has(.admin-agenda) .admin-fab {
+    bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Celu angosto: la hora ya está en la barra del teléfono; así el saludo
+   entra entero al lado del estado del club. */
+@media (max-width: 380px) {
+  .admin-root .admin-main-inner:has(.admin-agenda) .admin-header-scoreboard .admin-header-date {
+    display: none;
+  }
+}
+
+/* Tablet vertical: la barra flota 12px más arriba. */
+@media (min-width: 768px) and (max-width: 900px) and (min-height: 501px) {
+  .admin-root:has(.admin-agenda) .admin-fab {
+    bottom: calc(102px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Celu acostado: la barra de abajo es más baja y hay poco alto, así que
+   "Nueva reserva" queda como un botón redondo con el "+" (el texto sigue
+   para el lector de pantalla): tapa mucho menos. */
+@media (max-height: 500px) {
+  .admin-root:has(.admin-agenda) .admin-fab {
+    bottom: calc(68px + env(safe-area-inset-bottom));
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    gap: 0;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 0;
   }
 }

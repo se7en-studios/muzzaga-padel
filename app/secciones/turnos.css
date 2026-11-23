@@ -1137,3 +1137,211 @@
     background: rgba(74, 222, 128, 0.12);
   }
 }
+
+/* ==========================================================================
+   GRILLA CALMA: LO LIBRE ES UNA CELDA LIMPIA, LA CANCHA ES TU TURNO
+   Catorce canchas azules iguales con la píldora verde "Disponible" (y en
+   compu "CANCHA 1 · $60.000 · Reservar →" repetido en cada una) cansaban la
+   vista. Ahora lo libre es una celda clara con borde fino y "Reservar" en
+   azul; la textura de cancha queda solo para el turno ELEGIDO (con su anillo
+   naranja y la pelota que cruza la red, ver anim-turnos.css). Lo ocupado
+   sigue gris y los horarios que ya pasaron se achican a un renglón.
+   ========================================================================== */
+.booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) {
+  background: var(--color-surface-card);
+  background-image: none;
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-ink);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05);
+  filter: none;
+}
+
+.booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected):hover {
+  background: #f3f6ff;
+  background-image: none;
+  border-color: #2350d6;
+  box-shadow: 0 6px 14px -10px rgba(35, 80, 214, 0.55);
+  filter: none;
+}
+
+.booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected):focus-visible {
+  outline: 3px solid #2350d6;
+  outline-offset: 2px;
+}
+
+.booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-meta {
+  color: var(--color-muted);
+  text-shadow: none;
+}
+
+/* "Reservar" como texto azul (6,1:1 sobre blanco), no como pastilla. */
+.booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-badge {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #2350d6;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-badge::after {
+  content: "→";
+  margin-left: 5px;
+}
+
+@media (max-width: 640px) {
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) {
+    border-color: var(--color-hairline-strong);
+  }
+}
+
+/* Compu: una sola línea. Cancha a la izquierda; a la derecha "Reservar →"
+   y, solo en la tarifa pico distinta de la general, el precio. */
+@media (min-width: 641px) {
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) {
+    grid-template-columns: 1fr auto auto;
+    grid-template-rows: auto;
+    align-items: center;
+    min-height: 56px;
+    padding: 10px 18px;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-meta {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-badge {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-price {
+    grid-column: 2;
+    grid-row: 1;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-price strong {
+    font-size: 20px;
+    color: var(--color-ink);
+    text-shadow: none;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-price-cta {
+    order: -1;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-orange-text);
+    text-shadow: none;
+  }
+
+  /* El elegido (cancha azul) también puede ser pico: precio en blanco. */
+  .booking-matrix-row .booking-slot.selected .slot-price-cta {
+    color: #e4fb5a;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-badge::after {
+    display: inline-block;
+    transition: transform var(--t-hover, 160ms) var(--ease, ease);
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected):hover .slot-badge::after {
+    transform: translateX(3px);
+  }
+}
+
+/* Horarios que ya pasaron (sueltos, o desplegados con "Ver"): un renglón
+   gris y bajo, sin tarjetas. No se pueden tocar, así que no necesitan los
+   44 px. */
+.booking-matrix-container .booking-matrix-row.is-pasada > * {
+  min-height: 0;
+  padding-block: 4px;
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.booking-matrix-container .booking-matrix-row.is-pasada .booking-matrix-time-col {
+  flex-direction: row;
+  gap: 6px;
+  background: transparent;
+}
+
+.booking-matrix-container .booking-matrix-row.is-pasada .booking-matrix-time-col strong {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.booking-matrix-container .booking-matrix-row.is-pasada .booking-matrix-time-col span {
+  display: none;
+}
+
+.booking-matrix-container .booking-matrix-row.is-pasada .booking-slot {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  opacity: 0.6;
+  filter: none;
+}
+
+.booking-matrix-container .booking-matrix-row.is-pasada .booking-slot .slot-badge {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.booking-matrix-container .booking-matrix-row.is-pasada .booking-slot .slot-meta {
+  display: none;
+}
+
+/* Oscuro: la celda libre es la tarjeta de la noche; el azul se aclara para
+   leerse sobre ella. */
+@media (prefers-color-scheme: dark) {
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) {
+    box-shadow: none;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected):hover {
+    background: rgba(120, 155, 255, 0.1);
+    border-color: #8fabff;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-badge {
+    color: #a9c0ff;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected):focus-visible {
+    outline-color: #a9c0ff;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) .slot-price-cta {
+    color: #ff9a5a;
+  }
+}
+
+/* Cajón de reserva: con el formulario vacío, ayuda neutra (no un error). */
+.booking-missing.is-ayuda {
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+@media (prefers-color-scheme: dark) {
+  .booking-missing.is-ayuda {
+    color: var(--color-muted);
+  }
+}

@@ -1183,7 +1183,9 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
     // etiquetas flotantes
     const r = stageRect;
-    const place = (el, v) => { cp.copy(v).project(camera); if (cp.z > 1) { el.style.display = 'none'; return; } el.style.display = ''; el.style.transform = 'translate(' + ((cp.x * 0.5 + 0.5) * r.width).toFixed(1) + 'px,' + ((-cp.y * 0.5 + 0.5) * r.height).toFixed(1) + 'px) translate(-50%,-100%)'; };
+    // La etiqueta no se sale del costado (en el celu "5 Mesas y tercer tiempo" quedaba cortada): su centro se corre
+    // hacia adentro lo justo. El ancho se mide una vez por etiqueta y tamaño de escenario (no en cada cuadro).
+    const place = (el, v) => { cp.copy(v).project(camera); if (cp.z > 1) { el.style.display = 'none'; return; } el.style.display = ''; let x = (cp.x * 0.5 + 0.5) * r.width; if (el._wFor !== r.width || !el._w) { el._w = el.offsetWidth; el._wFor = r.width; } const half = el._w / 2 + 8; if (el._w && r.width > half * 2) x = Math.min(Math.max(x, half), r.width - half); el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + ((-cp.y * 0.5 + 0.5) * r.height).toFixed(1) + 'px) translate(-50%,-100%)'; };
     const pk = cam.az + '|' + cam.el + '|' + cam.d + '|' + cam.fov + '|' + r.width + '|' + r.height, moved = pk !== lastPK; lastPK = pk;
     if (moved) SPOTS.forEach(sp => place(sp.pin, tmp.set(sp.x, 1.2, sp.z)));
     if (moved) COURT_CARDS.forEach(c => place(c.d, c.pos));

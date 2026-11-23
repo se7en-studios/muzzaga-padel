@@ -2479,3 +2479,52 @@
 #instalaciones .ig-tag {
   background: var(--btn-naranja, #bf5512);
 }
+
+/* ==========================================================================
+   INSTALACIONES: RÓTULO LEGIBLE, FICHA A TIEMPO Y MENOS CÉSPED VACÍO
+   - El rótulo "03 | INSTALACIONES" caía justo donde el césped se funde con
+     la página clara: naranja claro sobre casi blanco, no se leía. Va en una
+     placa azul noche con letra lima (12:1) y el número en blanco, legible
+     sobre cualquier punto del degradé y en los dos modos.
+   - La ficha técnica arrancaba en opacity 0 (ScrollReveal) y al scrollear
+     a ritmo normal se veía césped vacío: queda visible siempre y solo sube
+     unos píxeles al entrar.
+   - Debajo de la ficha sobraba aire: menos padding abajo (el fundido del
+     césped se acorta en la misma medida).
+   ========================================================================== */
+#instalaciones .section-header-row div:has(> .section-title) > .badge-linear:first-child {
+  padding: 6px 14px 6px 12px;
+  border-radius: 999px;
+  background: rgba(7, 16, 52, 0.88);
+  box-shadow: 0 4px 14px -8px rgba(4, 10, 32, 0.8);
+  color: #d7f03a;
+}
+
+#instalaciones .section-header-row div:has(> .section-title) > .badge-linear:first-child::before {
+  color: #fff;
+  border-right-color: #d7f03a;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #instalaciones .spec-panel.reveal-up {
+    opacity: 1;
+  }
+}
+
+#instalaciones {
+  padding-bottom: 96px;
+}
+
+#instalaciones::after {
+  bottom: 56px;
+}
+
+@media (max-width: 768px) {
+  #instalaciones {
+    padding-bottom: 60px;
+  }
+
+  #instalaciones::after {
+    bottom: 34px;
+  }
+}

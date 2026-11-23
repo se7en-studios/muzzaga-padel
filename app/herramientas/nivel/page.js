@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import "../herramientas.css";
-import PageCrumbs from "../../../components/PageCrumbs";
 import HerramientasNav from "../../../components/HerramientasNav";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
@@ -23,7 +22,6 @@ export default function NivelPage() {
     <>
       <SiteHeader />
       <main className="page-main">
-        <PageCrumbs items={[{ label: "Herramientas", href: "/#herramientas" }, { label: "Test de nivel" }]} />
         <HerramientasNav actual="nivel" />
 
         <section className="hx-tool hx-tool--nivel">
