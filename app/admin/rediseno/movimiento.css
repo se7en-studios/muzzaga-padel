@@ -1,0 +1,3 @@
+/* Movimiento del panel: transiciones entre vistas, confirmaciones al
+   guardar/cobrar/reservar y microinteracciones. Solo transform/opacity,
+   dentro de prefers-reduced-motion: no-preference. */
