@@ -1102,8 +1102,8 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     const avg = pAcc / pN; pAcc = 0; pN = 0;
     // en el monitor el ritmo es fijo (20 cps): se mira lo que cuesta cada cuadro, no cada cuánto sale
     if (MONITOR) { if (cost > 22 && pr > 0.6) { pr = Math.max(0.6, +(pr - 0.15).toFixed(2)); renderer.setPixelRatio(pr); resize(); } return; }
-    if (avg > 0.034 && pr > (MOVIL ? 0.75 : 1)) { pr = Math.max(MOVIL ? 0.75 : 1, pr - 0.25); pLocked = true; renderer.setPixelRatio(pr); resize(); }
-    else if (!pLocked && avg < 0.0185 && pr < prMax) { pr = Math.min(prMax, pr + 0.25); renderer.setPixelRatio(pr); resize(); }
+    if (avg > Math.max(0.034, MIN_GAP * 0.00135) && pr > (MOVIL ? 0.75 : 1)) { pr = Math.max(MOVIL ? 0.75 : 1, pr - 0.25); pLocked = true; renderer.setPixelRatio(pr); resize(); }
+    else if (!pLocked && avg < Math.max(0.0185, MIN_GAP * 0.00105) && pr < prMax) { pr = Math.min(prMax, pr + 0.25); renderer.setPixelRatio(pr); resize(); }
   }
 
   let lastDraw = 0, cost = 8;

@@ -642,3 +642,36 @@
     transform: translateY(4%);
   }
 }
+
+/* ==========================================================================
+   CELU: EL "MUZZAGA" DEL PIE, LIVIANO
+   Cada letra llevaba una textura de ruido generada (feTurbulence), tres
+   sombras desenfocadas con filter y un brillo que se movía animando
+   background-position: el celu tenía que repintar todo eso en cada cuadro
+   del scroll y de la animación. En el celu: sin la textura, una sola sombra,
+   sin el brillo que barre, y cada letra en su propia capa para que el pique
+   de la pelota solo la mueva (transform) sin repintarla. Va al final de este
+   archivo (y con "body") para ganarle a las reglas de animación de arriba.
+   ========================================================================== */
+@media (pointer: coarse), (max-width: 900px) {
+  body .footer-wordmark-letter,
+  body .footer-wordmark-letter.is-accent {
+    background-image: var(--wm-fill);
+    background-size: 100% 100%;
+    background-position: 0 0;
+    filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.5));
+    will-change: transform;
+  }
+
+  body .footer-wordmark.is-in .footer-wordmark-letter {
+    animation-name: none;
+  }
+}
+
+@media (pointer: coarse) and (prefers-reduced-motion: no-preference),
+  (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+  /* El golpe de la pelota sí queda (es solo transform). */
+  body .footer-wordmark.is-in .footer-wordmark-letter {
+    animation: fwGolpe 0.34s ease-out calc(1.54s + var(--d) * 2.5);
+  }
+}

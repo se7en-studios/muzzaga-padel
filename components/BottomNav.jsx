@@ -34,12 +34,19 @@ function useCompactOnScroll(ref) {
     let travel = 0;
     let frame = 0;
     const set = (compact) => nav.classList.toggle("is-compact", compact);
+    // El alto de la página se guarda y se vuelve a medir solo si cambia de
+    // tamaño: leerlo en cada cuadro del scroll obligaba a recalcular el diseño.
+    let docH = document.documentElement.scrollHeight;
+    const ro = new ResizeObserver(() => {
+      docH = document.documentElement.scrollHeight;
+    });
+    ro.observe(document.body);
     const update = () => {
       frame = 0;
       const y = window.scrollY;
       const delta = y - lastY;
       lastY = y;
-      const atBottom = window.innerHeight + y >= document.documentElement.scrollHeight - BOTTOM_PX;
+      const atBottom = window.innerHeight + y >= docH - BOTTOM_PX;
       if (y < TOP_PX || atBottom) {
         travel = 0;
         set(false);
@@ -56,6 +63,7 @@ function useCompactOnScroll(ref) {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
+      ro.disconnect();
       window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(frame);
     };
