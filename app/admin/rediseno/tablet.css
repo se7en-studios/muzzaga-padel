@@ -176,6 +176,12 @@
   .admin-root .cc-roster th[data-col="lastDate"] { width: 132px; }
   .admin-root .cc-roster th[data-col="contact"] { width: 96px; }
 
+  /* Las etiquetas (VIP, debe) bajan debajo del nombre si no entran. */
+  .admin-root .cc-player-name {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
   /* Cantina: los rótulos del marcador se cortaban con "…". */
   .admin-root .admin-pos-stats dt {
     font-size: 11.5px;

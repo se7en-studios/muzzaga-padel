@@ -2473,3 +2473,9 @@
     min-height: 44px;
   }
 }
+
+/* Etiquetas naranjas de Instalaciones (claro y oscuro): con el naranja de
+   botón el texto blanco se lee a 4,6:1 (con el de marca daba 3,1:1). */
+#instalaciones .ig-tag {
+  background: var(--btn-naranja, #bf5512);
+}

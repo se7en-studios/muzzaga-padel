@@ -72,7 +72,7 @@
      escala todo el tablero parejo, sin rearmar su grilla interna); así no
      queda un hueco entre el título y el tablero. */
   #top .hero-v2-board {
-    zoom: 1.14;
+    zoom: 1.06;
   }
 
   #top .hero-mascot {
@@ -92,3 +92,13 @@
     margin-bottom: 44px;
   }
 }
+
+/* A 1880 o más la columna del tablero ya tiene lugar para escalarlo más
+   (452 px × 1,14 = 515 px, con la columna en ~550). Más abajo de eso, el
+   renglón "Turnos libres · en vivo" se partía en dos. */
+@media (min-width: 1880px) {
+  #top .hero-v2-board {
+    zoom: 1.14;
+  }
+}
+

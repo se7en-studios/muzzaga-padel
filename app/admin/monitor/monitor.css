@@ -530,7 +530,7 @@ body:has(.mon-root) {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--mon-display);
-  font-size: 4.8vh;
+  font-size: 5.2vh;
   font-weight: 800;
   line-height: 1;
   text-transform: uppercase;
@@ -541,14 +541,14 @@ body:has(.mon-root) {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--mon-suave);
-  font-size: 2.25vh;
+  font-size: 2.2vh;
   font-weight: 500;
 }
 
 /* Libre: una pelota grande donde iría la cuenta regresiva. */
 .mon-card-ball {
-  width: min(12vh, 100cqh);
-  height: min(12vh, 100cqh);
+  width: min(11vh, 100cqh);
+  height: min(11vh, 100cqh);
   object-fit: contain;
   filter: drop-shadow(0 1vh 1.2vh rgba(0, 0, 0, 0.5));
 }

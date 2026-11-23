@@ -50,3 +50,22 @@
       0 10px 22px -8px rgba(0, 0, 0, 0.8);
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  /* ---------- Horarios: el tablero de LED ----------
+     Mismo tablero que el pie: negro azulado, con la grilla de LEDs. */
+  .horario-tablero {
+    background:
+      radial-gradient(rgba(150, 180, 255, 0.07) 1px, transparent 1.3px) 0 0 / 6px 6px,
+      linear-gradient(180deg, #121a36 0%, #060a18 100%);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Etiquetas naranjas de Instalaciones: blanco sobre #e8722a daba 3,1:1;
+     con el naranja de botón, 4,6:1. */
+  #instalaciones .ig-tag {
+    background: var(--btn-naranja, #bf5512);
+  }
+}

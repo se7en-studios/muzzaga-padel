@@ -240,15 +240,16 @@
 
 /* El mismo naranja del "Reservar turno" del hero. */
 .estado-btn-primary {
-  background: var(--estado-naranja);
-  border-color: var(--estado-naranja);
+  /* Naranja de botón: el texto blanco se lee (4,6:1). */
+  background: var(--btn-naranja, #bf5512);
+  border-color: var(--btn-naranja, #bf5512);
   color: #ffffff;
   box-shadow: 0 10px 22px -10px rgba(232, 114, 42, 0.9);
 }
 
 .estado-btn-primary:hover {
-  background: #d9631d;
-  border-color: #d9631d;
+  background: var(--btn-naranja-hover, #a9470c);
+  border-color: var(--btn-naranja-hover, #a9470c);
 }
 
 .estado-btn-secondary {
@@ -274,6 +275,17 @@
 @media (prefers-color-scheme: dark) {
   .estado-btn-whatsapp {
     color: #4ade80;
+  }
+
+  /* Blanco sobre #e8722a daba 3,1:1; con el naranja de botón, 4,6:1. */
+  .estado-btn-primary {
+    background: var(--btn-naranja, #bf5512);
+    border-color: var(--btn-naranja, #bf5512);
+  }
+
+  .estado-btn-primary:hover {
+    background: var(--btn-naranja-hover, #a9470c);
+    border-color: var(--btn-naranja-hover, #a9470c);
   }
 }
 

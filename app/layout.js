@@ -62,7 +62,11 @@ export const metadata = {
 
 export const viewport = {
   // Negro de marca: el naranja pintaba toda la barra del navegador.
-  themeColor: "#1b1b19",
+  // La barra del navegador acompaña al tema: en oscuro, el azul noche de la web.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#1b1b19" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a1022" },
+  ],
 };
 
 export default async function RootLayout({ children }) {

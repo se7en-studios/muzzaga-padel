@@ -1742,3 +1742,26 @@
     width: 210px;
   }
 }
+
+/* --------------------------------------------------------------------------
+   TABLET VERTICAL (768-899): tres fichas por fila de ~235 px. El precio en
+   24 px y el botón de 112 px no entraban juntos y "$18.000" tocaba
+   "Agregar". El botón se achica un poco y el precio baja a 21 px.
+   -------------------------------------------------------------------------- */
+@media (min-width: 768px) and (max-width: 899px) {
+  .carta .carta-item {
+    column-gap: 8px;
+  }
+
+  .carta .carta-item .menu-item-control {
+    width: 102px;
+  }
+
+  .carta .menu-add-btn {
+    padding: 0 8px;
+  }
+
+  .carta .carta-item-price {
+    font-size: 21px;
+  }
+}
