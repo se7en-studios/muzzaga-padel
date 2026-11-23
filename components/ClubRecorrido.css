@@ -17,7 +17,9 @@
   --ct-glass-edge: rgba(255, 255, 255, 0.16);
   --ct-edge: clamp(16px, 4vw, 56px);
   position: relative;
-  height: calc(var(--stops) * 100svh);
+  /* Compu: las 6 paradas, 3/4 de pantalla de scroll cada una (antes una
+     pantalla entera: 6 pantallas de recorrido; ahora 4,5). */
+  height: calc(var(--stops) * 75svh);
 }
 
 /* Celu y tablet: recorrido corto (vista general → canchas → barra; ver

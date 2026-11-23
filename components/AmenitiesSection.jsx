@@ -1,7 +1,6 @@
 "use client";
 
 import FeatureCarousel from "./FeatureCarousel";
-import Mascota from "./Mascota";
 
 export default function AmenitiesSection({ photos }) {
   return (
@@ -22,13 +21,6 @@ export default function AmenitiesSection({ photos }) {
               Diseñado de cero para brindar la mejor experiencia deportiva y
               social de Catriel.
             </p>
-          </div>
-          <div className="mascot-section-badge">
-            <Mascota
-              pose="descanso-mate"
-              alt="Muzzaguito descansando con mate y su paletero"
-              className="mascot-section-img"
-            />
           </div>
         </div>
 
