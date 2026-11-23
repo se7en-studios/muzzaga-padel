@@ -42,6 +42,9 @@ import "./secciones/anim-turnos.css";
 import "./secciones/anim-camaras-torneos.css";
 import "./secciones/anim-cantina-herramientas.css";
 import "./secciones/anim-faq-ubicacion.css";
+import "./secciones/tablet.css";
+import "./secciones/pantalla-grande.css";
+import "./secciones/oscuro.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";

@@ -17,6 +17,7 @@ import "./rediseno/modales.css";
 import "./rediseno/editores.css";
 import "./rediseno/login.css";
 import "./rediseno/movimiento.css";
+import "./rediseno/tablet.css";
 
 // Una sola sans para todo el admin (inputs, montos, placeholders). La web
 // pública sigue con Poppins: esta fuente y admin.css solo aplican dentro de
