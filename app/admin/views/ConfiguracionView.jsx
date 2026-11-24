@@ -35,6 +35,7 @@ import {
   depositFor,
   maskCbu,
   normalizeConfig,
+  penaltyFor,
   slotTimesFor,
 } from "../../../lib/clubConfig";
 import { isoAddDays, todayInClub } from "../../../lib/booking";
@@ -91,7 +92,7 @@ const SECTIONS = [
     id: "cobros",
     label: "Cobros",
     icon: CreditCard,
-    hint: "La seña que se pide al reservar y los datos para transferir.",
+    hint: "La seña que se pide al reservar, la multa por cancelar sobre la hora y los datos para transferir.",
     save: "form",
   },
   {
@@ -137,7 +138,8 @@ function sectionForField(key) {
   if (/^courts\.\d+\.streamUrl/.test(key) || key === "beelupUrl") return "camaras";
   if (key.startsWith("courts") || key.startsWith("pricing")) return "canchas";
   if (key.startsWith("schedule") || key === "slotDurationMin") return "horarios";
-  if (key === "depositPct" || key.startsWith("payment")) return "cobros";
+  if (key === "depositPct" || key === "penaltyPct" || key.startsWith("payment"))
+    return "cobros";
   if (key.startsWith("blockedDates")) return "cierres";
   if (key === "clubPhone") return "club";
   return null;
@@ -453,7 +455,13 @@ export default function ConfiguracionView({
     const picks = {
       canchas: (c) => [c.courts.map(({ name, type }) => [name, type]), c.pricing],
       horarios: (c) => [c.slotDurationMin, c.schedule],
-      cobros: (c) => [c.depositPct, c.paymentAlias, c.paymentTitular, c.paymentCbu],
+      cobros: (c) => [
+        c.depositPct,
+        c.penaltyPct,
+        c.paymentAlias,
+        c.paymentTitular,
+        c.paymentCbu,
+      ],
       cierres: (c) => c.blockedDates,
       club: (c) => c.clubPhone,
       camaras: (c) => [c.beelupUrl, c.courts.map((x) => x.streamUrl || "")],
@@ -635,6 +643,7 @@ export default function ConfiguracionView({
   const dirtyLabels = dirtySections.map((id) => SECTION_BY_ID[id].label);
   const depositPctShown = Math.min(100, Math.max(0, Number(form.depositPct) || 0));
   const depositSample = depositFor(form, valle.court);
+  const penaltySample = penaltyFor(form, valle.court);
   const phoneDigits = form.clubPhone.replace(/\D/g, "");
   const isHttp = (url) => /^https?:\/\//i.test(String(url || "").trim());
   // Con un error en algún día, los horarios quedan abiertos para verlo.
@@ -1092,6 +1101,7 @@ export default function ConfiguracionView({
             {err("depositPct")}
           </div>
 
+
           {/* La seña dibujada sobre el precio del turno: se entiende de un vistazo. */}
           <div className="admin-cfg-deposit" aria-hidden>
             <div className="admin-cfg-deposit-bar">
@@ -1105,6 +1115,26 @@ export default function ConfiguracionView({
                 En el club <strong>{formatARS(Math.max(0, valle.court - depositSample))}</strong>
               </span>
             </div>
+          </div>
+
+          <div className="admin-field" style={{ maxWidth: 320 }}>
+            <label className="admin-field-label" htmlFor="cfg-penalty">
+              Multa por cancelar sobre la hora (% del turno)
+            </label>
+            <input
+              id="cfg-penalty"
+              type="number"
+              min={0}
+              max={100}
+              value={form.penaltyPct ?? 50}
+              onChange={(e) => set({ penaltyPct: Number(e.target.value) })}
+            />
+            <p className="admin-field-hint">
+              Se sugiere al cancelar un turno (por ejemplo, un fijo que cede el
+              horario tarde): un turno de {formatARS(valle.court)} lleva{" "}
+              {formatARS(penaltySample)} de multa. Se puede cambiar en cada caso.
+            </p>
+            {err("penaltyPct")}
           </div>
 
           <div className="admin-field-row">

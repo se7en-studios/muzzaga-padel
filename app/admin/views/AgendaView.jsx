@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Banknote, CalendarDays, CircleAlert, CircleCheck } from "lucide-react";
+import {
+  Banknote,
+  CalendarDays,
+  CalendarX2,
+  CircleAlert,
+  CircleCheck,
+} from "lucide-react";
 import {
   isoAddDays,
   nextDays,
@@ -11,7 +17,10 @@ import {
 import { hasSlotStarted, minutesIntoNight } from "../../../lib/clubConfig";
 import { formatARS, formatPct } from "../../../lib/format";
 import {
+  hasPenalty,
+  isBillableBooking,
   isCountableBooking,
+  paidAmount,
   paymentState,
   pendingAmount,
 } from "../../../lib/metrics";
@@ -153,9 +162,15 @@ export default function AgendaView({
 
   const { summary, stats } = dayData;
   const bookings = dayData.bookings || [];
+  // Deben: turnos con saldo y multas por cancelar sobre la hora sin cobrar.
   const owing = bookings.filter(
-    (b) => isCountableBooking(b) && pendingAmount(b) > 0,
+    (b) => isBillableBooking(b) && pendingAmount(b) > 0,
   ).length;
+  // Cancelados del día (no prueba): la grilla ya no los muestra porque el
+  // horario quedó libre, pero acá se pueden abrir para cobrar la multa.
+  const cancelled = bookings.filter(
+    (b) => b.status === "cancelado" && !b.isTest,
+  );
 
   const rowOrder = [...new Set(dayData.slots.map((s) => s.start))];
   const nextSlot =
@@ -356,9 +371,69 @@ export default function AgendaView({
           )}
         </section>
 
+        {cancelled.length > 0 && (
+          <CancelledSection bookings={cancelled} onOpenDetail={onOpenDetail} />
+        )}
+
         <WeekSection weekStats={weekStats} />
       </div>
     </div>
+  );
+}
+
+/**
+ * Turnos cancelados del día. El horario ya está libre en la grilla, pero
+ * acá quedan a mano: el que se canceló sobre la hora (por ejemplo, un turno
+ * fijo que cedió tarde) se abre para cobrarle la multa o para ponérsela.
+ */
+function CancelledSection({ bookings, onOpenDetail }) {
+  const multas = bookings.filter(hasPenalty);
+  const debe = multas.reduce((s, b) => s + pendingAmount(b), 0);
+  return (
+    <section className="admin-cancelados" aria-labelledby="admin-cancelados-title">
+      <div className="admin-cancelados-head">
+        <h2 id="admin-cancelados-title" className="admin-section-title admin-m0">
+          <CalendarX2 size={18} strokeWidth={1.9} aria-hidden /> Cancelados del día
+        </h2>
+        {debe > 0 && (
+          <span className="admin-cancelados-debe">
+            Multas por cobrar: <strong>{formatARS(debe)}</strong>
+          </span>
+        )}
+      </div>
+      <ul className="admin-cancelados-list">
+        {bookings.map((b) => {
+          const penalized = hasPenalty(b);
+          const pending = pendingAmount(b);
+          const tone = !penalized ? "sin" : pending > 0 ? "debe" : "paga";
+          return (
+            <li key={b.id}>
+              <button
+                type="button"
+                className={`admin-cancelado is-${tone}`}
+                onClick={() => onOpenDetail(b)}
+              >
+                <span className="admin-cancelado-hora">{b.startTime}</span>
+                <span className="admin-cancelado-quien">
+                  <strong>{b.playerName || "Turno"}</strong>
+                  <small>
+                    {b.courtName}
+                    {b.recurringId ? " · Turno fijo" : ""}
+                  </small>
+                </span>
+                <span className="admin-cancelado-estado">
+                  {!penalized
+                    ? "Sin multa"
+                    : pending > 0
+                      ? `Multa · debe ${formatARS(pending)}`
+                      : `Multa cobrada · ${formatARS(paidAmount(b))}`}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

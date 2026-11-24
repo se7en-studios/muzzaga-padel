@@ -110,10 +110,10 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
   const tier = cat.category.toLowerCase();
   const inactive = isInactiveClient(client, today);
   const cantinaTotal = detail?.cantina.reduce((s, c) => s + c.total, 0) || 0;
-  // Solo para mostrar: lo que quedó sin cobrar en turnos no cancelados.
-  const owed = (detail?.bookings || []).filter(
-    (b) => b.status !== "cancelado" && b.total > b.paid,
-  );
+  // Solo para mostrar: lo que quedó sin cobrar. `total` ya viene en 0 para
+  // los cancelados sin multa, y en el monto de la multa para los cancelados
+  // sobre la hora con multa (que sí se deben).
+  const owed = (detail?.bookings || []).filter((b) => b.total > b.paid);
   const owedTotal = owed.reduce((s, b) => s + (b.total - b.paid), 0);
   // Categoría y posición que el staff ya anotó (mismas etiquetas rápidas de
   // abajo): se muestran en la ficha para no tener que leer la nota.
@@ -307,12 +307,14 @@ export default function ClientDrawer({ client, onClose, onToast, onDeleted }) {
                   </span>
                   <span className="cc-history-end">
                     <span className="cc-status" data-status={b.status}>
-                      {STATUS_LABEL[b.status] || b.status}
+                      {b.status === "cancelado" && b.total > 0
+                        ? "Cancelado con multa"
+                        : STATUS_LABEL[b.status] || b.status}
                     </span>
                     <span className="cc-history-amount">
                       {formatARS(b.total)}
                     </span>
-                    {b.total > b.paid && b.status !== "cancelado" && (
+                    {b.total > b.paid && (
                       <small className="cc-history-owed">
                         Debe {formatARS(b.total - b.paid)}
                       </small>

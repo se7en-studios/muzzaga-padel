@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Banknote, Users } from "lucide-react";
-import { depositFor, slotTimesFor } from "../../lib/clubConfig";
+import { depositFor, penaltyFor, slotTimesFor } from "../../lib/clubConfig";
 import { formatARS } from "../../lib/format";
 import { toWhatsappNumber } from "../../lib/phone";
 import { categorizeClient } from "../../lib/clientsExport";
@@ -14,9 +14,15 @@ import {
 } from "./actions";
 import { readPlayerNames } from "../../lib/playerNames";
 import PlayerNamesFields from "./ui/PlayerNamesFields";
-import { bookingTotal, onAccountTotal } from "../../lib/metrics";
+import {
+  bookingTotal,
+  hasPenalty,
+  onAccountTotal,
+  slotValue,
+} from "../../lib/metrics";
 import { formatDate, plural } from "../../lib/format";
 import StaffPinModal from "./ui/StaffPinModal";
+import PenaltyEditModal from "./ui/PenaltyEditModal";
 import BusyButton from "./ui/BusyButton";
 import { useExitAnimation } from "./ui/motion";
 import {
@@ -29,6 +35,7 @@ import {
   buildReminderMessage,
   buildDepositRequestMessage,
   buildConfirmationMessage,
+  buildPenaltyMessage,
 } from "./adminHelpers";
 
 const weekdayLong = new Intl.DateTimeFormat("es-AR", {
@@ -44,6 +51,7 @@ const PAY_LABEL = {
   prueba: "Prueba",
   bloqueo: "Bloqueo",
   cancelado: "Cancelado",
+  multa: "Multa",
 };
 
 /**
@@ -77,6 +85,8 @@ export default function BookingDetailModal({
   const [isMoving, setIsMoving] = useState(false);
   const [isOtherAmount, setIsOtherAmount] = useState(false);
   const [isDeletePinOpen, setIsDeletePinOpen] = useState(false);
+  // Multa de un turno ya cancelado: "poner" (o corregir) | "sacar" | null.
+  const [penaltyAction, setPenaltyAction] = useState(null);
   const [moveCourtId, setMoveCourtId] = useState(booking.courtId || "cancha-1");
   const [moveDate, setMoveDate] = useState(booking.date || "");
   const [moveStartTime, setMoveStartTime] = useState(
@@ -165,8 +175,12 @@ export default function BookingDetailModal({
   const total = bookingTotal(booking);
   const paid = paidAmount(booking);
   const pending = pendingAmount(booking);
-  // Seña según el % de Configuración (antes fija en $15.000).
-  const deposit = depositFor(clubConfig, total);
+  // Turno cancelado con multa por cancelar sobre la hora: lo que se cobra
+  // es la multa (la seña que ya había pagado cuenta como parte).
+  const penalized = hasPenalty(booking);
+  // Seña según el % de Configuración (antes fija en $15.000). Una multa no
+  // lleva seña.
+  const deposit = penalized ? 0 : depositFor(clubConfig, total);
   const phone = booking.playerPhone
     ? toWhatsappNumber(booking.playerPhone)
     : null;
@@ -176,7 +190,11 @@ export default function BookingDetailModal({
   const isBlocked = booking.status === "bloqueado";
 
   // Solo presentación: el estado de cobro con su color de semáforo.
-  const payTone = isCancelled
+  const payTone = penalized
+    ? pending <= 0
+      ? "pagado"
+      : "multa"
+    : isCancelled
     ? "cancelado"
     : isBlocked
       ? "bloqueo"
@@ -187,7 +205,12 @@ export default function BookingDetailModal({
           : paid > 0
             ? "sena"
             : "debe";
-  const canCharge = !isCancelled && pending > 0;
+  const canCharge = (!isCancelled || penalized) && pending > 0;
+  // Datos para ofrecer la multa en un turno cancelado sin multa.
+  const slotPrice = slotValue(booking);
+  const suggestedPenalty = penaltyFor(clubConfig, slotPrice);
+  const canAddPenalty =
+    isCancelled && !penalized && !booking.isTest && suggestedPenalty > 0;
   const courtMatch = /^cancha\s+(\S+)$/i.exec(booking.courtName || "");
   const [by, bm, bd] = (booking.date || "").split("-").map(Number);
   const weekday = booking.date
@@ -278,6 +301,11 @@ export default function BookingDetailModal({
             {isCancelled && (
               <span className="admin-detail-tag is-danger">Cancelado</span>
             )}
+            {penalized && (
+              <span className="admin-detail-tag is-multa">
+                Multa por cancelar sobre la hora
+              </span>
+            )}
             {clientCat?.category === "VIP" && (
               <span
                 className="admin-detail-tag is-vip"
@@ -324,6 +352,25 @@ export default function BookingDetailModal({
                   </strong>
                   <span>No suma en la caja ni en los números del mes.</span>
                 </>
+              ) : penalized ? (
+                <>
+                  <span className="admin-bk-money-kicker">
+                    {pending > 0
+                      ? "Multa por cancelar sobre la hora"
+                      : "✓ Multa cobrada"}
+                  </span>
+                  <strong className="admin-bk-money-amount">
+                    {formatARS(pending > 0 ? pending : paid)}
+                  </strong>
+                  <span>
+                    Multa {formatARS(total)}
+                    {booking.penalty?.pct && booking.penalty?.base
+                      ? ` (${booking.penalty.pct}% del turno de ${formatARS(booking.penalty.base)})`
+                      : ""}{" "}
+                    · Ya pagó {formatARS(paid)}
+                  </span>
+                  <span>El horario quedó libre en la agenda.</span>
+                </>
               ) : payTone === "cancelado" ? (
                 <>
                   <strong className="admin-bk-money-kicker">
@@ -363,6 +410,41 @@ export default function BookingDetailModal({
               )}
             </div>
           </div>
+
+          {(canAddPenalty || penalized) && (
+            <div className="admin-multa-actions">
+              {canAddPenalty && (
+                <button
+                  type="button"
+                  className="btn btn-secondary admin-detail-wide admin-multa-add"
+                  onClick={() => setPenaltyAction("poner")}
+                >
+                  Cobrar multa por cancelar sobre la hora ·{" "}
+                  {formatARS(suggestedPenalty)}
+                </button>
+              )}
+              {penalized && (
+                <div className="admin-detail-row">
+                  <button
+                    type="button"
+                    className="admin-detail-link"
+                    onClick={() => setPenaltyAction("poner")}
+                  >
+                    Corregir el monto
+                  </button>
+                  {paid === 0 && (
+                    <button
+                      type="button"
+                      className="admin-detail-link is-danger"
+                      onClick={() => setPenaltyAction("sacar")}
+                    >
+                      Sacar la multa
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {canCharge && (
             <div className="admin-detail-pay admin-bk-pay" id="admin-detail-pay">
@@ -630,6 +712,18 @@ export default function BookingDetailModal({
             <div className="admin-detail-section admin-bk-section">
               <h4 className="admin-detail-subtitle">Mensajes de WhatsApp</h4>
               <div className="admin-detail-wa">
+                {penalized && pending > 0 && (
+                  <a
+                    href={waLink(
+                      buildPenaltyMessage(booking, clubConfig.paymentAlias),
+                    )}
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Avisarle la multa
+                  </a>
+                )}
+                {!isCancelled && (
                 <a
                   href={waLink(buildReminderMessage(booking))}
                   target="_blank"
@@ -637,7 +731,8 @@ export default function BookingDetailModal({
                 >
                   Recordarle el turno
                 </a>
-                {pending > 0 && (
+                )}
+                {!isCancelled && pending > 0 && (
                   <a
                     href={waLink(
                       buildDepositRequestMessage(
@@ -652,6 +747,7 @@ export default function BookingDetailModal({
                     Pedirle la seña
                   </a>
                 )}
+                {!isCancelled && (
                 <a
                   href={waLink(buildConfirmationMessage(booking))}
                   target="_blank"
@@ -659,6 +755,7 @@ export default function BookingDetailModal({
                 >
                   Confirmarle el turno
                 </a>
+                )}
               </div>
             </div>
           )}
@@ -837,7 +934,7 @@ export default function BookingDetailModal({
                   : "Cancelar este turno (libera la cancha)"
               }
               onClick={() => {
-                onCancel(booking.id, booking.courtId, booking.startTime);
+                onCancel(booking.id, booking.courtId, booking.startTime, booking);
                 onClose();
               }}
             >
@@ -848,7 +945,31 @@ export default function BookingDetailModal({
         </div>
       </div>
 
+      {/* La ventana del PIN va en un portal, pero los clics igual suben por
+          el árbol de React hasta el fondo de este detalle (que lo cierra al
+          tocar afuera): se cortan acá. */}
+      {penaltyAction && (
+        <div onClick={(e) => e.stopPropagation()}>
+        <PenaltyEditModal
+          booking={booking}
+          clubConfig={clubConfig}
+          action={penaltyAction}
+          onClose={() => setPenaltyAction(null)}
+          onDone={(res) => {
+            setPenaltyAction(null);
+            onToast?.(
+              res.penalty
+                ? `Multa de ${formatARS(res.penalty.amount)} anotada por ${res.staff}`
+                : `Multa sacada por ${res.staff}`,
+            );
+            onBookingChanged?.();
+          }}
+        />
+        </div>
+      )}
+
       {isDeletePinOpen && (
+        <div onClick={(e) => e.stopPropagation()}>
         <StaffPinModal
           isOpen={isDeletePinOpen}
           title="Borrar el turno para siempre"
@@ -873,6 +994,7 @@ export default function BookingDetailModal({
             }
           }}
         />
+        </div>
       )}
     </div>
   );
