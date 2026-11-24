@@ -27,7 +27,11 @@ export default function CancelBookingModal({ booking, clubConfig, onClose, onDon
   const suggested = penaltyFor(clubConfig, value);
   const canPenalize =
     booking.status !== "bloqueado" && !booking.isTest && value > 0 && suggested > 0;
-  const [mode, setMode] = useState("sin");
+  // Un turno fijo que se cancela es el caso típico de multa (cede el
+  // horario sobre la hora): viene marcada; igual se puede elegir "Sin multa".
+  const [mode, setMode] = useState(
+    canPenalize && booking.recurringId ? "multa" : "sin",
+  );
   const [amount, setAmount] = useState(String(suggested));
 
   const isBlock = booking.status === "bloqueado";
