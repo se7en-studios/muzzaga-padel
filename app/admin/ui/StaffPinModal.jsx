@@ -26,6 +26,7 @@ const MAX_PIN = 6;
  *   requireReason?: boolean,
  *   reasonLabel?: string,
  *   reasonPlaceholder?: string,
+ *   children?: import("react").ReactNode,
  *   onConfirm: (input: { pin: string, reason: string }) => Promise<void>,
  *   onClose: () => void,
  * }} props onConfirm tiene que lanzar un Error con el mensaje si falla.
@@ -40,6 +41,9 @@ export default function StaffPinModal({
   requireReason = false,
   reasonLabel,
   reasonPlaceholder = "ej. Cargado por error, pedido del cliente",
+  // Opciones extra de la acción (por ejemplo, cancelar con o sin multa),
+  // entre el elemento y el PIN.
+  children,
   onConfirm,
   onClose,
 }) {
@@ -137,6 +141,7 @@ export default function StaffPinModal({
               <strong>{targetName}</strong>
             </div>
           )}
+          {children}
 
           <label className="admin-field-label" htmlFor="staff-pin-input">
             PIN personal

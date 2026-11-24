@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import {
   adminAddPayment,
-  adminCancelBooking,
   adminCancelRecurringSeries,
   adminCreateManualBooking,
   adminCreateRecurringBookings,
@@ -55,6 +54,7 @@ import ActividadView from "./views/ActividadView";
 import CreateBookingModal from "./CreateBookingModal";
 import BookingDetailModal from "./BookingDetailModal";
 import StaffPinModal from "./ui/StaffPinModal";
+import CancelBookingModal from "./ui/CancelBookingModal";
 import { usePinGate } from "./ui/usePinGate";
 import { ICON_PROPS, NAV_GROUPS, NAV_ITEMS, findNavItem } from "./nav";
 import { Toaster, useToasts } from "./ui/Toaster";
@@ -362,8 +362,16 @@ export default function AdminPage() {
     loadWeekStats();
   }
 
-  function handleCancel(bookingId, courtId, startTime) {
-    setCancelTarget({ bookingId, courtId, startTime });
+  function handleCancel(bookingId, courtId, startTime, booking) {
+    // El turno entero hace falta para ofrecer la multa (valor, seña, fijo).
+    const full =
+      booking ||
+      dayData?.bookings?.find((b) => b.id === bookingId) || {
+        id: bookingId,
+        courtId,
+        startTime,
+      };
+    setCancelTarget(full);
   }
 
   function handleCancelSeries(recurringId, playerName) {
@@ -1192,29 +1200,19 @@ export default function AdminPage() {
 
       {/* PIN de staff para cancelar un turno (libera el horario) */}
       {cancelTarget && (
-        <StaffPinModal
-          isOpen={Boolean(cancelTarget)}
-          title="Cancelar Turno"
-          description={`¿Confirmás que querés cancelar este turno de las ${cancelTarget.startTime} hs y liberar la cancha?`}
-          confirmButtonText="Cancelar Turno"
-          confirmButtonTone="danger"
+        <CancelBookingModal
+          booking={cancelTarget}
+          clubConfig={clubConfig}
           onClose={() => setCancelTarget(null)}
-          onConfirm={async ({ pin, reason }) => {
-            const res = await adminCancelBooking({
-              bookingId: cancelTarget.bookingId,
-              pin,
-              reason,
-            });
-            if (res.ok) {
-              const { startTime } = cancelTarget;
-              setCancelTarget(null);
-              refreshMoney();
-              showToast(
-                `Turno de las ${startTime} cancelado · horario liberado`,
-              );
-            } else {
-              throw new Error(res.error || "No se pudo cancelar el turno.");
-            }
+          onDone={(res) => {
+            const { startTime } = cancelTarget;
+            setCancelTarget(null);
+            refreshMoney();
+            showToast(
+              res.penalty
+                ? `Turno de las ${startTime} cancelado · multa de ${formatARS(res.penalty.amount)} para cobrar`
+                : `Turno de las ${startTime} cancelado · horario liberado`,
+            );
           }}
         />
       )}

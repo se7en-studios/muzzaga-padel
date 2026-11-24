@@ -27,6 +27,10 @@ import { isoAddDays, todayInClub } from "../../../lib/booking";
 /** Qué significa cada código del registro, en palabras del club. */
 const ACTIONS = {
   CANCELAR_TURNO: { label: "Canceló un turno", area: "turnos", tone: "danger" },
+  CANCELAR_CON_MULTA: { label: "Canceló un turno con multa", area: "turnos", tone: "danger" },
+  PONER_MULTA: { label: "Puso una multa", area: "caja" },
+  CORREGIR_MULTA: { label: "Corrigió una multa", area: "caja" },
+  SACAR_MULTA: { label: "Sacó una multa", area: "caja", tone: "danger" },
   ELIMINAR_TURNO: { label: "Borró un turno", area: "turnos", tone: "danger" },
   CANCELAR_SERIE_FIJA: {
     label: "Canceló un turno fijo",

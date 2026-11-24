@@ -1889,3 +1889,143 @@
     min-height: 48px;
   }
 }
+
+/* ==========================================================================
+   MULTA POR CANCELAR SOBRE LA HORA
+   Elección al cancelar (MultaChoice), el semáforo "Multa" en el detalle y
+   los botones para ponerla / corregirla / sacarla.
+   ========================================================================== */
+.admin-root .admin-bk-money.is-multa {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.admin-root .admin-bk-money.is-multa .admin-bk-money-state {
+  background: #c2410c;
+  color: #ffffff;
+}
+
+.admin-root .admin-bk-money.is-multa .admin-bk-money-amount {
+  color: #9a3412;
+}
+
+.admin-root .admin-bk-pass .admin-detail-tag.is-multa {
+  border-color: #fdba74;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.admin-root .admin-multa-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-root .admin-multa-actions .admin-detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.admin-root .admin-multa-add {
+  min-height: 48px;
+  border-color: #fdba74;
+  color: #9a3412;
+  font-weight: 700;
+}
+
+.admin-root .admin-detail-link.is-danger {
+  color: #b91c1c;
+}
+
+/* Elección en la ventana de cancelar. */
+.admin-root .admin-multa {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 14px;
+  padding: 0;
+  border: 0;
+}
+
+.admin-root .admin-multa > legend {
+  margin-bottom: 6px;
+  padding: 0;
+}
+
+.admin-root .admin-multa-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.admin-root .admin-multa-opt input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: #c2410c;
+}
+
+.admin-root .admin-multa-opt.is-on {
+  border-color: #2350d6;
+  background: #eef2ff;
+}
+
+.admin-root .admin-multa-opt.is-multa.is-on {
+  border-color: #c2410c;
+  background: #fff7ed;
+}
+
+.admin-root .admin-multa-opt-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-root .admin-multa-opt-body strong {
+  font-size: 14.5px;
+  line-height: 1.25;
+}
+
+.admin-root .admin-multa-opt-body small {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text-muted, #57534e);
+}
+
+.admin-root .admin-multa-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-root .admin-multa-amount-row > span {
+  font-weight: 700;
+  color: var(--text-muted, #57534e);
+}
+
+.admin-root .admin-multa-amount-row input {
+  max-width: 180px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.admin-root .admin-multa-note {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-muted, #57534e);
+}
+
+.admin-root .admin-multa-warn {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #b91c1c;
+}

@@ -30,6 +30,7 @@ export {
   buildReminderMessage,
   buildDepositRequestMessage,
   buildConfirmationMessage,
+  buildPenaltyMessage,
 } from "../../lib/adminMessages";
 
 /**

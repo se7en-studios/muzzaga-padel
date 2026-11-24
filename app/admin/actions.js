@@ -40,12 +40,15 @@ import {
   buildDailySummaries,
   computeDailyCash,
   dayOccupancy,
+  hasPenalty,
+  isBillableBooking,
   isCountableBooking,
   isTestRecord,
   onAccountTotal,
   paidAmount,
   pendingAmount,
   periodOccupancy,
+  slotValue,
   sumSummaries,
   summarizeRecords,
 } from "../../lib/metrics";
@@ -633,8 +636,48 @@ export async function adminSetBookingPlayers(bookingId, playerNames) {
   }
 }
 
-/** Cancela un turno y libera el horario. Pide PIN para dejar registrado quién fue. */
-export async function adminCancelBooking({ bookingId, pin, reason } = {}) {
+/**
+ * Valida el monto de una multa contra el valor del turno. Devuelve
+ * { amount, value } (entero, > 0) o { error }.
+ */
+function checkPenaltyAmount(booking, raw) {
+  const amount = Math.round(Number(raw));
+  const value = slotValue(booking);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { error: "Ingresá el monto de la multa." };
+  }
+  if (value > 0 && amount > value) {
+    return {
+      error: `La multa no puede ser mayor al valor del turno ($${value}).`,
+    };
+  }
+  if (amount > MAX_PAYMENT) return { error: "Monto inválido." };
+  return { amount, value };
+}
+
+function penaltyRecord(amount, value, staffName) {
+  return {
+    amount,
+    // Base y % quedan guardados para mostrar "50% de $60.000" aunque
+    // después cambien los precios o el % de Ajustes.
+    base: value || null,
+    pct: value > 0 ? Math.round((amount / value) * 100) : null,
+    setAt: Date.now(),
+    setBy: staffName,
+  };
+}
+
+/**
+ * Cancela un turno y libera el horario. Pide PIN para dejar registrado quién
+ * fue. Con `penaltyAmount` > 0 queda una multa por cancelar sobre la hora:
+ * el horario se libera igual, pero la multa se factura y se cobra.
+ */
+export async function adminCancelBooking({
+  bookingId,
+  pin,
+  reason,
+  penaltyAmount,
+} = {}) {
   const denied = await requireAdmin();
   if (denied) return denied;
   if (!isId(bookingId)) return { ok: false, error: "Turno inválido." };
@@ -652,25 +695,116 @@ export async function adminCancelBooking({ bookingId, pin, reason } = {}) {
     const closed = await closedDayError(db, booking.date);
     if (closed) return closed;
 
+    let penalty = null;
+    const wantsPenalty =
+      penaltyAmount !== undefined && penaltyAmount !== null && penaltyAmount !== "";
+    if (wantsPenalty) {
+      if (booking.status === "bloqueado" || isTestRecord(booking)) {
+        return { ok: false, error: "Un bloqueo o un turno de prueba no lleva multa." };
+      }
+      const checked = checkPenaltyAmount(booking, penaltyAmount);
+      if (checked.error) return { ok: false, error: checked.error };
+      penalty = penaltyRecord(checked.amount, checked.value, auth.staff.name);
+    }
+
     await releaseClaim(db, booking, bookingId);
     await db.ref(`bookings/${bookingId}`).update({
       status: "cancelado",
       cancelledAt: Date.now(),
       cancelledBy: auth.staff.name,
       ...(reason ? { cancelReason: clip(reason, 120) } : {}),
+      ...(penalty ? { penalty } : {}),
     });
     await audit(
       db,
       auth.staff,
-      "CANCELAR_TURNO",
+      penalty ? "CANCELAR_CON_MULTA" : "CANCELAR_TURNO",
       `${booking.playerName || "Turno"} · ${booking.date} ${booking.startTime}`,
-      reason ? `Motivo: ${reason}` : "Turno cancelado y horario liberado",
-      { courtName: booking.courtName || null },
+      [
+        reason ? `Motivo: ${reason}` : null,
+        penalty
+          ? `Multa de $${penalty.amount} por cancelar sobre la hora`
+          : "Turno cancelado y horario liberado",
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      {
+        courtName: booking.courtName || null,
+        ...(penalty ? { amount: penalty.amount } : {}),
+      },
     );
-    return { ok: true, staff: auth.staff.name };
+    return { ok: true, staff: auth.staff.name, penalty };
   } catch (error) {
     console.error("Error al cancelar reserva en admin", error);
     return { ok: false, error: "No se pudo cancelar el turno." };
+  }
+}
+
+/**
+ * Pone, corrige o saca la multa de un turno YA cancelado (por ejemplo, si
+ * se decidió cobrarla después). `amount` > 0 la pone o corrige; 0 la saca.
+ * Sacarla no se puede si ya tiene cobros: primero hay que borrarlos (así la
+ * caja no pierde plata sin que quede registrado).
+ */
+export async function adminSetBookingPenalty({ bookingId, pin, amount } = {}) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!isId(bookingId)) return { ok: false, error: "Turno inválido." };
+
+  const auth = await authorizeStaff(pin);
+  if (auth.error) return { ok: false, error: auth.error };
+
+  try {
+    const db = getDb();
+    const booking = await readRecord(db, `bookings/${bookingId}`);
+    if (!booking) return { ok: false, error: "El turno no existe." };
+    if (booking.status !== "cancelado") {
+      return {
+        ok: false,
+        error: "La multa es para turnos cancelados. Cancelalo primero.",
+      };
+    }
+    if (isTestRecord(booking)) {
+      return { ok: false, error: "Un turno de prueba no lleva multa." };
+    }
+    const closed = await closedDayError(db, booking.date);
+    if (closed) return closed;
+    const target = `${booking.playerName || "Turno"} · ${booking.date} ${booking.startTime}`;
+
+    if (!(Number(amount) > 0)) {
+      if (!hasPenalty(booking)) {
+        return { ok: false, error: "Ese turno no tiene multa." };
+      }
+      if (paidAmount(booking) > 0) {
+        return {
+          ok: false,
+          error:
+            "La multa ya tiene cobros. Borrá primero el cobro (con PIN) y después sacá la multa.",
+        };
+      }
+      await db.ref(`bookings/${bookingId}/penalty`).set(null);
+      await audit(db, auth.staff, "SACAR_MULTA", target, "Multa sacada", {
+        courtName: booking.courtName || null,
+      });
+      return { ok: true, staff: auth.staff.name, penalty: null };
+    }
+
+    const checked = checkPenaltyAmount(booking, amount);
+    if (checked.error) return { ok: false, error: checked.error };
+    const penalty = penaltyRecord(checked.amount, checked.value, auth.staff.name);
+    await db.ref(`bookings/${bookingId}/penalty`).set(penalty);
+    await audit(
+      db,
+      auth.staff,
+      hasPenalty(booking) ? "CORREGIR_MULTA" : "PONER_MULTA",
+      target,
+      `Multa de $${penalty.amount} por cancelar sobre la hora`,
+      { courtName: booking.courtName || null, amount: penalty.amount },
+    );
+    return { ok: true, staff: auth.staff.name, penalty };
+  } catch (error) {
+    console.error("Error al poner la multa", error);
+    return { ok: false, error: "No se pudo guardar la multa." };
   }
 }
 
@@ -810,10 +944,11 @@ export async function adminAddPayment(bookingId, method, amount) {
     const db = getDb();
     const booking = await readRecord(db, `bookings/${bookingId}`);
     if (!booking) return { ok: false, error: "El turno no existe." };
-    if (!isCountableBooking(booking)) {
+    // Se cobra un turno que cuenta o la multa de uno cancelado con multa.
+    if (!isBillableBooking(booking)) {
       return {
         ok: false,
-        error: "No se puede cobrar un turno cancelado o bloqueado.",
+        error: "No se puede cobrar un turno cancelado (sin multa) o bloqueado.",
       };
     }
     const closed = await closedDayError(db, booking.date);
