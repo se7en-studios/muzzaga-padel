@@ -338,13 +338,17 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
     $('dateChip').textContent = n.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
   })();
 
-  try { await Promise.race([document.fonts.load('40px "Bebas Neue"'), new Promise(r => setTimeout(r, 1500))]); } catch (e) { /* respaldo */ }
   const IMG = {};
+  // las texturas se piden ya, mientras se espera la tipografía (antes esperaban hasta 1,5 s a que llegara)
+  const TEXF = ['epoxi', 'cesped', 'chapa-negra', 'yeso-oscuro', 'asfalto', 'tierra', 'vereda', 'estuco', 'porcelanato-beige', 'porcelanato-gris', 'nogal', 'madera-puerta', 'acero'];
+  // en el celu los suelos y el césped van en 512 px (texturas/m/, ~5 veces más livianos): desde arriba no se nota
+  const TEX_M = (LITE || MOVIL) ? { asfalto: 1, tierra: 1, vereda: 1, cesped: 1, 'chapa-negra': 1 } : {};
+  const texBase = /^\/recorrido(\/|$)/.test(location.pathname) ? '/recorrido/' : '';
+  const texReady = Promise.all(TEXF.map(k => new Promise(res => { const im = new Image(); im.onload = res; im.onerror = res; im.crossOrigin = 'anonymous'; im.src = texBase + 'texturas/' + (TEX_M[k] ? 'm/' : '') + k + '.jpg'; IMG['tx:' + k] = im; })));
+  try { await Promise.race([document.fonts.load('40px "Bebas Neue"'), new Promise(r => setTimeout(r, 1500))]); } catch (e) { /* respaldo */ }
   // texturas de materiales (Google Flow, emprolijadas para repetirse sin cortes); si alguna no carga queda la dibujada
   // en la web los archivos cuelgan de /recorrido/ (y la página también se abre como /recorrido, sin barra final)
   const BASE = window.MZ_BASE = /^\/recorrido(\/|$)/.test(location.pathname) ? '/recorrido/' : '';
-  const TEXF = ['epoxi', 'cesped', 'chapa-negra', 'yeso-oscuro', 'asfalto', 'tierra', 'vereda', 'estuco', 'porcelanato-beige', 'porcelanato-gris', 'nogal', 'madera-puerta', 'acero'];
-  const texReady = Promise.all(TEXF.map(k => new Promise(res => { const im = new Image(); im.onload = res; im.onerror = res; im.crossOrigin = 'anonymous'; im.src = BASE + 'texturas/' + k + '.jpg'; IMG['tx:' + k] = im; })));
   await Promise.all(Object.keys(ASSETS).map(k => new Promise(res => { const im = new Image(); im.onload = res; im.onerror = res; im.src = ASSETS[k]; IMG[k] = im; })));
   await new Promise(res => { const im = new Image(); im.onload = res; im.onerror = res; im.src = CHAIN; IMG.chain = im; });
   await texReady;

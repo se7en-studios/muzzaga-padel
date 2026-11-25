@@ -193,8 +193,11 @@ export default function ClubRecorrido() {
       waitQuiet();
     };
     // Celu: un ratito después de cargar (que primero termine lo de la primera pantalla).
+    // Compu: también se arma sola después de cargar (un poco más tarde que en
+    // el celu): antes esperaba a estar al 40 % de la sección y con conexión
+    // lenta se llegaba a ver la foto con "Armando la maqueta…".
     const onLoad = () => {
-      timerId = window.setTimeout(() => start(3000), 600);
+      timerId = window.setTimeout(() => start(3000), celu ? 600 : 1800);
     };
     if (saveData) window.addEventListener("scroll", onScroll, { passive: true });
     const io = new IntersectionObserver(
@@ -204,7 +207,7 @@ export default function ClubRecorrido() {
       { rootMargin: saveData ? "10% 0px" : celu ? "200% 0px" : "40% 0px" },
     );
     io.observe(el);
-    if (celu && !saveData) {
+    if (!saveData) {
       if (document.readyState === "complete") onLoad();
       else window.addEventListener("load", onLoad, { once: true });
     }
@@ -402,7 +405,7 @@ export default function ClubRecorrido() {
             <iframe
               ref={frameRef}
               className={`club-tour-frame${ready ? " is-ready" : ""}`}
-              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261125c`}
+              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261126a`}
               title="Maqueta 3D del club Muzzaga"
               tabIndex={-1}
               aria-hidden="true"
