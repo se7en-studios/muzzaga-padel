@@ -215,14 +215,14 @@ const TickerRotativo = memo(function TickerRotativo({ items }) {
     if (list.length < 2) return undefined;
     // Con la pestaña oculta no se avanza: nadie lo ve y la tele descansa.
     const id = setInterval(() => {
-      if (!document.hidden) setI((n) => (n + 1) % list.length);
+      if (!document.hidden) setI((n) => n + 1);
     }, 8000);
     return () => clearInterval(id);
   }, [list.length]);
   const item = list[i % list.length];
   return (
     <div className="mon-ticker-window" aria-live="off">
-      <span key={item} className="mon-ticker-item mon-ticker-rot">
+      <span className="mon-ticker-item mon-ticker-rot">
         <span className="mon-ticker-ball" aria-hidden="true" />
         {item}
       </span>
@@ -306,6 +306,24 @@ export default function MonitorPage() {
   const currentMinutes = useClubMinutes();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  // En la tele nadie toca nada: los botones y el puntero se esconden a los
+  // 4 s sin mover el mouse ni tocar una tecla, y vuelven al moverlo.
+  const [quieto, setQuieto] = useState(false);
+  useEffect(() => {
+    let id = null;
+    const despertar = () => {
+      setQuieto(false);
+      window.clearTimeout(id);
+      id = window.setTimeout(() => setQuieto(true), 4000);
+    };
+    despertar();
+    const evs = ["mousemove", "pointerdown", "keydown", "touchstart"];
+    evs.forEach((e) => window.addEventListener(e, despertar, { passive: true }));
+    return () => {
+      window.clearTimeout(id);
+      evs.forEach((e) => window.removeEventListener(e, despertar));
+    };
+  }, []);
   const [demo, setDemo] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [courtPts, setCourtPts] = useState(null);
@@ -604,7 +622,7 @@ export default function MonitorPage() {
   });
 
   return (
-    <div className={`mon-root${lite ? " is-lite" : ""}`}>
+    <div className={`mon-root${lite ? " is-lite" : ""}${quieto ? " is-quieto" : ""}`}>
       <div className="mon-scene" aria-hidden="true">
         <iframe
           ref={frameRef}
@@ -686,7 +704,8 @@ export default function MonitorPage() {
                 ` · datos de hace ${minutesSinceUpdate} min`}
             </span>
           ) : (
-            hasData && (
+            hasData &&
+            (demo || isStale || minutesSinceUpdate !== 0) && (
               <span
                 className={`mon-status${isStale ? " is-stale" : ""}`}
                 role="status"
