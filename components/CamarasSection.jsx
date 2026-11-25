@@ -462,8 +462,13 @@ export default function CamarasSection({ courts = [], beelupUrl: beelupUrlConfig
               {live
                 ? "Las cámaras de Beelup, en directo desde el club."
                 : "Cada partido queda grabado: reviví tus jugadas y compartilas con Beelup."}{" "}
-              {beelupUrl &&
-                "Tocá a Muzzaguito y conseguí el video de tu propio partido en Beelup."}
+              {/* En el celu esta parte se oculta (camaras-instalaciones.css):
+                  el botón de Beelup está justo abajo, en la tarjeta. */}
+              {beelupUrl && (
+                <span className="camaras-desc-extra">
+                  Tocá a Muzzaguito y conseguí el video de tu propio partido en Beelup.
+                </span>
+              )}
             </p>
           </div>
           <div className="mascot-section-badge">

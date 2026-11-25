@@ -348,10 +348,16 @@
     display: none;
   }
 
+  /* Fotos más bajas y con el título solo: la bajada larga se queda para
+     la compu (en el celu sumaba 60 px por foto y tapaba la imagen). */
   #cantina .photo-bento-card {
-    flex: 0 0 84%;
-    min-height: 248px;
+    flex: 0 0 80%;
+    min-height: 190px;
     scroll-snap-align: start;
+  }
+
+  #cantina .photo-bento-text {
+    display: none;
   }
 
   #cantina .photo-bento-body {
@@ -378,15 +384,15 @@
   }
 
   .tc-pizarra .menu-board-item {
-    min-height: 50px;
+    min-height: 44px;
     gap: 10px;
-    padding: 5px 0;
+    padding: 3px 0;
   }
 
   .tc-pizarra-icono {
-    width: 34px;
-    height: 34px;
-    font-size: 17px;
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
   }
 
   .tc-pizarra .menu-board-name {
@@ -400,6 +406,13 @@
   .tc-pizarra-pie {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 12px;
+  }
+
+  .tc-pizarra-qr {
+    font-size: 13px;
   }
 
   .tc-pizarra-cta {

@@ -69,3 +69,177 @@
     background: var(--btn-naranja, #bf5512);
   }
 }
+
+/* ==========================================================================
+   NOCHE DE PARTIDO: secciones con luz de estadio
+   En oscuro la home era una sola franja azul noche: Torneos, Cantina y
+   Herramientas tenían un azul apenas distinto del de la página, y Cantina y
+   Herramientas, pegadas, se veían como una sola banda (FAQ y Ubicación,
+   igual). Ahora:
+   - cada sección tiene arriba un "reflector" (un halo suave y ancho detrás
+     del encabezado, como las luces de la cancha), del color de lo
+     que muestra: dorado en Torneos, ámbar en Beelup, cálido en la Cantina,
+     azul cancha en Herramientas, lima en FAQ y verde en Ubicación;
+   - los tonos se alternan (página / superficie) para que dos secciones
+     seguidas no se fundan: Cantina y FAQ van en superficie, Herramientas y
+     Ubicación en el azul de la página.
+   Los fondos entran y salen con degradé, como antes: sin cortes. Reservas
+   no se toca (tiene su propio armado).
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  #torneos,
+  #camaras,
+  #cantina,
+  #herramientas,
+  #faq,
+  #ubicacion {
+    --reflector: rgba(120, 150, 255, 0.2);
+    /* El halo se centra detrás del encabezado y se apaga del todo antes
+       del borde de arriba (si lo tocaba, quedaba una línea recta). Celu:
+       más ancho que la pantalla; compu: 70 % del ancho. */
+    --reflector-forma: ellipse 120% 150px;
+    --reflector-alto: 150px;
+    --banda: transparent;
+  }
+
+  @media (min-width: 900px) {
+    #torneos,
+    #camaras,
+    #cantina,
+    #herramientas,
+    #faq,
+    #ubicacion {
+      --reflector-forma: ellipse 70% 200px;
+      --reflector-alto: 200px;
+    }
+  }
+
+  #torneos {
+    --reflector: rgba(255, 196, 80, 0.17);
+    --banda: var(--bg-surface);
+  }
+
+  #camaras {
+    --reflector: rgba(246, 162, 28, 0.16);
+  }
+
+  #cantina {
+    --reflector: rgba(255, 140, 60, 0.16);
+    --banda: var(--bg-surface);
+  }
+
+  #herramientas {
+    --reflector: rgba(80, 120, 255, 0.24);
+  }
+
+  #faq {
+    --reflector: rgba(215, 240, 58, 0.12);
+    --banda: var(--bg-surface);
+  }
+
+  #ubicacion {
+    --reflector: rgba(60, 200, 130, 0.15);
+  }
+
+  /* Mismos selectores que fondo-cancha.css (con !important): esta hoja va
+     después y le gana. */
+  #torneos[style],
+  #camaras,
+  #cantina,
+  #herramientas,
+  #faq,
+  #ubicacion {
+    background:
+      radial-gradient(var(--reflector-forma) at 50% var(--reflector-alto), var(--reflector), transparent),
+      linear-gradient(
+        180deg,
+        transparent 0,
+        var(--banda) 140px,
+        var(--banda) calc(100% - 140px),
+        transparent 100%
+      ) !important;
+  }
+
+  /* El borde del reflector: una línea de luz finita que se apaga hacia los
+     costados. Marca dónde empieza la sección sin un corte duro. (Cantina
+     ya tiene la suya: .section-bento::before.) */
+  #torneos::after,
+  #camaras::after,
+  #herramientas::after,
+  #faq::after,
+  #ubicacion::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: min(70%, 720px);
+    height: 1px;
+    translate: -50% 0;
+    background: linear-gradient(90deg, transparent, var(--reflector), transparent);
+    pointer-events: none;
+  }
+
+  /* ---------- Cantina: la pizarra ----------
+     El pizarrón verde con la madera apagada se perdía contra el azul. Ahora
+     el marco tiene el canto iluminado (luz cálida de bar desde arriba) y la
+     pizarra tira un halo ámbar muy suave sobre la pared. */
+  .menu-board.tc-pizarra {
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+      inset 0 0 40px rgba(0, 0, 0, 0.35),
+      0 -1px 0 rgba(255, 200, 140, 0.22),
+      0 0 0 1px rgba(255, 190, 120, 0.1),
+      0 26px 70px -26px rgba(255, 140, 60, 0.32),
+      0 18px 36px -22px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Tiza un poco más blanca en los rótulos y la nota (de 5,6 a 7:1). */
+  .tc-pizarra .menu-board-note,
+  .tc-pizarra-cat {
+    color: rgba(244, 241, 230, 0.76);
+  }
+
+  /* ---------- Fotos ----------
+     Borde de vidrio y una sombra que la despega del fondo (la foto oscura
+     se pegaba al azul). */
+  #cantina .photo-bento-card {
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.03),
+      0 18px 36px -20px rgba(0, 0, 0, 0.9);
+  }
+
+  /* ---------- Beelup ----------
+     La tarjeta negra era un agujero en el azul: canto de luz y un borde
+     ámbar muy suave, del color de la marca. */
+  .bl-card {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 1px rgba(246, 162, 28, 0.2),
+      0 30px 60px -30px rgba(246, 162, 28, 0.28),
+      0 30px 60px -30px rgba(0, 0, 0, 0.9);
+  }
+
+  /* ---------- FAQ ----------
+     Sobre la banda de superficie, las preguntas cerradas se separan con un
+     fondo apenas más claro y un borde que se ve (antes tarjeta y fondo eran
+     casi el mismo azul). Texto: ink sobre #16224a, 14:1. */
+  #faq .faq-card:not(.active) {
+    background: #16224a;
+    border-color: #34477f;
+  }
+
+  .faq-mas {
+    border-color: #3d5293;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  /* ---------- Ubicación ----------
+     La tarjeta sale del fondo con el mismo canto de luz. */
+  .section-ubicacion .location-unified-card {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 24px 50px -28px rgba(0, 0, 0, 0.9);
+  }
+}
