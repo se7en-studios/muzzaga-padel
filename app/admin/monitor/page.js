@@ -62,7 +62,7 @@ const BEELUP_CANCHAS = "El Tano / La Vasca";
 // canchas. En modo monitor pinta el borde de cada cancha según su estado,
 // avisa dónde cae cada una en pantalla y queda quieta después de armarse.
 const SCENE_SRC =
-  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261120";
+  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261125a";
 // Anillo de la cuenta regresiva (viewBox 0 0 120 120).
 const RING_R = 52;
 const RING_C = 2 * Math.PI * RING_R;

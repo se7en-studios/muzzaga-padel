@@ -143,42 +143,45 @@ export default function ClubRecorrido() {
     frameRef.current?.contentWindow?.postMessage(msg, window.location.origin);
   }, []);
 
-  // El iframe (three.js + texturas ~3 MB; los personajes, ~8 MB más, llegan después y aparecen solos)
-  // se pide cuando la sección está por llegar a pantalla, nunca antes: ese parseo de varios MB
-  // comparte el hilo principal con la landing (lo advierte el propio motor, ver index.html), así que
-  // pedirlo con "cualquier gesto en cualquier parte de la página" —como antes— trababa el scroll
-  // desde el primer toque, estés donde estés. El margen (40% del alto de pantalla) da tiempo a que
-  // termine de armarse antes de que se vea; si aun así se llega antes, queda la foto + "Armando la
-  // maqueta…" unos instantes, mejor que trabar toda la landing de entrada. Con ahorro de datos, se
-  // espera a que la sección esté realmente a la vista.
+  // Cuándo se arma la maqueta (three.js + texturas ~3 MB; los personajes, ~8 MB más, solo en la compu).
+  // Armarla comparte el hilo principal con la landing (el iframe es del mismo sitio), así que el
+  // truco es elegir el momento:
+  // - Celu: apenas la página terminó de cargar y queda ociosa (requestIdleCallback), esté donde
+  //   esté el usuario. La escena se arma en tandas cortas y, hasta que la sección se ve, no dibuja
+  //   nada: cuando el usuario llega ya está lista ("que cargue ahí nomás"). Si llega antes (scroll
+  //   rápido), a dos pantallas de distancia se arranca igual, sin esperar a que suelte el dedo.
+  //   Antes se esperaba a estar al 10 % y con el dedo quieto: no trababa, pero aparecía tarde.
+  // - Compu: al 40 % de pantalla, como siempre (arma rapidísimo).
+  // - Con ahorro de datos: recién con la sección a la vista y el dedo quieto, como antes.
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return undefined;
     const saveData = navigator.connection?.saveData === true;
+    const celu = wantsLite3d() || wantsMobile3d();
     let idleId = null;
     let timerId = null;
-    // En el celu, armar la 3D (parsear varios MB y subir texturas) comparte el hilo con la
-    // página: si arrancaba con la sección todavía a pantalla y media, el scroll de "Muzzaga Play"
-    // se trababa. Ahí se arranca recién cuando la sección está por entrar y con el dedo quieto
-    // (≈300 ms sin scroll); mientras tanto se ve la foto de la maqueta.
-    const celu = wantsLite3d() || wantsMobile3d();
     let quietId = null;
     let lastScroll = 0;
+    let started = false;
     const onScroll = () => {
       lastScroll = performance.now();
     };
-    const start = () => {
+    const run = () =>
+      setLoad(wantsLite3d() ? "lite" : wantsMobile3d() ? "movil" : "full");
+    const start = (timeout = 1500) => {
+      if (started) return;
+      started = true;
       io.disconnect();
-      const run = () =>
-        setLoad(wantsLite3d() ? "lite" : wantsMobile3d() ? "movil" : "full");
+      window.removeEventListener("load", onLoad);
+      if (timerId !== null) window.clearTimeout(timerId);
       const idle = () => {
         if ("requestIdleCallback" in window) {
-          idleId = window.requestIdleCallback(run, { timeout: 1500 });
+          idleId = window.requestIdleCallback(run, { timeout });
         } else {
           timerId = window.setTimeout(run, 200);
         }
       };
-      if (!celu) return idle();
+      if (!saveData) return idle();
       const waitQuiet = () => {
         if (performance.now() - lastScroll < 300) {
           quietId = window.setTimeout(waitQuiet, 120);
@@ -189,17 +192,26 @@ export default function ClubRecorrido() {
       };
       waitQuiet();
     };
-    if (celu) window.addEventListener("scroll", onScroll, { passive: true });
+    // Celu: un ratito después de cargar (que primero termine lo de la primera pantalla).
+    const onLoad = () => {
+      timerId = window.setTimeout(() => start(3000), 600);
+    };
+    if (saveData) window.addEventListener("scroll", onScroll, { passive: true });
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) start();
+        if (entry.isIntersecting) start(celu ? 400 : 1500);
       },
-      { rootMargin: saveData || celu ? "10% 0px" : "40% 0px" },
+      { rootMargin: saveData ? "10% 0px" : celu ? "200% 0px" : "40% 0px" },
     );
     io.observe(el);
+    if (celu && !saveData) {
+      if (document.readyState === "complete") onLoad();
+      else window.addEventListener("load", onLoad, { once: true });
+    }
     return () => {
       io.disconnect();
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("load", onLoad);
       if (quietId !== null) window.clearTimeout(quietId);
       if (idleId !== null) window.cancelIdleCallback(idleId);
       if (timerId !== null) window.clearTimeout(timerId);
@@ -224,17 +236,26 @@ export default function ClubRecorrido() {
   }, []);
 
   // La maqueta solo dibuja mientras la sección está a la vista (el iframe no puede saberlo por sí solo).
+  // Ahora se arma mucho antes de llegar: arranca sin dibujar (ver index.html) y se le avisa desde
+  // el primer momento; al estar lista se le repite, por si el aviso llegó antes que su oído.
+  const visibleRef = useRef(false);
   useEffect(() => {
     const el = sectionRef.current;
-    if (!el || !ready) return undefined;
+    if (!el || !load) return undefined;
     const io = new IntersectionObserver(
-      ([entry]) => post({ muzzaga: "visible", v: entry.isIntersecting }),
+      ([entry]) => {
+        visibleRef.current = entry.isIntersecting;
+        post({ muzzaga: "visible", v: entry.isIntersecting });
+      },
       // Solo dibuja con la sección en pantalla: con margen, en el celu seguía
       // dibujando mientras se scrolleaba la sección de arriba.
       { rootMargin: "0px" },
     );
     io.observe(el);
     return () => io.disconnect();
+  }, [load, post]);
+  useEffect(() => {
+    if (ready) post({ muzzaga: "visible", v: visibleRef.current });
   }, [ready, post]);
 
   // Scroll → progreso 0..1 → cámara del iframe.
@@ -381,7 +402,7 @@ export default function ClubRecorrido() {
             <iframe
               ref={frameRef}
               className={`club-tour-frame${ready ? " is-ready" : ""}`}
-              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261123c`}
+              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261125a`}
               title="Maqueta 3D del club Muzzaga"
               tabIndex={-1}
               aria-hidden="true"

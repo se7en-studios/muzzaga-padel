@@ -13,7 +13,8 @@ import { Suspense, lazy, useEffect } from "react";
 // chunk en el HTML y se bajaría al abrir igual.
 
 // Margen amplio: el código llega bastante antes de que la sección entre en
-// pantalla (el recorrido 3D arranca su propia carga al 40 % de pantalla).
+// pantalla. El recorrido 3D pide más (ver abajo): su propio código decide
+// cuándo armar la maqueta y en el celu lo hace con la página quieta.
 const MARGEN = "1200px 0px";
 const EN_SERVIDOR = typeof window === "undefined";
 // Hasta que la página termina de hidratarse, el HTML de cada sección ya está
@@ -50,7 +51,10 @@ if (!EN_SERVIDOR && window.location.hash.length > 1) {
   mirar();
 }
 
-function diferida(id, cargar) {
+// `margen`: cuánto antes de llegar se baja el código. `alQuedarQuieta`: además
+// se baja apenas la página terminó de cargar y el hilo queda libre, esté donde
+// esté el usuario (el recorrido 3D lo usa para empezar a armarse temprano).
+function diferida(id, cargar, { margen = MARGEN, alQuedarQuieta = false } = {}) {
   let soltar;
   let soltada = false;
   let observada = null;
@@ -86,6 +90,14 @@ function diferida(id, cargar) {
     }
     if (observada === el) return;
     observada = el;
+    if (alQuedarQuieta) {
+      const ocioso = () =>
+        "requestIdleCallback" in window
+          ? window.requestIdleCallback(() => liberar(false), { timeout: 3000 })
+          : window.setTimeout(() => liberar(false), 1500);
+      if (document.readyState === "complete") ocioso();
+      else window.addEventListener("load", ocioso, { once: true });
+    }
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
@@ -93,7 +105,7 @@ function diferida(id, cargar) {
           liberar(false);
         }
       },
-      { rootMargin: MARGEN },
+      { rootMargin: margen },
     );
     io.observe(el);
   }
@@ -128,7 +140,10 @@ function diferida(id, cargar) {
 }
 
 export const CamarasSection = diferida("camaras", () => import("./CamarasSection"));
-export const ClubRecorrido = diferida("recorrido", () => import("./ClubRecorrido"));
+export const ClubRecorrido = diferida("recorrido", () => import("./ClubRecorrido"), {
+  margen: "250% 0px",
+  alQuedarQuieta: true,
+});
 export const AmenitiesSection = diferida("instalaciones", () => import("./AmenitiesSection"));
 export const HomeTorneosTeaser = diferida("torneos", () => import("./HomeTorneosTeaser"));
 export const ClubToolsSection = diferida("herramientas", () => import("./ClubToolsSection"));
