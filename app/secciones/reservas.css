@@ -1,0 +1,320 @@
+/* reservas: se carga al final de la home (app/page.js), después de oscuro.css.
+   Mejoras de la sección "Reservá tu cancha":
+   - Resumen del día arriba de la grilla (cuántos libres y el primero).
+   - Compu: el formulario va AL LADO de la grilla, fijo mientras scrolleás
+     (antes aparecía abajo, a la izquierda, con media pantalla vacía).
+   - Filas parejas: lo ocupado mide lo mismo que lo libre.
+   - Oscuro: celdas libres con un brillo de cancha iluminada. */
+
+/* ---------- Resumen del día ---------- */
+.booking-dia-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 14px;
+}
+
+.booking-dia-nombre {
+  font-family: var(--font-display, inherit);
+  font-size: 20px;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.booking-dia-libres {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f6b44;
+  background: #e5f6ed;
+  border: 1px solid #a8dfc8;
+}
+
+.booking-dia-libres::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+}
+
+.booking-dia-libres.is-cero,
+.booking-dia-libres.is-cargando {
+  color: var(--color-muted);
+  background: transparent;
+  border-color: var(--color-hairline-strong);
+}
+
+.booking-dia-libres.is-cero::before {
+  background: var(--color-muted);
+  box-shadow: none;
+}
+
+.booking-dia-primero {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--color-accent-orange-border, rgba(232, 114, 42, 0.45));
+  background: var(--color-accent-orange-subtle, rgba(232, 114, 42, 0.08));
+  color: var(--color-accent-orange-text, #a8430a);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform var(--t-hover, 160ms) var(--ease, ease),
+    background-color var(--t-hover, 160ms) var(--ease, ease);
+}
+
+.booking-dia-primero:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.booking-dia-libres.is-cargando::before {
+  background: var(--color-muted);
+  box-shadow: none;
+  animation: none;
+}
+
+.booking-dia-primero:hover:not(:disabled) {
+  background: var(--btn-naranja, #bf5512);
+  border-color: var(--btn-naranja, #bf5512);
+  color: #fff;
+}
+
+.booking-dia-primero:focus-visible {
+  outline: 3px solid #2350d6;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .booking-dia-primero:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .booking-dia-libres::before {
+    animation: reservasLatido 2.4s ease-in-out infinite;
+  }
+
+  .turnos-fuera .booking-dia-libres::before {
+    animation: none;
+  }
+}
+
+@keyframes reservasLatido {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0);
+  }
+}
+
+/* Celu: el botón del primero ocupa su propio renglón, ancho entero. */
+@media (max-width: 640px) {
+  .booking-dia-nombre {
+    font-size: 18px;
+  }
+
+  .booking-dia-primero {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+}
+
+/* ---------- Filas parejas: lo ocupado como lo libre ---------- */
+.booking-matrix-container .booking-matrix-row:not(.is-pasada) .booking-slot.taken:not(.past) {
+  justify-content: center;
+}
+
+@media (min-width: 641px) {
+  .booking-matrix-container .booking-matrix-row:not(.is-pasada) .booking-slot.taken:not(.past) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    padding: 10px 18px;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent 0 10px,
+      rgba(127, 140, 170, 0.07) 10px 20px
+    );
+  }
+
+  .booking-matrix-container .booking-matrix-row:not(.is-pasada) .booking-slot.taken:not(.past) .slot-meta {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* El elegido, en una línea como los demás: la fila no crece. */
+  .booking-matrix-container .booking-matrix-row .booking-slot.selected {
+    grid-template-columns: 1fr auto auto;
+    grid-template-rows: auto;
+    align-items: center;
+    min-height: 56px;
+    padding: 10px 18px;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot.selected .slot-meta {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 16px;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot.selected .slot-price {
+    grid-column: 2;
+    grid-row: 1;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot.selected .slot-badge {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+}
+
+.booking-dia-flecha {
+  margin-left: 6px;
+}
+
+/* ---------- Compu: el formulario al lado de la grilla ----------
+   Desde 1100 px hay lugar para la grilla y una columna de 400 px. La
+   columna queda fija (sticky) mientras recorrés los horarios. */
+@media (min-width: 1100px) and (min-height: 501px) {
+  .booking-calendar.con-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    column-gap: 28px;
+    align-items: start;
+  }
+
+  .booking-calendar.con-form > * {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .booking-calendar.con-form > .booking-drawer-backdrop {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    position: sticky;
+    top: 96px;
+    align-self: start;
+  }
+
+  .booking-calendar.con-form .booking-form {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* Tablet y compu angosta: abajo de la grilla, pero centrado. */
+@media (min-width: 769px) and (max-width: 1099.98px) and (min-height: 501px) {
+  .booking-calendar > .booking-drawer-backdrop .booking-form {
+    margin-inline: auto;
+    margin-top: 8px;
+  }
+}
+
+/* ---------- Oscuro ---------- */
+@media (prefers-color-scheme: dark) {
+  .booking-dia-libres {
+    color: #7ee2a8;
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(74, 222, 128, 0.32);
+  }
+
+  .booking-dia-libres::before {
+    background: #4ade80;
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
+  }
+
+  .booking-dia-libres.is-cero,
+  .booking-dia-libres.is-cargando {
+    color: var(--color-muted);
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+
+  .booking-dia-libres.is-cero::before,
+  .booking-dia-libres.is-cargando::before {
+    background: var(--color-muted);
+    box-shadow: none;
+  }
+
+  .booking-dia-primero {
+    color: #ffb27a;
+    background: rgba(255, 138, 61, 0.1);
+    border-color: rgba(255, 138, 61, 0.4);
+  }
+
+  .booking-dia-primero:focus-visible {
+    outline-color: #a9c0ff;
+  }
+
+  /* Celda libre: una cancha con la luz prendida arriba (brillo fino en el
+     borde superior) en vez de una caja plana. */
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected) {
+    background-image: linear-gradient(180deg, rgba(140, 170, 255, 0.07), rgba(140, 170, 255, 0) 70%);
+    border-color: rgba(140, 170, 255, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .booking-matrix-container .booking-matrix-row .booking-slot:not(:disabled):not(.selected):hover {
+    background-image: linear-gradient(180deg, rgba(140, 170, 255, 0.16), rgba(140, 170, 255, 0.04));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 10px 24px -14px rgba(120, 155, 255, 0.8);
+  }
+
+  /* Lo ocupado se aparta: rayado tenue, sin borde marcado. */
+  .booking-matrix-container .booking-matrix-row:not(.is-pasada) .booking-slot.taken:not(.past) {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  /* Columna de horario: la hora en blanco y con el tono de la cancha. */
+  .booking-matrix-container .booking-matrix-row:not(.is-pasada) .booking-matrix-time-col {
+    background-image: linear-gradient(180deg, rgba(140, 170, 255, 0.06), transparent);
+  }
+
+  /* El formulario al lado, en compu: tarjeta con luz de cancha. */
+  .booking-calendar.con-form .booking-form {
+    box-shadow:
+      0 24px 60px -28px rgba(0, 0, 0, 0.9),
+      0 0 0 1px rgba(140, 170, 255, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Botones naranjas de la home: un brillo arriba y un halo cálido, así no
+     se ven apagados sobre el azul noche (el color de fondo y el contraste
+     del texto no cambian). */
+  .btn-orange-primary,
+  .booking-dia-primero:hover:not(:disabled) {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 60%);
+    box-shadow:
+      0 10px 26px -12px rgba(255, 122, 26, 0.75),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  }
+}
