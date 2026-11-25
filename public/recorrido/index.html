@@ -189,6 +189,8 @@ html.embed #pins{pointer-events:none}
 html.embed .pin{opacity:0;transition:opacity .5s;pointer-events:none;padding:7px 14px 7px 7px;font-size:13px;background:rgba(16,18,22,.88);color:#fff;border-color:rgba(255,255,255,.12)}
 html.embed .pin b{background:var(--accent)}
 html.embed .pin.act{opacity:1}
+/* ?captura=1 (scripts/render-recorrido.mjs): las etiquetas aparecen de una, sin fundido, para que cada foto salga terminada */
+html.captura .pin{transition:none!important}
 html.embed .pin .pn{display:inline}
 </style>
 
@@ -304,6 +306,14 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   // Quieta (salvo ?anim=1): anima unos segundos al armarse y después se dibuja solo cuando algo cambia (estado de una
   // cancha, tamaño de pantalla). En una tele sin placa de video la escena animada congelaba la página entera.
   const MONITOR_STILL = MONITOR && !/[?&]anim=1/.test(location.search);
+  // ?embed=1&captura=1: solo para scripts/render-recorrido.mjs, que saca las fotos del recorrido que muestra la landing.
+  // El tiempo queda congelado (gente, pelotas, molinetes quietos: fotos seguidas iguales salvo por la cámara), la cámara
+  // llega de una a donde se le pide (sin el suavizado) y se dibuja a la resolución completa de la pantalla.
+  // Sin ese parámetro no cambia nada.
+  const CAPTURA = document.documentElement.classList.contains('embed') && !MONITOR && /[?&]captura=1/.test(location.search);
+  // y siempre con el mismo azar (gente, poses): si el script se corta y sigue en otra carga, las fotos siguen pegando
+  if (CAPTURA) { let semilla = 20261126; Math.random = () => { semilla = (semilla + 0x6d2b79f5) | 0; let x = Math.imul(semilla ^ (semilla >>> 15), 1 | semilla); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; }
+  if (CAPTURA) { document.documentElement.classList.add('captura'); window.MZ_CAPTURA = { cuadros: 0, gente: false, pedido: null, dibujado: null }; }
   let monitorStillAt = Infinity, monitorRedraw = 0;
   // Quieta, el bucle de cuadros se apaga del todo (antes seguía despertando 60 veces por segundo sin dibujar nada y en
   // la tele eso no dejaba descansar al procesador). Lo vuelve a prender monitorWake() cuando hay algo que dibujar.
@@ -321,7 +331,7 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   // ni bloom, a 1× como mucho, sin animaciones de fondo y dibujando solo cuando la cámara se mueve.
   const LITE = /[?&]lite=1/.test(location.search), calm = reduceMotion || LITE;
   let litePose = null, liteRedraw = 2, liteFadeUntil = Infinity; // hasta cuándo se están prendiendo las luces
-  let pr = MONITOR || LITE ? Math.min(window.devicePixelRatio || 1, 1) : Math.min(window.devicePixelRatio || 1, MOVIL ? 1.25 : innerWidth < 860 ? 1.5 : 1.75); const prMax = pr; renderer.setPixelRatio(pr);
+  let pr = MONITOR || LITE ? Math.min(window.devicePixelRatio || 1, 1) : Math.min(window.devicePixelRatio || 1, MOVIL ? 1.25 : innerWidth < 860 ? 1.5 : 1.75); if (CAPTURA) pr = window.devicePixelRatio || 1; const prMax = pr; renderer.setPixelRatio(pr);
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.shadowMap.enabled = !LITE; renderer.shadowMap.type = MOVIL ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.66; renderer.shadowMap.autoUpdate = false;
@@ -929,6 +939,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       if (window.MuzzagaClub) { window.MuzzagaClub.install(pctx); await tick(); }
       if (window.MuzzagaGente && !LITE && !MOVIL) {
         if (MONITOR) { genteListo = false; genteDespues = () => window.MuzzagaGente.install(Object.assign({}, pctx, { onListo: () => { genteListo = true; renderer.shadowMap.needsUpdate = true; monitorRedraw = Math.max(monitorRedraw, 2); monitorWake(); } })); }
+        else if (CAPTURA) window.MuzzagaGente.install(Object.assign({}, pctx, { onListo: () => { window.MZ_CAPTURA.gente = true; } }));
         else window.MuzzagaGente.install(pctx);
       } }
   } catch (e) { console.error('premium', e); }
@@ -1170,10 +1181,13 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     // dejarle tiempo a la página (comparten el hilo). Con ~10 ms por cuadro: 60 en pantallas de 60/120 Hz y 48 en 144 Hz.
     // ?movil=1 con la cámara quieta (no se está scrolleando): la vida del club sigue, pero a ~20 cuadros por segundo
     // en vez de ~30. Al scrollear vuelve a ~30 enseguida.
-    if (now - lastDraw < Math.max(movilQuiet ? 50 : MIN_GAP, cost * COST_K) - 1) return;
+    // captura: sin pausa entre cuadros, pero una vez dibujada la posición pedida no se dibuja más hasta la próxima
+    if (CAPTURA) { if (window.MZ_CAPTURA.pedido !== null && window.MZ_CAPTURA.dibujado === window.MZ_CAPTURA.pedido) return; }
+    else if (now - lastDraw < Math.max(movilQuiet ? 50 : MIN_GAP, cost * COST_K) - 1) return;
     lastDraw = now; const c0 = performance.now();
     if (MONITOR_STILL && now > monitorStillAt && monitorRedraw) monitorRedraw--; // se descuenta al dibujar, no en los cuadros salteados
-    const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    const dt = CAPTURA ? 0 : Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    if (CAPTURA) snap = true;
     if (introOn) { want.az = PRE['3d'].az + Math.sin(t * 0.25) * 20; want.d = 74; want.el = 36; }
     // snap: el primer cuadro de calentamiento deja todo en su lugar de una (techo arriba, paredes bajas, cámara).
     // Pasado el arranque del monitor la cámara, el recorte y las paredes van a su lugar en dos o tres cuadros: en una
@@ -1261,9 +1275,11 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       if (still && !wallsMoved && now > liteFadeUntil && !liteRedraw) return;
       litePose = pose; if (liteRedraw) liteRedraw--;
     }
-    monitorMoving = wallsMoved; wallsMoved = false; if (!warm && !movilQuiet) perf(dt); // al ritmo lento (quieta) o calentando, el ritmo no dice nada
+    if (CAPTURA) renderer.shadowMap.needsUpdate = true;
+    monitorMoving = wallsMoved; wallsMoved = false; if (!warm && !movilQuiet && !CAPTURA) perf(dt); // al ritmo lento (quieta) o calentando, el ritmo no dice nada
     if (postfx) postfx.render(); else renderer.render(scene, camera);
     cost += (performance.now() - c0 - cost) * 0.1; // costo promedio de un cuadro (solo el hilo principal)
+    if (CAPTURA) { window.MZ_CAPTURA.cuadros++; window.MZ_CAPTURA.dibujado = window.MZ_CAPTURA.pedido; } // qué posición quedó en la foto
     if (monitorTrasDibujar) monitorTrasDibujar();
     if (warm && !--warm && onWarm) { const f = onWarm; onWarm = null; f(); }
   }
@@ -1309,10 +1325,10 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       if (near.shot !== lastShot) { lastShot = near.shot; parent.postMessage({ muzzaga: 'shot', i: near.shot }, location.origin); }
     };
     embedStep = dt => {
-      const k = 1 - Math.pow(0.0015, dt);
+      const k = CAPTURA ? 1 : 1 - Math.pow(0.0015, dt);
       if (EMBED) { // fuera de la landing la cámara la maneja el usuario
         if (tgtWant) { TGT.x += (tgtWant.x - TGT.x) * k; TGT.z += (tgtWant.z - TGT.z) * k; }
-        cutH += (cutWant - cutH) * k * 0.6; cutPlane.constant = cutH;
+        cutH += (cutWant - cutH) * (CAPTURA ? 1 : k * 0.6); cutPlane.constant = cutH;
         parS.x += (par.x - parS.x) * k * 0.5; parS.y += (par.y - parS.y) * k * 0.5;
         want.az = base.az + parS.x * 3; want.el = Math.max(12, base.el - parS.y * 1.6);
       }
@@ -1325,7 +1341,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     };
     if (EMBED) addEventListener('message', e => {
       if (e.origin !== location.origin || !e.data) return;
-      if (e.data.muzzaga === 'tour') apply(+e.data.p || 0);
+      if (e.data.muzzaga === 'tour') { apply(+e.data.p || 0); if (CAPTURA) window.MZ_CAPTURA.pedido = +e.data.p || 0; }
       if (e.data.muzzaga === 'visible') inView = !!e.data.v;
       if (e.data.muzzaga === 'pointer') { par.x = Math.max(-1, Math.min(1, +e.data.x || 0)); par.y = Math.max(-1, Math.min(1, +e.data.y || 0)); }
     });
