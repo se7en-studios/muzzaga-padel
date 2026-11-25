@@ -29,6 +29,10 @@ const BookingPassModal = lazy(() => loadPassModal().catch(loadPassModal));
 
 const DAY_COUNT = 14;
 const DIAS_LARGOS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+const MESES_LARGOS = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
 const CLUB_WHATSAPP = "5492995974176";
 
 function buildWhatsappUrl(bookingCode, booking) {
@@ -72,6 +76,8 @@ export default function BookingCalendar({
   const [loadError, setLoadError] = useState(null);
   // Sube para volver a pedir la disponibilidad (botón "Reintentar").
   const [reloadKey, setReloadKey] = useState(0);
+  // { "YYYY-MM-DD": { free, total, closed } } de los 14 días de la tira.
+  const [resumenDias, setResumenDias] = useState({});
   // Filas del último día cargado: el esqueleto de carga mide lo mismo.
   const lastRowCount = useRef(7);
   // Contenedor estable de la grilla: al tocar "Reintentar" el botón se
@@ -213,6 +219,21 @@ export default function BookingCalendar({
       root.style.paddingRight = "";
     };
   }, [selected, isDrawer]);
+
+  // Cuántos libres tiene cada día de la tira: un pedido para los 14 días.
+  // Se vuelve a pedir al reservar (confirmed) para que los números no mientan.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/availability/summary?from=${days[0].iso}&days=${days.length}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.days) setResumenDias(data.days);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [days, reloadKey, confirmed?.bookingCode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -374,8 +395,18 @@ export default function BookingCalendar({
     [visibleSlots, slotsDate, activeDate],
   );
   const diaLargo = activeDay
-    ? `${DIAS_LARGOS[new Date(`${activeDay.iso}T12:00:00Z`).getUTCDay()]} ${activeDay.dayNumber}`
+    ? `${DIAS_LARGOS[new Date(`${activeDay.iso}T12:00:00Z`).getUTCDay()]} ${activeDay.dayNumber} de ${MESES_LARGOS[Number(activeDay.iso.slice(5, 7)) - 1]}`
     : "";
+
+  // Libres por día para la tira de días: el del día elegido sale de la
+  // grilla (al instante, incluso después de reservar); el resto, del resumen.
+  const libresDelDia = (iso) => {
+    if (iso === slotsDate && slots) {
+      return slots.filter((x) => x.available && !x.past).length;
+    }
+    const r = resumenDias[iso];
+    return r && !r.closed ? r.free : null;
+  };
 
   const selectedPricing = useMemo(() => {
     if (!selected) return null;
@@ -501,11 +532,13 @@ export default function BookingCalendar({
         role="group"
         aria-label="Elegí el día"
       >
-        {daysView.map((day) => (
+        {daysView.map((day) => {
+          const n = day.closed ? null : libresDelDia(day.iso);
+          return (
           <button
             key={day.iso}
             type="button"
-            className={`booking-date-btn${day.iso === activeDate ? " active" : ""}${day.closed ? " is-closed" : ""}`}
+            className={`booking-date-btn${day.iso === activeDate ? " active" : ""}${day.closed ? " is-closed" : ""}${n !== null ? " con-libres" : ""}${n === 0 ? " is-lleno" : ""}`}
             onClick={() => {
               userChoseDay.current = true;
               setAutoNotice(null);
@@ -531,8 +564,15 @@ export default function BookingCalendar({
               </span>
             )}
             {day.closed && <span className="sr-only">, cerrado</span>}
+            {n !== null && (
+              <span className="booking-date-libres">
+                <span className="sr-only">, </span>
+                {n === 0 ? "Lleno" : `${n} libre${n === 1 ? "" : "s"}`}
+              </span>
+            )}
           </button>
-        ))}
+          );
+        })}
         <span className="booking-dias-indicador" ref={indicadorRef} aria-hidden="true">
           <span key={activeDate} className="booking-dias-pelota" />
         </span>
