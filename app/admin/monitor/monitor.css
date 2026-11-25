@@ -84,6 +84,24 @@ body:has(.mon-root) {
   opacity: 1;
 }
 
+/* Foto de la maqueta de la vez anterior (ver fotoMaqueta.js): ocupa lo mismo
+   que el lienzo de la maqueta y se estira igual, así coincide pixel a pixel.
+   La maqueta va encima y aparece con un fundido corto. */
+.mon-scene-foto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  pointer-events: none;
+}
+
+.mon-scene.has-foto .mon-scene-frame {
+  position: relative;
+  transition-duration: 0.45s;
+}
+
 /* Oscurece la columna de las tarjetas y las franjas de arriba y abajo, para
    que todo se lea sobre cualquier parte de la maqueta. Es un degradé fijo:
    no cuesta nada por cuadro. */

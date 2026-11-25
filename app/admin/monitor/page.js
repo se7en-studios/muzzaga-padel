@@ -29,6 +29,7 @@ import { formatARS, formatDate } from "../../../lib/format";
 import { isExpiredSessionError } from "../adminHelpers";
 import { courtSchedule, liveAndNext, toMinutes } from "./schedule";
 import { isMonitorDemo, monitorDemoData } from "./demo";
+import { claveFoto, fotoVencida, guardarFoto, leerFoto } from "./fotoMaqueta";
 import "./monitor.css";
 
 // El dominio que se muestra en la tele para reservar (lo eligió el club).
@@ -59,7 +60,12 @@ const BEELUP_CANCHAS = "El Tano / La Vasca";
 // canchas. En modo monitor pinta el borde de cada cancha según su estado,
 // avisa dónde cae cada una en pantalla y queda quieta después de armarse.
 const SCENE_SRC =
-  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261125b";
+  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261125c";
+// Si la maqueta no avisa que quedó quieta, a los 30 s de mostrarse se da por
+// quieta igual (para el fundido desde la foto y para medir la tele).
+const SETTLE_FALLBACK_MS = 30000;
+// Lo que tarda el fundido de la foto a la maqueta (ver .mon-scene.has-foto).
+const FOTO_FADE_MS = 450;
 // Anillo de la cuenta regresiva (viewBox 0 0 120 120).
 const RING_R = 52;
 const RING_C = 2 * Math.PI * RING_R;
@@ -326,9 +332,23 @@ export default function MonitorPage() {
   }, []);
   const [demo, setDemo] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
+  // La maqueta quedó quieta y completa (luces, cámara, personajes 3D).
+  const [sceneSettled, setSceneSettled] = useState(false);
   const [courtPts, setCourtPts] = useState(null);
-  // Modo liviano: sin las animaciones de adorno (ver useLiteMode).
-  const lite = useLiteMode(sceneReady);
+  // Foto de la maqueta de la vez anterior ({ url, pts }), mientras se arma la
+  // de verdad (ver fotoMaqueta.js). url queda en null después del fundido.
+  const [foto, setFoto] = useState(null);
+  const fotoGuardada = useRef(null);
+  const pedirFoto = useRef(null);
+  const sceneReadyRef = useRef(false);
+  // Modo liviano: sin las animaciones de adorno (ver useLiteMode). Se mide con
+  // la maqueta ya quieta: mientras se arma (y cargan los personajes) la tele
+  // va lenta igual.
+  const lite = useLiteMode(sceneSettled);
+  // Con foto, la maqueta aparece recién cuando quedó igual a la foto; sin
+  // foto, apenas está armada (como siempre).
+  const sceneShown = foto ? sceneSettled : sceneReady;
+  const globoPts = foto?.pts && !sceneShown ? foto.pts : courtPts || foto?.pts;
   const firedChimes = useRef(new Set());
   const frameRef = useRef(null);
   const dataKeyRef = useRef("");
@@ -368,12 +388,36 @@ export default function MonitorPage() {
     const onMessage = (e) => {
       if (e.origin !== window.location.origin || !e.data) return;
       if (e.data.muzzaga === "ready") {
+        sceneReadyRef.current = true;
         setSceneReady(true);
+        // Si no hay foto (o es vieja o de otra pantalla), se le pide una.
+        pedirFoto.current?.then((pedir) => {
+          if (pedir) {
+            frameRef.current?.contentWindow?.postMessage(
+              { muzzaga: "snap" },
+              window.location.origin,
+            );
+          }
+        });
         // Con ?cam= fijo, el primer "tour" deja la cámara en su lugar.
         frameRef.current?.contentWindow?.postMessage(
           { muzzaga: "tour", p: 0 },
           window.location.origin,
         );
+      }
+      if (e.data.muzzaga === "settled") setSceneSettled(true);
+      if (e.data.muzzaga === "snapshot" && e.data.blob instanceof Blob) {
+        const rect = frameRef.current?.getBoundingClientRect();
+        if (rect && rect.width > 0) {
+          guardarFoto({
+            key: claveFoto(rect, frameRef.current.getAttribute("src")),
+            at: Date.now(),
+            pts: Array.isArray(e.data.pts) ? e.data.pts : null,
+            w: e.data.w,
+            h: e.data.h,
+            blob: e.data.blob,
+          });
+        }
       }
       if (e.data.muzzaga === "courtPts" && Array.isArray(e.data.pts)) {
         // Solo si cambiaron de verdad: cada aviso igual redibujaba todo.
@@ -386,6 +430,56 @@ export default function MonitorPage() {
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, []);
+
+  // La foto guardada se empieza a leer apenas abre la página (mientras se
+  // verifica la sesión), así está lista cuando aparece la maqueta.
+  useEffect(() => {
+    fotoGuardada.current = leerFoto();
+  }, []);
+
+  // Con la maqueta ya en la página: si la foto es de esta misma pantalla, se
+  // muestra hasta que la maqueta termine de armarse.
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame || pedirFoto.current) return undefined;
+    let url = null;
+    let cancelled = false;
+    const rect = frame.getBoundingClientRect();
+    const key = claveFoto(rect, frame.getAttribute("src"));
+    const leida = fotoGuardada.current || leerFoto();
+    pedirFoto.current = leida.then((guardada) => {
+      const pedir = rect.width > 0 && fotoVencida(guardada, key);
+      if (!cancelled && guardada?.blob && guardada.key === key && !sceneReadyRef.current) {
+        url = URL.createObjectURL(guardada.blob);
+        setFoto({ url, pts: guardada.pts });
+      }
+      return pedir;
+    });
+    return () => {
+      cancelled = true;
+      pedirFoto.current = null;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [authorized, sessionChecked]);
+
+  // Si la maqueta nunca avisa que quedó quieta, se da por quieta igual.
+  useEffect(() => {
+    if (!sceneReady || sceneSettled) return undefined;
+    const id = setTimeout(() => setSceneSettled(true), SETTLE_FALLBACK_MS);
+    return () => clearTimeout(id);
+  }, [sceneReady, sceneSettled]);
+
+  // Terminado el fundido, la foto se saca de la página (libera la memoria).
+  // Los globos siguen con los puntos que manda la maqueta.
+  const fotoUrl = foto?.url;
+  useEffect(() => {
+    if (!fotoUrl || !sceneShown) return undefined;
+    const id = setTimeout(() => {
+      URL.revokeObjectURL(fotoUrl);
+      setFoto((f) => (f ? { ...f, url: null } : f));
+    }, FOTO_FADE_MS + 300);
+    return () => clearTimeout(id);
+  }, [fotoUrl, sceneShown]);
 
   useEffect(() => {
     if (!authorized) return;
@@ -623,10 +717,13 @@ export default function MonitorPage() {
 
   return (
     <div className={`mon-root${lite ? " is-lite" : ""}${quieto ? " is-quieto" : ""}`}>
-      <div className="mon-scene" aria-hidden="true">
+      <div className={`mon-scene${foto ? " has-foto" : ""}`} aria-hidden="true">
+        {/* La foto va exactamente donde va a estar la maqueta (mismo tamaño y
+            estirada igual que su lienzo): el fundido no se nota. */}
+        {foto?.url && <img className="mon-scene-foto" src={foto.url} alt="" />}
         <iframe
           ref={frameRef}
-          className={`mon-scene-frame${sceneReady ? " is-ready" : ""}`}
+          className={`mon-scene-frame${sceneShown ? " is-ready" : ""}`}
           src={sceneSrc}
           title="Maqueta 3D del club"
           tabIndex={-1}
@@ -634,11 +731,13 @@ export default function MonitorPage() {
       </div>
       <div className="mon-shade" aria-hidden="true" />
 
-      {/* Globos sobre cada cancha, donde la maqueta dice que cae. */}
-      {sceneReady &&
-        courtPts &&
+      {/* Globos sobre cada cancha, donde la maqueta dice que cae (o donde
+          caía en la foto, mientras se arma: ahí la cámara todavía no está en
+          su lugar y los puntos que manda no sirven). */}
+      {(sceneReady || foto) &&
+        globoPts &&
         views.map((v) => {
-          const pt = courtPts[v.index];
+          const pt = globoPts[v.index];
           if (!pt) return null;
           return (
             <div
