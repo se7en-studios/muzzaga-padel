@@ -28,6 +28,7 @@ const loadPassModal = () => import("./BookingPassModal");
 const BookingPassModal = lazy(() => loadPassModal().catch(loadPassModal));
 
 const DAY_COUNT = 14;
+const DIAS_LARGOS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 const CLUB_WHATSAPP = "5492995974176";
 
 function buildWhatsappUrl(bookingCode, booking) {
@@ -361,6 +362,21 @@ export default function BookingCalendar({
     [visibleSlots],
   );
 
+  // Resumen arriba de la grilla: cuántos turnos libres quedan ese día (en
+  // las canchas que se ven) y el primero, para tomarlo de un toque sin
+  // recorrer la lista.
+  const cargado = Boolean(visibleSlots) && slotsDate === activeDate;
+  const libres = useMemo(
+    () =>
+      visibleSlots && slotsDate === activeDate
+        ? visibleSlots.filter((s) => s.available && !s.past)
+        : [],
+    [visibleSlots, slotsDate, activeDate],
+  );
+  const diaLargo = activeDay
+    ? `${DIAS_LARGOS[new Date(`${activeDay.iso}T12:00:00Z`).getUTCDay()]} ${activeDay.dayNumber}`
+    : "";
+
   const selectedPricing = useMemo(() => {
     if (!selected) return null;
     // El precio lo calcula el server según la franja (pico/valle).
@@ -475,7 +491,11 @@ export default function BookingCalendar({
   }
 
   return (
-    <div className="booking-calendar" id="reservar" ref={raizRef}>
+    <div
+      className={`booking-calendar${selected && !isDrawer ? " con-form" : ""}`}
+      id="reservar"
+      ref={raizRef}
+    >
       <ScrollRow
         className="booking-dates"
         role="group"
@@ -615,6 +635,48 @@ export default function BookingCalendar({
                 ))}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Mientras carga se muestra igual (con "Buscando…"), así la grilla
+            no salta cuando llegan los turnos. */}
+        {!activeDay?.closed && !loadError && (
+          <div className="booking-dia-resumen" role="status">
+            <span className="booking-dia-nombre">
+              {activeDay?.iso === days[0].iso ? "Hoy, " : ""}
+              {diaLargo}
+            </span>
+            {cargado ? (
+              <span className={`booking-dia-libres${libres.length ? "" : " is-cero"}`}>
+                {libres.length === 0
+                  ? "Sin turnos libres"
+                  : libres.length === 1
+                    ? "1 turno libre"
+                    : `${libres.length} turnos libres`}
+              </span>
+            ) : (
+              <span className="booking-dia-libres is-cargando">Buscando turnos…</span>
+            )}
+            {(!cargado || libres.length > 0) && !selected && (
+              <button
+                type="button"
+                className="booking-dia-primero"
+                disabled={!cargado}
+                onClick={() => cargado && pickSlot(libres[0])}
+              >
+                {cargado ? (
+                  <>
+                    Tomar el de las {libres[0].start}
+                    {courtFilter === "all" && courts.length > 1
+                      ? ` · ${courts.find((c) => c.id === libres[0].courtId)?.name || ""}`
+                      : ""}
+                  </>
+                ) : (
+                  "Buscando el primero libre"
+                )}
+                <span className="booking-dia-flecha" aria-hidden="true">→</span>
+              </button>
+            )}
           </div>
         )}
 

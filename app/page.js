@@ -44,6 +44,7 @@ import "./secciones/anim-faq-ubicacion.css";
 import "./secciones/tablet.css";
 import "./secciones/pantalla-grande.css";
 import "./secciones/oscuro.css";
+import "./secciones/reservas.css";
 
 import { getClubConfig } from "../lib/clubConfigServer";
 import { getSiteContent } from "../lib/siteContentServer";
