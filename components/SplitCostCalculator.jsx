@@ -7,7 +7,6 @@ import {
   buildSplitCostMessage,
   buildSplitCostWhatsAppUrl,
 } from "../lib/splitCost";
-import Mascota from "./Mascota";
 import { useCountTo } from "../lib/useCountTo";
 import { WhatsAppLogo } from "./BrandLogos";
 import { CreditCard, Check, Copy, Minus, Plus, ChevronDown, ArrowDown } from "lucide-react";
@@ -273,12 +272,6 @@ export default function SplitCostCalculator({ extras }) {
                   <li key={i} />
                 ))}
               </ul>
-              <Mascota
-                pose="pizza-padel-mood"
-                size="s"
-                alt=""
-                className="hx-dv-masc"
-              />
             </div>
 
             <div className="hx-ticket">

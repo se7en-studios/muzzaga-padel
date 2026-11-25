@@ -2302,7 +2302,7 @@
   }
 
   .hx-cierre-texto {
-    flex-basis: calc(100% - 86px);
+    flex-basis: 100%;
     padding-right: 18px;
   }
 

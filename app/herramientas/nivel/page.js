@@ -7,7 +7,6 @@ import SiteFooter from "../../../components/SiteFooter";
 import BottomNav from "../../../components/BottomNav";
 import RatingCalculator from "../../../components/RatingCalculator";
 import { PADEL_LEVELS } from "../../../data/levels";
-import Mascota from "../../../components/Mascota";
 import { pageMetadata } from "../../../lib/pageMeta";
 
 export const metadata = pageMetadata({
@@ -88,12 +87,6 @@ export default function NivelPage() {
 
         <aside className="hx-cierre" aria-label="Reservar turno">
           <span className="hx-cierre-pelota" aria-hidden="true" />
-          <Mascota
-            pose="pelota-padel-life"
-            size="s"
-            alt=""
-            className="hx-cierre-masc"
-          />
           <div className="hx-cierre-texto">
             <h2 className="hx-cierre-titulo">Jugá en tu nivel</h2>
             <p className="hx-cierre-desc">
