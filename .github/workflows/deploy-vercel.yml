@@ -1,0 +1,38 @@
+# Publica en Vercel cada vez que algo entra a master.
+#
+# Por qué: en el plan Hobby de Vercel, con el repo privado, solo se publican
+# solos los cambios del dueño de la cuenta de Vercel; los merges hechos con
+# otro usuario de GitHub quedaban frenados. El Deploy Hook del proyecto
+# (Vercel → muzzaga-padel → Settings → Git → Deploy Hooks, "github-master")
+# publica el último master sin importar quién hizo el cambio.
+#
+# La dirección del hook es una clave: va en el secreto VERCEL_DEPLOY_HOOK del
+# repo (Settings → Secrets and variables → Actions), nunca en el código.
+name: Publicar en Vercel
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-vercel
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Avisar a Vercel
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Falta el secreto VERCEL_DEPLOY_HOOK (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK" > /dev/null
+          echo "Vercel recibió el aviso: publica el último master."
