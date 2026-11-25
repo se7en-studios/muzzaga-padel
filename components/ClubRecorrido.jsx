@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { buildWhatsAppLink } from "../data/club";
 import { WhatsAppLogo } from "./BrandLogos";
+import { crearSecuencia, indiceDeCam } from "./secuenciaRecorrido";
+import MANIFIESTO_CELU from "../public/recorrido/secuencia/movil/manifest.json";
+import MANIFIESTO_COMPU from "../public/recorrido/secuencia/compu/manifest.json";
 
 // Una sola fuente para la tarjeta y la tira de zonas: cada parada del
 // recorrido tiene su tarjeta y (si es un lugar del club) su chip, con la
@@ -57,8 +60,8 @@ const STOPS = [
 
 // La ruta: puntos repartidos parejo a lo largo del scroll de la sección, cada
 // uno con su parada (índice de STOPS) y la posición de cámara `cam` (0..1)
-// que se le manda a la maqueta. Entre dos puntos la cámara va de una a otra
-// (la maqueta suaviza el viaje por los cuadros clave intermedios); la parada
+// del recorrido (cada foto de la secuencia tiene la suya). Entre dos puntos
+// la cámara va de una a otra; la parada
 // —tarjeta, chip y puntitos— es la del punto más cercano. Una sola cuenta
 // para todo, así que nunca se desfasan.
 // Compu: los 8 cuadros clave, uno por tramo (cam = i / 7), como siempre.
@@ -66,24 +69,27 @@ const RUTA_PC = [0, 0, 1, 1, 2, 3, 4, 5].map((stop, i) => ({ stop, cam: i / 7 })
 // Celu: solo vista general → canchas → barra y cantina (la sección mide 1,8
 // pantallas en vez de 6; ver ClubRecorrido.css). El último tramo se queda en
 // la barra para que se vea antes de seguir con la página. Mesas y Baños
-// quedan en los chips: tocarlos mueve la cámara sin scrollear.
+// quedan en los chips: tocarlos lleva la foto ahí sin scrollear.
 const RUTA_CELU = [
   { stop: 0, cam: 0 },
   { stop: 1, cam: STOPS[1].p },
   { stop: 2, cam: STOPS[2].p },
   { stop: 2, cam: STOPS[2].p },
 ];
-// Misma condición que el CSS que acorta la sección (y que wantsMobile3d).
+// Misma condición que el CSS que acorta la sección.
 const CELU_MQ = "(pointer: coarse), (max-width: 900px)";
 
-/** Scroll 0..1 → { cam, stop } sobre la ruta. */
+/** Scroll 0..1 → { cam, stop, camParada } sobre la ruta. */
 function enRuta(ruta, s) {
   const f = clamp01(s) * (ruta.length - 1);
   const i = Math.min(ruta.length - 2, Math.floor(f));
   const t = f - i;
+  const cerca = ruta[Math.round(f)];
   return {
     cam: ruta[i].cam + (ruta[i + 1].cam - ruta[i].cam) * t,
-    stop: ruta[Math.round(f)].stop,
+    stop: cerca.stop,
+    // con "reducir movimiento" no hay viaje: se queda en la foto de la parada
+    camParada: cerca.cam,
   };
 }
 
@@ -92,143 +98,41 @@ const ZONAS = STOPS.flatMap((s, i) => (s.zona ? [{ label: s.zona, p: s.p, stop: 
 
 const WHATSAPP_HREF = buildWhatsAppLink("Hola! Quiero reservar una cancha");
 
-/**
- * Celulares humildes (un Samsung J7 tiene 2-3 GB y GPU de gama baja): la
- * maqueta va en modo liviano, sin los personajes 3D (8 MB), sin sombras ni
- * bloom y dibujando solo cuando la cámara se mueve. ?lite3d=1 lo fuerza.
- */
-function wantsLite3d() {
-  const nav = window.navigator;
-  if (/[?&]lite3d=1/.test(window.location.search)) return true;
-  return (
-    nav.connection?.saveData === true ||
-    (nav.deviceMemory > 0 && nav.deviceMemory <= 4) ||
-    (nav.hardwareConcurrency > 0 && nav.hardwareConcurrency <= 4)
-  );
-}
-/**
- * El resto de los celulares (y tablets): la maqueta completa pero más barata
- * de dibujar (sin antialias ni bloom, sombras simples, sin los personajes de
- * 8 MB, ~40 cuadros por segundo). Con la calidad de compu se trababa al
- * scrollear el recorrido en celus comunes.
- */
-function wantsMobile3d() {
-  return (
-    window.matchMedia("(pointer: coarse)").matches ||
-    window.matchMedia("(max-width: 900px)").matches
-  );
-}
+// Las fotos del recorrido (scripts/render-recorrido.mjs): una secuencia
+// vertical para el celu y una apaisada para la compu, cada una con su
+// manifiesto (cuántas fotos, tamaño, cámara de cada una y archivos, con el
+// hash en el nombre). Los manifiestos vienen dentro de este JS: no hay pedido
+// aparte y nunca quedan desfasados de las fotos.
+const SECUENCIAS = {
+  celu: { manifiesto: MANIFIESTO_CELU, carpeta: "/recorrido/secuencia/movil" },
+  compu: { manifiesto: MANIFIESTO_COMPU, carpeta: "/recorrido/secuencia/compu" },
+};
+
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export default function ClubRecorrido() {
   const sectionRef = useRef(null);
   const sceneRef = useRef(null);
-  const frameRef = useRef(null);
+  const canvasRef = useRef(null);
   const poiRef = useRef(null);
-  const [load, setLoad] = useState(false);
-  const [ready, setReady] = useState(false);
+  // ya se dibujó la primera foto (hasta entonces se ve la foto fija de fondo)
+  const [listo, setListo] = useState(false);
   // La parada actual: de acá salen la tarjeta y el chip activo.
   const [step, setStep] = useState(0);
   // Recorrido corto del celu (RUTA_CELU) o el completo de la compu. El alto
   // de la sección lo pone el CSS con la misma media query: el HTML del
   // servidor ya llega con la altura justa y no salta nada al hidratar.
-  const [celu, setCelu] = useState(false);
+  // null hasta saberlo (al montar): así no se empieza a bajar la secuencia
+  // equivocada.
+  const [celu, setCelu] = useState(null);
   const ruta = celu ? RUTA_CELU : RUTA_PC;
   // Zona elegida con un chip que no está en la ruta (Mesas o Baños en el
   // celu): la cámara va ahí sin scrollear y vuelve a seguir al scroll apenas
   // la persona se mueve un poco.
   const fueraRef = useRef(null);
-
-  const post = useCallback((msg) => {
-    frameRef.current?.contentWindow?.postMessage(msg, window.location.origin);
-  }, []);
-
-  // Cuándo se arma la maqueta (three.js + texturas ~3 MB; los personajes, ~8 MB más, solo en la compu).
-  // Armarla comparte el hilo principal con la landing (el iframe es del mismo sitio), así que el
-  // truco es elegir el momento:
-  // - Celu: apenas la página terminó de cargar y queda ociosa (requestIdleCallback), esté donde
-  //   esté el usuario. La escena se arma en tandas cortas y, hasta que la sección se ve, no dibuja
-  //   nada: cuando el usuario llega ya está lista ("que cargue ahí nomás"). Si llega antes (scroll
-  //   rápido), a dos pantallas de distancia se arranca igual, sin esperar a que suelte el dedo.
-  //   Antes se esperaba a estar al 10 % y con el dedo quieto: no trababa, pero aparecía tarde.
-  // - Compu: al 40 % de pantalla, como siempre (arma rapidísimo).
-  // - Con ahorro de datos: recién con la sección a la vista y el dedo quieto, como antes.
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return undefined;
-    const saveData = navigator.connection?.saveData === true;
-    const celu = wantsLite3d() || wantsMobile3d();
-    let idleId = null;
-    let timerId = null;
-    let quietId = null;
-    let lastScroll = 0;
-    let started = false;
-    const onScroll = () => {
-      lastScroll = performance.now();
-    };
-    const run = () =>
-      setLoad(wantsLite3d() ? "lite" : wantsMobile3d() ? "movil" : "full");
-    const start = (timeout = 1500) => {
-      if (started) return;
-      started = true;
-      io.disconnect();
-      window.removeEventListener("load", onLoad);
-      if (timerId !== null) window.clearTimeout(timerId);
-      const idle = () => {
-        if ("requestIdleCallback" in window) {
-          idleId = window.requestIdleCallback(run, { timeout });
-        } else {
-          timerId = window.setTimeout(run, 200);
-        }
-      };
-      if (!saveData) return idle();
-      const waitQuiet = () => {
-        if (performance.now() - lastScroll < 300) {
-          quietId = window.setTimeout(waitQuiet, 120);
-          return;
-        }
-        window.removeEventListener("scroll", onScroll);
-        idle();
-      };
-      waitQuiet();
-    };
-    // Celu: un ratito después de cargar (que primero termine lo de la primera pantalla).
-    // Compu: también se arma sola después de cargar (un poco más tarde que en
-    // el celu): antes esperaba a estar al 40 % de la sección y con conexión
-    // lenta se llegaba a ver la foto con "Armando la maqueta…".
-    const onLoad = () => {
-      timerId = window.setTimeout(() => start(3000), celu ? 600 : 1800);
-    };
-    if (saveData) window.addEventListener("scroll", onScroll, { passive: true });
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) start(celu ? 400 : 1500);
-      },
-      { rootMargin: saveData ? "10% 0px" : celu ? "200% 0px" : "40% 0px" },
-    );
-    io.observe(el);
-    if (!saveData) {
-      if (document.readyState === "complete") onLoad();
-      else window.addEventListener("load", onLoad, { once: true });
-    }
-    return () => {
-      io.disconnect();
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("load", onLoad);
-      if (quietId !== null) window.clearTimeout(quietId);
-      if (idleId !== null) window.cancelIdleCallback(idleId);
-      if (timerId !== null) window.clearTimeout(timerId);
-    };
-  }, []);
-
-  useEffect(() => {
-    const onMessage = (e) => {
-      if (e.origin !== window.location.origin) return;
-      if (e.data?.muzzaga === "ready") setReady(true);
-    };
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, []);
+  // Para el chip "fuera de ruta": le avisa al bucle de dibujo que recalcule.
+  const refrescarRef = useRef(() => {});
 
   useEffect(() => {
     const mq = window.matchMedia(CELU_MQ);
@@ -238,116 +142,218 @@ export default function ClubRecorrido() {
     return () => mq.removeEventListener("change", sync);
   }, []);
 
-  // La maqueta solo dibuja mientras la sección está a la vista (el iframe no puede saberlo por sí solo).
-  // Ahora se arma mucho antes de llegar: arranca sin dibujar (ver index.html) y se le avisa desde
-  // el primer momento; al estar lista se le repite, por si el aviso llegó antes que su oído.
-  const visibleRef = useRef(false);
+  // Scroll → parada (tarjeta y chip) y posición en la secuencia → lienzo.
+  // Todo en un requestAnimationFrame y solo con la sección en pantalla: fuera
+  // de la vista no se hace nada (ni se escucha el scroll).
   useEffect(() => {
     const el = sectionRef.current;
-    if (!el || !load) return undefined;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        visibleRef.current = entry.isIntersecting;
-        post({ muzzaga: "visible", v: entry.isIntersecting });
-      },
-      // Solo dibuja con la sección en pantalla: con margen, en el celu seguía
-      // dibujando mientras se scrolleaba la sección de arriba.
-      { rootMargin: "0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [load, post]);
-  useEffect(() => {
-    if (ready) post({ muzzaga: "visible", v: visibleRef.current });
-  }, [ready, post]);
-
-  // Scroll → progreso 0..1 → cámara del iframe.
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return undefined;
+    const scene = sceneRef.current;
+    const canvas = canvasRef.current;
+    if (!el || !scene || !canvas || celu === null) return undefined;
+    const { manifiesto, carpeta } = SECUENCIAS[celu ? "celu" : "compu"];
+    const cams = manifiesto.cams;
+    const reduce = reduceMotion();
+    // Cerca de una foto se queda en esa foto justa: el scroll redondea a
+    // medio píxel y quedaba un 2 % de fundido con la vecina (se veía el
+    // fantasma de la etiqueta de la parada).
+    const indice = (cam) => {
+      const i = indiceDeCam(cams, cam);
+      return Math.abs(i - Math.round(i)) < 0.08 ? Math.round(i) : i;
+    };
+    // primero la vista general, después el resto de las paradas de la ruta y
+    // las de los chips (cada parada se ve nítida apenas se llega)
+    const claves = [
+      ...new Set([0, ...ruta.map((r) => r.cam), ...ZONAS.map((z) => z.p)].map((c) => Math.round(indice(c)))),
+    ];
+    const ctx = canvas.getContext("2d", { alpha: false });
     let raf = 0;
-    let last = -1;
+    let visible = false;
+    let pos = -1; // foto que se ve (con decimales: fundido entre dos)
+    let meta = 0; // foto a la que se va
+    let lento = false; // viaje de un chip fuera de ruta: más pausado
+    let antes = 0;
+    let dibujado = "";
     let fades = "";
-    const update = () => {
+    let ancho = 0;
+    let alto = 0;
+
+    const seq = crearSecuencia({
+      manifiesto,
+      carpeta,
+      claves,
+      soloClaves: reduce,
+      alCambiar: () => {
+        dibujado = "";
+        pedir();
+      },
+    });
+
+    const dibujar = () => {
+      if (!ancho || !alto) return;
+      const d = seq.paraDibujar(pos);
+      if (!d) return;
+      // solo se dibuja si cambió algo que se vea (foto, fundido o tamaño)
+      const key = `${d.A._i}|${d.B ? d.B._i : ""}|${Math.round(d.t * 24)}|${ancho}x${alto}`;
+      if (key === dibujado) return;
+      dibujado = key;
+      // como object-fit: cover, centrada
+      const fw = manifiesto.ancho;
+      const fh = manifiesto.alto;
+      const k = Math.max(ancho / fw, alto / fh);
+      const sw = ancho / k;
+      const sh = alto / k;
+      const sx = (fw - sw) / 2;
+      const sy = (fh - sh) / 2;
+      ctx.globalAlpha = 1;
+      ctx.drawImage(d.A, sx, sy, sw, sh, 0, 0, ancho, alto);
+      if (d.B && Math.round(d.t * 24) > 0) {
+        ctx.globalAlpha = Math.round(d.t * 24) / 24;
+        ctx.drawImage(d.B, sx, sy, sw, sh, 0, 0, ancho, alto);
+        ctx.globalAlpha = 1;
+      }
+      if (!el.dataset.listo) {
+        el.dataset.listo = "1";
+        setListo(true);
+      }
+    };
+
+    // La foto que se ve persigue a la del scroll con un suavizado corto
+    // (como la cámara de la maqueta): al scrollear de a saltos —rueda del
+    // mouse, flick del celu— igual se ve un viaje parejo.
+    const paso = (now) => {
       raf = 0;
+      const dt = antes ? Math.min(0.1, (now - antes) / 1000) : 1 / 60;
+      antes = now;
+      if (pos < 0 || reduce) pos = meta;
+      else {
+        pos += (meta - pos) * (1 - Math.exp(-dt / (lento ? 0.32 : 0.09)));
+        if (Math.abs(meta - pos) < 0.01) pos = meta;
+      }
+      dibujar();
+      if (pos !== meta && visible) raf = requestAnimationFrame(paso);
+      else antes = 0;
+    };
+    function pedir() {
+      if (!raf && visible) raf = requestAnimationFrame(paso);
+    }
+
+    const medir = () => {
+      const r = scene.getBoundingClientRect();
+      // a la resolución de las fotos como mucho (más grande no suma nitidez)
+      const k = Math.max(r.width / manifiesto.ancho, r.height / manifiesto.alto);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2, Math.max(1, 1 / k));
+      const w = Math.max(1, Math.round(r.width * dpr));
+      const h = Math.max(1, Math.round(r.height * dpr));
+      if (w === ancho && h === alto) return;
+      ancho = canvas.width = w;
+      alto = canvas.height = h;
+      dibujado = "";
+      pedir();
+    };
+
+    const update = () => {
       const rect = el.getBoundingClientRect();
       // Bordes: mientras el arriba o el abajo de la sección está en pantalla, la maqueta se
       // funde con la página. El degradado se achica hasta 0 justo cuando la sección queda fija.
-      const scene = sceneRef.current;
-      if (scene) {
-        const vh = window.innerHeight;
-        const size = Math.min(180, vh * 0.22);
-        const top = Math.round(Math.min(size, Math.max(0, rect.top)));
-        const bottom = Math.round(
-          Math.min(size, Math.max(0, vh - rect.bottom)),
-        );
-        // Antes era una máscara sobre la 3D que cambiaba de tamaño en cada
-        // cuadro del scroll: el celu tenía que recomponer toda la maqueta y
-        // se trababa. Ahora son dos franjas con el color de la página encima
-        // (alto fijo) y solo cambia su opacidad, que es casi gratis.
-        const key = `${top},${bottom}`;
-        if (key !== fades) {
-          fades = key;
-          const franjas = scene.parentElement; // .club-tour-sticky
-          franjas.style.setProperty("--fade-size", `${Math.round(size)}px`);
-          franjas.style.setProperty("--fade-top-o", (top / size).toFixed(3));
-          franjas.style.setProperty("--fade-bottom-o", (bottom / size).toFixed(3));
-        }
+      // Son dos franjas con el color de la página encima (alto fijo) y solo cambia su
+      // opacidad, que es casi gratis.
+      const vh = window.innerHeight;
+      const size = Math.min(180, vh * 0.22);
+      const top = Math.round(Math.min(size, Math.max(0, rect.top)));
+      const bottom = Math.round(Math.min(size, Math.max(0, vh - rect.bottom)));
+      const key = `${top},${bottom}`;
+      if (key !== fades) {
+        fades = key;
+        const franjas = scene.parentElement; // .club-tour-sticky
+        franjas.style.setProperty("--fade-size", `${Math.round(size)}px`);
+        franjas.style.setProperty("--fade-top-o", (top / size).toFixed(3));
+        franjas.style.setProperty("--fade-bottom-o", (bottom / size).toFixed(3));
       }
       const fuera = fueraRef.current;
       if (fuera && Math.abs(window.scrollY - fuera.y) < 48) {
-        if (last !== -2) post({ muzzaga: "tour", p: fuera.cam });
-        last = -2;
-        return;
+        meta = indice(fuera.cam);
+        lento = true;
+      } else {
+        fueraRef.current = null;
+        lento = false;
+        const s = clamp01(-rect.top / Math.max(1, rect.height - vh));
+        const r = enRuta(ruta, s);
+        // la tarjeta (y el chip) siguen al scroll aunque la foto todavía esté bajando
+        setStep(r.stop);
+        meta = indice(reduce ? r.camParada : r.cam);
       }
-      fueraRef.current = null;
-      const s = clamp01(
-        -rect.top / Math.max(1, rect.height - window.innerHeight),
-      );
-      if (s === last) return;
-      last = s;
-      const { cam, stop } = enRuta(ruta, s);
-      // la tarjeta (y el chip) siguen al scroll aunque la 3D todavía se esté armando
-      setStep(stop);
-      post({ muzzaga: "tour", p: cam });
+      pedir();
     };
+    refrescarRef.current = update;
+
+    let scrollRaf = 0;
     const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
+      if (visible && !scrollRaf)
+        scrollRaf = requestAnimationFrame(() => {
+          scrollRaf = 0;
+          update();
+        });
     };
-    update();
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) {
+        medir();
+        update();
+      } else if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+        antes = 0;
+      }
+    });
+    io.observe(el);
+    const ro = new ResizeObserver(() => {
+      if (!visible) return;
+      medir();
+      update();
+    });
+    ro.observe(scene);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
+      io.disconnect();
+      ro.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      refrescarRef.current = () => {};
+      seq.destruir();
+      delete el.dataset.listo;
     };
-  }, [ready, post, ruta]);
+  }, [celu, ruta]);
 
-  // Parallax suave: la posición del cursor se manda a la maqueta (se apaga con "reducir movimiento").
+  // Parallax suave con el cursor (compu): la foto se corre apenas, como
+  // antes giraba un poco la cámara. Solo un transform del lienzo; se apaga
+  // con "reducir movimiento" y en pantallas táctiles.
   useEffect(() => {
     const el = sectionRef.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+    const canvas = canvasRef.current;
+    if (!el || !canvas || reduceMotion() || !window.matchMedia("(pointer: fine)").matches)
       return undefined;
     let raf = 0;
-    let pending = null;
+    let x = 0;
+    let y = 0;
     const flush = () => {
       raf = 0;
-      post({ muzzaga: "pointer", ...pending });
+      canvas.style.transform = `scale(1.03) translate3d(${(-x * 0.9).toFixed(2)}%, ${(-y * 0.6).toFixed(2)}%, 0)`;
     };
     const onMove = (e) => {
-      pending = {
-        x: (e.clientX / window.innerWidth) * 2 - 1,
-        y: (e.clientY / window.innerHeight) * 2 - 1,
-      };
+      x = (e.clientX / window.innerWidth) * 2 - 1;
+      y = (e.clientY / window.innerHeight) * 2 - 1;
       if (!raf) raf = requestAnimationFrame(flush);
     };
     el.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       el.removeEventListener("pointermove", onMove);
       if (raf) cancelAnimationFrame(raf);
+      canvas.style.transform = "";
     };
-  }, [post]);
+  }, []);
 
   // En el celu la tira de zonas no entra entera: la zona activa se centra (solo la tira, no la página).
   useEffect(() => {
@@ -355,16 +361,15 @@ export default function ClubRecorrido() {
     const i = ZONAS.findIndex((z) => z.stop === step);
     const btn = i >= 0 ? nav?.children[i] : null;
     if (!btn || nav.scrollWidth <= nav.clientWidth) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     nav.scrollTo({
       left: btn.offsetLeft - (nav.clientWidth - btn.offsetWidth) / 2,
-      behavior: reduce ? "auto" : "smooth",
+      behavior: reduceMotion() ? "auto" : "smooth",
     });
   }, [step]);
 
   // Tocar un punto de interés: scroll suave hasta su tramo de la ruta y la
-  // cámara lo sigue. Si la zona no está en la ruta (celu), la cámara va
-  // directo, sin mover la página.
+  // foto lo sigue. Si la zona no está en la ruta (celu), viaja directo, sin
+  // mover la página.
   const goTo = (zona) => {
     const el = sectionRef.current;
     if (!el) return;
@@ -372,18 +377,15 @@ export default function ClubRecorrido() {
     if (j < 0) {
       fueraRef.current = { y: window.scrollY, cam: zona.p };
       setStep(zona.stop);
-      post({ muzzaga: "tour", p: zona.p });
+      refrescarRef.current();
       return;
     }
     fueraRef.current = null;
     const p = j / (ruta.length - 1);
     const top = el.getBoundingClientRect().top + window.scrollY;
-    const reduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
     window.scrollTo({
       top: top + p * (el.offsetHeight - window.innerHeight),
-      behavior: reduce ? "auto" : "smooth",
+      behavior: reduceMotion() ? "auto" : "smooth",
     });
   };
 
@@ -395,27 +397,21 @@ export default function ClubRecorrido() {
       ref={sectionRef}
       id="recorrido"
       className="club-tour"
-      data-load={load || undefined}
       aria-label="Recorrido 3D del club"
       style={{ "--stops": STOPS.length }}
     >
       <div className="club-tour-sticky">
         <div ref={sceneRef} className="club-tour-scene">
-          {load && (
-            <iframe
-              ref={frameRef}
-              className={`club-tour-frame${ready ? " is-ready" : ""}`}
-              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261126a`}
-              title="Maqueta 3D del club Muzzaga"
-              tabIndex={-1}
-              aria-hidden="true"
-            />
-          )}
+          <canvas
+            ref={canvasRef}
+            className={`club-tour-canvas${listo ? " is-ready" : ""}`}
+            aria-hidden="true"
+          />
         </div>
-        {!ready && (
+        {!listo && (
           <div className="club-tour-loading">
             <span className="club-tour-loading-ball" aria-hidden="true" />
-            Armando la maqueta…
+            Cargando el recorrido…
           </div>
         )}
 
