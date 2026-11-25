@@ -305,6 +305,12 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   // cancha, tamaño de pantalla). En una tele sin placa de video la escena animada congelaba la página entera.
   const MONITOR_STILL = MONITOR && !/[?&]anim=1/.test(location.search);
   let monitorStillAt = Infinity, monitorRedraw = 0;
+  // Quieta, el bucle de cuadros se apaga del todo (antes seguía despertando 60 veces por segundo sin dibujar nada y en
+  // la tele eso no dejaba descansar al procesador). Lo vuelve a prender monitorWake() cuando hay algo que dibujar.
+  var monitorAsleep = false, monitorWake = () => {};
+  // Antes de dormirse espera a que todo llegue a su lugar (cámara, recorte, paredes, luces que se prenden): en una tele
+  // lenta salían pocos cuadros en esos 7 s y la maqueta podía quedar congelada a mitad de camino o con las luces bajas.
+  var monitorEmbedSettled = true, monitorMoving = false;
   // ?lite=1 (celulares con poca memoria o pocos núcleos, ver ClubRecorrido): sin los personajes 3D (8 MB), sin sombras
   // ni bloom, a 1× como mucho, sin animaciones de fondo y dibujando solo cuando la cámara se mueve.
   const LITE = /[?&]lite=1/.test(location.search), calm = reduceMotion || LITE;
@@ -941,7 +947,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
   let postfx = null; // posproceso (premium-post.js); null = render directo
   let stageRect = { width: 1, height: 1 }; // medida del escenario: se lee acá y no en cada cuadro (forzaba un recálculo de layout)
-  function resize() { monitorRedraw = 3; liteRedraw = 2; const r = stageRect = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height);
+  function resize() { monitorRedraw = 3; liteRedraw = 2; if (monitorAsleep) monitorWake(); const r = stageRect = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height);
     // en vertical (landing) se sube el motivo para que quede en la zona libre sobre la tarjeta
     if (document.documentElement.classList.contains('embed') && r.width / r.height < 0.8) camera.setViewOffset(r.width, r.height, 0, r.height * 0.14, r.width, r.height); else camera.clearViewOffset(); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(stage); resize();
@@ -1138,22 +1144,30 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   let lastDraw = 0, cost = 8;
   // en la tele de recepción (?monitor=1) ~30 cuadros por segundo alcanzan y la placa del televisor trabaja la mitad
   const MIN_GAP = MONITOR ? 50 : LITE || MOVIL ? 33 : 12.5, COST_K = MONITOR ? 3 : 1.5; // en el monitor la maqueta usa como mucho un tercio del hilo
+  monitorWake = () => { if (monitorAsleep) { monitorAsleep = false; requestAnimationFrame(frame); } };
   function frame(now) {
+    if (MONITOR_STILL && now > monitorStillAt && !monitorRedraw) {
+      const settled = monitorEmbedSettled && !monitorMoving && Math.abs(wrap(want.az - cam.az)) < 0.02 && Math.abs(want.el - cam.el) < 0.02 && Math.abs(want.d - cam.d) < 0.02 && Math.abs(want.fov - cam.fov) <= 0.05;
+      if (settled || now > monitorStillAt + 30000) { last = now; monitorAsleep = true; return; }
+    }
     requestAnimationFrame(frame);
     // fuera de la vista no se anima ni se dibuja nada: en la landing comparte el hilo con la página y le trababa el scroll
     if (!inView && !warm) { last = now; return; }
-    if (MONITOR_STILL && now > monitorStillAt) { if (!monitorRedraw) { last = now; return; } monitorRedraw--; }
     // ritmo de dibujo: nunca más de ~72 cuadros por segundo, y si cada cuadro sale caro se dibuja menos seguido para
     // dejarle tiempo a la página (comparten el hilo). Con ~10 ms por cuadro: 60 en pantallas de 60/120 Hz y 48 en 144 Hz.
     // ?movil=1 con la cámara quieta (no se está scrolleando): la vida del club sigue, pero a ~20 cuadros por segundo
     // en vez de ~30. Al scrollear vuelve a ~30 enseguida.
     if (now - lastDraw < Math.max(movilQuiet ? 50 : MIN_GAP, cost * COST_K) - 1) return;
     lastDraw = now; const c0 = performance.now();
+    if (MONITOR_STILL && now > monitorStillAt && monitorRedraw) monitorRedraw--; // se descuenta al dibujar, no en los cuadros salteados
     const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
     if (introOn) { want.az = PRE['3d'].az + Math.sin(t * 0.25) * 20; want.d = 74; want.el = 36; }
-    // snap: el primer cuadro de calentamiento deja todo en su lugar de una (techo arriba, paredes bajas, cámara)
-    const k = snap ? 1 : 1 - Math.pow(0.0015, dt);
-    if (embedStep) embedStep(dt);
+    // snap: el primer cuadro de calentamiento deja todo en su lugar de una (techo arriba, paredes bajas, cámara).
+    // Pasado el arranque del monitor la cámara, el recorte y las paredes van a su lugar en dos o tres cuadros: en una
+    // tele lenta salen muy pocos y a paso normal quedaban a mitad de camino (el resto de la escena sigue con dt)
+    const edt = MONITOR_STILL && now > monitorStillAt ? Math.max(dt, 0.5) : dt;
+    const k = snap ? 1 : 1 - Math.pow(0.0015, edt);
+    if (embedStep) embedStep(edt);
     cam.az += wrap(want.az - cam.az) * k; cam.el += (want.el - cam.el) * k; cam.d += (want.d - cam.d) * k;
     if (Math.abs(cam.fov - want.fov) > 0.05) { cam.fov += (want.fov - cam.fov) * k; camera.fov = cam.fov; camera.updateProjectionMatrix(); }
     const az = cam.az * rad, el = cam.el * rad, ce = Math.cos(el);
@@ -1234,7 +1248,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       if (still && !wallsMoved && now > liteFadeUntil && !liteRedraw) return;
       litePose = pose; if (liteRedraw) liteRedraw--;
     }
-    wallsMoved = false; if (!warm && !movilQuiet) perf(dt); // al ritmo lento (quieta) o calentando, el ritmo no dice nada
+    monitorMoving = wallsMoved; wallsMoved = false; if (!warm && !movilQuiet) perf(dt); // al ritmo lento (quieta) o calentando, el ritmo no dice nada
     if (postfx) postfx.render(); else renderer.render(scene, camera);
     cost += (performance.now() - c0 - cost) * 0.1; // costo promedio de un cuadro (solo el hilo principal)
     if (warm && !--warm && onWarm) { const f = onWarm; onWarm = null; f(); }
@@ -1293,6 +1307,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
         fadeItems.forEach(([o, v]) => { if (o.isLight) o.intensity = v * e; else o.opacity = v * e; });
         if (u >= 1) fadeStart = 0;
       }
+      monitorEmbedSettled = !fadeStart && Math.abs(cutWant - cutH) < 0.01 && (!tgtWant || Math.abs(tgtWant.x - TGT.x) + Math.abs(tgtWant.z - TGT.z) < 0.01);
     };
     if (EMBED) addEventListener('message', e => {
       if (e.origin !== location.origin || !e.data) return;
@@ -1404,7 +1419,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
           n.g.visible = !!(st && st.color);
           if (n.g.visible) { n.mat.color.set(st.color); n.halo.color.set(st.color); }
         });
-        renderer.shadowMap.needsUpdate = true; monitorRedraw = Math.max(monitorRedraw, 1);
+        renderer.shadowMap.needsUpdate = true; monitorRedraw = Math.max(monitorRedraw, 1); monitorWake();
       });
       const v = new THREE.Vector3(); let sent = '';
       frameHooks.push((dt, t, cam) => {

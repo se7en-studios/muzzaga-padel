@@ -280,6 +280,8 @@ body:has(.mon-root) {
 /* El reloj va en un tablero oscuro con la raya naranja, como el día elegido
    en la agenda del panel. */
 .mon-clock {
+  /* El minuto que cambia no reacomoda el encabezado entero. */
+  contain: layout;
   display: grid;
   justify-items: end;
   padding: 0.8vh 1.8vh 0.9vh;
@@ -403,6 +405,9 @@ body:has(.mon-root) {
   background: var(--mon-panel);
   box-shadow: 0 2.4vh 4vh -2vh rgba(0, 0, 0, 0.85);
   transition: border-color 0.4s ease;
+  /* Lo que cambia adentro (minutos, anillo, nombres) no obliga a recalcular
+     ni repintar el resto de la pantalla. Ya recorta con overflow: hidden. */
+  contain: layout paint;
 }
 
 /* Cabecera: césped azul con textura y líneas blancas, como los turnos de la
@@ -1078,6 +1083,8 @@ body:has(.mon-root) {
 }
 
 .mon-ticker-window {
+  /* Cada aviso nuevo se acomoda y se pinta solo dentro de la tira. */
+  contain: layout paint;
   flex: 1;
   display: flex;
   align-items: center;
@@ -1358,4 +1365,15 @@ body:has(.mon-root) {
       transform: translateY(40%);
     }
   }
+}
+
+/* --------------------------------------------------------------------------
+   Modo liviano (?lite=1, o solo si la tele no llega a ~35 cuadros por
+   segundo): se ve igual, pero sin animaciones ni transiciones de adorno.
+   -------------------------------------------------------------------------- */
+.mon-root.is-lite *,
+.mon-root.is-lite *::before,
+.mon-root.is-lite *::after {
+  animation: none !important;
+  transition: none !important;
 }
