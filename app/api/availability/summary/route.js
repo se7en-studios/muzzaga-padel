@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
 import { getDb, isFirebaseConfigured } from "../../../../lib/firebase";
-import { nowInClubTimezone, slotKey } from "../../../../lib/booking";
-import { hasSlotStarted, slotTimesFor } from "../../../../lib/clubConfig";
+import { isoAddDays, nowInClubTimezone } from "../../../../lib/booking";
 import { getClubConfig } from "../../../../lib/clubConfigServer";
+import { countFreeSlots } from "../../../../lib/freeSlots";
 
 const MAX_DAYS = 14;
-
-function addDays(iso, n) {
-  const d = new Date(`${iso}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-}
 
 /**
  * GET /api/availability/summary?from=YYYY-MM-DD&days=N
@@ -26,10 +20,9 @@ export async function GET(request) {
     return NextResponse.json({ error: "Fecha inválida" }, { status: 400 });
   }
   const count = Math.min(MAX_DAYS, Math.max(1, Number(searchParams.get("days")) || 7));
-  const to = addDays(from, count - 1);
+  const to = isoAddDays(from, count - 1);
 
   const config = await getClubConfig();
-  const { courts } = config;
 
   let claims = {};
   if (isFirebaseConfigured()) {
@@ -46,25 +39,12 @@ export async function GET(request) {
     }
   }
 
+  // El conteo es el mismo que usa la Agenda del admin (lib/freeSlots.js).
+  // Al público le alcanza con los números, sin los horarios.
+  const counted = countFreeSlots({ config, claims, from, count, now });
   const days = {};
-  for (let i = 0; i < count; i += 1) {
-    const date = addDays(from, i);
-    const times = slotTimesFor(config, date);
-    if (times.length === 0) {
-      days[date] = { free: 0, total: 0, closed: true };
-      continue;
-    }
-    const taken = claims[date] || {};
-    let free = 0;
-    let total = 0;
-    for (const court of courts) {
-      for (const { start } of times) {
-        if (hasSlotStarted(config, date, start, now)) continue;
-        total += 1;
-        if (!taken[slotKey(court.id, start)]) free += 1;
-      }
-    }
-    days[date] = { free, total, closed: false };
+  for (const [date, { free, total, closed }] of Object.entries(counted)) {
+    days[date] = { free, total, closed };
   }
 
   return NextResponse.json({ from, days });
