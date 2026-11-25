@@ -102,17 +102,6 @@ const nextConfig = {
         ],
       },
       {
-        // Las fotos del recorrido de la landing llevan el hash del contenido
-        // en el nombre (scripts/render-recorrido.mjs): nunca cambian.
-        source: "/recorrido/secuencia/:variante/:archivo([^/]+\\.webp)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-      {
         // /recorrido sin barra final (se reescribe a /recorrido/index.html)
         source: "/recorrido",
         headers: [{ key: "Content-Security-Policy", value: CSP_RECORRIDO }],
