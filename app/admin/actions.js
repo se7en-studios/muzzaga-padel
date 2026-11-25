@@ -376,6 +376,50 @@ export async function getAdminDayData(isoDate) {
   };
 }
 
+/**
+ * Lo justo para el Monitor TV: canchas y turnos de un día, con los campos que
+ * se muestran. getAdminDayData hace siete consultas (ventas, egresos, caja,
+ * la semana anterior…) y arma un JSON grande que la tele bajaba y parseaba
+ * cada 30 s sin usar casi nada. Esto es una sola consulta y un JSON chico.
+ */
+export async function adminGetMonitorData(isoDate) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  const date = isoDate || businessDayInClub();
+  if (!ISO_DATE.test(date)) return { ok: false, error: "Fecha inválida." };
+  const config = await getClubConfig();
+
+  let bookings = [];
+  if (isFirebaseConfigured()) {
+    try {
+      bookings = await loadByDateRange(getDb(), "bookings", date, date);
+    } catch (error) {
+      console.warn("Aviso Firebase en Monitor:", error.message);
+      return { ok: false, error: "No se pudieron leer los turnos." };
+    }
+  }
+
+  return {
+    ok: true,
+    date,
+    courts: config.courts.map(({ id, name, type }) => ({ id, name, type })),
+    bookings: bookings
+      .map((b) => ({
+        id: b.id,
+        date: b.date,
+        courtId: b.courtId,
+        startTime: b.startTime,
+        endTime: b.endTime,
+        playerName: b.playerName,
+        playersCount: b.playersCount,
+        status: b.status,
+        ...(b.isTest === true ? { isTest: true } : {}),
+      }))
+      .sort((a, b) => (a.startTime > b.startTime ? 1 : -1)),
+  };
+}
+
 export async function adminCreateManualBooking(input) {
   const denied = await requireAdmin();
   if (denied) return denied;

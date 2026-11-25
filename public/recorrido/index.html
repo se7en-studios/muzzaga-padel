@@ -276,7 +276,21 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   if (!window.THREE) { showErr('No se pudo cargar el motor 3D. Revisá tu conexión y recargá.'); return; }
   const THREE = window.THREE;
   /* ponytail: la escena se arma en tandas y se cede el hilo entre una y otra, para que la landing no se trabe mientras la maqueta carga */
-  const tick = () => (window.scheduler && scheduler.yield ? scheduler.yield() : new Promise(r => setTimeout(r)));
+  const ceder = () => (window.scheduler && scheduler.yield ? scheduler.yield() : new Promise(r => setTimeout(r)));
+  // En la landing la maqueta se empieza a armar apenas carga la página (ver ClubRecorrido), mucho antes de llegar a la
+  // sección. Si justo en ese momento el usuario está scrolleando más arriba, cada tanda espera a que suelte el dedo
+  // (como mucho 1,5 s por tanda) para no trabarle el scroll; con la sección ya cerca (a menos de pantalla y media) no
+  // espera más: ahí importa que esté lista.
+  const ENLANDING = document.documentElement.classList.contains('embed') && !/[?&]monitor=1/.test(location.search);
+  let pScroll = 0;
+  if (ENLANDING) try { parent.addEventListener('scroll', () => { pScroll = performance.now(); }, { passive: true }); } catch (e) { /* sin padre */ }
+  const cerca = () => { try { const s = parent.document.getElementById('recorrido'); return !s || s.getBoundingClientRect().top < parent.innerHeight * 1.5; } catch (e) { return true; } };
+  const tick = async () => {
+    await ceder();
+    if (!pScroll) return;
+    const t0 = performance.now();
+    while (performance.now() - pScroll < 250 && performance.now() - t0 < 1500 && !cerca()) await new Promise(r => setTimeout(r, 100));
+  };
   let renderer;
   // ?movil=1 (celulares que no van en liviano): misma maqueta pero más barata de dibujar. Sin antialias (a 1,25× casi
   // no se nota y en celu cuesta mucho), sin bloom, sombras más simples y que se recalculan cada tanto, sin los
@@ -291,6 +305,12 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   // cancha, tamaño de pantalla). En una tele sin placa de video la escena animada congelaba la página entera.
   const MONITOR_STILL = MONITOR && !/[?&]anim=1/.test(location.search);
   let monitorStillAt = Infinity, monitorRedraw = 0;
+  // Quieta, el bucle de cuadros se apaga del todo (antes seguía despertando 60 veces por segundo sin dibujar nada y en
+  // la tele eso no dejaba descansar al procesador). Lo vuelve a prender monitorWake() cuando hay algo que dibujar.
+  var monitorAsleep = false, monitorWake = () => {};
+  // Antes de dormirse espera a que todo llegue a su lugar (cámara, recorte, paredes, luces que se prenden): en una tele
+  // lenta salían pocos cuadros en esos 7 s y la maqueta podía quedar congelada a mitad de camino o con las luces bajas.
+  var monitorEmbedSettled = true, monitorMoving = false;
   // ?lite=1 (celulares con poca memoria o pocos núcleos, ver ClubRecorrido): sin los personajes 3D (8 MB), sin sombras
   // ni bloom, a 1× como mucho, sin animaciones de fondo y dibujando solo cuando la cámara se mueve.
   const LITE = /[?&]lite=1/.test(location.search), calm = reduceMotion || LITE;
@@ -299,6 +319,9 @@ const CHAIN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmH
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.shadowMap.enabled = !LITE; renderer.shadowMap.type = MOVIL ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.66; renderer.shadowMap.autoUpdate = false;
+  // En la landing no se le pregunta al driver si cada shader compiló bien: esa pregunta frena el hilo (que es el de la
+  // página) hasta que termina de compilar, uno por uno. Si alguno fallara se ve igual en la página completa /recorrido.
+  if (document.documentElement.classList.contains('embed')) renderer.debug.checkShaderErrors = false;
 
   /* hora y fecha del club */
   (function () {
@@ -887,7 +910,14 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   await tick();
   /* ---------- calidad premium: materiales PBR, luces, cantina y mobiliario ---------- */
   try {
-    if (window.MuzzagaScene && !/look=basic/.test(location.search)) { const pctx = { THREE, scene, renderer, std, box, plane, sign, ctex, itex, textTex, W, IMG, DS, solid, wood, darkMat, person, movers, reduceMotion, onFrame: f => frameHooks.push(f) }; window.MuzzagaScene.enhance(pctx); if (window.MuzzagaSigns) window.MuzzagaSigns.install(pctx); if (window.MuzzagaEnv) window.MuzzagaEnv.install(pctx); if (window.MuzzagaEntrance) window.MuzzagaEntrance.install(pctx); if (window.MuzzagaClub) window.MuzzagaClub.install(pctx); if (window.MuzzagaGente && !LITE && !MOVIL) window.MuzzagaGente.install(pctx); }
+    if (window.MuzzagaScene && !/look=basic/.test(location.search)) { const pctx = { THREE, scene, renderer, std, box, plane, sign, ctex, itex, textTex, W, IMG, DS, solid, wood, darkMat, person, movers, reduceMotion, onFrame: f => frameHooks.push(f) };
+      // de a una pieza y cediendo el hilo entre cada una: juntas eran la tanda más larga del armado (~0,8 s con el celu frenado)
+      window.MuzzagaScene.enhance(pctx); await tick();
+      if (window.MuzzagaSigns) { window.MuzzagaSigns.install(pctx); await tick(); }
+      if (window.MuzzagaEnv) { window.MuzzagaEnv.install(pctx); await tick(); }
+      if (window.MuzzagaEntrance) { window.MuzzagaEntrance.install(pctx); await tick(); }
+      if (window.MuzzagaClub) { window.MuzzagaClub.install(pctx); await tick(); }
+      if (window.MuzzagaGente && !LITE && !MOVIL) window.MuzzagaGente.install(pctx); }
   } catch (e) { console.error('premium', e); }
   scene.traverse(o => {
     if (!o.isMesh) return;
@@ -917,7 +947,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
   let postfx = null; // posproceso (premium-post.js); null = render directo
   let stageRect = { width: 1, height: 1 }; // medida del escenario: se lee acá y no en cada cuadro (forzaba un recálculo de layout)
-  function resize() { monitorRedraw = 3; liteRedraw = 2; const r = stageRect = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height);
+  function resize() { monitorRedraw = 3; liteRedraw = 2; if (monitorAsleep) monitorWake(); const r = stageRect = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); if (postfx) postfx.setSize(r.width, r.height);
     // en vertical (landing) se sube el motivo para que quede en la zona libre sobre la tarjeta
     if (document.documentElement.classList.contains('embed') && r.width / r.height < 0.8) camera.setViewOffset(r.width, r.height, 0, r.height * 0.14, r.width, r.height); else camera.clearViewOffset(); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(stage); resize();
@@ -1094,7 +1124,12 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   const DM_CAP = document.documentElement.classList.contains('embed') ? 1.9 : 2.6; // en vertical, la landing encuadra más cerca
   let embedStep = null;
   let introOn = true; $('go').addEventListener('click', () => { introOn = false; want.az = PRE['3d'].az; want.d = PRE['3d'].d; want.el = PRE['3d'].el; setRoof(false); $('intro').classList.add('off'); });
-  let last = performance.now(), t = 0, fc = 0, lastPK = '', wallsMoved = false, inView = true, pAcc = 0, pN = 0, pLocked = false;
+  // En la landing (embed sin monitor) la maqueta se arma mucho antes de que la sección llegue a pantalla: arranca sin
+  // dibujar y espera el aviso "visible" de la página. Solo dibuja un cuadro de calentamiento (warm) al terminar de
+  // armarse, para compilar los shaders y dejar la primera imagen lista antes de mostrarse.
+  const LANDING = document.documentElement.classList.contains('embed') && !MONITOR;
+  let last = performance.now(), t = 0, fc = 0, lastPK = '', wallsMoved = false, inView = !LANDING, pAcc = 0, pN = 0, pLocked = false;
+  let warm = 0, snap = false, onWarm = null, movilPose = null, movilQuiet = false;
   // en la landing la visibilidad la informa la página padre (el observer del iframe podía quedar en "no visible")
   if (!document.documentElement.classList.contains('embed')) new IntersectionObserver(e => { inView = e[0].isIntersecting; }).observe(stage);
   function perf(dt) {
@@ -1109,23 +1144,34 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   let lastDraw = 0, cost = 8;
   // en la tele de recepción (?monitor=1) ~30 cuadros por segundo alcanzan y la placa del televisor trabaja la mitad
   const MIN_GAP = MONITOR ? 50 : LITE || MOVIL ? 33 : 12.5, COST_K = MONITOR ? 3 : 1.5; // en el monitor la maqueta usa como mucho un tercio del hilo
+  monitorWake = () => { if (monitorAsleep) { monitorAsleep = false; requestAnimationFrame(frame); } };
   function frame(now) {
+    if (MONITOR_STILL && now > monitorStillAt && !monitorRedraw) {
+      const settled = monitorEmbedSettled && !monitorMoving && Math.abs(wrap(want.az - cam.az)) < 0.02 && Math.abs(want.el - cam.el) < 0.02 && Math.abs(want.d - cam.d) < 0.02 && Math.abs(want.fov - cam.fov) <= 0.05;
+      if (settled || now > monitorStillAt + 30000) { last = now; monitorAsleep = true; return; }
+    }
     requestAnimationFrame(frame);
     // fuera de la vista no se anima ni se dibuja nada: en la landing comparte el hilo con la página y le trababa el scroll
-    if (!inView) { last = now; return; }
-    if (MONITOR_STILL && now > monitorStillAt) { if (!monitorRedraw) { last = now; return; } monitorRedraw--; }
+    if (!inView && !warm) { last = now; return; }
     // ritmo de dibujo: nunca más de ~72 cuadros por segundo, y si cada cuadro sale caro se dibuja menos seguido para
     // dejarle tiempo a la página (comparten el hilo). Con ~10 ms por cuadro: 60 en pantallas de 60/120 Hz y 48 en 144 Hz.
-    if (now - lastDraw < Math.max(MIN_GAP, cost * COST_K) - 1) return;
+    // ?movil=1 con la cámara quieta (no se está scrolleando): la vida del club sigue, pero a ~20 cuadros por segundo
+    // en vez de ~30. Al scrollear vuelve a ~30 enseguida.
+    if (now - lastDraw < Math.max(movilQuiet ? 50 : MIN_GAP, cost * COST_K) - 1) return;
     lastDraw = now; const c0 = performance.now();
+    if (MONITOR_STILL && now > monitorStillAt && monitorRedraw) monitorRedraw--; // se descuenta al dibujar, no en los cuadros salteados
     const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
     if (introOn) { want.az = PRE['3d'].az + Math.sin(t * 0.25) * 20; want.d = 74; want.el = 36; }
-    const k = 1 - Math.pow(0.0015, dt);
-    if (embedStep) embedStep(dt);
+    // snap: el primer cuadro de calentamiento deja todo en su lugar de una (techo arriba, paredes bajas, cámara).
+    // Pasado el arranque del monitor la cámara, el recorte y las paredes van a su lugar en dos o tres cuadros: en una
+    // tele lenta salen muy pocos y a paso normal quedaban a mitad de camino (el resto de la escena sigue con dt)
+    const edt = MONITOR_STILL && now > monitorStillAt ? Math.max(dt, 0.5) : dt;
+    const k = snap ? 1 : 1 - Math.pow(0.0015, edt);
+    if (embedStep) embedStep(edt);
     cam.az += wrap(want.az - cam.az) * k; cam.el += (want.el - cam.el) * k; cam.d += (want.d - cam.d) * k;
     if (Math.abs(cam.fov - want.fov) > 0.05) { cam.fov += (want.fov - cam.fov) * k; camera.fov = cam.fov; camera.updateProjectionMatrix(); }
     const az = cam.az * rad, el = cam.el * rad, ce = Math.cos(el);
-    dm += (clampN(1.35 / camera.aspect, 1, DM_CAP) - dm) * 0.2; const dd = cam.d * dm;
+    dm += (clampN(1.35 / camera.aspect, 1, DM_CAP) - dm) * (snap ? 1 : 0.2); const dd = cam.d * dm; snap = false;
     camera.position.set(TGT.x + dd * Math.sin(az) * ce, TGT.y + dd * Math.sin(el), TGT.z + dd * Math.cos(az) * ce);
     camera.lookAt(TGT); camera.updateMatrixWorld();
 
@@ -1191,15 +1237,21 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     if (moved) COURT_CARDS.forEach(c => place(c.d, c.pos));
     for (const o of dyn) if (o.visible) o.updateMatrixWorld(true); // los muñecos ocultos (ya hay personaje) no se dibujan
     if ((MONITOR ? (++fc) % 60 === 0 : MOVIL ? (++fc) % 12 === 0 : ((++fc) & 1) === 0) || wallsMoved) renderer.shadowMap.needsUpdate = true;
+    if (MOVIL) { // ¿se movió la cámara desde el cuadro anterior? (decide el ritmo del próximo)
+      const cp = camera.position, cq = camera.quaternion, pose = [cp.x, cp.y, cp.z, cq.x, cq.y, cq.z, cq.w];
+      movilQuiet = !!movilPose && !wallsMoved && pose.every((v, i) => Math.abs(v - movilPose[i]) < (i < 3 ? 5e-3 : 1e-4));
+      movilPose = pose;
+    }
     if (LITE) { // quieta no se dibuja: solo si la cámara se movió, se movieron paredes/techo o se están prendiendo las luces
       const cp = camera.position, cq = camera.quaternion, pose = [cp.x, cp.y, cp.z, cq.x, cq.y, cq.z, cq.w];
       const still = litePose && pose.every((v, i) => Math.abs(v - litePose[i]) < (i < 3 ? 5e-3 : 1e-4)); // 5 mm / giro imperceptible
       if (still && !wallsMoved && now > liteFadeUntil && !liteRedraw) return;
       litePose = pose; if (liteRedraw) liteRedraw--;
     }
-    wallsMoved = false; perf(dt);
+    monitorMoving = wallsMoved; wallsMoved = false; if (!warm && !movilQuiet) perf(dt); // al ritmo lento (quieta) o calentando, el ritmo no dice nada
     if (postfx) postfx.render(); else renderer.render(scene, camera);
     cost += (performance.now() - c0 - cost) * 0.1; // costo promedio de un cuadro (solo el hilo principal)
+    if (warm && !--warm && onWarm) { const f = onWarm; onWarm = null; f(); }
   }
   requestAnimationFrame(frame);
 
@@ -1255,6 +1307,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
         fadeItems.forEach(([o, v]) => { if (o.isLight) o.intensity = v * e; else o.opacity = v * e; });
         if (u >= 1) fadeStart = 0;
       }
+      monitorEmbedSettled = !fadeStart && Math.abs(cutWant - cutH) < 0.01 && (!tgtWant || Math.abs(tgtWant.x - TGT.x) + Math.abs(tgtWant.z - TGT.z) < 0.01);
     };
     if (EMBED) addEventListener('message', e => {
       if (e.origin !== location.origin || !e.data) return;
@@ -1324,7 +1377,9 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       fadeItems.forEach(([o]) => { if (o.isLight) o.intensity = 0; else o.opacity = 0; });
       scene.updateMatrixWorld(true); // la escena no se actualiza sola: sin esto lo agregado queda en el origen
     }
+    await tick();
     if (!/look=day/.test(location.search)) { try { dusk(); if (window.MuzzagaLighting) { window.MuzzagaLighting.install({ THREE, scene, ctex, addFade: (o, v) => { fadeItems.push([o, v]); if (o.isLight) o.intensity = 0; else o.opacity = 0; } }); scene.updateMatrixWorld(true); } } catch (e) { console.error('dusk', e); } } // el clima nunca debe romper la maqueta
+    await tick();
     /* ---- las canchas se bajan cuando la cámara apunta a otro sector (no tapan la cantina ni los vestuarios) ---- */
     if (EMBED) (function () {
       renderer.localClippingEnabled = true;
@@ -1364,7 +1419,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
           n.g.visible = !!(st && st.color);
           if (n.g.visible) { n.mat.color.set(st.color); n.halo.color.set(st.color); }
         });
-        renderer.shadowMap.needsUpdate = true; monitorRedraw = Math.max(monitorRedraw, 1);
+        renderer.shadowMap.needsUpdate = true; monitorRedraw = Math.max(monitorRedraw, 1); monitorWake();
       });
       const v = new THREE.Vector3(); let sent = '';
       frameHooks.push((dt, t, cam) => {
@@ -1380,7 +1435,8 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
        Quedan aparte los muñecos (los reemplazan los personajes), todo lo que se anima (dyn, userData.anima), lo
        transparente, lo espejado y lo que tiene otras mallas colgadas. Va al final: los retoques de arriba buscan
        mallas sueltas (ventanas, follaje, luminarias, recorte de las canchas). ?batch=0 lo apaga para comparar. ---- */
-    (function batchStatic() {
+    await tick();
+    await (async function batchStatic() {
       const U = THREE.BufferGeometryUtils;
       if (!U || /[?&]batch=0/.test(location.search)) return;
       scene.updateMatrixWorld(true);
@@ -1443,20 +1499,23 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
         e.items.push([o, new THREE.Matrix4().multiplyMatrices(inv.copy(a.matrixWorld).invert(), o.matrixWorld)]);
       });
       let before = 0, after = 0;
-      groups.forEach(e => {
-        if (e.items.length < 2) return;
+      // en tandas de ~40 ms cediendo el hilo: de una sola vez era medio segundo con la página trabada (celu frenado)
+      let slice = performance.now();
+      for (const e of groups.values()) {
+        if (performance.now() - slice > 40) { await tick(); slice = performance.now(); }
+        if (e.items.length < 2) continue;
         const geos = e.items.map(([o, rel]) => o.geometry.clone().applyMatrix4(rel));
         let merged = null;
         try { merged = U.mergeBufferGeometries(geos, false); } catch (err) { merged = null; }
         geos.forEach(g => g.dispose());
-        if (!merged) return;
+        if (!merged) continue;
         const mesh = new THREE.Mesh(merged, e.o.material);
         mesh.castShadow = e.o.castShadow; mesh.receiveShadow = e.o.receiveShadow; mesh.renderOrder = e.o.renderOrder; mesh.frustumCulled = e.o.frustumCulled;
         mesh.userData.fused = e.items.length;
         e.a.add(mesh); mesh.updateMatrixWorld(true);
         e.items.forEach(([o]) => { if (o.parent) o.parent.remove(o); });
         before += e.items.length; after++;
-      });
+      }
       renderer.shadowMap.needsUpdate = true;
       const solos = [...groups.values()].filter(e => e.items.length < 2), mats = new Set(solos.map(e => e.o.material));
       window.MZ_FUSION = { before, after, why, solos: solos.length, materialesSolos: mats.size, materiales: new Set(list.map(([o]) => o.material)).size };
@@ -1464,8 +1523,13 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
 
     if (EMBED) {
       apply(0); TGT.set(KF[0].x, TGT.y, KF[0].z); Object.assign(cam, want);
-      // se espera a que techo y paredes terminen de bajar antes de mostrarse
-      setTimeout(() => { fadeStart = performance.now(); liteFadeUntil = fadeStart + 3000; if (MONITOR_STILL) monitorStillAt = fadeStart + 7000; parent.postMessage({ muzzaga: 'ready' }, location.origin); }, 1400);
+      const listo = () => { fadeStart = performance.now(); liteFadeUntil = fadeStart + 3000; if (MONITOR_STILL) monitorStillAt = fadeStart + 7000; parent.postMessage({ muzzaga: 'ready' }, location.origin); };
+      // Landing: un cuadro de calentamiento con todo ya en su lugar (snap: compila los shaders y arma las sombras) y
+      // avisa; no hace falta esperar a que techo y paredes bajen animados (antes 1,4 s fijos con la escena dibujando a
+      // pantalla completa sin que nadie la viera).
+      if (LANDING) { await tick(); snap = true; warm = 1; onWarm = listo; }
+      // monitor: se espera a que techo y paredes terminen de bajar antes de mostrarse
+      else setTimeout(listo, 1400);
     } else { fadeStart = performance.now(); liteFadeUntil = fadeStart + 3000; }
   }
 })();

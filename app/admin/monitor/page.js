@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -13,8 +13,8 @@ import {
 import {
   adminGetClubConfig,
   adminGetCantinaMenu,
+  adminGetMonitorData,
   checkAdminSession,
-  getAdminDayData,
 } from "../actions";
 import {
   COURTS,
@@ -36,9 +36,6 @@ const DOMINIO = "muzzagapadel.com";
 
 const REFRESH_MS = 30000;
 const MENU_REFRESH_MS = 10 * 60 * 1000;
-// Los minutos restantes cambian de a uno: no hace falta redibujar la pantalla
-// entera cada segundo (en un stick de TV se nota). El reloj va aparte.
-const NOW_TICK_MS = 10000;
 const STALE_AFTER_MIN = 2;
 // Después de esta hora ya no queda nada de ayer en pista.
 const LATE_NIGHT_UNTIL = JORNADA_CUTOFF;
@@ -62,7 +59,7 @@ const BEELUP_CANCHAS = "El Tano / La Vasca";
 // canchas. En modo monitor pinta el borde de cada cancha según su estado,
 // avisa dónde cae cada una en pantalla y queda quieta después de armarse.
 const SCENE_SRC =
-  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261120";
+  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261125b";
 // Anillo de la cuenta regresiva (viewBox 0 0 120 120).
 const RING_R = 52;
 const RING_C = 2 * Math.PI * RING_R;
@@ -101,19 +98,125 @@ function inLabel(minutes) {
   return m ? `en ${h} h ${String(m).padStart(2, "0")}` : `en ${h} h`;
 }
 
-/** El único pedazo de la pantalla que cambia cada segundo. */
+/**
+ * Llama a `fn` justo cuando cambia el minuto (y no cada segundo): todo lo que
+ * muestra la tele va de a minuto. Un setTimeout alineado al próximo minuto
+ * despierta al navegador una vez por minuto en vez de 60 o 6 veces.
+ */
+function useEveryMinute(fn) {
+  const fnRef = useRef(fn);
+  fnRef.current = fn;
+  useEffect(() => {
+    let id;
+    const schedule = () => {
+      // +80 ms de margen para no caer un pelito antes del cambio de minuto.
+      id = setTimeout(tick, 60000 - (Date.now() % 60000) + 80);
+    };
+    const tick = () => {
+      fnRef.current();
+      schedule();
+    };
+    schedule();
+    // Al volver a mostrarse (o si la tele suspendió los timers) se pone al día.
+    const onVisible = () => {
+      if (document.hidden) return;
+      clearTimeout(id);
+      tick();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+}
+
+// Si la tele tarda más que esto por cuadro (menos de ~35 cuadros por segundo)
+// con la pantalla quieta, no da para los adornos.
+const LITE_FRAME_MS = 28;
+
+/**
+ * Modo liviano: apaga las animaciones de adorno (el "salto" del cartel, el
+ * titileo, el fundido de los avisos, el anillo que se desliza). Lo que se
+ * muestra es lo mismo. Se prende con ?lite=1, o solo: unos segundos después
+ * de que la maqueta queda quieta se miden 3 s de cuadros y, si la tele no
+ * llega, se activa hasta que se recargue la página. ?lite=0 no mide nunca.
+ */
+function useLiteMode(sceneReady) {
+  const [lite, setLite] = useState(false);
+  const decided = useRef(false);
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("lite");
+    if (q === "1" || q === "0") decided.current = true;
+    if (q === "1") setLite(true);
+  }, []);
+
+  useEffect(() => {
+    if (!sceneReady || decided.current) return undefined;
+    let raf = 0;
+    let wait = 0;
+    let cancelled = false;
+    const measure = () => {
+      if (cancelled) return;
+      if (document.hidden) {
+        wait = setTimeout(measure, 5000);
+        return;
+      }
+      const gaps = [];
+      let last = 0;
+      const step = (t) => {
+        if (cancelled) return;
+        if (last) gaps.push(t - last);
+        last = t;
+        const total = gaps.reduce((a, b) => a + b, 0);
+        if (total < 3000) {
+          raf = requestAnimationFrame(step);
+          return;
+        }
+        // Medición terminada: no queda ningún requestAnimationFrame andando.
+        decided.current = true;
+        const avg = total / gaps.length;
+        const slow = gaps.filter((g) => g > 50).length / gaps.length;
+        if (avg > LITE_FRAME_MS || slow > 0.25) setLite(true);
+      };
+      raf = requestAnimationFrame(step);
+    };
+    // La maqueta anima unos 7 s al armarse y después queda quieta: se mide ahí.
+    wait = setTimeout(measure, 9000);
+    return () => {
+      cancelled = true;
+      clearTimeout(wait);
+      cancelAnimationFrame(raf);
+    };
+  }, [sceneReady]);
+
+  return lite;
+}
+
+/** Minutos desde las 00:00 en la hora del club; cambia una vez por minuto. */
+function useClubMinutes() {
+  const [minutes, setMinutes] = useState(() => toMinutes(nowInClubTimezone().hhmm));
+  // Mismo valor → React no vuelve a dibujar.
+  useEveryMinute(() => setMinutes(toMinutes(nowInClubTimezone().hhmm)));
+  return minutes;
+}
+
 /**
  * Avisos de a uno, cambiando cada 8 s con un fundido corto. Antes era una
  * cinta que se desplazaba sin parar: eso obligaba a la tele a redibujar la
  * pantalla entera (maqueta incluida) 60 veces por segundo y la trababa. Así
  * la pantalla queda quieta casi todo el tiempo.
  */
-function TickerRotativo({ items }) {
+const TickerRotativo = memo(function TickerRotativo({ items }) {
   const list = items.length ? items : [""];
   const [i, setI] = useState(0);
   useEffect(() => {
     if (list.length < 2) return undefined;
-    const id = setInterval(() => setI((n) => (n + 1) % list.length), 8000);
+    // Con la pestaña oculta no se avanza: nadie lo ve y la tele descansa.
+    const id = setInterval(() => {
+      if (!document.hidden) setI((n) => (n + 1) % list.length);
+    }, 8000);
     return () => clearInterval(id);
   }, [list.length]);
   const item = list[i % list.length];
@@ -130,17 +233,22 @@ function TickerRotativo({ items }) {
       )}
     </div>
   );
-}
+});
 
-function MonitorClock() {
+/**
+ * El reloj va en su propio componente: al cambiar el minuto se redibuja solo
+ * él. Antes preguntaba la hora cada segundo; ahora se despierta justo en el
+ * cambio de minuto (la pantalla no muestra segundos).
+ */
+const MonitorClock = memo(function MonitorClock() {
   const [time, setTime] = useState("");
-  useEffect(() => {
-    const tick = () => setTime(getClubTimeString());
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-  const date = formatDate(todayInClub(), "long");
+  const [date, setDate] = useState(() => todayInClub());
+  useEffect(() => setTime(getClubTimeString()), []);
+  useEveryMinute(() => {
+    setTime(getClubTimeString());
+    setDate(todayInClub());
+  });
+  const dateLabel = formatDate(date, "long");
   return (
     <div className="mon-clock" aria-label="Hora del club">
       <span className="mon-clock-time">
@@ -148,11 +256,11 @@ function MonitorClock() {
         <small>hs</small>
       </span>
       <span className="mon-clock-date">
-        {date.charAt(0).toUpperCase() + date.slice(1)}
+        {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
       </span>
     </div>
   );
-}
+});
 
 /** "Cancha 1" sola si el nombre es genérico; si tiene apodo, también el apodo. */
 function courtTitle(court, index) {
@@ -190,15 +298,33 @@ export default function MonitorPage() {
   const [slotDuration, setSlotDuration] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [loadError, setLoadError] = useState(null); // null | "expired" | "offline"
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [, setNowTick] = useState(0);
+  // La hora de la última lectura buena va en un ref: guardarla en el estado
+  // redibujaba la pantalla cada 30 s aunque no hubiera cambiado nada. El
+  // cartel "En vivo / hace N min" se recalcula en el redibujo de cada minuto.
+  const lastUpdatedRef = useRef(null);
+  const [hasData, setHasData] = useState(false);
+  const currentMinutes = useClubMinutes();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [demo, setDemo] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [courtPts, setCourtPts] = useState(null);
+  // Modo liviano: sin las animaciones de adorno (ver useLiteMode).
+  const lite = useLiteMode(sceneReady);
   const firedChimes = useRef(new Set());
   const frameRef = useRef(null);
+  const dataKeyRef = useRef("");
+  const loadingRef = useRef(false);
+  // ?animado=1: los jugadores se mueven (para una compu con buena placa de video).
+  // Se calcula una sola vez y no en cada redibujo.
+  const sceneSrc = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).has("animado")
+        ? `${SCENE_SRC}&anim=1`
+        : SCENE_SRC,
+    [],
+  );
 
   useEffect(() => {
     if (isMonitorDemo()) {
@@ -211,11 +337,6 @@ export default function MonitorPage() {
       setAuthorized(res.ok);
       setSessionChecked(true);
     });
-  }, []);
-
-  useEffect(() => {
-    const id = setInterval(() => setNowTick((n) => n + 1), NOW_TICK_MS);
-    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -237,7 +358,11 @@ export default function MonitorPage() {
         );
       }
       if (e.data.muzzaga === "courtPts" && Array.isArray(e.data.pts)) {
-        setCourtPts(e.data.pts);
+        // Solo si cambiaron de verdad: cada aviso igual redibujaba todo.
+        const pts = e.data.pts;
+        setCourtPts((prev) =>
+          prev && JSON.stringify(prev) === JSON.stringify(pts) ? prev : pts,
+        );
       }
     };
     window.addEventListener("message", onMessage);
@@ -250,7 +375,8 @@ export default function MonitorPage() {
       setSlotDuration(90);
       setDayData(monitorDemoData());
       setMenuItems(normalizeMenu(null).items);
-      setLastUpdated(Date.now());
+      lastUpdatedRef.current = Date.now();
+      setHasData(true);
       return;
     }
     adminGetClubConfig().then((res) => {
@@ -264,32 +390,55 @@ export default function MonitorPage() {
         .catch(() => {});
     loadMenu();
     loadData();
-    const id = setInterval(loadData, REFRESH_MS);
-    const menuId = setInterval(loadMenu, MENU_REFRESH_MS);
+    // Con la pestaña oculta no se pide nada; al volver se actualiza en el acto.
+    const id = setInterval(() => {
+      if (!document.hidden) loadData();
+    }, REFRESH_MS);
+    const menuId = setInterval(() => {
+      if (!document.hidden) loadMenu();
+    }, MENU_REFRESH_MS);
+    const onVisible = () => {
+      if (!document.hidden) loadData();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       clearInterval(id);
       clearInterval(menuId);
+      document.removeEventListener("visibilitychange", onVisible);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authorized, demo]);
 
   async function loadData() {
+    // Con internet lento un pedido puede tardar más de 30 s: no se apilan.
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     const today = todayInClub();
     const isLateNight = nowInClubTimezone().hhmm < LATE_NIGHT_UNTIL;
     try {
       const [res, prev] = await Promise.all([
-        getAdminDayData(today),
-        isLateNight ? getAdminDayData(isoAddDays(today, -1)) : null,
+        adminGetMonitorData(today),
+        isLateNight ? adminGetMonitorData(isoAddDays(today, -1)) : null,
       ]);
       if (!res.ok) {
         setLoadError(isExpiredSessionError(res) ? "expired" : "offline");
         return;
       }
-      setDayData(res);
-      setYesterdayBookings(prev?.ok ? prev.bookings : []);
+      lastUpdatedRef.current = Date.now();
       setLoadError(null);
-      setLastUpdated(Date.now());
+      setHasData(true);
+      // Si los turnos no cambiaron (lo más común) no se toca el estado y la
+      // pantalla no se redibuja.
+      const prevBookings = prev?.ok ? prev.bookings : [];
+      const key = JSON.stringify([res.courts, res.bookings, prevBookings]);
+      if (key === dataKeyRef.current) return;
+      dataKeyRef.current = key;
+      setDayData(res);
+      setYesterdayBookings(prevBookings);
     } catch {
       setLoadError("offline");
+    } finally {
+      loadingRef.current = false;
     }
   }
 
@@ -301,46 +450,48 @@ export default function MonitorPage() {
     }
   }
 
-  const now = nowInClubTimezone();
-  const currentMinutes = toMinutes(now.hhmm);
-  const courts = dayData?.courts || COURTS;
-  const views = courts.map((court, index) => {
-    const schedule = courtSchedule(
-      court.id,
-      dayData?.bookings,
-      yesterdayBookings,
-    );
-    const { live } = liveAndNext(schedule, currentMinutes);
-    const upcoming = schedule.filter((x) => x.start > currentMinutes);
-    const remaining = live ? Math.max(0, live.end - currentMinutes) : 0;
-    const total = live ? Math.max(1, live.end - live.start) : 1;
-    const nextUp = upcoming[0] || null;
-    const startsIn = nextUp ? nextUp.start - currentMinutes : null;
-    const ending = Boolean(live) && remaining <= WARN_MIN;
-    const state = live
-      ? ending
-        ? "termina"
-        : "juego"
-      : startsIn != null && startsIn <= PROXIMO_MIN
-        ? "proximo"
-        : "libre";
-    return {
-      court,
-      index,
-      schedule,
-      title: courtTitle(court, index),
-      match: live?.booking || null,
-      remaining,
-      left: Math.min(1, remaining / total),
-      state,
-      tone: live ? timerTone(remaining) : null,
-      players: Math.min(8, Math.max(1, Number(live?.booking?.playersCount) || 4)),
-      nextUp,
-      startsIn,
-      // En "próximo" el turno que viene ya está en el cuerpo: el pie muestra el siguiente.
-      footer: state === "proximo" ? upcoming[1] || null : nextUp,
-    };
-  });
+  // Las tarjetas solo se recalculan si cambió el minuto o llegaron turnos
+  // nuevos; no al prender el sonido, al moverse un globo, etc.
+  const views = useMemo(() => {
+    const courts = dayData?.courts || COURTS;
+    return courts.map((court, index) => {
+      const schedule = courtSchedule(
+        court.id,
+        dayData?.bookings,
+        yesterdayBookings,
+      );
+      const { live } = liveAndNext(schedule, currentMinutes);
+      const upcoming = schedule.filter((x) => x.start > currentMinutes);
+      const remaining = live ? Math.max(0, live.end - currentMinutes) : 0;
+      const total = live ? Math.max(1, live.end - live.start) : 1;
+      const nextUp = upcoming[0] || null;
+      const startsIn = nextUp ? nextUp.start - currentMinutes : null;
+      const ending = Boolean(live) && remaining <= WARN_MIN;
+      const state = live
+        ? ending
+          ? "termina"
+          : "juego"
+        : startsIn != null && startsIn <= PROXIMO_MIN
+          ? "proximo"
+          : "libre";
+      return {
+        court,
+        index,
+        schedule,
+        title: courtTitle(court, index),
+        match: live?.booking || null,
+        remaining,
+        left: Math.min(1, remaining / total),
+        state,
+        tone: live ? timerTone(remaining) : null,
+        players: Math.min(8, Math.max(1, Number(live?.booking?.playersCount) || 4)),
+        nextUp,
+        startsIn,
+        // En "próximo" el turno que viene ya está en el cuerpo: el pie muestra el siguiente.
+        footer: state === "proximo" ? upcoming[1] || null : nextUp,
+      };
+    });
+  }, [dayData, yesterdayBookings, currentMinutes]);
 
   // Borde de neón de cada cancha en la maqueta: el color del estado, o
   // apagado si está libre (así se distingue también en la maqueta).
@@ -391,6 +542,21 @@ export default function MonitorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMinutes, dayData, yesterdayBookings, soundEnabled]);
 
+  // Misma lista mientras no cambie la duración del turno: así la tira de
+  // avisos no se redibuja con el resto de la pantalla.
+  const tickerItems = useMemo(
+    () =>
+      [
+        slotDuration ? `El turno dura ${slotDuration} minutos` : null,
+        "Terminá a horario para que el siguiente arranque puntual",
+        "Preguntá en recepción por los próximos torneos",
+        "Hacé el test de nivel y sumate a partidos parejos de tu categoría",
+        `Reservá tu turno online en ${DOMINIO}`,
+        "Reviví tu partido en video en beelup.com",
+      ].filter(Boolean),
+    [slotDuration],
+  );
+
   if (!sessionChecked) {
     return (
       <div className="mon-center">
@@ -416,19 +582,12 @@ export default function MonitorPage() {
     );
   }
 
+  const lastUpdated = lastUpdatedRef.current;
   const minutesSinceUpdate = lastUpdated
     ? Math.floor((Date.now() - lastUpdated) / 60000)
     : null;
   const isStale =
     minutesSinceUpdate != null && minutesSinceUpdate >= STALE_AFTER_MIN;
-  const tickerItems = [
-    slotDuration ? `El turno dura ${slotDuration} minutos` : null,
-    "Terminá a horario para que el siguiente arranque puntual",
-    "Preguntá en recepción por los próximos torneos",
-    "Hacé el test de nivel y sumate a partidos parejos de tu categoría",
-    `Reservá tu turno online en ${DOMINIO}`,
-    "Reviví tu partido en video en beelup.com",
-  ].filter(Boolean);
   const destacados = featuredItems(menuItems);
   const cantina = (destacados.length ? destacados : menuItems).slice(
     0,
@@ -445,17 +604,12 @@ export default function MonitorPage() {
   });
 
   return (
-    <div className="mon-root">
+    <div className={`mon-root${lite ? " is-lite" : ""}`}>
       <div className="mon-scene" aria-hidden="true">
         <iframe
           ref={frameRef}
           className={`mon-scene-frame${sceneReady ? " is-ready" : ""}`}
-          src={
-            // ?animado=1: los jugadores se mueven (para una compu con buena placa de video)
-            new URLSearchParams(window.location.search).has("animado")
-              ? `${SCENE_SRC}&anim=1`
-              : SCENE_SRC
-          }
+          src={sceneSrc}
           title="Maqueta 3D del club"
           tabIndex={-1}
         />
@@ -532,7 +686,7 @@ export default function MonitorPage() {
                 ` · datos de hace ${minutesSinceUpdate} min`}
             </span>
           ) : (
-            lastUpdated && (
+            hasData && (
               <span
                 className={`mon-status${isStale ? " is-stale" : ""}`}
                 role="status"
