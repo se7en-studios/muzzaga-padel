@@ -58,7 +58,7 @@
 .admin-root .admin-agenda .admin-daychip {
   position: relative;
   flex: 1 0 56px;
-  height: 68px;
+  height: 82px;
   gap: 0;
   padding: 6px 0 7px;
   border: 1px solid transparent;
@@ -219,6 +219,49 @@
 
 .admin-root .admin-agenda .admin-daychip[aria-selected="true"] .admin-daychip-bar span {
   background: var(--ball-flat);
+}
+
+/* Lleno: la barra entera en el azul más hondo, que se note de lejos. */
+.admin-root .admin-agenda .admin-daychip-bar[data-tone="full"] span {
+  background: var(--court-deep);
+}
+
+/* "8 libres" / "Lleno" debajo de la barrita (lib/freeSlots.js, el mismo
+   conteo que ve el público al reservar). */
+.admin-root .admin-agenda .admin-daychip-free {
+  margin-top: 3px;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-agenda .admin-daychip-free:is([data-tone="empty"], [data-tone="low"]) {
+  color: #15803d;
+}
+
+.admin-root .admin-agenda .admin-daychip-free[data-tone="full"] {
+  color: var(--court-deep);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.admin-root .admin-agenda .admin-daychip-free:is([data-tone="done"], [data-tone="closed"]) {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.admin-root .admin-agenda .admin-daychip[aria-selected="true"] .admin-daychip-free {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-root .admin-agenda .admin-daychip[aria-selected="true"] .admin-daychip-free[data-tone="full"] {
+  color: var(--ball-flat);
 }
 
 .admin-root .admin-agenda .admin-daystrip-keys {
@@ -2507,5 +2550,366 @@
   .admin-root .admin-cancelado-estado {
     grid-column: 2;
     justify-self: start;
+  }
+}
+
+/* ==========================================================================
+   PRÓXIMOS 7 DÍAS (FreeOutlook): lo que queda libre para vender.
+   Un día por columna, la barra crece con lo reservado (mismo azul que la
+   tira). Al costado, el día para promocionar y el más lleno; abajo, la
+   promo de WhatsApp lista para copiar.
+   ========================================================================== */
+.admin-root .admin-agenda .admin-outlook {
+  margin-top: 30px;
+}
+
+.admin-root .admin-agenda .admin-outlook-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 290px);
+  gap: 16px 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 10px 26px -20px rgba(27, 27, 25, 0.45);
+}
+
+.admin-root .admin-agenda .admin-outlook-card.is-loading {
+  display: block;
+  min-height: 196px;
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-agenda .admin-outlook-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-root .admin-agenda .admin-outlook-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 2px 7px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-root .admin-agenda .admin-outlook-day:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+.admin-root .admin-agenda .admin-outlook-day:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.admin-root .admin-agenda .admin-outlook-day:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.admin-root .admin-agenda .admin-outlook-day.is-active {
+  border-color: var(--board-bg);
+  box-shadow: inset 0 -3px 0 var(--brand);
+}
+
+/* Cuántos quedan: el número grande, como el marcador. */
+.admin-root .admin-agenda .admin-outlook-free {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #15803d;
+}
+
+.admin-root .admin-agenda .admin-outlook-day:is([data-tone="mid"], [data-tone="high"]) .admin-outlook-free {
+  color: var(--court-ink);
+}
+
+.admin-root .admin-agenda .admin-outlook-day[data-tone="full"] .admin-outlook-free {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--court-deep);
+}
+
+.admin-root .admin-agenda .admin-outlook-day:is([data-tone="closed"], [data-tone="done"]) .admin-outlook-free {
+  color: var(--text-muted);
+}
+
+.admin-root .admin-agenda .admin-outlook-meter {
+  position: relative;
+  width: min(34px, 82%);
+  height: 72px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #ebe6da;
+}
+
+.admin-root .admin-agenda .admin-outlook-meter > span {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #8fa6ec;
+  transform-origin: bottom;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.admin-root .admin-agenda .admin-outlook-day[data-tone="mid"] .admin-outlook-meter > span {
+  background: #4f72de;
+}
+
+.admin-root .admin-agenda .admin-outlook-day[data-tone="high"] .admin-outlook-meter > span {
+  background: var(--court);
+}
+
+.admin-root .admin-agenda .admin-outlook-day[data-tone="full"] .admin-outlook-meter > span {
+  background-color: var(--court-deep);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 60%);
+}
+
+.admin-root .admin-agenda .admin-outlook-day:is([data-tone="closed"], [data-tone="done"]) .admin-outlook-meter {
+  background: repeating-linear-gradient(135deg, #ebe6da 0 5px, #f5f1e8 5px 10px);
+}
+
+/* El día más vacío, con aro naranja: es el que hay que salir a vender. */
+.admin-root .admin-agenda .admin-outlook-day.is-emptiest .admin-outlook-meter {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--brand);
+  overflow: visible;
+}
+
+.admin-root .admin-agenda .admin-outlook-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-root .admin-agenda .admin-outlook-day.is-active .admin-outlook-name {
+  color: var(--text, #1b1b19);
+}
+
+.admin-root .admin-agenda .admin-outlook-side {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.admin-root .admin-agenda .admin-outlook-pick {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.admin-root .admin-agenda .admin-outlook-pick.is-static {
+  cursor: default;
+}
+
+.admin-root .admin-agenda button.admin-outlook-pick:hover {
+  border-color: var(--border-strong);
+}
+
+.admin-root .admin-agenda .admin-outlook-pick:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.admin-root .admin-agenda .admin-outlook-pick.is-emptiest {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.admin-root .admin-agenda .admin-outlook-pick-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-root .admin-agenda .admin-outlook-pick.is-emptiest .admin-outlook-pick-label {
+  color: #9a3412;
+}
+
+.admin-root .admin-agenda .admin-outlook-pick.is-busiest .admin-outlook-pick-label {
+  color: var(--court-ink);
+}
+
+.admin-root .admin-agenda .admin-outlook-pick strong {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-root .admin-agenda .admin-outlook-pick-cta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-agenda .admin-outlook-pick.is-emptiest .admin-outlook-pick-cta {
+  color: #9a3412;
+}
+
+.admin-root .admin-agenda .admin-outlook-promo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  grid-column: 1 / -1;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+
+.admin-root .admin-agenda .admin-outlook-promo-text {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.admin-root .admin-agenda .admin-outlook-promo-text strong {
+  color: var(--text, #1b1b19);
+}
+
+.admin-root .admin-agenda .admin-outlook-promo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-root .admin-agenda .admin-outlook-promo-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  text-decoration: none;
+}
+
+.admin-root .admin-agenda .admin-outlook-copy.is-copied {
+  border-color: #86efac;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.admin-root .admin-agenda .admin-outlook-wa {
+  border-color: #25d366;
+  color: #0f7a3d;
+}
+
+.admin-root .admin-agenda .admin-outlook-preview {
+  flex: 1 1 100%;
+  font-size: 13px;
+}
+
+.admin-root .admin-agenda .admin-outlook-preview summary {
+  width: max-content;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* Como una burbuja de WhatsApp, así se ve cómo va a llegar. */
+.admin-root .admin-agenda .admin-outlook-preview pre {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  border-radius: 12px;
+  background: #e7f8ee;
+  color: #1b1b19;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* Tablet y celu: los días arriba, los destacados abajo (de a dos si entran). */
+@media (max-width: 1100px) {
+  .admin-root .admin-agenda .admin-outlook-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-root .admin-agenda .admin-outlook-side {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 900px), (max-height: 500px) {
+  .admin-root .admin-agenda .admin-outlook {
+    margin-top: 24px;
+  }
+
+  .admin-root .admin-agenda .admin-outlook-card {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .admin-root .admin-agenda .admin-outlook-days {
+    gap: 3px;
+  }
+
+  .admin-root .admin-agenda .admin-outlook-free {
+    font-size: 17px;
+  }
+
+  .admin-root .admin-agenda .admin-outlook-day[data-tone="full"] .admin-outlook-free {
+    font-size: 9.5px;
+    letter-spacing: 0;
+  }
+
+  .admin-root .admin-agenda .admin-outlook-meter {
+    height: 56px;
+  }
+
+  .admin-root .admin-agenda .admin-outlook-name {
+    font-size: 10.5px;
+    letter-spacing: 0;
+  }
+
+  .admin-root .admin-agenda .admin-outlook-promo-actions {
+    flex: 1 1 100%;
+  }
+
+  .admin-root .admin-agenda .admin-outlook-promo-actions .btn {
+    flex: 1 1 0;
+    justify-content: center;
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-root .admin-agenda .admin-outlook-meter > span {
+    transition: none;
   }
 }

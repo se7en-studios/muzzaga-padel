@@ -921,3 +921,99 @@
     transform: rotate(-35deg);
   }
 }
+
+/* --- "Ver todas": las preguntas que no entran de arranque --------------- */
+#faq .faq-card[hidden] {
+  display: none;
+}
+
+.faq-mas {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 18px;
+  border: 1.5px dashed var(--color-hairline-strong);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    border-color var(--t-hover) var(--ease),
+    background-color var(--t-hover) var(--ease);
+}
+
+/* El contador va en una pelotita, como el "+" de cada pregunta. */
+.faq-mas-cuenta {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--hf-pelota);
+  color: #14210a;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+}
+
+.faq-mas:focus-visible {
+  outline: 2px solid var(--color-accent-orange);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .faq-mas:hover {
+    border-color: var(--hf-cancha);
+    background: color-mix(in srgb, var(--hf-cancha) 6%, transparent);
+  }
+}
+
+/* Celu: el cierre en un renglón, título a la izquierda y el botón a la
+   derecha ("WhatsApp →"). La bajada repetía lo que dice el botón; la
+   pelota, más chica, queda en la esquina detrás del botón. */
+@media (max-width: 640px) {
+  .faq-cierre {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 14px 14px 14px 16px;
+  }
+
+  .faq-cierre-texto {
+    padding-right: 0;
+  }
+
+  .faq-cierre-titulo {
+    font-size: 24px;
+    margin-bottom: 0;
+  }
+
+  .faq-cierre-desc,
+  .faq-cierre-btn-extra {
+    display: none;
+  }
+
+  .faq-cierre-btn {
+    min-height: 48px;
+    padding-inline: 16px;
+  }
+
+  .faq-cierre-pelota {
+    top: -44px;
+    right: -34px;
+    width: 88px;
+    height: 88px;
+  }
+
+  .hl-cancha {
+    height: 120px;
+  }
+}

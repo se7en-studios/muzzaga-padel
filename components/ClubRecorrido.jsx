@@ -63,7 +63,7 @@ const STOPS = [
 // para todo, así que nunca se desfasan.
 // Compu: los 8 cuadros clave, uno por tramo (cam = i / 7), como siempre.
 const RUTA_PC = [0, 0, 1, 1, 2, 3, 4, 5].map((stop, i) => ({ stop, cam: i / 7 }));
-// Celu: solo vista general → canchas → barra y cantina (la sección mide 2,5
+// Celu: solo vista general → canchas → barra y cantina (la sección mide 1,8
 // pantallas en vez de 6; ver ClubRecorrido.css). El último tramo se queda en
 // la barra para que se vea antes de seguir con la página. Mesas y Baños
 // quedan en los chips: tocarlos mueve la cámara sin scrollear.
@@ -402,7 +402,7 @@ export default function ClubRecorrido() {
             <iframe
               ref={frameRef}
               className={`club-tour-frame${ready ? " is-ready" : ""}`}
-              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261125b`}
+              src={`/recorrido/index.html?embed=1${load === "lite" ? "&lite=1" : load === "movil" ? "&movil=1" : ""}&v=20261125c`}
               title="Maqueta 3D del club Muzzaga"
               tabIndex={-1}
               aria-hidden="true"

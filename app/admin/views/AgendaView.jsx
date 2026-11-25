@@ -24,9 +24,10 @@ import {
   paymentState,
   pendingAmount,
 } from "../../../lib/metrics";
-import { adminGetRangeStats } from "../actions";
+import { adminGetFreeSlots, adminGetRangeStats } from "../actions";
 import CourtTimeline from "./agenda/CourtTimeline";
 import DayStrip from "./agenda/DayStrip";
+import FreeOutlook from "./agenda/FreeOutlook";
 import WeekChart from "./agenda/WeekChart";
 import Tanteador from "./agenda/Tanteador";
 import { EmptyState, Skeleton, SkeletonRows } from "../ui/states";
@@ -51,6 +52,8 @@ export default function AgendaView({
   weekStats,
 }) {
   const [rangeStats, setRangeStats] = useState(null);
+  // Turnos libres por jugar de los 14 días (null = cargando, false = falló).
+  const [freeSlots, setFreeSlots] = useState(null);
   // Reloj de la grilla: cada 30 s se vuelve a pintar con la hora nueva, así
   // la línea de "ahora", la franja "En juego" y "Próximo turno" avanzan
   // solas sin tocar Actualizar. Con la pestaña oculta no hace nada.
@@ -100,12 +103,24 @@ export default function AgendaView({
   const now = nowInClubTimezone();
   const days = nextDays(14, todayIso);
 
-  // Ocupación de los próximos 14 días para la tira
+  // Ocupación y turnos libres de los próximos 14 días para la tira. Se
+  // vuelven a pedir cada vez que llega el día (Actualizar, reserva nueva,
+  // cobro, cancelación): los libres salen de una sola lectura de slotClaims.
   useEffect(() => {
     let cancelled = false;
     adminGetRangeStats(todayIso, 14).then((res) => {
       if (!cancelled && res.ok) setRangeStats(res.days);
     });
+    adminGetFreeSlots(todayIso, 14)
+      .then((res) => {
+        if (cancelled) return;
+        // Si falla una recarga, queda lo último que se supo.
+        if (res?.ok) setFreeSlots(res.days);
+        else setFreeSlots((prev) => prev || false);
+      })
+      .catch(() => {
+        if (!cancelled) setFreeSlots((prev) => prev || false);
+      });
     return () => {
       cancelled = true;
     };
@@ -137,6 +152,7 @@ export default function AgendaView({
     <DayStrip
       days={days}
       rangeStats={rangeStats}
+      freeSlots={freeSlots || null}
       activeDate={activeDate}
       todayIso={todayIso}
       loading={loading}
@@ -374,6 +390,14 @@ export default function AgendaView({
         {cancelled.length > 0 && (
           <CancelledSection bookings={cancelled} onOpenDetail={onOpenDetail} />
         )}
+
+        <FreeOutlook
+          freeSlots={freeSlots}
+          dates={days.slice(0, 7).map((d) => d.iso)}
+          todayIso={todayIso}
+          activeDate={activeDate}
+          onSelect={setActiveDate}
+        />
 
         <WeekSection weekStats={weekStats} />
       </div>

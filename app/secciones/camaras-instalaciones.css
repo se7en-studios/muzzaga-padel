@@ -1568,6 +1568,53 @@
     font-size: 38px;
   }
 
+  /* La bajada repetía, casi igual, la del encabezado de la sección
+     ("cada partido queda grabado…"): en el celu se saca. */
+  .bl-sub {
+    display: none;
+  }
+
+  /* El celular con la repetición: en el celu la tele de arriba ya muestra
+     las canchas y eran dos pantallas de video seguidas. La tarjeta arranca
+     directo con el logo de Beelup. */
+  .bl-phone-wrap {
+    display: none;
+  }
+
+  .camaras-desc-extra {
+    display: none;
+  }
+
+  /* Logo y "Cámaras en las 2 canchas" en un solo renglón. */
+  .bl-head {
+    flex-wrap: nowrap;
+  }
+
+  .bl-chip {
+    flex: none;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  /* Los tres beneficios en una tira que se desliza (eran dos renglones). */
+  .bl-perks {
+    flex-wrap: nowrap;
+    margin-inline: -20px;
+    padding: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 20px, #000 calc(100% - 32px), transparent);
+    mask-image: linear-gradient(90deg, transparent 0, #000 20px, #000 calc(100% - 32px), transparent);
+  }
+
+  .bl-perks::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bl-perks li {
+    flex: none;
+  }
+
   .bl-logo {
     font-size: 22px;
   }
@@ -2176,5 +2223,19 @@
 
   #instalaciones::after {
     bottom: 34px;
+  }
+}
+
+/* Celu chico: un poco menos de aire arriba y abajo de la cancha (84/60 →
+   64/44). El perimetral y los fundidos se corren lo mismo. */
+@media (max-width: 640px) {
+  #instalaciones {
+    padding-top: 64px;
+    padding-bottom: 44px;
+  }
+
+  #instalaciones::after {
+    top: 42px;
+    bottom: 20px;
   }
 }

@@ -2659,3 +2659,71 @@ html:has(#turnos) body {
     transform: rotate(180deg);
   }
 }
+
+/* --------------------------------------------------------------------------
+   CELU: MENOS AIRE ENTRE SECCIONES
+   56 px arriba y abajo de cada sección eran 112 px de hueco entre una y otra
+   (casi media pantalla cada dos secciones). Con 28 alcanza: el número y el
+   rótulo de cada encabezado ya marcan dónde empieza la siguiente.
+   Reservas queda como está (tiene su propio armado) e Instalaciones lleva el
+   suyo por las líneas de la cancha.
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  #torneos,
+  #camaras,
+  #cantina,
+  #herramientas,
+  #faq,
+  #ubicacion {
+    padding-block: 28px;
+  }
+
+  :where(#top ~ *) .section-header-row {
+    margin-bottom: 18px;
+  }
+
+  :where(#top ~ *) .section-desc {
+    margin-top: 10px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   CELU: EL PIE DE LA HOME SIN REPETIR
+   Justo arriba está "Ubicación y horarios" con la dirección y el horario de
+   toda la semana: en la home el bloque "Club y horarios" del pie lo
+   repetía. Y la navegación pasa a una tira que se desliza de costado (eran
+   tres renglones de fichas). En las otras páginas el pie queda igual
+   (:has(#ubicacion) solo existe en la home).
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  body:has(#ubicacion) .pie-club {
+    display: none;
+  }
+
+  body:has(#ubicacion) .pie-chips {
+    flex-wrap: nowrap;
+    margin-inline: -16px;
+    padding: 2px 16px 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 28px), transparent);
+  }
+
+  body:has(#ubicacion) .pie-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  body:has(#ubicacion) .pie-chip {
+    flex: none;
+  }
+
+  /* FAQ: la bajada ("todo lo que necesitás saber…") no sumaba nada a las
+     preguntas, que están ahí abajo. Cantina: la bajada contaba lo mismo que
+     los títulos de las fotos y la pizarra con precios. */
+  #faq .section-desc,
+  #cantina .section-desc {
+    display: none;
+  }
+}

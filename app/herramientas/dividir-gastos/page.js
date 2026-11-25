@@ -5,7 +5,6 @@ import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
 import BottomNav from "../../../components/BottomNav";
 import SplitCostCalculator from "../../../components/SplitCostCalculator";
-import Mascota from "../../../components/Mascota";
 import { pageMetadata } from "../../../lib/pageMeta";
 import { getCantinaMenu } from "../../../lib/cantinaMenuServer";
 import { featuredItems } from "../../../lib/cantinaMenu";
@@ -32,7 +31,6 @@ export default async function DividirGastosPage() {
 
         <aside className="hx-cierre" aria-label="Reservar turno">
           <span className="hx-cierre-pelota" aria-hidden="true" />
-          <Mascota pose="pizza-cerveza" size="s" alt="" className="hx-cierre-masc" />
           <div className="hx-cierre-texto">
             <h2 className="hx-cierre-titulo">¿Ya tienen el equipo?</h2>
             <p className="hx-cierre-desc">

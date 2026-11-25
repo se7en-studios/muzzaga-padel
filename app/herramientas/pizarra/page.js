@@ -5,7 +5,6 @@ import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
 import BottomNav from "../../../components/BottomNav";
 import TacticalCourtSimulator from "../../../components/TacticalCourtSimulator";
-import Mascota from "../../../components/Mascota";
 import { pageMetadata } from "../../../lib/pageMeta";
 
 export const metadata = pageMetadata({
@@ -26,7 +25,6 @@ export default function PizarraPage() {
 
         <aside className="hx-cierre" aria-label="Reservar turno">
           <span className="hx-cierre-pelota" aria-hidden="true" />
-          <Mascota pose="enredado-paleta" size="s" alt="" className="hx-cierre-masc" />
           <div className="hx-cierre-texto">
             <h2 className="hx-cierre-titulo">Llevá la táctica a la cancha</h2>
             <p className="hx-cierre-desc">

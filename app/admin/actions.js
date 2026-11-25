@@ -53,6 +53,7 @@ import {
   summarizeRecords,
 } from "../../lib/metrics";
 import { clientKey } from "../../lib/clientsExport";
+import { countFreeSlots } from "../../lib/freeSlots";
 import { normalizePlayerNames } from "../../lib/playerNames";
 import {
   datesBetween,
@@ -1343,6 +1344,47 @@ export async function adminGetRangeStats(fromIso, count = 14) {
       ok: false,
       error: "No se pudo cargar la ocupación de los próximos días.",
     };
+  }
+}
+
+/**
+ * Turnos libres por día desde `fromIso`, para la tira de días y el panel
+ * "Próximos 7 días" de la Agenda. Mismo conteo que la tira de la reserva
+ * pública (lib/freeSlots.js): una sola lectura de slotClaims para todo el
+ * rango, sin días cerrados ni bloqueados y sin los turnos que ya arrancaron.
+ */
+export async function adminGetFreeSlots(fromIso, count = 14) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  const from = ISO_DATE.test(fromIso || "") ? fromIso : businessDayInClub();
+  const n = Math.min(31, Math.max(1, Number(count) || 14));
+  const to = isoAddDays(from, n - 1);
+  try {
+    const config = await getClubConfig();
+    let claims = {};
+    if (isFirebaseConfigured()) {
+      const snap = await getDb()
+        .ref("slotClaims")
+        .orderByKey()
+        .startAt(from)
+        .endAt(to)
+        .get();
+      if (snap.exists()) claims = snap.val() || {};
+    }
+    return {
+      ok: true,
+      from,
+      days: countFreeSlots({
+        config,
+        claims,
+        from,
+        count: n,
+        now: nowInClubTimezone(),
+      }),
+    };
+  } catch (error) {
+    return { ok: false, error: "No se pudieron contar los turnos libres." };
   }
 }
 

@@ -6,7 +6,9 @@
 (function () {
   function install(ctx) {
     const { THREE, scene, onFrame } = ctx;
-    if (!THREE.GLTFLoader || !THREE.SkeletonUtils || !onFrame) return;
+    // onListo (opcional, lo usa el monitor): avisa cuando los personajes ya están en escena, o que no van a estar
+    const listo = typeof ctx.onListo === 'function' ? ctx.onListo : () => {};
+    if (!THREE.GLTFLoader || !THREE.SkeletonUtils || !onFrame) return listo();
     const NAMES = ['jugador', 'jugadora', 'veterano', 'bartender', 'clienta', 'cliente'];
     const FEMALE = { jugadora: true, clienta: true };
     const HEIGHT = 1.74;
@@ -17,12 +19,13 @@
 
     // muñecos de la maqueta (los arma person()): hijos directos de la escena con piernas y torso
     const proxies = scene.children.filter((o) => o.userData && o.userData.legL && o.userData.up);
-    if (!proxies.length) return;
+    if (!proxies.length) return listo();
 
     const base = window.MZ_BASE || ''; // en la web: /recorrido/
     Promise.all([load(base + 'modelos/animaciones.json')].concat(NAMES.map((n) => load(base + 'modelos/personajes/' + n + '.json'))))
       .then(([anim, ...models]) => start(anim.animations, models.map((g) => g.scene)))
-      .catch((e) => console.warn('personajes 3D', e));
+      .catch((e) => console.warn('personajes 3D', e))
+      .then(listo);
 
     function start(clipList, bases) {
       const clips = {};
