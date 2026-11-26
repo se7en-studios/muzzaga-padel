@@ -1,0 +1,33 @@
+/* liviano-celu: se carga al final de la home (app/page.js).
+   En iPhone se sentía trabada toda la página. Dos cosas que en Safari cuestan
+   mucho en cada cuadro del scroll:
+
+   1. Desenfoque de fondo (backdrop-filter): el navegador tiene que volver a
+      desenfocar lo que pasa por detrás en cada cuadro. En celulares se apaga
+      en toda la home; los elementos ya tienen su fondo semitransparente
+      oscuro o claro, así que se siguen leyendo.
+   2. Animaciones que se repiten sin parar (latidos, pelotitas, "en vivo"):
+      seguían corriendo aunque la sección no estuviera a la vista. Las
+      secciones que no se ven llevan la clase .fuera-de-vista (la pone
+      MotionFx) y ahí todo queda en pausa. */
+@media (pointer: coarse) {
+  body:has(.hero-night) *,
+  body:has(.hero-night) *::before,
+  body:has(.hero-night) *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* El fondo oscuro del cajón de reserva compensa el desenfoque que ya no
+     está. */
+  body:has(.hero-night) .booking-drawer-backdrop {
+    background: rgba(0, 0, 0, 0.78);
+  }
+}
+
+.fuera-de-vista,
+.fuera-de-vista *,
+.fuera-de-vista *::before,
+.fuera-de-vista *::after {
+  animation-play-state: paused !important;
+}

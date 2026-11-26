@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Video de fondo del hero. La foto de abajo sigue siendo el primer cuadro (y
@@ -53,10 +53,25 @@ export default function HeroVideo() {
     };
   }, []);
 
+  // Fuera de pantalla el video se pausa: seguía decodificándose mientras se
+  // scrolleaba el resto de la página (en iPhone se notaba en toda la home).
+  const ref = useRef(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || typeof IntersectionObserver === "undefined") return undefined;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) v.play().catch(() => {});
+      else v.pause();
+    });
+    io.observe(v);
+    return () => io.disconnect();
+  }, [src]);
+
   if (!src) return null;
 
   return (
     <video
+      ref={ref}
       className={`hero-night-video${ready ? " is-ready" : ""}`}
       src={src}
       autoPlay

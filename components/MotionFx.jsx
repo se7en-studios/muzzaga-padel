@@ -12,6 +12,44 @@ const TARGETS =
  * turno en los celus que la permiten. No renderiza nada.
  */
 export default function MotionFx() {
+  // Las secciones que no están a la vista quedan en pausa (sus animaciones
+  // que se repiten sin parar no consumen nada; ver liviano-celu.css). Las
+  // secciones que llegan después (cargadas al acercarse) se suman solas.
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return undefined;
+    const vista = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) e.target.classList.toggle("fuera-de-vista", !e.isIntersecting);
+      },
+      { rootMargin: "150px 0px" },
+    );
+    const vistas = new WeakSet();
+    const sumar = () => {
+      document.querySelectorAll("section, footer").forEach((el) => {
+        if (vistas.has(el)) return;
+        vistas.add(el);
+        vista.observe(el);
+      });
+    };
+    sumar();
+    // Como mucho una revisión cada medio segundo (la página cambia texto
+    // seguido: reloj, contadores).
+    let pendiente = 0;
+    const cambios = new MutationObserver(() => {
+      if (pendiente) return;
+      pendiente = window.setTimeout(() => {
+        pendiente = 0;
+        sumar();
+      }, 500);
+    });
+    cambios.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      vista.disconnect();
+      cambios.disconnect();
+      window.clearTimeout(pendiente);
+    };
+  }, []);
+
   useEffect(() => {
     if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches)
       return undefined;
