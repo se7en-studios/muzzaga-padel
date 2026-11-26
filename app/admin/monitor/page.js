@@ -60,7 +60,7 @@ const BEELUP_CANCHAS = "El Tano / La Vasca";
 // canchas. En modo monitor pinta el borde de cada cancha según su estado,
 // avisa dónde cae cada una en pantalla y queda quieta después de armarse.
 const SCENE_SRC =
-  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261126a";
+  "/recorrido/index.html?embed=1&monitor=1&cam=212,40,52,2,-10&v=20261127a";
 // Si la maqueta no avisa que quedó quieta, a los 30 s de mostrarse se da por
 // quieta igual (para el fundido desde la foto y para medir la tele).
 const SETTLE_FALLBACK_MS = 30000;
