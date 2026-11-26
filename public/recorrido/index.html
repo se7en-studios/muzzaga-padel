@@ -1141,6 +1141,7 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
   // dibujar y espera el aviso "visible" de la página. Solo dibuja un cuadro de calentamiento (warm) al terminar de
   // armarse, para compilar los shaders y dejar la primera imagen lista antes de mostrarse.
   const LANDING = document.documentElement.classList.contains('embed') && !MONITOR;
+  const EMBED_HTML = document.documentElement.classList.contains('embed');
   let last = performance.now(), t = 0, fc = 0, lastPK = '', wallsMoved = false, inView = !LANDING, pAcc = 0, pN = 0, pLocked = false;
   let warm = 0, snap = false, onWarm = null, movilPose = null, movilQuiet = false;
   // en la landing la visibilidad la informa la página padre (el observer del iframe podía quedar en "no visible")
@@ -1244,10 +1245,12 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
     const r = stageRect;
     // La etiqueta no se sale del costado (en el celu "5 Mesas y tercer tiempo" quedaba cortada): su centro se corre
     // hacia adentro lo justo. El ancho se mide una vez por etiqueta y tamaño de escenario (no en cada cuadro).
-    const place = (el, v) => { cp.copy(v).project(camera); if (cp.z > 1) { el.style.display = 'none'; return; } el.style.display = ''; let x = (cp.x * 0.5 + 0.5) * r.width; if (el._wFor !== r.width || !el._w) { el._w = el.offsetWidth; el._wFor = r.width; } const half = el._w / 2 + 8; if (el._w && r.width > half * 2) x = Math.min(Math.max(x, half), r.width - half); el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + ((-cp.y * 0.5 + 0.5) * r.height).toFixed(1) + 'px) translate(-50%,-100%)'; };
+    // Solo se escribe el estilo si cambió (cada escritura obliga a recalcular estilos de la página).
+    const place = (el, v) => { cp.copy(v).project(camera); const off = cp.z > 1; if (el._off !== off) { el._off = off; el.style.display = off ? 'none' : ''; } if (off) return; let x = (cp.x * 0.5 + 0.5) * r.width; if (el._wFor !== r.width || !el._w) { el._w = el.offsetWidth; el._wFor = r.width; } const half = el._w / 2 + 8; if (el._w && r.width > half * 2) x = Math.min(Math.max(x, half), r.width - half); const tf = 'translate(' + x.toFixed(1) + 'px,' + ((-cp.y * 0.5 + 0.5) * r.height).toFixed(1) + 'px) translate(-50%,-100%)'; if (el._tf !== tf) { el._tf = tf; el.style.transform = tf; } };
     const pk = cam.az + '|' + cam.el + '|' + cam.d + '|' + cam.fov + '|' + r.width + '|' + r.height, moved = pk !== lastPK; lastPK = pk;
     if (moved) SPOTS.forEach(sp => place(sp.pin, tmp.set(sp.x, 1.2, sp.z)));
-    if (moved) COURT_CARDS.forEach(c => place(c.d, c.pos));
+    // las tarjetas de las canchas no existen en el modo embed (display:none): medirlas en cada cuadro forzaba un recálculo
+    if (moved && !EMBED_HTML) COURT_CARDS.forEach(c => place(c.d, c.pos));
     for (const o of dyn) if (o.visible) o.updateMatrixWorld(true); // los muñecos ocultos (ya hay personaje) no se dibujan
     if ((MONITOR ? (++fc) % 60 === 0 : MOVIL ? (++fc) % 12 === 0 : ((++fc) & 1) === 0) || wallsMoved) renderer.shadowMap.needsUpdate = true;
     if (MOVIL) { // ¿se movió la cámara desde el cuadro anterior? (decide el ritmo del próximo)
@@ -1487,7 +1490,10 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       if (!U || /[?&]batch=0/.test(location.search)) return;
       scene.updateMatrixWorld(true);
       const anchors = new Set([scene, ...Object.values(W), roofG]), moving = new Set(dyn);
-      const flagged = o => moving.has(o) || !!(o.userData && (o.userData.legL || o.userData.anima));
+      // En el celu (?movil=1 / ?lite=1) los muñecos son los simples de person() y no los reemplaza ningún personaje 3D:
+      // los que están quietos (sentados, en la barra) se fusionan como cualquier pieza fija. Eran ~370 mallas sueltas.
+      const SIMPLES = LITE || MOVIL;
+      const flagged = o => moving.has(o) || !!(o.userData && ((o.userData.legL && !SIMPLES) || o.userData.anima));
       const anchorOf = o => {
         for (let a = o.parent; a; a = a.parent) {
           if (anchors.has(a)) return a;
@@ -1526,16 +1532,74 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       };
       const SAFE = { MeshStandardMaterial: 1, MeshBasicMaterial: 1, MeshLambertMaterial: 1, MeshPhongMaterial: 1 };
       const noCompile = THREE.Material.prototype.onBeforeCompile;
-      const msig = m => {
+      // Color por vértice: materiales lisos (sin texturas) que solo cambian en el color (y en la rugosidad, si son PBR)
+      // van juntos en una sola malla; el color y la rugosidad de cada pieza viajan en la geometría. El sombreado da
+      // exactamente lo mismo (el color de la pieza multiplica igual que el del material). Son la mayoría de las piezas
+      // sueltas: sillas, mesas, muñecos, marcos, tachos…
+      const MAPAS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap', 'lightMap', 'envMap', 'specularMap', 'displacementMap'];
+      const lisa = m => (m.type === 'MeshStandardMaterial' || m.type === 'MeshBasicMaterial') && m.onBeforeCompile === noCompile && !m.vertexColors && !Object.keys(m.userData || {}).length && MAPAS.every(k => !m[k]);
+      const msig = (m, vc) => {
         if (!SAFE[m.type] || m.onBeforeCompile !== noCompile || Object.keys(m.userData || {}).length) return m.uuid;
         const c = x => (x && x.getHex ? x.getHex() : '-');
-        return [m.type, c(m.color), c(m.emissive), m.emissiveIntensity, m.roughness, m.metalness, m.envMapIntensity, m.lightMapIntensity, m.aoMapIntensity, m.bumpScale,
+        return [vc ? 'vc' : '', m.type, vc ? '*' : c(m.color), c(m.emissive), m.emissiveIntensity, vc ? '*' : m.roughness, m.metalness, m.envMapIntensity, m.lightMapIntensity, m.aoMapIntensity, m.bumpScale,
           tsig(m.map), tsig(m.normalMap), tsig(m.roughnessMap), tsig(m.metalnessMap), tsig(m.emissiveMap), tsig(m.aoMap), tsig(m.bumpMap), tsig(m.alphaMap), tsig(m.lightMap), tsig(m.envMap),
           m.normalScale ? m.normalScale.x + ',' + m.normalScale.y : '-', m.side, m.vertexColors, m.flatShading, m.toneMapped, m.opacity, m.alphaTest, m.depthWrite, m.depthTest, m.colorWrite,
           m.polygonOffset, m.polygonOffsetFactor, m.polygonOffsetUnits, m.fog, m.wireframe, m.blending, m.dithering, (m.clippingPlanes || []).length, m.clipShadows, JSON.stringify(m.defines || {})].join('|');
       };
       const matKey = new Map();
-      const keyOf = m => { let k = matKey.get(m); if (k === undefined) { k = msig(m); matKey.set(m, k); } return k; };
+      const keyOf = m => { let k = matKey.get(m); if (k === undefined) { k = msig(m, lisa(m)); matKey.set(m, k); } return k; };
+      // la pieza lleva su color (y su rugosidad) en cada vértice
+      const pintar = (g, m) => {
+        const n = g.attributes.position.count, col = new Float32Array(n * 3), ru = new Float32Array(n);
+        for (let i = 0; i < n; i++) { col[i * 3] = m.color.r; col[i * 3 + 1] = m.color.g; col[i * 3 + 2] = m.color.b; ru[i] = m.roughness || 0; }
+        g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        if (m.isMeshStandardMaterial) g.setAttribute('mzRough', new THREE.BufferAttribute(ru, 1));
+        return g;
+      };
+      // la rugosidad sale del vértice en vez del material (mismo cálculo; ver roughnessmap_fragment de three r128)
+      const rugosidadPorVertice = sh => {
+        sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float mzRough;\nvarying float vMzRough;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvMzRough = mzRough;');
+        sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vMzRough;').replace('#include <roughnessmap_fragment>', 'float roughnessFactor = vMzRough;');
+      };
+      const vcMats = new Map();
+      const matVC = src => {
+        const k = keyOf(src); let m = vcMats.get(k);
+        if (!m) {
+          m = src.clone(); m.color.setRGB(1, 1, 1); m.vertexColors = true;
+          m.clippingPlanes = src.clippingPlanes; // clone() copia los planos: el recorte de las canchas tiene que seguir siendo el mismo (se anima)
+          if (m.isMeshStandardMaterial) { m.roughness = 1; m.onBeforeCompile = rugosidadPorVertice; }
+          vcMats.set(k, m);
+        }
+        return m;
+      };
+      // Lo que se mueve (jugadores, barman, gente que camina, autos), solo en el celu: las piezas de cada parte rígida
+      // (cada pierna, cada brazo, el torso, la carrocería) van en una malla por parte. De ~25 llamadas de dibujo por
+      // muñeco a ~6. En la compu no: los personajes de premium-people.js animan piezas sueltas (ojos, vaso…).
+      if (SIMPLES) dyn.forEach(g => {
+        if (!g.visible) return;
+        const nodos = []; g.traverse(n => { if (!n.isMesh) nodos.push(n); });
+        nodos.forEach(n => {
+          const grupos = new Map();
+          n.children.forEach(c => {
+            if (c.type !== 'Mesh' || !c.visible || c.children.length || !c.material || Array.isArray(c.material) || c.material.transparent || !lisa(c.material)) return;
+            const k = [keyOf(c.material), +c.castShadow, +c.receiveShadow, c.renderOrder, sig(c.geometry)].join('|');
+            if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(c);
+          });
+          grupos.forEach(cs => {
+            if (cs.length < 2) return;
+            const geos = cs.map(c => { c.updateMatrix(); return pintar(c.geometry.clone().applyMatrix4(c.matrix), c.material); });
+            let merged = null;
+            try { merged = U.mergeBufferGeometries(geos, false); } catch (err) { merged = null; }
+            geos.forEach(x => x.dispose());
+            if (!merged) return;
+            const mesh = new THREE.Mesh(merged, matVC(cs[0].material));
+            mesh.castShadow = cs[0].castShadow; mesh.receiveShadow = cs[0].receiveShadow; mesh.renderOrder = cs[0].renderOrder;
+            mesh.matrixAutoUpdate = false; mesh.userData.fused = cs.length;
+            cs.forEach(c => n.remove(c)); n.add(mesh);
+          });
+        });
+        g.updateMatrixWorld(true);
+      });
       const groups = new Map(), inv = new THREE.Matrix4(), box = new THREE.Box3(), ctr = new THREE.Vector3();
       list.forEach(([o, a]) => {
         box.setFromObject(o).getCenter(ctr);
@@ -1550,12 +1614,13 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       for (const e of groups.values()) {
         if (performance.now() - slice > 40) { await tick(); slice = performance.now(); }
         if (e.items.length < 2) continue;
-        const geos = e.items.map(([o, rel]) => o.geometry.clone().applyMatrix4(rel));
+        const vc = lisa(e.o.material);
+        const geos = e.items.map(([o, rel]) => { const g = o.geometry.clone().applyMatrix4(rel); return vc ? pintar(g, o.material) : g; });
         let merged = null;
         try { merged = U.mergeBufferGeometries(geos, false); } catch (err) { merged = null; }
         geos.forEach(g => g.dispose());
         if (!merged) continue;
-        const mesh = new THREE.Mesh(merged, e.o.material);
+        const mesh = new THREE.Mesh(merged, vc ? matVC(e.o.material) : e.o.material);
         mesh.castShadow = e.o.castShadow; mesh.receiveShadow = e.o.receiveShadow; mesh.renderOrder = e.o.renderOrder; mesh.frustumCulled = e.o.frustumCulled;
         mesh.userData.fused = e.items.length;
         e.a.add(mesh); mesh.updateMatrixWorld(true);
@@ -1565,6 +1630,58 @@ const slat = std(0x7a2f22, { roughness: 0.6 }), iron = std(0x15161a, { metalness
       renderer.shadowMap.needsUpdate = true;
       const solos = [...groups.values()].filter(e => e.items.length < 2), mats = new Set(solos.map(e => e.o.material));
       window.MZ_FUSION = { before, after, why, solos: solos.length, materialesSolos: mats.size, materiales: new Set(list.map(([o]) => o.material)).size };
+    })();
+
+    /* ---- Precompilado en tandas (landing). El cuadro de calentamiento compilaba todos los shaders, subía todas las
+       texturas y armaba las sombras de una sola vez: era la tarea más larga de todo el armado (segundos con el celu
+       frenado) y trababa el scroll de la página justo mientras cargaba. Ahora se dibuja la escena de a pedacitos (capa
+       31 + sin recorte por cámara) en un solo píxel del lienzo (tijera de 1×1; el iframe todavía es invisible), cediendo
+       el hilo entre tanda y tanda: cada shader se compila, cada textura y cada geometría se suben en su tanda, con las
+       mismas luces, sombras, niebla, recorte y el mismo lienzo que el dibujo de verdad (así los programas, y lo que el
+       driver arma según el lienzo, son exactamente los que va a usar). Con bloom (compu) se dibuja en otros lienzos y
+       la compu no lo necesita: no se hace. ---- */
+    if (LANDING && !postfx) await (async function precompilar() {
+      const L = 31, objs = [], luces = [];
+      scene.traverse(o => { if (o.isLight) luces.push(o); else if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o.material) objs.push(o); });
+      const pc = camera.clone(); pc.layers.set(L);
+      const gl = renderer.getContext(), gl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+      luces.forEach(l => l.layers.enable(L));
+      // el techo en la landing no se ve nunca (sube y se oculta en el primer cuadro): no se compila
+      const techo = roofG.visible; if (!roofOn) roofG.visible = false;
+      let i = 0, n = 4, previa = null; const sombras = new Set();
+      const f0 = () => { if (previa) gl.deleteSync(previa); previa = null; };
+      const esperar = async f => {
+        if (!f) return;
+        const tw = performance.now();
+        while (gl.getSyncParameter(f, gl.SYNC_STATUS) !== gl.SIGNALED && performance.now() - tw < 3000) await new Promise(r => setTimeout(r, 16));
+        gl.deleteSync(f);
+      };
+      try {
+        while (i < objs.length) {
+          await tick();
+          const t0 = performance.now(), lote = objs.slice(i, i + n), fc = lote.map(o => o.frustumCulled);
+          lote.forEach(o => { o.layers.enable(L); o.frustumCulled = false; });
+          // el pase de sombras (todo el mapa de sombras) solo en las tandas que traen una variante nueva de sombra (con o
+          // sin recorte, doble cara, recortada por transparencia, instanciada): con eso alcanza para compilar sus shaders
+          const sv = lote.filter(o => o.castShadow).map(o => { const m = Array.isArray(o.material) ? o.material[0] : o.material; return [o.isInstancedMesh, o.isSkinnedMesh, m.clipShadows && m.clippingPlanes ? m.clippingPlanes.length : 0, m.side, !!(m.map && m.alphaTest > 0)].join(); }).filter(k => !sombras.has(k));
+          sv.forEach(k => sombras.add(k)); renderer.shadowMap.needsUpdate = sv.length > 0;
+          renderer.setScissor(0, 0, 1, 1); renderer.setScissorTest(true); renderer.render(scene, pc); renderer.setScissorTest(false);
+          lote.forEach((o, k) => { o.layers.disable(L); o.frustumCulled = fc[k]; });
+          i += lote.length;
+          const dt = performance.now() - t0; n = dt < 12 ? Math.min(256, n * 2) : dt > 40 ? Math.max(1, n >> 1) : n;
+          // La placa trabaja a la par (mientras se prepara la tanda siguiente) pero nunca con más de una tanda de atraso:
+          // antes de seguir se espera, sin frenar el hilo, a que termine la anterior. Si no, lo que la placa tenía
+          // pendiente (subir y achicar texturas, armar shaders) se juntaba todo y frenaba a la página justo cuando la
+          // maqueta aparecía. Con la sección ya cerca no se espera: ahí importa que esté lista cuanto antes.
+          if (gl2) {
+            const f = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush();
+            if (cerca()) { gl.deleteSync(f); f0(); } else { await esperar(previa); previa = f; }
+          }
+        }
+        await esperar(previa); previa = null;
+      } catch (e) { console.warn('precompilado', e); }
+      renderer.setScissorTest(false); luces.forEach(l => l.layers.disable(L)); roofG.visible = techo;
+      renderer.shadowMap.needsUpdate = true; // el mapa de sombras quedó a medias: se arma entero en el cuadro de calentamiento
     })();
 
     if (EMBED) {
